@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+This code is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 only, as
+published by the Free Software Foundation.  Oracle designates this
+particular file as subject to the "Classpath" exception as provided
+by Oracle in the LICENSE file that accompanied this code.
+
+This code is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+version 2 for more details (a copy is included in the LICENSE file that
+accompanied this code).
+
+You should have received a copy of the GNU General Public License version
+2 along with this work; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+or visit www.oracle.com if you need additional information or have any
+questions.
+-->
+
+
+<project name="asmtools" default="build" basedir=".">
+
+
+    <!--****************************************************************-->
+    <!--Property & FileSet Definitions					-->
+    <!--****************************************************************-->
+    <property file="build.properties"/>
+    <property file="productinfo.properties"/>
+    <property name="proj.build.product.version" value="${PRODUCT_VERSION}"/>
+    <property name="proj.build.product.name.prefix" value="${PRODUCT_NAME}"/>
+    <property name="proj.build.product.name" value="${proj.build.product.name.prefix}"/>
+
+    <!-- workspace dirs -->
+    <property name="ws.top.dir" location=".."/>
+    <property name="ws.src.dir" location="${ws.top.dir}/src"/>
+    <property name="ws.src.classes.dir" location="${ws.src.dir}"/>
+    <property name="ws.doc.dir" location="${ws.src.dir}/doc"/>
+    <property name="ws.test.dir" location="${ws.src.dir}/test"/>
+
+    <!-- Build output area -->
+    <property name="build.root" location="${ws.top.dir}/.." />
+    <property name="build.base.dir" location="${build.root}/${PRODUCT_NAME}-${PRODUCT_VERSION}-build" />
+
+    <!-- BuildProduct Area -->
+    <property name="buildprod.root" location="${ws.top.dir}/../"/>
+    <property name="buildprod.dir" location="${buildprod.root}/${proj.build.product.name}-${proj.build.product.version}-build"/>
+    <tstamp>
+        <format  pattern="MM-dd-yyyy_hh-mm-aa" property="touch.time"/>
+    </tstamp>
+    <property name="buildprod.tmp.dir" location="${java.io.tmpdir}/${proj.build.product.name}-${proj.build.product.version}-build-${touch.time}"/>
+
+    <property name="buildprod.image.dir" location="${buildprod.dir}/dist"/>
+
+    <!-- Build Area -->
+    <property name="buildArea.dir" location="${buildprod.dir}/binaries"/>
+    <property name="build.tmp.dir" location="${buildprod.tmp.dir}/binaries"/>
+
+    <property name="build.classes.dir" location="${buildArea.dir}/classes"/>
+    <property name="build.bin.dir" location="${buildArea.dir}/bin"/>
+    <property name="build.src.classes.dir" location="${buildArea.dir}/src"/>
+    <property name="build.lib.dir" location="${buildArea.dir}/lib"/>
+    <property name="build.doc.dir" location="${buildArea.dir}/doc"/>
+    <property name="build.javadoc.dir" location="${build.base.dir}/javadoc"/>
+    <property name="build.javadocreport.dir" location="${build.base.dir}/javadoc-report"/>
+
+    <property name="build.src.dir" location="${buildArea.dir}/src"/>
+
+    <!-- Release area -->
+    <property name="releaseArea.dir" location="${buildprod.dir}/release"/>
+    <property name="release.tmp.dir" location="${buildprod.tmp.dir}/release"/>
+
+
+    <property name="release.bin.dir" location="${releaseArea.dir}/bin"/>
+    <property name="release.lib.dir" location="${releaseArea.dir}/lib"/>
+    <property name="release.doc.dir" location="${releaseArea.dir}/doc"/>
+    <property name="release.src.dir" location="${releaseArea.dir}/src"/>
+
+    <!--set up compile class path-->
+    <path id="compileClassPath">
+        <pathelement location="${build.classes.dir}"/>
+    </path>
+
+    <!-- Temporary file containing generated token replacements pairs  -->
+    <property name="tokenReplacementsFile" location="${build.base.dir}/tokenReplacements.properties"/>
+
+    <!-- Temporary file containing JVM system properties  -->
+    <property name="jvmPropertiesFile" location="${build.base.dir}/jvmSystem.properties"/>
+
+    <!--************************************************************************-->
+    <!-- Help:  Describes Top Level Targets	                		-->
+    <!--************************************************************************-->
+
+    <target name="help" description="Describes the top-level targets for this build.">
+        <echo>
+Usage:
+     ant &lt;TARGET&gt; -D&lt;OPTIONS&gt;
+
+where TARGET is:
+     build (default):        builds all binaries, doc,  and distributions.
+     clean:                  removes all generated files and directories.
+     clean-build:            cleans then builds the project
+     help:                   prints a usage message (this message).
+
+Other values for TARGET are:
+     bin:                    produces binaries.
+     devbuild:               produces binaries and javadocs.
+     javadoc:                produces javadocs.
+     test:                   runs sanity tests. (not currently available)
+            </echo>
+    </target>
+
+
+    <!--************************************************************************-->
+    <!-- Clean Targets                                -->
+    <!--************************************************************************-->
+
+    <target name="clean" description="Remove all generated files.">
+        <delete dir="${build.temp.dir}" />
+        <delete dir="${build.base.dir}" />
+    </target>
+
+    <!--========================================================================-->
+    <!-- Setup                                                                  -->
+    <!--========================================================================-->
+
+    <!-- Make build area dir and temp dir -->
+    <target name="prepare" depends="preparebuildarea,preparereleasearea" description="Prepares the build generation areas." />
+
+
+    <target name="prepareGenArea">
+	    <!--set up compile class path-->
+	    <path id="compileClassPath">
+		<pathelement location="${buildArea.dir}/classes"/>
+		<pathelement path="${proj.build.jdk.home}/lib/tools.jar"/>
+	    </path>
+
+	    <!--get location of java compiler-->
+	    <property name="proj.build.javac" value="${proj.build.jdk.home}/bin/javac"/>
+
+	    <!--make temp dirs-->
+	    <mkdir dir="${buildprod.dir}"/>
+	    <mkdir dir="${buildprod.tmp.dir}"/>
+	    <mkdir dir="${buildprod.image.dir}"/>
+    </target>
+
+
+
+    <!-- Make build area dir and temp dir					-->
+    <target name="preparebuildarea" depends="prepareGenArea" >
+	    <!--make temp dirs-->
+	<mkdir dir="${buildArea.dir}"/>
+	<mkdir dir="${build.tmp.dir}"/>
+	<mkdir dir="${build.classes.dir}"/>
+	<mkdir dir="${build.src.classes.dir}"/>
+	<mkdir dir="${build.lib.dir}"/>
+	<mkdir dir="${build.doc.dir}"/>
+
+        <mkdir dir="${build.src.dir}" />
+        <copy todir="${build.src.dir}">
+            <fileset dir="${ws.src.classes.dir}/" includes="**/*" />
+        </copy>
+
+        <copy file="${ws.top.dir}/LICENSE" todir="${buildArea.dir}"/>
+        <copy file="${ws.top.dir}/README.html" todir="${buildArea.dir}"/>
+ </target>
+
+    <!-- Make build area dir and temp dir					-->
+    <target name="preparereleasearea" depends="prepareGenArea" >
+	    <!--make temp dirs-->
+	    <mkdir dir="${releaseArea.dir}"/>
+	    <mkdir dir="${release.tmp.dir}"/>
+	    <mkdir dir="${release.lib.dir}"/>
+	    <mkdir dir="${release.doc.dir}"/>
+	    <mkdir dir="${release.bin.dir}"/>
+            <copy file="${ws.top.dir}/LICENSE" todir="${releaseArea.dir}"/>
+            <copy file="${ws.top.dir}/README.html" todir="${releaseArea.dir}"/>
+    </target>
+
+    <target name="checkJDK" description="Check jdk.home setting">
+        <available file="${jdk.home}/bin/javac" property="jdk.javac.present" />
+        <fail unless="jdk.javac.present" message="${jdk.home}/bin/javac is not found, Check 'jdk.home' property setting in 'build/build.properties' file." />
+
+        <available file="${test.jdk.home}/bin/javac" property="test.jdk.javac.present" />
+        <fail unless="test.jdk.javac.present" message="${test.jdk.home}/bin/javac is not found, Check 'test.jdk.home' property setting in 'build/build.properties' file."/>
+    </target>
+
+    <target name="stamp" description="Set up build time properties.">
+        <tstamp>
+            <format property="build.date" pattern="MMMMM dd, yyyy" locale="en"/>
+            <format property="build.date.time" pattern="MMMMM dd, yyyy hh:mm aa" locale="en"/>
+        </tstamp>
+    </target>
+
+    <target name="replace-tokens" depends="stamp">
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%BUILD_DATE%%" value="${build.date}"/>
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%PRODUCT_BUILDNUMBER%%" value="${PRODUCT_BUILDNUMBER}"/>
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%PRODUCT_NAME%%" value="${PRODUCT_NAME}"/>
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%PRODUCT_NAME_LONG%%" value="${PRODUCT_NAME_LONG}"/>
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%PRODUCT_VERSION%%" value="${PRODUCT_VERSION}"/>
+        <replace file="${build.src.classes.dir}/org/openjdk/asmtools/util/productinfo.properties"
+                 token="%%PRODUCT_MILESTONE%%" value="${PRODUCT_MILESTONE}"/>
+    </target>
+
+    <!--========================================================================-->
+    <!-- Build Sub Targets                            -->
+    <!--========================================================================-->
+
+    <target name="build"  depends="release" description="Build asmtools product." />
+
+    <target name="release" depends="devbuild, examples, releaseproduct"/>
+
+    <target name="devbuild"  depends="prepare, replace-tokens, jar, javadoc"/>
+
+    <target name="clean-build"  depends="clean, build" description="Build asmtools product." />
+
+    <!--========================================================================-->
+    <!-- Binaries / Libraries                                -->
+    <!--========================================================================-->
+
+    <!-- Jar file                            -->
+
+    <target name="jar" depends="compileClasses">
+        <mkdir dir="${build.lib.dir}"/>
+        <copy file="${ws.top.dir}/LICENSE" todir="${build.classes.dir}"/>
+        <jar destfile="${build.lib.dir}/${PRODUCT_JAR_NAME}"
+             basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="org.openjdk.asmtools.Main"/>
+            </manifest>
+        </jar>
+    </target>
+
+
+    <target name="compileClasses" depends="prepare">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac fork="true"
+            target="1.7"
+            source="1.7"
+            srcdir="${build.src.classes.dir}"
+            destdir="${build.classes.dir}"
+            debug="${javac.debug}"
+            verbose="${javac.verbose}" deprecation="${javac.deprecation}"
+            classpathref="compileClassPath">
+        </javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${build.src.classes.dir}" excludes="**/*.java" />
+        </copy>
+    </target>
+
+    <target name="examples" description="Prepare examples">
+    </target>
+
+
+    <!--========================================================================-->
+    <!-- Release                                       -->
+    <!--========================================================================-->
+    <target name="releaseproduct" depends="preparereleasearea,preparerelease" description="Build and Bundle the HelloWorld product.">
+	    <property name="bundle.name" value="${proj.build.product.name}-${proj.build.product.version}.zip"/>
+	    <basename property="bundle.prefix" file="${proj.build.product.name}-${proj.build.product.version}" suffix=".zip"/>
+
+	    <zip destfile="${release.tmp.dir}/${bundle.name}" >
+		    <zipfileset dir="${releaseArea.dir}" includes="**/*" prefix="${bundle.prefix}"/>
+	    </zip>
+
+	    <move file="${release.tmp.dir}/${bundle.name}" todir="${buildprod.image.dir}"/>
+    </target>
+
+    <target name="preparerelease" description="Build and Bundle the product.">
+        <mkdir dir="${releaseArea.dir}" />
+        <mkdir dir="${release.lib.dir}" />
+        <copy todir="${release.lib.dir}">
+            <fileset dir="${build.lib.dir}/" includes="**/*"  excludes="**/exclude.jar" />
+        </copy>
+    </target>
+
+    <target name="javadoc" depends="prepare">
+        <mkdir dir="${build.javadoc.dir}"/>
+        <loadfile property="copyright.text" srcFile='${ws.top.dir}/LICENSE' failonerror='false'/>
+        <javadoc sourcepath="${build.src.classes.dir}"
+            destdir="${build.javadoc.dir}"
+            author="false"
+            version="false"
+            additionalparam="-breakiterator"
+        >
+            <classpath>
+                <path path="${javac.classpath}"/>
+            </classpath>
+            <fileset dir="${build.src.classes.dir}">
+                <filename name="**/*.java"/>
+            </fileset>
+            <packageset dir="${build.src.classes.dir}">
+                <include name="javasoft/sqe/**"/>
+            </packageset>
+            <bottom><![CDATA[
+           ]]>
+            </bottom>
+        </javadoc>
+    </target>
+
+
+</project>
+
