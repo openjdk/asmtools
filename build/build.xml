@@ -300,9 +300,6 @@ Other values for TARGET are:
             <fileset dir="${build.src.classes.dir}">
                 <filename name="**/*.java"/>
             </fileset>
-            <packageset dir="${build.src.classes.dir}">
-                <include name="javasoft/sqe/**"/>
-            </packageset>
             <bottom><![CDATA[
            ]]>
             </bottom>
