@@ -150,7 +150,7 @@ public class TypeAnnotationUtils {
         meth_type_param_bnds        (0x12, "METHOD_TYPE_PARAMETER_BOUND",  InfoType.TYPEPARAM_BOUND, "method type parameter bounds"),
         field                       (0x13, "FIELD",  InfoType.EMPTY, "field"),
         meth_ret_type               (0x14, "METHOD_RETURN",  InfoType.EMPTY, "method return type"),
-        meth_reciever               (0x15, "METHOD_RECEIVER",  InfoType.EMPTY, "method reciever"),
+        meth_receiver               (0x15, "METHOD_RECEIVER",  InfoType.EMPTY, "method receiver"),
         meth_formal_param           (0x16, "METHOD_FORMAL_PARAMETER",  InfoType.METHODPARAM, "method formal parameter type"),
         throws_type                 (0x17, "THROWS",  InfoType.EXCEPTION, "exception type in throws"),
         local_var                   (0x40, "LOCAL_VARIABLE",  InfoType.LOCALVAR, "local variable"),
@@ -799,7 +799,7 @@ public class TypeAnnotationUtils {
                     break;
                 case field:
                 case meth_ret_type:
-                case meth_reciever:
+                case meth_receiver:
                     visit_empty_target(tt);
                     break;
                 case meth_formal_param:

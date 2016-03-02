@@ -101,6 +101,7 @@ public class JcodTokens {
         DIV                 (72, "DIV",             "div",          TokenType.KEYWORDS),
         EQ                  (73, "EQ",              "eq",           TokenType.KEYWORDS),
         ASSIGN              (74, "ASSIGN",          "assign",       TokenType.KEYWORDS),
+        MODULE              (75, "MODULE",          "module",       TokenType.KEYWORDS, KeywordType.KEYWORD),
 
         COLON               (134, "COLON",        ":",    TokenType.PUNCTUATION),
         SEMICOLON           (135, "SEMICOLON",    ";",    TokenType.PUNCTUATION, KeywordType.KEYWORD),

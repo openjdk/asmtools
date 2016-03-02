@@ -1,0 +1,7 @@
+re:data/.*
+re:asmtools-6.0-build/.*
+re:.*~$
+re:.*\.log$
+re:.*\.pyc$
+re:.*\.swp$
+re:.*\.DS_Store$

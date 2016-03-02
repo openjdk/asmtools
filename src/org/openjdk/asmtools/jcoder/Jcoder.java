@@ -621,6 +621,8 @@ class Jcoder {
             case IDENT:
                 if (prev == Token.FILE) {
                     buf.myname = scanner.stringValue;
+                } else if( prev == Token.MODULE) {
+                    buf.myname = "module-info.class";
                 } else {
                     buf.myname = scanner.stringValue + ".class";
                 }
@@ -671,6 +673,7 @@ class Jcoder {
                 try {
                     switch (scanner.token) {
                         case CLASS:
+                        case MODULE:
                         case INTERFACE:
                         case FILE:
                             // Start of a class

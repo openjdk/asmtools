@@ -294,7 +294,15 @@ public class JasmTokens {
         BRIDGE              (171, "BRIDGE",     "bridge",   TokenType.MODIFIER, KeywordType.KEYWORD),
 
         // Declaration keywords
-        BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", TokenType.DECLARATION, KeywordType.KEYWORD, true);
+        BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", TokenType.DECLARATION, KeywordType.KEYWORD, true),
+
+        //Module statements
+        REQUIRES            (180, "REQUIRES", "requires", TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        EXPORTS             (182, "EXPORTS",  "exports",  TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        TO                  (183, "TO",       "to",       TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        USES                (184, "USES",     "uses",     TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        PROVIDES            (185, "PROVIDES", "provides", TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        WITH                (186, "WITH",     "with",     TokenType.DECLARATION, KeywordType.KEYWORD, true);
 
         // Misc Keywords
         private Integer value;

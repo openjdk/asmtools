@@ -24,10 +24,12 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.jasm.Modifiers;
-import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
-import static org.openjdk.asmtools.jasm.Tables.*;
+
 import java.io.*;
 import java.util.ArrayList;
+
+import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
+import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
  * Central class data for of the Java Disassembler
@@ -88,6 +90,11 @@ public class ClassData extends MemberData {
      */
     protected ArrayList<BootstrapMethodData> bootstrapMethods;
 
+    /**
+     * The module this class file presents
+     */
+    protected ModuleData moduleData;
+
     // other parsing fields
     protected PrintWriter out;
     protected String pkgPrefix = "";
@@ -105,7 +112,6 @@ public class ClassData extends MemberData {
         memberType = "ClassData";
         TraceUtils.traceln("printOptions=" + options.toString());
         pool = new ConstantPool(this);
-
     }
 
     /*========================================================*/
@@ -217,6 +223,11 @@ public class ClassData extends MemberData {
                     bootstrapMethods.add(bsmData);
                 }
                 break;
+            case ATT_Module:
+                // Read Module Attribute
+                moduleData = new ModuleData(this);
+                moduleData.read(in);
+                break;
             default:
                 handled = false;
                 break;
@@ -295,11 +306,13 @@ public class ClassData extends MemberData {
 
     public void print() throws IOException {
         int k, l;
-// Write the header
-        String classname = pool.getClassName(this_cpx);
-        pkgPrefixLen = classname.lastIndexOf("/") + 1;
+        String className = pool.getClassName(this_cpx);
+        String moduleName = pool.getModuleName(this_cpx);
+        boolean isModuleUnit = !moduleName.isEmpty();
+        pkgPrefixLen = className.lastIndexOf("/") + 1;
+        // Write the header
         // package-info compilation unit
-        if (classname.endsWith("package-info")) {
+        if (className.endsWith("package-info")) {
             // Print the Annotations
             if (visibleAnnotations != null) {
                 for (AnnotationData visad : visibleAnnotations) {
@@ -329,52 +342,52 @@ public class ClassData extends MemberData {
             }
 
             if (pkgPrefixLen != 0) {
-                pkgPrefix = classname.substring(0, pkgPrefixLen);
+                pkgPrefix = className.substring(0, pkgPrefixLen);
                 out.print("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + " ");
                 out.print("version " + major_version + ":" + minor_version + ";");
             }
             out.println();
             return;
         }
-
-        if (pkgPrefixLen != 0) {
-            pkgPrefix = classname.substring(0, pkgPrefixLen);
-            out.println("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + ";");
-            classname = pool.getShortClassName(this_cpx, pkgPrefix);
-        }
-        out.println();
-
-        // Print the Annotations
-        if (visibleAnnotations != null) {
-            for (AnnotationData visad : visibleAnnotations) {
-                visad.print(out, initialTab);
-                out.println();
+        if (!isModuleUnit) {
+            if (pkgPrefixLen != 0) {
+                pkgPrefix = className.substring(0, pkgPrefixLen);
+                out.println("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + ";");
+                className = pool.getShortClassName(this_cpx, pkgPrefix);
             }
-        }
-        if (invisibleAnnotations != null) {
-            for (AnnotationData invisad : invisibleAnnotations) {
-                invisad.print(out, initialTab);
-                out.println();
-            }
-        }
-        if (visibleTypeAnnotations != null) {
             out.println();
-            for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                visad.print(out, initialTab);
-                out.println();
-            }
-        }
-        if (invisibleTypeAnnotations != null) {
-            out.println();
-            for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                invisad.print(out, initialTab);
-                out.println();
-            }
-        }
 
-        if ((access & ACC_SUPER) != 0) {
-            out.print("super ");
-            access = access & ~ACC_SUPER;
+            // Print the Annotations
+            if (visibleAnnotations != null) {
+                for (AnnotationData visad : visibleAnnotations) {
+                    visad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if (invisibleAnnotations != null) {
+                for (AnnotationData invisad : invisibleAnnotations) {
+                    invisad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if (visibleTypeAnnotations != null) {
+                out.println();
+                for (TypeAnnotationData visad : visibleTypeAnnotations) {
+                    visad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if (invisibleTypeAnnotations != null) {
+                out.println();
+                for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
+                    invisad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if ((access & ACC_SUPER) != 0) {
+                out.print("super ");
+                access = access & ~ACC_SUPER;
+            }
         }
 
         // see if we are going to print: abstract interface class
@@ -428,11 +441,12 @@ printSugar:
             pool.PrintConstant(out, this_cpx);
         }
         out.println();
-
-        if (!pool.getClassName(super_cpx).equals("java/lang/Object")) {
-            out.print("\textends ");
-            pool.printlnClassId(out, super_cpx);
-            out.println();
+        if(!isModuleUnit ) {
+            if (!pool.getClassName(super_cpx).equals("java/lang/Object")) {
+                out.print("\textends ");
+                pool.printlnClassId(out, super_cpx);
+                out.println();
+            }
         }
         l = interfaces.length;
 
@@ -459,7 +473,9 @@ printSugar:
             } catch (IOException e) {
             }
         }
-        out.println();
+        // keep this new line for classes to pass huge test suite.
+        if(!isModuleUnit)
+            out.println();
 
         // Print the constant pool
         if (options.contains(Options.PR.CP)) {
@@ -500,8 +516,16 @@ printSugar:
             }
             out.println();
         }
+        // Print module attributes
+        if( isModuleUnit  && moduleData != null) {
+            moduleData.print();
+        }
 
-        out.println("} // end Class " + classname);
+        if( isModuleUnit ) {
+            out.println("} // end Module " + moduleName);
+        } else {
+            out.println("} // end Class " + className);
+        }
 
     } // end ClassData.print()
 

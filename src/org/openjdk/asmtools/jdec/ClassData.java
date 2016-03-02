@@ -22,14 +22,13 @@
  */
 package org.openjdk.asmtools.jdec;
 
+import org.openjdk.asmtools.jasm.Modifiers;
 import org.openjdk.asmtools.util.I18NResourceBundle;
+
+import java.io.*;
+
 import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  *
@@ -46,11 +45,14 @@ class ClassData {
     String inpname;
     int[] cpe_pos;
     boolean printDetails;
+    String entityname;
+
 
     public static I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
     public ClassData(String inpname, int printFlags, PrintWriter out) throws IOException {
+        entityname = (inpname.endsWith("module-info.class")) ? "module" : "class";
         FileInputStream filein = new FileInputStream(inpname);
         byte buf[] = new byte[filein.available()];
         filein.read(buf);
@@ -219,7 +221,6 @@ class ClassData {
                 case CONSTANT_FIELD:
                 case CONSTANT_METHOD:
                 case CONSTANT_NAMEANDTYPE:
-//                case CONSTANT_INVOKEDYNAMIC_TRANS:
                     cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
                     break;
                 case CONSTANT_INVOKEDYNAMIC:
@@ -427,13 +428,14 @@ class ClassData {
     }
 
     /**
-     * Processes JSR-308 <code>extended_annotation</code> structure.
+     * Processes 4.7.20 The RuntimeVisibleTypeAnnotations Attribute, 4.7.21 The RuntimeInvisibleTypeAnnotations Attribute
+     * <code>type_annotation</code> structure.
      */
-    void decodeTargetTypeAndRefInfo(DataInputStream in, int len, PrintWriter out, boolean isWildcard) throws IOException {
-        int tt = in.readUnsignedShort();
+    void decodeTargetTypeAndRefInfo(DataInputStream in, PrintWriter out, boolean isWildcard) throws IOException {
+        int tt = in.readUnsignedByte(); // [4.7.20] annotations[], type_annotation { u1 target_type; ...}
         TargetType target_type = targetTypeEnum(tt);
         InfoType info_type = target_type.infoType();
-        out_println(toHex(tt, 2) + ";  //  target_type: " + target_type.parseKey());
+        out_println(toHex(tt, 1) + ";  //  target_type: " + target_type.parseKey());
 
         switch (info_type) {
             case TYPEPARAM:          //[3.3.1] meth_type_param, class_type_param:
@@ -446,7 +448,7 @@ class ClassData {
                 out_println(toHex(in.readUnsignedByte(), 1) + ";  //  param_index");
                 out_println(toHex(in.readUnsignedByte(), 1) + ";  //  bound_index");
                 break;
-            case EMPTY:             //[3.3.4]  meth_reciever, meth_ret_type, field
+            case EMPTY:             //[3.3.4]  meth_receiver, meth_ret_type, field
                 // NOTE: reference_info is empty for this annotation's target
                 break;
             case METHODPARAM:       //[3.3.5]  meth_formal_param:
@@ -483,13 +485,14 @@ class ClassData {
                 out_println(toHex(tt, 1) + "; // invalid target_info: " + tt);
                 throw new ClassFormatError();
         }
-        int path_len = in.readUnsignedShort();
-        startArrayCmt(path_len, "type_paths");
-        for (int i = 0; i < path_len; i++) {
-            // print the type Path elements
-            out_println("{ " + toHex(in.readUnsignedByte(), 1)
-                    + "; " + toHex(in.readUnsignedByte(), 1)
-                    + "; } // type_path[" + i + "]");  // type path kind
+        // [4.7.20.2]
+        int path_length = in.readUnsignedByte();  // type_path { u1 path_length; ...}
+        startArrayCmt(path_length, "type_paths");
+        for (int i = 0; i < path_length; i++) {
+            // print the type_path elements
+            out_println("{ " + toHex(in.readUnsignedByte(), 1)  // { u1 type_path_kind;
+                    + "; " + toHex(in.readUnsignedByte(), 1)    //   u1 type_argument_index; }
+                    + "; } // type_path[" + i + "]");           // path[i]
         }
         out_end("}");
 
@@ -560,8 +563,9 @@ class ClassData {
         out_end("}  //  annotation");
     }
 
-    void decodeExtendedAnnotation(DataInputStream in, PrintWriter out) throws IOException {
-        out_begin("{  //  annotation");
+    void decodeTypeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
+        out_begin("{  //  type_annotation");
+        decodeTargetTypeAndRefInfo(in, out, false);
         decodeCPXAttr(in, 2, "field descriptor", out);
         int evp_num = in.readUnsignedShort();
         startArrayCmt(evp_num, "element_value_pairs");
@@ -575,8 +579,7 @@ class ClassData {
             }
         }
         out_end("}  //  element_value_pairs");
-        decodeTargetTypeAndRefInfo(in, 0, out, false);
-        out_end("}  //  annotation");
+        out_end("}  //  type_annotation");
     }
 
     void decodeBootstrapMethod(DataInputStream in, PrintWriter out) throws IOException {
@@ -778,12 +781,14 @@ class ClassData {
                     }
                     out_end("}");
                     break;
+                // 4.7.20 The RuntimeVisibleTypeAnnotations Attribute
+                // 4.7.21 The RuntimeInvisibleTypeAnnotations Attribute
                 case ATT_RuntimeInvisibleTypeAnnotations:
                 case ATT_RuntimeVisibleTypeAnnotations:
                     int ant_num = in.readUnsignedShort();
                     startArrayCmt(ant_num, "annotations");
                     for (int i = 0; i < ant_num; i++) {
-                        decodeExtendedAnnotation(in, out);
+                        decodeTypeAnnotation(in, out);
                         if (i < ant_num - 1) {
                             out_println(";");
                         }
@@ -821,6 +826,9 @@ class ClassData {
                     }
                     out_end("}");
                     break;
+                case ATT_Module:
+                    decodeModule(in, out);
+                    break;
                 default:
                     if (AttrName == null) {
                         printBytes(out, in, len);
@@ -841,6 +849,52 @@ class ClassData {
         }
         out_end("} // end " + endingComment);
         countedin.leave();
+    }
+
+    void decodeModule(DataInputStream in, PrintWriter out) throws IOException {
+        int count = in.readUnsignedShort(); // u2 requires_count
+        startArrayCmt(count, "requires");
+        for (int i = 0; i < count; i++) {
+            // u2 requires_index; u2 requires_flag
+            out_println("#" + in.readUnsignedShort() + " " + toHex(in.readUnsignedShort(), 2) + ";");
+        }
+        out_end("} // requires\n");
+
+//        count = in.readUnsignedShort();     // u2 permits_count
+//        startArrayCmt(count, "permits");
+//        for (int i = 0; i < count; i++) {
+//            // u2 permits_index
+//            out_println("#" + in.readUnsignedShort() + ";");
+//        }
+//        out_end("} // permits\n");
+
+        count = in.readUnsignedShort();     // u2 exports_count
+        startArrayCmt(count, "exports");
+        for (int i = 0; i < count; i++) {
+            // u2 exports_index
+            out_println("#" + in.readUnsignedShort());
+            int exports_to_count = in.readUnsignedShort();
+            startArrayCmt(exports_to_count, "to");
+            for (int j = 0; j < exports_to_count; j++) {
+                out_println("#" + in.readUnsignedShort() + ";");
+            }
+            out_end("}; // end to");
+        }
+        out_end("} // exports\n");
+        count = in.readUnsignedShort();     // u2 uses_count
+        startArrayCmt(count, "uses");
+        for (int i = 0; i < count; i++) {
+            // u2 uses_index
+            out_println("#" + in.readUnsignedShort() + ";");
+        }
+        out_end("} // uses\n");
+        count = in.readUnsignedShort(); // u2 provides_count
+        startArrayCmt(count, "provides");
+        for (int i = 0; i < count; i++) {
+            // u2 provides_index; u2 with_index
+            out_println("#" + in.readUnsignedShort() + " #" + in.readUnsignedShort() + ";");
+        }
+        out_end("} // provides\n");
     }
 
     void decodeAttrs(DataInputStream in, PrintWriter out) throws IOException {
@@ -883,7 +937,7 @@ class ClassData {
     }
 
     public void decodeClass() throws IOException {
-        String classname = "N/A";
+        String classname  = "N/A";
         // Read the header
         try {
             int magic = in.readInt();
@@ -892,16 +946,21 @@ class ClassData {
 
             // Read the constant pool
             readCP(in);
-            short access = in.readShort(); // dont care about sign
+            short access = in.readShort(); // don't care about sign
             int this_cpx = in.readUnsignedShort();
 
             try {
                 classname = (String) cpool[((Integer) cpool[this_cpx]).intValue()];
-                out_begin("class " + classname + " {");
+                int ind = classname.lastIndexOf("module-info");
+                if( ind > -1) {
+                    entityname = "module";
+                    classname = classname.substring(0, --ind < 0 ? 0 : ind ).replace('/', '.');
+                }
+                out_begin(String.format("%s %s {", entityname, classname));
             } catch (Exception e) {
                 classname = inpname;
                 out.println("// " + e.getMessage() + " while accessing classname");
-                out_begin("class " + classname + " { // source file name");
+                out_begin(String.format("%s %s { // source file name", entityname, classname));
             }
 
             out_print(toHex(magic, 4) + ";");
@@ -914,8 +973,8 @@ class ClassData {
 
             // Print the constant pool
             printCP(out);
-
-            out_println(toHex(access, 2) + "; // access");
+            out_println(toHex(access, 2) + "; // access"  +
+            ( printDetails ? " [" +  (" " + Modifiers.accessString(access, CF_Context.CTX_CLASS).toUpperCase()).replaceAll(" (\\S)"," ACC_$1") + "]" : "" ));
             out_println("#" + this_cpx + ";// this_cpx");
             int super_cpx = in.readUnsignedShort();
             out_println("#" + super_cpx + ";// super_cpx");
@@ -946,7 +1005,7 @@ class ClassData {
             out.println("//------- ClassFormatError:" + err.getMessage());
             printRestOfBytes();
         } finally {
-            out_end("} // end class " + classname);
+            out_end(String.format("} // end %s %s", entityname, classname));
         }
     } // end decodeClass()
     /* ====================================================== */

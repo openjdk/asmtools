@@ -23,14 +23,16 @@
 
 package org.openjdk.asmtools.jasm;
 
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MAJOR_VERSION;
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MINOR_VERSION;
-import static org.openjdk.asmtools.jasm.ConstantPool.*;
-import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
-import static org.openjdk.asmtools.jasm.Tables.*;
-import static org.openjdk.asmtools.jasm.JasmTokens.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+
+import static org.openjdk.asmtools.jasm.ConstantPool.*;
+import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MAJOR_VERSION;
+import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MINOR_VERSION;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
+import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
  * This class is used to parse Jasm statements and expressions.
@@ -83,15 +85,15 @@ class Parser extends ParseBase {
     private String                      pkg = null;
     private String                      pkgPrefix = "";
     private ArrayList<AnnotationData>   pkgAnnttns = null;
-    /* RemoveModules
-    private String mdl = null;
-    private ArrayList<AnnotationData> mdlAnnttns = null;
-     */
+    private String                      mdl = null;
+    private ArrayList<AnnotationData>   mdlAnnttns = null;
     private ArrayList<AnnotationData>   clsAnnttns = null;
     private ArrayList<AnnotationData>   memberAnnttns = null;
     private short                       major_version = DEFAULT_MAJOR_VERSION;
     private short                       minor_version = DEFAULT_MINOR_VERSION;
     private boolean                     explicitcp = false;
+    private ModuleAttr                  moduleAttribute;
+
 
     /** other parser components */
     private ParserAnnotation            annotParser = null;     // For parsing Annotations
@@ -130,8 +132,6 @@ class Parser extends ParseBase {
         annotParser.enableDebug(debugAnnot);
         instrParser.enableDebug(debugInstr);
     }
-
-
 
 
     /*---------------------------------------------*/
@@ -571,7 +571,6 @@ class Parser extends ParseBase {
                 case STRICT:       nextmod = ACC_STRICT;       break;
                 case ENUM:         nextmod = ACC_ENUM;         break;
                 case SYNTHETIC:    nextmod = ACC_SYNTHETIC;    break;
- //               case SYNTHETIC:    nextmod = SYNTHETIC_ATTRIBUTE;    break;
 
                 case DEPRECATED:   nextmod = DEPRECATED_ATTRIBUTE;   break;
                 case MANDATED:       nextmod = ACC_MANDATED;       break;
@@ -1214,7 +1213,278 @@ class Parser extends ParseBase {
         endClass(scanner.prevPos);
     } // end parseClass
 
-    private void parseClassMembers() throws IOException {
+  /**
+   * Parses a module, package or type name in a module statement(s)
+   */
+    private String parseTypeName() throws IOException {
+        String name = "";
+        while (true) {
+            if ( scanner.token == Token.IDENT ) {
+                name += String.format("%s%s", name.isEmpty() ? "" : "/", scanner.idValue);
+                scanner.scan();
+            } else {
+                env.error(scanner.pos, "name.expected");
+                throw new Scanner.SyntaxError();
+            }
+            if(scanner.token == Token.FIELD) {
+                scanner.scan();
+            } else {
+                break;
+            }
+        }
+        return name;
+    }
+
+  /**
+   * Parse a module declaration.
+   */
+  protected void parseModule() throws IOException {
+    debugStr("   [Parser.parseModule]:  Begin ");
+
+    if (cd == null) {
+      cd = new ClassData(env, major_version, minor_version);
+      pool = cd.pool;
+    }
+
+    // move the tokenizer to the identifier:
+    if (scanner.token == Token.MODULE) {
+      scanner.scan();
+    }
+
+    // Parse the module name
+    String name = parseTypeName();
+
+    if (scanner.token == Token.SEMICOLON) {
+      // drop the semi-colon following a name
+      scanner.scan();
+    }
+    if (name.isEmpty()) {
+      env.error(scanner.pos, "name.expected");
+      throw new Scanner.SyntaxError();
+    }
+    ConstCell this_cpx = pool.FindCellClassByName(name + "/module-info");
+    moduleAttribute    = new ModuleAttr(cd);
+
+    parseVersion();
+    scanner.expect(Token.LBRACE);
+
+    // Begin a new class as module
+    cd.initAsModule(this_cpx);
+
+    // Parse module statement(s)
+    while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
+      switch (scanner.token) {
+        case REQUIRES:
+          scanRequires(moduleAttribute);
+          break;
+        case EXPORTS:
+          scanExports(moduleAttribute);
+          break;
+        case USES:
+          scanUses(moduleAttribute);
+          break;
+        case PROVIDES:
+          scanProvidesWith(moduleAttribute);
+          break;
+        case SEMICOLON:
+          // Empty fields are allowed
+          scanner.scan();
+          break;
+        default:
+          env.error(scanner.pos, "module.statement.expected");
+          throw new Scanner.SyntaxError();
+      }  // end switch
+    } // while
+    scanner.expect(Token.RBRACE);
+    // End the module
+    endModule();
+  } // end parseModule
+
+  /**
+   * Scans  ModuleStatement: provides TypeName with TypeName ;
+   */
+  private void scanProvidesWith(ModuleAttr attr) throws IOException {
+    String s = "", impl = "";
+    boolean inWith = false;
+    scanner.scan();
+    while (scanner.token != Token.SEMICOLON) {
+      switch (scanner.token) {
+        case IDENT:
+          if (s.isEmpty() && !inWith) {
+            s = parseTypeName();
+            continue;
+          } else if (impl.isEmpty() && inWith) {
+            impl = parseTypeName();
+            continue;
+          }
+          env.error(scanner.pos, "provides.expected");
+          throw new Scanner.SyntaxError();
+        case WITH:
+          if (s.isEmpty() || inWith) {
+            env.error(scanner.pos, "provides.expected");
+            throw new Scanner.SyntaxError();
+          }
+          inWith = true;
+          break;
+        default:
+          env.error(scanner.pos, "provides.expected");
+          throw new Scanner.SyntaxError();
+      }
+      scanner.scan();
+    }
+    // Token.SEMICOLON
+    if (s.isEmpty() || impl.isEmpty()) {
+      env.error(scanner.pos, "provides.expected");
+      throw new Scanner.SyntaxError();
+    }
+    attr.provide(s, impl);
+    scanner.scan();
+  }
+
+  /**
+   * Scans  ModuleStatement: uses TypeName ;
+   */
+  private void scanUses(ModuleAttr attr) throws IOException {
+    String tn = "";
+    scanner.scan();
+    while (scanner.token != Token.SEMICOLON) {
+      switch (scanner.token) {
+        case IDENT:
+          if (!tn.isEmpty()) {
+            env.error(scanner.pos, "uses.expected");
+            throw new Scanner.SyntaxError();
+          }
+          tn = parseTypeName();
+          continue;
+        default:
+          env.error(scanner.pos, "uses.expected");
+          throw new Scanner.SyntaxError();
+      }
+    }
+    // Token.SEMICOLON
+    if (tn.isEmpty()) {
+      env.error(scanner.pos, "uses.expected");
+      throw new Scanner.SyntaxError();
+    }
+    attr.use(tn);
+    scanner.scan();
+  }
+
+  /**
+   * Scans  ModuleStatement: exports PackageName [to ModuleName {, ModuleName}] ;
+   */
+  private void scanExports(ModuleAttr attr) throws IOException {
+    String pn = "";
+    HashSet<String> mn = new HashSet<>();
+    scanner.scan();
+    while (scanner.token != Token.SEMICOLON) {
+      switch (scanner.token) {
+        case IDENT:
+          if (!pn.isEmpty()) {
+            env.error(scanner.pos, "exports.expected");
+            throw new Scanner.SyntaxError();
+          }
+          pn = parseTypeName();
+          continue;
+        case TO:
+          if (pn.isEmpty()) {
+            env.error(scanner.pos, "exports.expected");
+            throw new Scanner.SyntaxError();
+          }
+          mn = scanTo();
+          continue;
+        default:
+          env.error(scanner.pos, "exports.expected");
+          throw new Scanner.SyntaxError();
+      }
+    }
+    // Token.SEMICOLON
+    if (pn.isEmpty()) {
+      env.error(scanner.pos, "exports.expected");
+      throw new Scanner.SyntaxError();
+    }
+    attr.exports(pn, mn);
+    scanner.scan();
+  }
+
+  /**
+   * Scans the "to" part of ModuleStatement: exports PackageName [to ModuleName {, ModuleName}] ;
+   * : [to ModuleName {, ModuleName}] ;
+   */
+  private HashSet<String> scanTo() throws IOException {
+    HashSet<String> names = new HashSet<>();
+    boolean nextID = true;
+    scanner.scan();
+    while (scanner.token != Token.SEMICOLON) {
+      switch (scanner.token) {
+        case COMMA:
+          if (nextID) {
+            env.error(scanner.pos, "exports.expected");
+            throw new Scanner.SyntaxError();
+          }
+          nextID = true;
+          break;
+        case IDENT:
+          if (!nextID) {
+            env.error(scanner.pos, "exports.expected");
+            throw new Scanner.SyntaxError();
+          }
+          names.add(parseTypeName());
+          nextID = false;
+          continue;
+        default:
+          env.error(scanner.pos, "exports.expected");
+          throw new Scanner.SyntaxError();
+      }
+      scanner.scan();
+    }
+    // Token.SEMICOLON
+    if (names.isEmpty()) {
+      env.error(scanner.pos, "exports.expected");
+      throw new Scanner.SyntaxError();
+    }
+    return names;
+  }
+
+  /**
+   * Scans  ModuleStatement: requires [public] ModuleName ;
+   */
+  private void scanRequires(ModuleAttr attr) throws IOException {
+    boolean reexports = false;
+    String mn = "";
+    scanner.scan();
+    while (scanner.token != Token.SEMICOLON) {
+      switch (scanner.token) {
+        case IDENT:
+          if (!mn.isEmpty()) {
+            env.error(scanner.pos, "requires.expected");
+            throw new Scanner.SyntaxError();
+          }
+          mn = parseTypeName();
+          continue;
+          case PUBLIC:
+          if (reexports || !mn.isEmpty()) {
+            env.error(scanner.pos, "requires.expected");
+            throw new Scanner.SyntaxError();
+          }
+          reexports = true;
+          break;
+        default:
+          env.error(scanner.pos, "requires.expected");
+          throw new Scanner.SyntaxError();
+      }
+      scanner.scan();
+    }
+    // Token.SEMICOLON
+    if (mn.isEmpty()) {
+      env.error(scanner.pos, "requires.expected");
+      throw new Scanner.SyntaxError();
+    }
+    attr.require(mn, reexports);
+    scanner.scan();
+  }
+
+  private void parseClassMembers() throws IOException {
         debugScan("[Parser.parseClassMembers]:  Begin ");
         // Parse annotations
         if (scanner.token == Token.ANNOTATION) {
@@ -1303,6 +1573,15 @@ class Parser extends ParseBase {
         }
 
         cd.endClass();
+        clsDataList.add(cd);
+        cd = null;
+    }
+
+    /**
+     * End module
+     */
+    protected void endModule() {
+        cd.endModule(moduleAttribute);
         clsDataList.add(cd);
         cd = null;
     }
@@ -1417,29 +1696,34 @@ class Parser extends ParseBase {
                     int mod = scanModifiers();
                     if (mod == 0) {
                         switch (scanner.token) {
-                        case CLASS:
-                        case CPINDEX:
-                        case STRINGVAL:
-                        case IDENT:
-                          // this is a class declaration anyway
-                          break;
-                        case SEMICOLON:
-                          // Bogus semi colon
-                          scanner.scan();
-                          continue;
-                        default:
-                          // no class declaration found
-                          debugScan(" [Parser.parseFile]: ");
-                          env.error(scanner.pos, "toplevel.expected");
-                          throw new Scanner.SyntaxError();
+                            case MODULE:
+                            case CLASS:
+                            case CPINDEX:
+                            case STRINGVAL:
+                            case IDENT:
+                                // this is a class declaration anyway
+                                break;
+                            case SEMICOLON:
+                                // Bogus semi colon
+                                scanner.scan();
+                                continue;
+                            default:
+                                // no class declaration found
+                                debugScan(" [Parser.parseFile]: ");
+                                env.error(scanner.pos, "toplevel.expected");
+                                throw new Scanner.SyntaxError();
                         }
                     } else if (Modifiers.isInterface(mod) && (scanner.token != Token.CLASS)) {
                         // rare syntactic sugar:
                         // interface <ident> == abstract interface class <ident>
                         mod |= ACC_ABSTRACT;
                     }
-                    parseClass(mod);
+                    if( scanner.token == Token.MODULE )
+                        parseModule();
+                    else
+                        parseClass(mod);
                     clsAnnttns = null;
+
                 } catch (Scanner.SyntaxError e) {
                     // KTL
                     env.traceln("^^^^^^^ Syntax Error ^^^^^^^^^^^^");

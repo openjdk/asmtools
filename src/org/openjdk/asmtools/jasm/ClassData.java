@@ -22,11 +22,12 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.io.*;
+import java.util.ArrayList;
+
 import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MAJOR_VERSION;
 import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MINOR_VERSION;
 import static org.openjdk.asmtools.jasm.Tables.*;
-import java.io.*;
-import java.util.ArrayList;
 
 /**
  * ClassData
@@ -52,9 +53,10 @@ class ClassData extends MemberData {
     ArrayList<MethodData> methods = new ArrayList<>();
     DataVectorAttr<InnerClassData> innerClasses = null;
     DataVectorAttr<BootstrapMethodData> bootstrapMethodsAttr = null;
-    String mdl = null;
+    ModuleAttr moduleAttribute = null;
     Environment env;
     protected ConstantPool pool;
+
 
     private static final String DEFAULT_EXTENSION = ".class";
     String fileExtension = DEFAULT_EXTENSION;
@@ -86,6 +88,12 @@ class ClassData extends MemberData {
         this.interfaces = interfaces;
     }
 
+    public final void initAsModule(ConstantPool.ConstCell me) {
+        this.access = RuntimeConstants.ACC_MODULE;
+        this.me = me;
+        this.father = new ConstantPool.ConstCell(0);
+    }
+
     /**
      * default constructor
      *
@@ -100,6 +108,7 @@ class ClassData extends MemberData {
         cdos = new CDOutputStream();
 
     }
+
 
     /**
      * canonical default constructor
@@ -310,6 +319,13 @@ class ClassData extends MemberData {
         }
     }
 
+    public void endModule(ModuleAttr moduleAttr) {
+        moduleAttribute = moduleAttr.build();
+        pool.NumberizePool();
+        pool.CheckGlobals();
+        myClassName = "module-info";
+    }
+
     private void printInnerClasses() {
         if (innerClasses != null) {
             int i = 1;
@@ -370,32 +386,29 @@ class ClassData extends MemberData {
             out.writeShort(0);
         }
 
-        // Write the attributes
         DataVector attrs = new DataVector();
-        attrs.add(sourceFileNameAttr);
-        if (innerClasses != null) {
-            attrs.add(innerClasses);
-        }
-        if (syntheticAttr != null) {
-            attrs.add(syntheticAttr);
-        }
-        if (deprecatedAttr != null) {
-            attrs.add(deprecatedAttr);
-        }
-        if (annotAttrVis != null) {
-            attrs.add(annotAttrVis);
-        }
-        if (annotAttrInv != null) {
-            attrs.add(annotAttrInv);
-        }
-        if (type_annotAttrVis != null) {
-            attrs.add(type_annotAttrVis);
-        }
-        if (type_annotAttrInv != null) {
-            attrs.add(type_annotAttrInv);
-        }
-        if (bootstrapMethodsAttr != null) {
-            attrs.add(bootstrapMethodsAttr);
+
+        // Write the attributes
+        if( moduleAttribute != null ) {
+            attrs.add(moduleAttribute);
+        } else {
+            attrs.add(sourceFileNameAttr);
+            if (innerClasses != null)
+                attrs.add(innerClasses);
+            if (syntheticAttr != null)
+                attrs.add(syntheticAttr);
+            if (deprecatedAttr != null)
+                attrs.add(deprecatedAttr);
+            if (annotAttrVis != null)
+                attrs.add(annotAttrVis);
+            if (annotAttrInv != null)
+                attrs.add(annotAttrInv);
+            if (type_annotAttrVis != null)
+                attrs.add(type_annotAttrVis);
+            if (type_annotAttrInv != null)
+                attrs.add(type_annotAttrInv);
+            if (bootstrapMethodsAttr != null)
+                attrs.add(bootstrapMethodsAttr);
         }
         attrs.write(out);
     } // end ClassData.write()

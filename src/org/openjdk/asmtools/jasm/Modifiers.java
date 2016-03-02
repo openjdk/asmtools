@@ -40,14 +40,16 @@ public class Modifiers {
     public static final int MM_ATTR        = SYNTHETIC_ATTRIBUTE | DEPRECATED_ATTRIBUTE;
 
     public static final int MM_INTRF       = ACC_PUBLIC | ACC_ABSTRACT | ACC_INTERFACE | MM_ATTR ; // | ACC_MODULE  ;
-    public static final int MM_CLASS       = ACC_PUBLIC | ACC_FINAL|  ACC_SUPER | ACC_ABSTRACT | ACC_SYNTHETIC  | ACC_ANNOTATION | ACC_ENUM | MM_ATTR ; // |  ACC_MODULE ;
+    public static final int MM_CLASS       = ACC_PUBLIC | ACC_FINAL|  ACC_SUPER | ACC_ABSTRACT | ACC_SYNTHETIC  | ACC_ANNOTATION | ACC_ENUM | MM_ATTR |  ACC_MODULE ;
     public static final int MM_ACCESS      = ACC_PUBLIC | ACC_PRIVATE | ACC_PROTECTED; // | ACC_MODULE;
     public static final int MM_FIELD       = MM_ACCESS | ACC_STATIC | ACC_FINAL |  ACC_VOLATILE | ACC_TRANSIENT |  ACC_SYNTHETIC | ACC_ENUM | MM_ATTR ; // |  ACC_MODULE ;
-    public static final int MM_I_METHOD    = ACC_ABSTRACT | ACC_PUBLIC | ACC_VARARGS | ACC_BRIDGE | ACC_SYNTHETIC ; // interface method
+    public static final int MM_I_METHOD    = ACC_ABSTRACT | ACC_PUBLIC | ACC_PRIVATE | ACC_STATIC | ACC_VARARGS | ACC_BRIDGE | ACC_SYNTHETIC ; // interface method
     public static final int MM_A_METHOD    = MM_ACCESS | ACC_ABSTRACT | MM_ATTR;
     public static final int MM_N_METHOD    = MM_ACCESS | ACC_STRICT | ACC_VARARGS | ACC_SYNTHETIC | MM_ATTR;  // <init>
     public static final int MM_METHOD      = MM_ACCESS | ACC_STATIC | ACC_FINAL | ACC_SYNCHRONIZED |  ACC_BRIDGE | ACC_VARARGS | ACC_NATIVE | ACC_ABSTRACT |  ACC_STRICT | ACC_SYNTHETIC | MM_ATTR ; // |  ACC_MODULE ;
     public static final int MM_INNERCLASS  = MM_ACCESS | ACC_STATIC | ACC_FINAL | ACC_SUPER | ACC_INTERFACE | ACC_ABSTRACT | ACC_SYNTHETIC | ACC_ANNOTATION | ACC_ENUM | MM_ATTR ; // |  ACC_MODULE ;
+    public static final int MM_REQUIRES    = ACC_REEXPORT | ACC_SYNTHETIC | ACC_MANDATED ;
+
 
     private Modifiers() {
     }
@@ -57,6 +59,10 @@ public class Modifiers {
             ref = new Modifiers();
         }
         return ref;
+    }
+
+    public static boolean validRequires(int mod) {
+        return (mod & ~MM_REQUIRES) == 0;
     }
 
     public static boolean validClass(int mod) {
@@ -87,9 +93,9 @@ public class Modifiers {
         return (mod & ~MM_N_METHOD) == 0;
     }
 
-    public static boolean validInterfaceMethod(int mod) {
-//        return (mod & ~MM_ATTR) == MM_I_METHOD;
-        return ((mod & ~MM_I_METHOD) == 0) && isPublic(mod) && isAbstract(mod);
+    public static boolean validInterfaceMethod(int mod, ClassData cd) {
+        return ((mod & ~MM_I_METHOD) == 0) &&
+            (cd.major_version >= 52 || isPublic(mod) && isAbstract(mod) && !isStatic(mod));
     }
 
     public static boolean validInterfaceField(int mod) {
@@ -155,15 +161,10 @@ public class Modifiers {
     public static boolean isSuper(int mod) {
         return (mod & ACC_SUPER) != 0;
     }
-    /*
-     public static boolean isModule(int mod) {
-     return (mod & ACC_MODULE)!=0;
-     }
-     * */
 
-    public static boolean isMandated(int mod) {
-        return (mod & ACC_MANDATED) != 0;
-    }
+    public static boolean isModule(int mod) { return (mod & ACC_MODULE)!=0; }
+
+    public static boolean isMandated(int mod) { return (mod & ACC_MANDATED) != 0; }
 
     public static boolean isSynchronized(int mod) {
         return (mod & ACC_SYNCHRONIZED) != 0;
@@ -193,6 +194,7 @@ public class Modifiers {
         return isSyntheticPseudoMod(mod) || isDeprecatedPseudoMod(mod);
     }
 
+    public static boolean isReexport(int mod) { return (mod & ACC_REEXPORT) != 0;  }
     /*
      * Checks that only one (or none) of the Access flags are set.
      */
@@ -288,7 +290,7 @@ public class Modifiers {
             if (cd.isInterface()) {
                 if (is_init) {
                     env.error(pos, "warn.init.in_int");
-                } else if (!validInterfaceMethod(mod)) {
+                } else if (!validInterfaceMethod(mod, cd)) {
                     int badflags = (mod & ~MM_I_METHOD);
                     env.error(pos, "warn.invalid.modifier.intmth", toString(badflags, CF_Context.CTX_METHOD)
                             + "   *****" + toString(mod, CF_Context.CTX_METHOD) + "*****");
@@ -314,7 +316,6 @@ public class Modifiers {
                 }
             }
         }
-
     }
 
     /**
@@ -338,8 +339,9 @@ public class Modifiers {
 
     private static StringBuffer _accessString(int mod, CF_Context context) {
         StringBuffer sb = new StringBuffer();
- //       if (isModule(mod))
-        //           sb.append(Tables.keywordName(Tables.Module) + " ");
+        if (context == CF_Context.CTX_CLASS && isModule(mod)) {
+            sb.append(Token.MODULE.parsekey() + " ");
+        }
         if (isPublic(mod)) {
             sb.append(Token.PUBLIC.parsekey() + " ");
         }
@@ -398,7 +400,7 @@ public class Modifiers {
         if (isEnum(mod)) {
             sb.append(Token.ENUM.parsekey() + " ");
         }
-        if (isMandated(mod)) {
+        if (context == CF_Context.CTX_METHOD && isMandated(mod)) {
             sb.append(Token.MANDATED.parsekey() + " ");
         }
 //      We don't have print identifiers for annotation flags

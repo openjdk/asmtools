@@ -208,7 +208,8 @@ public class Tables {
         ATT_BootstrapMethods                        (21, "ATT_BootstrapMethods", "BootstrapMethods"),
         ATT_RuntimeVisibleTypeAnnotations           (22, "ATT_RuntimeVisibleTypeAnnotations", "RuntimeVisibleTypeAnnotations"),
         ATT_RuntimeInvisibleTypeAnnotations         (23, "ATT_RuntimeInvisibleTypeAnnotations", "RuntimeInvisibleTypeAnnotations"),
-        ATT_MethodParameters                        (24, "ATT_MethodParameters", "MethodParameters");
+        ATT_MethodParameters                        (24, "ATT_MethodParameters", "MethodParameters"),
+        ATT_Module                                  (25, "ATT_Module", "Module");
 
         private final Integer value;
         private final String printval;

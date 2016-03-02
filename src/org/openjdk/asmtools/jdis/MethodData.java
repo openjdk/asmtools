@@ -23,14 +23,16 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.jasm.Modifiers;
-import static org.openjdk.asmtools.jasm.Tables.*;
-import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+import static org.openjdk.asmtools.jasm.Tables.AttrTag;
+import static org.openjdk.asmtools.jasm.Tables.CF_Context;
+
 /**
- *
  * Method data for method members in a class of the Java Disassembler
  */
 public class MethodData extends MemberData {

@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -772,6 +773,38 @@ public class ConstantPool {
 
     /**
      *
+     * getModuleName
+     *
+     * Gets a Java module name from a ConstantClass from the CP at a given index
+     * where this_class is presented in the form: [Module's name in internal form (JVMS 4.2.1)]/module-info
+     * Traditionally, if this_class indicates P/Q/R, then the ClassFile occupies a file R.class in a directory representing
+     * the package P.Q. Similarly, if this_class indicates P/Q/module-info, then the ClassFile occupies a file module-info.class
+     * in a directory representing the module P.Q.
+     *
+     * Returns the Java module name, or an empty string in any other case.
+     */
+    public String getModuleName(int cpx) {
+        String this_class = getClassName(cpx);
+        if(this_class.equals("#" + cpx)) {
+            return "";
+        }
+        return _getModuleName(this_class);
+    }
+
+  /**
+   * _getModuleName
+   *
+   * Helper for getting Module's name from the this_class string.
+   *
+   * Returns an empty string if this_class is not [Module's name in internal form (JVMS 4.2.1)]/module-info
+   */
+    private String _getModuleName(String this_class) {
+        int i = this_class.lastIndexOf("/module-info");
+        return (i>0) ? this_class.substring(0,i).replace('/', '.') : "";
+    }
+
+    /**
+     *
      * getClassName
      *
      * Safely gets a Java class name from a ConstantClass from a CPX2 constant pool
@@ -929,6 +962,7 @@ public class ConstantPool {
             return "#" + cpx;
         }
         switch (cns.tag) {
+
             case CONSTANT_METHODHANDLE:
             case CONSTANT_INVOKEDYNAMIC:
 //            case CONSTANT_INVOKEDYNAMIC_TRANS:
@@ -939,6 +973,12 @@ public class ConstantPool {
                 if (cns2.value1 == cd.this_cpx) {
                     cpx = cns2.value2;
                 }
+            }
+        }
+        if(cns.tag == TAG.CONSTANT_CLASS) {
+            String moduleName = _getModuleName(StringValue(cpx));
+            if( !moduleName.isEmpty() ) {
+                return " " + moduleName;
             }
         }
         return cns.tag.tagname + " " + StringValue(cpx);

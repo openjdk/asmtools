@@ -22,10 +22,11 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import static org.openjdk.asmtools.jasm.JasmTokens.*;
-import static org.openjdk.asmtools.jasm.Tables.*;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
  * ParserCP
@@ -584,4 +585,5 @@ d2l:            {
             return parser.pool.FindCell(ref);
         }
     } // end parseConstRef
+
 }
