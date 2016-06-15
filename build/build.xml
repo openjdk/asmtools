@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
 This code is free software; you can redistribute it and/or modify it
@@ -296,7 +296,7 @@ Other values for TARGET are:
             destdir="${build.javadoc.dir}"
             author="false"
             version="false"
-            additionalparam="-breakiterator"
+            additionalparam="-breakiterator -Xdoclint:none"
         >
             <classpath>
                 <path path="${javac.classpath}"/>
