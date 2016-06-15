@@ -238,6 +238,10 @@ Other values for TARGET are:
              basedir="${build.classes.dir}">
             <manifest>
                 <attribute name="Main-Class" value="org.openjdk.asmtools.Main"/>
+                <attribute name="Implementation-Title" value="${PRODUCT_NAME_LONG}"/>
+                <attribute name="Implementation-Version" value="${PRODUCT_VERSION}"/>
+                <attribute name="Build-Version" value="${PRODUCT_VERSION}"/>
+                <attribute name="Build-Number" value="${PRODUCT_BUILDNUMBER}"/>
             </manifest>
         </jar>
     </target>
