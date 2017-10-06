@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -450,12 +450,15 @@ d2l:            {
                     ConstantPool.ConstCell NapeCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
 
                     ArrayList<ConstantPool.ConstCell> bsm_args = new ArrayList<>(256);
-                    while (scanner.token != Token.SEMICOLON) {
-                        if (scanner.token == Token.COMMA) {
-                            scanner.scan();
-                        }
+
+                    for (boolean sep = false; scanner.token != Token.SEMICOLON; sep = true) {
+                        if (sep) scanner.expect(Token.COMMA);
+                        bsm_args.add(parseConstRef(null));
+                        scanner.idValue = null; // Clear tag
                         bsm_args.add(parseConstRef(null));
                     }
+
+
                     BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
                     parser.cd.addBootstrapMethod(bsmData);
                     obj = new ConstantPool.ConstValue_IndyPair(bsmData, NapeCell);

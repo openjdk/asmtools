@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,6 +48,7 @@ public class Scanner {
      * End of input
      */
     public static final int EOF = -1;
+    public static final int LBRACE = 123; // "{"
     private boolean debugCP = false;
     private int numCPentrs = 0;
 
@@ -471,7 +472,12 @@ numberLoop:
                 }
                 return n;
             }
-
+            case '@':
+                readCh();
+                return '@';
+            case ':':
+                readCh();
+                return ':';
             case 'r':
                 readCh();
                 return '\r';
@@ -530,7 +536,11 @@ loop:
                 case '\\': {
                     int c = scanEscapeChar();
                     if (c >= 0) {
-                        putc((char) c);
+                        char ch = (char)c;
+                        if ( ch == '@' || ch == ':' || ch == '\\') {
+                            putc('\\');
+                        }
+                        putc(ch);
                     }
                     break;
                 }
@@ -638,6 +648,19 @@ loop:
             }
         }
     } // end scanIdentifier
+
+    // skip till symbol
+    protected void skipTill(int sym) throws IOException {
+        while (true) {
+            if( ch == EOF ) {
+                env.error(pos, "eof.in.comment");
+                return;
+            } else if (ch == sym) {
+                return;
+            }
+            readCh();
+        }
+    }
 
     protected int xscan() throws IOException {
         int retPos = pos;

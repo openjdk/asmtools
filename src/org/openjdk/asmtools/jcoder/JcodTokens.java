@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -292,7 +292,6 @@ public class JcodTokens {
         CONSTANT_FLOAT                      (4, "CONSTANT_FLOAT", "float"),
         CONSTANT_LONG                       (5, "CONSTANT_LONG", "long"),
         CONSTANT_DOUBLE                     (6, "CONSTANT_DOUBLE", "double"),
-
         // Class is removed for JavaCard (???)
         CONSTANT_CLASS                      (7, "CONSTANT_CLASS", "class"),
         CONSTANT_STRING                     (8, "CONSTANT_STRING", "String"),
@@ -300,16 +299,17 @@ public class JcodTokens {
         CONSTANT_METHOD                     (10, "CONSTANT_METHOD", "Method"),
         CONSTANT_INTERFACEMETHOD            (11, "CONSTANT_INTERFACEMETHOD", "InterfaceMethod"),
         CONSTANT_NAMEANDTYPE                (12, "CONSTANT_NAMEANDTYPE", "NameAndType"),
-
         // added for JavaCard
-        CONSTANT_PACKAGE                    (13, "CONSTANT_PACKAGE", "package"),  // in javacard export file
+        CONSTANT_JAVACARD_PACKAGE           (13, "CONSTANT_PACKAGE", "package"),  // in javacard export file
         // Constant 14 reserved
         CONSTANT_METHODHANDLE               (15, "CONSTANT_METHODHANDLE", "MethodHandle"),
         CONSTANT_METHODTYPE                 (16, "CONSTANT_METHODTYPE", "MethodType"),
-        CONSTANT_INVOKEDYNAMIC_TRANS        (17, "CONSTANT_INVOKEDYNAMIC_TRANS", "InvokeDynamicTrans"),
-        CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic");
+      // Constant 17 reserved
+        CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic"),
+        CONSTANT_MODULE                     (19, "CONSTANT_MODULE",  "Module"),
+        CONSTANT_MODULE_PACKAGE             (20, "CONSTANT_PACKAGE", "Package");
 
-        public static final int maxTag = 18;
+        public static final int maxTag = 20;
 
         private final int value;
         private final String parseKey;
@@ -368,7 +368,7 @@ public class JcodTokens {
         ConstantTypes.put(tt.value, tt);
     }
 
-    static int constValue(String stringValue) {
+    public static int constValue(String stringValue) {
         ConstType Val = constType(stringValue);
         int val = -1;
 

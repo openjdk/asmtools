@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ public class Main {
     /**
      * Name of the program.
      */
-    String program;
+    public static String programName;
     /**
      * The stream where error message are printed.
      */
@@ -58,14 +58,14 @@ public class Main {
      */
     public Main(PrintWriter out, String program) {
         this.out = out;
-        this.program = program;
+        Main.programName = program;
     }
 
     /**
      * Top level error message
      */
     public void error(String msg) {
-        System.err.println(program + ": " + msg);
+        System.err.println(programName + ": " + msg);
     }
 
     /**
@@ -122,7 +122,6 @@ public class Main {
             return false;
         }
 
-disasm:
         for (String inpname : vj) {
             if (inpname == null) {
                 continue;
@@ -131,14 +130,16 @@ disasm:
                 ClassData cc = new ClassData(out);
                 cc.read(new DataInputStream(new FileInputStream(inpname)));
                 cc.print();
-                continue disasm;
+                continue;
             } catch (FileNotFoundException ee) {
                 error(i18n.getString("jdis.error.cannot_read", inpname));
             } catch (Error ee) {
-                ee.printStackTrace();
+                if (options.contains(Options.PR.DEBUG))
+                    ee.printStackTrace();
                 error(i18n.getString("jdis.error.fatal_error", inpname));
             } catch (Exception ee) {
-                ee.printStackTrace();
+                if (options.contains(Options.PR.DEBUG))
+                    ee.printStackTrace();
                 error(i18n.getString("jdis.error.fatal_exception", inpname));
             }
             return false;

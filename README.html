@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 
-  Copyright (c) 2008, 2014, Oracle and/or its affiliates. All rights reserved.
+  Copyright (c) 2008, 2017, Oracle and/or its affiliates. All rights reserved.
   DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
   This code is free software; you can redistribute it and/or modify it
@@ -106,7 +106,7 @@ table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
       <h1>Release Notes</h1>
       <h2>AsmTools</h2>
       </h2>
-      <h2>November 2014</h2>
+      <h2>October 2017</h2>
       </center>
       </td>
     </tr>
@@ -190,7 +190,7 @@ See the (
 <p>
 Using ASM Tools requires a properly configured, certified Java
 Platform, Standard Edition (Java SE&#8482; platform) runtime environment
-version 1.7 or later, or a Java SE platform 7.0 runtime environment.
+version 1.8 or later, or a Java SE platform 8.0 runtime environment.
 </p>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <a name="installation"></a>
@@ -316,9 +316,9 @@ OpenJDK ASM Tools</a> main page for updated and more detailed information.
 <p><a name="building" id="building"></a></p>
 <h2>Building the Sources</h2>
 <p>
-Building the sources requires Ant version 1.8 or later (1.8.2 is current at the
+Building the sources requires Ant version 1.8 or later (1.10.1 is current at the
 time of writing), and the built-in build is compatible with using an IDE.
-The sources are designed for Java 7 and if you invoke <code>ant</code> with this
+The sources are designed for Java 8 and if you invoke <code>ant</code> with this
 runtime, your chance of encountering an abnormal conditions due to your runtime
 or compiler (or javadoc) version.
 </p>
@@ -328,7 +328,7 @@ General requirements:
 </p>
 <ul>
 <li>ant, version 1.8 or later
-<li>Java 7 runtime and compiler (minimum and recommended)
+<li>Java 8 runtime and compiler (minimum and recommended)
 <li>10MB free disk space (3MB for source tree, 7MB for build output)
 </ul>
 
@@ -348,7 +348,7 @@ A common variation of the build command to force <code>ant</code> to use a parti
 installation of Java on your machine:
 </p>
 <pre>
-# JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home ANTHOME=/usr/share/ant ant
+# JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home ANTHOME=/usr/share/ant ant
 </pre>
 This example for common *nix shells (<code>zsh, bash, sh</code>), alter it as needed for your
 command environment.  You can test your invocation of <code>ant</code> by running it with
@@ -368,7 +368,7 @@ specify in your IDE for building.
 <hr>
 
 <hr noshade="noshade">
-<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2014, Oracle and/or its affiliates. All rights reserved.
+<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2017, Oracle and/or its affiliates. All rights reserved.
     Use is subject to license terms.The majority of the Assember Tools project is released under the <A
         HREF="http://openjdk.java.net/legal/gplv2+ce.html">GNU
         General Public License Version 2 (GPLv2)</A></p>

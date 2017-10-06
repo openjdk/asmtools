@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
@@ -126,10 +127,12 @@ public class Tables {
         // Constant 14 reserved
         CONSTANT_METHODHANDLE               (15, "CONSTANT_METHODHANDLE", "MethodHandle"),
         CONSTANT_METHODTYPE                 (16, "CONSTANT_METHODTYPE", "MethodType"),
-        CONSTANT_INVOKEDYNAMIC_TRANS        (17, "CONSTANT_INVOKEDYNAMIC_TRANS", "InvokeDynamicTrans"),
-        CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic");
+        // Constant 17 reserved
+        CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic"),
+        CONSTANT_MODULE                     (19, "CONSTANT_MODULE",        "Module"),
+        CONSTANT_PACKAGE                    (20, "CONSTANT_PACKAGE",       "Package");
 
-        static final public int maxTag = 18;
+        static final public int maxTag = 20;
 
         private final int value;
         private final String parseKey;
@@ -209,7 +212,13 @@ public class Tables {
         ATT_RuntimeVisibleTypeAnnotations           (22, "ATT_RuntimeVisibleTypeAnnotations", "RuntimeVisibleTypeAnnotations"),
         ATT_RuntimeInvisibleTypeAnnotations         (23, "ATT_RuntimeInvisibleTypeAnnotations", "RuntimeInvisibleTypeAnnotations"),
         ATT_MethodParameters                        (24, "ATT_MethodParameters", "MethodParameters"),
-        ATT_Module                                  (25, "ATT_Module", "Module");
+        ATT_Module                                  (25, "ATT_Module",  "Module"),
+        ATT_Version                                 (26, "ATT_Version", "Version"),
+        ATT_TargetPlatform                          (27, "ATT_TargetPlatform", "TargetPlatform"),
+        ATT_MainClass                               (28, "ATT_MainClass", "MainClass"),
+        ATT_ModulePackages                          (29, "ATT_ModulePackages", "ModulePackages"),
+        ATT_ModuleMainClass                         (30, "ATT_ModuleMainClass", "ModuleMainClass"),
+        ATT_ModuleTarget                            (31, "ATT_ModuleTarget", "ModuleTarget");
 
         private final Integer value;
         private final String printval;
@@ -390,21 +399,22 @@ public class Tables {
      */
     static public enum AnnotElemType {
 
-        AE_BYTE      ('B', "byte"),
-        AE_CHAR      ('C', "char"),
-        AE_SHORT     ('S', "short"),
-        AE_INT       ('I', "int"),
-        AE_LONG      ('J', "long"),
-        AE_FLOAT     ('F', "float"),
-        AE_DOUBLE    ('D', "double"),
-        AE_BOOLEAN   ('Z', "boolean"),
-        AE_STRING    ('s', "string"),
-        AE_ENUM      ('e', "enum"),
-        AE_CLASS     ('c', "class"),
+        AE_BYTE         ('B', "byte"),
+        AE_CHAR         ('C', "char"),
+        AE_SHORT        ('S', "short"),
+        AE_INT          ('I', "int"),
+        AE_LONG         ('J', "long"),
+        AE_FLOAT        ('F', "float"),
+        AE_DOUBLE       ('D', "double"),
+        AE_BOOLEAN      ('Z', "boolean"),
+        AE_STRING       ('s', "string"),
+        AE_ENUM         ('e', "enum"),
+        AE_CLASS        ('c', "class"),
         AE_ANNOTATION   ('@', "annotation"),
-        AE_ARRAY   ('[', "array");
+        AE_ARRAY        ('[', "array"),
+        AE_UNKNOWN      ((char)0, "unknown");
 
-        private final char value;
+        private char value;
         private final String printval;
 
         AnnotElemType(char val, String print) {
@@ -431,7 +441,11 @@ public class Tables {
     }
 
     public static AnnotElemType annotElemType(char subtag) {
-        return AnnotElemTypes.get(subtag);
+        AnnotElemType type = AnnotElemTypes.get(subtag);
+        if ( type == null ) {
+            type = AnnotElemType.AE_UNKNOWN;
+        }
+        return type;
     }
 
     public static String annotElemTypeName(char subtag) {
@@ -459,17 +473,18 @@ public class Tables {
      */
     static public enum StackMapType {
         /* Type codes for StackMap attribute */
-        ITEM_Bogus      (0, "bogus",    "B"),   // an unknown or uninitialized value
-        ITEM_Integer    (1, "int",      "I"),   // a 32-bit integer
-        ITEM_Float      (2, "float",    "F"),   // not used
-        ITEM_Double     (3, "double",   "D"),   // not used
-        ITEM_Long       (4, "long",     "L"),   // a 64-bit integer
-        ITEM_Null       (5, "null",     "N"),   // the type of null
-        ITEM_InitObject (6, "this",     "IO"),  // "this" in constructor
-        ITEM_Object     (7, "CP",       "O"),   // followed by 2-byte index of class name
-        ITEM_NewObject  (8, "at",       "NO");  // followed by 2-byte ref to "new"
+        ITEM_Bogus      (0,     "bogus",    "B"),           // an unknown or uninitialized value
+        ITEM_Integer    (1,     "int",      "I"),           // a 32-bit integer
+        ITEM_Float      (2,     "float",    "F"),           // not used
+        ITEM_Double     (3,     "double",   "D"),           // not used
+        ITEM_Long       (4,     "long",     "L"),           // a 64-bit integer
+        ITEM_Null       (5,     "null",     "N"),           // the type of null
+        ITEM_InitObject (6,     "this",     "IO"),          // "this" in constructor
+        ITEM_Object     (7,     "CP",       "O"),           // followed by 2-byte index of class name
+        ITEM_NewObject  (8,     "at",       "NO"),          // followed by 2-byte ref to "new"
+        ITEM_UNKNOWN    (null,  "UNKNOWN",  "UNKNOWN");     // placeholder for wrong types
 
-        private final Integer value;
+        private Integer value;
         private final String printval;
         private final String parsekey;
 
@@ -498,8 +513,15 @@ public class Tables {
         StackMapTypes.put(typ.value, typ);
     }
 
-    public static StackMapType stackMapType(int subtag) {
-        return StackMapTypes.get(subtag);
+    public static StackMapType stackMapType(int subtag, PrintWriter out) {
+        StackMapType type = StackMapTypes.get(subtag);
+        if (type == null || type == StackMapType.ITEM_UNKNOWN) {
+            if (out != null)
+                out.println("// Unknown StackMap type " + subtag);
+            type = StackMapType.ITEM_UNKNOWN;
+            type.value = subtag;
+        }
+        return type;
     }
 
     public static StackMapType stackMapType(String subtag) {
@@ -619,7 +641,8 @@ public class Tables {
         CTX_CLASS       (0, "class"),
         CTX_FIELD       (1, "field"),
         CTX_METHOD      (2, "method"),
-        CTX_INNERCLASS  (3, "inner-class");
+        CTX_INNERCLASS  (3, "inner-class"),
+        CTX_MODULE      (4, "module") ;
 
         private final int value;
         private final String printval;
@@ -640,7 +663,7 @@ public class Tables {
 
     private static void registerAnnotElemType(CF_Context ctx) {
         //       NameToAnnotElemType.put(typ.printval, typ);
-//        AnnotElemTypes.put(typ.value, typ);
+        //        AnnotElemTypes.put(typ.value, typ);
     }
     /*
      public static CF_Context annotElemType(String idValue) {
@@ -649,6 +672,5 @@ public class Tables {
      public static CF_Context annotElemType(int subtag) {
      return  AnnotElemTypes.get(subtag);
      }
-     * */
-
+    */
 }

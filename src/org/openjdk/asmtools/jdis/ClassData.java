@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,10 +23,12 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
+import org.openjdk.asmtools.jasm.JasmTokens;
 import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
@@ -37,15 +39,14 @@ import static org.openjdk.asmtools.jasm.Tables.*;
 public class ClassData extends MemberData {
 
     /*-------------------------------------------------------- */
-    /* ClassData Fields */
+    /* ClassData Fields                                        */
     // -----------------------------
     // Header Info
     // -----------------------------
     /**
      * Version info
      */
-    protected int minor_version,
-            major_version;
+    protected int minor_version, major_version;
 
     /**
      * Constant Pool index to this class
@@ -251,9 +252,6 @@ public class ClassData extends MemberData {
         }
         minor_version = in.readShort();
         major_version = in.readShort();
-//        if (major_version != JAVA_VERSION) {
-//            throw new ClassFormatError("wrong version: " + major_version + ", expected " + JAVA_VERSION);
-//        }
 
         // Read the constant pool
         // -----------------------------------------------
@@ -304,93 +302,58 @@ public class ClassData extends MemberData {
         return line;
     }
 
+    private <T extends AnnotationData> void printAnnotations(List<T> annotations) {
+        if (annotations != null) {
+            for (T ad : annotations) {
+                ad.print(out, initialTab);
+                out.println();
+            }
+        }
+    }
+
     public void print() throws IOException {
         int k, l;
-        String className = pool.getClassName(this_cpx);
-        String moduleName = pool.getModuleName(this_cpx);
-        boolean isModuleUnit = !moduleName.isEmpty();
-        pkgPrefixLen = className.lastIndexOf("/") + 1;
-        // Write the header
-        // package-info compilation unit
-        if (className.endsWith("package-info")) {
+        String className = "";
+        if( isModuleUnit() ) {
             // Print the Annotations
-            if (visibleAnnotations != null) {
-                for (AnnotationData visad : visibleAnnotations) {
-                    visad.print(out, initialTab);
-                    out.println();
+            printAnnotations(visibleAnnotations);
+            printAnnotations(invisibleAnnotations);
+        } else {
+            className = pool.getClassName(this_cpx);
+            pkgPrefixLen = className.lastIndexOf("/") + 1;
+            // Write the header
+            // package-info compilation unit
+            if (className.endsWith("package-info")) {
+                // Print the Annotations
+                printAnnotations(visibleAnnotations);
+                printAnnotations(invisibleAnnotations);
+                printAnnotations(visibleTypeAnnotations);
+                printAnnotations(invisibleTypeAnnotations);
+                if (pkgPrefixLen != 0) {
+                    pkgPrefix = className.substring(0, pkgPrefixLen);
+                    out.print("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + " ");
+                    out.print("version " + major_version + ":" + minor_version + ";");
                 }
-            }
-            if (invisibleAnnotations != null) {
-                for (AnnotationData invisad : invisibleAnnotations) {
-                    invisad.print(out, initialTab);
-                    out.println();
-                }
-            }
-            if (visibleTypeAnnotations != null) {
                 out.println();
-                for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                    visad.print(out, initialTab);
-                    out.println();
-                }
+                return;
             }
-            if (invisibleTypeAnnotations != null) {
-                out.println();
-                for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                    invisad.print(out, initialTab);
-                    out.println();
-                }
-            }
-
-            if (pkgPrefixLen != 0) {
-                pkgPrefix = className.substring(0, pkgPrefixLen);
-                out.print("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + " ");
-                out.print("version " + major_version + ":" + minor_version + ";");
-            }
-            out.println();
-            return;
-        }
-        if (!isModuleUnit) {
             if (pkgPrefixLen != 0) {
                 pkgPrefix = className.substring(0, pkgPrefixLen);
                 out.println("package  " + pkgPrefix.substring(0, pkgPrefixLen - 1) + ";");
                 className = pool.getShortClassName(this_cpx, pkgPrefix);
             }
             out.println();
-
             // Print the Annotations
-            if (visibleAnnotations != null) {
-                for (AnnotationData visad : visibleAnnotations) {
-                    visad.print(out, initialTab);
-                    out.println();
-                }
-            }
-            if (invisibleAnnotations != null) {
-                for (AnnotationData invisad : invisibleAnnotations) {
-                    invisad.print(out, initialTab);
-                    out.println();
-                }
-            }
-            if (visibleTypeAnnotations != null) {
-                out.println();
-                for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                    visad.print(out, initialTab);
-                    out.println();
-                }
-            }
-            if (invisibleTypeAnnotations != null) {
-                out.println();
-                for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                    invisad.print(out, initialTab);
-                    out.println();
-                }
-            }
+            printAnnotations(visibleAnnotations);
+            printAnnotations(invisibleAnnotations);
+            printAnnotations(visibleTypeAnnotations);
+            printAnnotations(invisibleTypeAnnotations);
             if ((access & ACC_SUPER) != 0) {
                 out.print("super ");
                 access = access & ~ACC_SUPER;
             }
         }
-
-        // see if we are going to print: abstract interface class
+// see if we are going to print: abstract interface class
 // then replace it with just: interface
 printHeader:
         {
@@ -427,21 +390,25 @@ printSugar:
                 break printHeader;
             }
 
-            // not all conditions met, print header in ordinary way:
-            out.print(Modifiers.accessString(access, CF_Context.CTX_CLASS));
-            if (isSynthetic) {
-                out.print("synthetic ");
+            if(isModuleUnit()) {
+                out.print(moduleData.getModuleHeader());
+            } else {
+                // not all conditions met, print header in ordinary way:
+                out.print(Modifiers.accessString(access, CF_Context.CTX_CLASS));
+                if (isSynthetic) {
+                    out.print("synthetic ");
+                }
+                if (isDeprecated) {
+                    out.print("deprecated ");
+                }
+                if (options.contains(Options.PR.CPX)) {
+                    out.print("\t#" + this_cpx + "; //");
+                }
+                pool.PrintConstant(out, this_cpx);
             }
-            if (isDeprecated) {
-                out.print("deprecated ");
-            }
-            if (options.contains(Options.PR.CPX)) {
-                out.print("\t#" + this_cpx + "; //");
-            }
-            pool.PrintConstant(out, this_cpx);
         }
         out.println();
-        if(!isModuleUnit ) {
+        if(!isModuleUnit()) {
             if (!pool.getClassName(super_cpx).equals("java/lang/Object")) {
                 out.print("\textends ");
                 pool.printlnClassId(out, super_cpx);
@@ -470,11 +437,10 @@ printSugar:
             out.println("\t// Compiled from " + source_name);
             try {
                 source = new TextLines(source_name);
-            } catch (IOException e) {
-            }
+            } catch (IOException ignored) {}
         }
         // keep this new line for classes to pass huge test suite.
-        if(!isModuleUnit)
+        if(!isModuleUnit())
             out.println();
 
         // Print the constant pool
@@ -482,52 +448,56 @@ printSugar:
             pool.print(out);
             out.println();
         }
+        // Don't print fields, methods, inner classes and bootstrap methods if it is module-info entity
+        if ( !isModuleUnit() ) {
 
-        // Print the fields
-        if (fields != null) {
-            for (FieldData curf : fields) {
-                curf.print();
+            // Print the fields
+            if (fields != null && !fields.isEmpty()) {
+                for (FieldData curf : fields) {
+                    curf.print();
+                }
             }
-        }
 
-        // Print the methods
-        if (methods != null) {
-            for (MethodData curm : methods) {
-                boolean skipBlankLine = false;
-                curm.print(skipBlankLine);
+            // Print the methods
+            if (methods != null && !methods.isEmpty()) {
+                for (MethodData curm : methods) {
+                    boolean skipBlankLine = false;
+                    curm.print(skipBlankLine);
+                }
+                out.println();
             }
-            out.println();
-        }
 
-        // Print the inner classes
-        if (innerClasses != null) {
-            for (InnerClassData icd : innerClasses) {
-                icd.print();
+            // Print the inner classes
+            if (innerClasses != null && !innerClasses.isEmpty()) {
+                for (InnerClassData icd : innerClasses) {
+                    icd.print();
+                }
+                out.println();
             }
-            out.println();
-        }
-
-        // Print the BootstrapMethods
-        //
-        // Only print these if printing extended constants
-        if ((options.contains(Options.PR.CPX)) && bootstrapMethods != null) {
-            for (BootstrapMethodData bsmdd : bootstrapMethods) {
-                bsmdd.print();
+            // Print the BootstrapMethods
+            //
+            // Only print these if printing extended constants
+            if ((options.contains(Options.PR.CPX)) && bootstrapMethods != null && !bootstrapMethods.isEmpty()) {
+                for (BootstrapMethodData bsmdd : bootstrapMethods) {
+                    bsmdd.print();
+                }
+                out.println();
             }
-            out.println();
-        }
-        // Print module attributes
-        if( isModuleUnit  && moduleData != null) {
-            moduleData.print();
-        }
-
-        if( isModuleUnit ) {
-            out.println("} // end Module " + moduleName);
-        } else {
             out.println("} // end Class " + className);
+        } else {
+            // Print module attributes
+            moduleData.print();
+            out.print("} // end Module ");
+            out.print( moduleData.getModuleName());
+            if(moduleData.getModuleVersion() != null)
+                out.print(" @" + moduleData.getModuleVersion());
+            out.println();
         }
-
     } // end ClassData.print()
 
+    // Gets the type of processed binary
+    private boolean isModuleUnit() {
+        return moduleData != null;
+    }
 }// end class ClassData
 

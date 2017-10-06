@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,15 +22,14 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import static org.openjdk.asmtools.jcoder.JcodTokens.*;
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
-import java.util.ArrayList;
+
+import static org.openjdk.asmtools.jcoder.JcodTokens.ConstType;
+import static org.openjdk.asmtools.jcoder.JcodTokens.Token;
 
 /**
  * Compiles just 1 source file
@@ -39,13 +38,12 @@ class Jcoder {
 
     /*-------------------------------------------------------- */
     /* Jcoder Fields */
-    ArrayList<ByteBuffer> Classes = new ArrayList<>();
-    ByteBuffer buf;
-    DataOutputStream bufstream;
-    String pkg = null, pkgPrefix = "";
-    int depth = 0;
-    String tabStr = "";
-    Context context = null;
+    private ArrayList<ByteBuffer> Classes = new ArrayList<>();
+    private ByteBuffer buf;
+    private DataOutputStream bufstream;
+    private int depth = 0;
+    private String tabStr = "";
+    private Context context = null;
     protected SourceFile env;
     protected Scanner scanner;
 
@@ -55,46 +53,44 @@ class Jcoder {
     /*-------------------------------------------------------- */
     /* ContextTag (marker) - describes the type of token */
     /*    this is rather cosmetic, no function currently. */
-    static public enum ContextTag {
-        NULL                (0, ""),
-        CLASS               (1, "Class"),
-        CONSTANTPOOL        (2, "Constant-Pool"),
-        INTERFACES          (3, "Interfaces"),
-        INTERFACE           (4, "Interface"),
-        METHODS             (5, "Methods"),
-        METHOD              (6, "Method"),
-        FIELDS              (7, "Fields"),
-        FIELD               (8, "Field"),
-        ATTRIBUTE           (9, "Attribute");
+    private enum ContextTag {
+        NULL                ( ""),
+        CLASS               ( "Class"),
+        CONSTANTPOOL        ( "Constant-Pool"),
+        INTERFACES          ( "Interfaces"),
+        INTERFACE           ( "Interface"),
+        METHODS             ( "Methods"),
+        METHOD              ( "Method"),
+        FIELDS              ( "Fields"),
+        FIELD               ( "Field"),
+        ATTRIBUTE           ( "Attribute");
 
-        private final Integer value;
-        private final String  printval;
+        private final String  printValue;
 
-        ContextTag(Integer val,  String print) {
-            value = val;
-            printval = print;
+        ContextTag(String value) {
+            printValue = value;
         }
 
         public String printval() {
-            return printval;
+            return printValue;
         }
     }
 
     /*-------------------------------------------------------- */
     /* ContextVal (marker) - Specific value on a context stack */
-    public class ContextVal {
+    private class ContextVal {
 
         public ContextTag tag;
-        public int compCount;
-        public ContextVal owner;
+        int compCount;
+        ContextVal owner;
 
-        public ContextVal(ContextTag tg) {
+        ContextVal(ContextTag tg) {
             tag = tg;
             compCount = 0;
             owner = null;
         }
 
-        public ContextVal(ContextTag tg, ContextVal ownr) {
+        ContextVal(ContextTag tg, ContextVal ownr) {
             tag = tg;
             compCount = 0;
             owner = ownr;
@@ -118,11 +114,8 @@ class Jcoder {
             init();
         }
 
-        public boolean isConstantPool() {
-            if (stack.empty()) {
-                return false;
-            }
-            return (stack.peek().tag == ContextTag.CONSTANTPOOL);
+        boolean isConstantPool() {
+          return !stack.empty() && (stack.peek().tag == ContextTag.CONSTANTPOOL);
         }
 
         public void init() {
@@ -133,7 +126,7 @@ class Jcoder {
             hasFields = false;
         }
 
-        public void update() {
+        void update() {
             if (stack.empty()) {
                 stack.push(new ContextVal(ContextTag.CLASS));
                 return;
@@ -164,8 +157,6 @@ class Jcoder {
                     currentCtx.compCount += 1;
                     stack.push(new ContextVal(ContextTag.INTERFACE, currentCtx));
                     break;
-                //               case INTERFACE:
-//                    break;
                 case FIELDS:
                     currentCtx.compCount += 1;
                     stack.push(new ContextVal(ContextTag.FIELD, currentCtx));
@@ -185,7 +176,7 @@ class Jcoder {
             }
         }
 
-        public void exit() {
+        void exit() {
             if (!stack.isEmpty()) {
                 stack.pop();
             }
@@ -217,7 +208,7 @@ class Jcoder {
     /**
      * Create a parser
      */
-    protected Jcoder(SourceFile sf, HashMap<String, String> macros) throws IOException {
+    Jcoder(SourceFile sf, HashMap<String, String> macros) throws IOException {
         scanner = new Scanner(sf, macros);
         env = sf;
         context = new Context();
@@ -228,16 +219,14 @@ class Jcoder {
     /**
      * Expect a token, return its value, scan the next token or throw an exception.
      */
-    protected final void expect(Token t) throws SyntaxError, IOException {
+    private void expect(Token t) throws SyntaxError, IOException {
         if (scanner.token != t) {
             env.traceln("expect:" + t + " instead of " + scanner.token);
             switch (t) {
                 case IDENT:
-//                  env.error(prevPos, "identifier.expected");
                     env.error(scanner.pos, "identifier.expected");
                     break;
                 default:
-//                  env.error(prevPos, "token.expected", keywordName(t)]);
                     env.error(scanner.pos, "token.expected", t.toString());
                     break;
             }
@@ -246,7 +235,7 @@ class Jcoder {
         scanner.scan();
     }
 
-    protected void recoverField() throws SyntaxError, IOException {
+    private void recoverField() throws SyntaxError, IOException {
         while (true) {
             switch (scanner.token) {
                 case LBRACE:
@@ -269,7 +258,6 @@ class Jcoder {
                 case INTERFACE:
                 case CLASS:
                     // begin of something outside a class, panic more
-//                  endClass(pos);
                     throw new SyntaxError();
 
                 default:
@@ -283,7 +271,7 @@ class Jcoder {
     /**
      * Parse an array of struct.
      */
-    protected void parseArray() throws IOException {
+    private void parseArray() throws IOException {
         scanner.scan();
         int length0 = buf.length, pos0 = scanner.pos;
         int num_expected;
@@ -316,6 +304,7 @@ class Jcoder {
         if (numSize > 0) {
             buf.append(num_expected, numSize);
         }
+
         int num_present = parseStruct();
         if (num_expected == -1) {
             env.trace(" buf.writeAt(" + length0 + ", " + num_present + ", " + numSize + ");  ");
@@ -323,15 +312,16 @@ class Jcoder {
             if (numSize > 0) {
                 buf.writeAt(length0, num_present, numSize);
             }
-        } else if (num_expected != num_present) {
-            env.error(pos0, "warn.array.wronglength", new Integer(num_expected), new Integer(num_present));
+        } else if ( num_expected != num_present) {
+            if (context.isConstantPool() && num_expected == num_present +1) return;
+            env.error(pos0, "warn.array.wronglength", num_expected, num_present);
         }
     }
 
     /**
      * Parse a byte array.
      */
-    protected void parseByteArray() throws IOException {
+    private void parseByteArray() throws IOException {
         scanner.scan();
         expect(Token.LSQBRACKET);
         int length0 = buf.length, pos0 = scanner.pos;
@@ -375,14 +365,14 @@ class Jcoder {
                 buf.writeAt(length0, len_present, lenSize);
             }
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.array.wronglength", new Integer(len_expected), new Integer(len_present));
+            env.error(pos0, "warn.array.wronglength", len_expected, len_present);
         }
     }
 
     /**
      * Parse an Attribute.
      */
-    protected void parseAttr() throws IOException {
+    private void parseAttr() throws IOException {
         scanner.scan();
         expect(Token.LPAREN);
         int cpx; // index int const. pool
@@ -418,14 +408,14 @@ class Jcoder {
         if (len_expected == -1) {
             buf.writeAt(length0, len_present, 4);
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.attr.wronglength", new Integer(len_expected), new Integer(len_present));
+            env.error(pos0, "warn.attr.wronglength", len_expected, len_present);
         }
     } // end parseAttr
 
     /**
      * Parse a Component of JavaCard .cap file.
      */
-    protected void parseComp() throws IOException {
+    private void parseComp() throws IOException {
         scanner.scan();
         expect(Token.LPAREN);
         int tag = scanner.intValue; // index int const. pool
@@ -447,7 +437,7 @@ class Jcoder {
         if (len_expected == -1) {
             buf.writeAt(length0, len_present, 2);
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.attr.wronglength", new Integer(len_expected), new Integer(len_present));
+            env.error(pos0, "warn.attr.wronglength", len_expected, len_present);
         }
     } // end parseComp
 
@@ -472,10 +462,10 @@ class Jcoder {
     /**
      * Parse a structure.
      */
-    protected int parseStruct() throws IOException {
+    private int parseStruct() throws IOException {
         adjustDepth(true);
         env.traceln(" ");
-        env.traceln(tabStr + "Struct { <" + context + "> ");
+        env.traceln(tabStr + "MapStruct { <" + context + "> ");
         expect(Token.LBRACE);
         int num = 0;
         int addElem = 0;
@@ -510,7 +500,7 @@ class Jcoder {
                         break;
                     case LONGSTRINGVAL:
                         scanner.scan();
-                        env.traceln("LongString [\"" + scanner.longStringValue.data + "\"] ");
+                        env.traceln("LongString [\"" + Arrays.toString(scanner.longStringValue.data) + "\"] ");
                         buf.write(scanner.longStringValue.data, 0, scanner.longStringValue.length);
                         addElem = 1;
                         break;
@@ -540,7 +530,7 @@ class Jcoder {
                     case RBRACE:
                         scanner.scan();
                         env.traceln(" ");
-                        env.traceln(tabStr + "} // Struct  <" + context + "> [");
+                        env.traceln(tabStr + "} // MapStruct  <" + context + "> [");
                         adjustDepth(false);
                         return num + addElem;
                     default:
@@ -559,7 +549,7 @@ class Jcoder {
      * Recover after a syntax error in the file. This involves discarding tokens until an
      * EOF or a possible legal continuation is encountered.
      */
-    protected void recoverFile() throws IOException {
+    private void recoverFile() throws IOException {
         while (true) {
             switch (scanner.token) {
                 case CLASS:
@@ -594,19 +584,29 @@ class Jcoder {
     }
 
     /**
+     * Parse module declaration
+     */
+    private void parseModule() throws IOException {
+        // skip module name as a redundant element
+        scanner.skipTill(Scanner.LBRACE);
+        buf = new ByteBuffer();
+        bufstream = new DataOutputStream(buf);
+        buf.myname = "module-info.class";
+        scanner.scan();
+        env.traceln("starting " + buf.myname);
+        // Parse the clause
+        parseClause();
+        env.traceln("ending " + buf.myname);
+    }
+
+    /**
      * Parse a class or interface declaration.
      */
-    protected void parseClass() throws IOException {
-        // Begin a new class
-        Token prev = scanner.token;
+    private void parseClass(Token prev) throws IOException {
         scanner.scan();
         buf = new ByteBuffer();
         bufstream = new DataOutputStream(buf);
-
-        String doc = scanner.docComment;
-
         // Parse the class name
-        int p = scanner.pos;
         switch (scanner.token) {
             case STRINGVAL:
                 buf.myname = scanner.stringValue;
@@ -621,8 +621,6 @@ class Jcoder {
             case IDENT:
                 if (prev == Token.FILE) {
                     buf.myname = scanner.stringValue;
-                } else if( prev == Token.MODULE) {
-                    buf.myname = "module-info.class";
                 } else {
                     buf.myname = scanner.stringValue + ".class";
                 }
@@ -632,12 +630,17 @@ class Jcoder {
                 throw new SyntaxError();
         }
         scanner.scan();
-
         env.traceln("starting class " + buf.myname);
         // Parse the clause
+        parseClause();
+        env.traceln("ending class " + buf.myname);
+
+    } // end parseClass
+
+    private void parseClause() throws IOException {
         switch (scanner.token) {
             case LBRACE:
-                parseStruct(); // ??
+                parseStruct();
                 break;
             case LSQBRACKET:
                 parseArray();
@@ -654,18 +657,12 @@ class Jcoder {
             default:
                 env.error(scanner.pos, "struct.expected");
         }
-
-        env.traceln("ending class " + buf.myname);
-
-        // End the class
-        env.flushErrors();
-        Classes.add(buf);
-    } // end parseClass
+    }
 
     /**
      * Parse an Jcoder file.
      */
-    public ArrayList<ByteBuffer> parseFile() {
+    ArrayList<ByteBuffer> parseFile() {
         env.traceln("PARSER");
         context.init();
         try {
@@ -676,11 +673,16 @@ class Jcoder {
                         case MODULE:
                         case INTERFACE:
                         case FILE:
-                            // Start of a class
-//                          scan();
-                            parseClass();
+                            Token t = scanner.token;
+                            if ( t == Token.MODULE) {
+                                parseModule();
+                            } else {
+                                parseClass(t);
+                            }
+                            // End of the class,interface or module
+                            env.flushErrors();
+                            Classes.add(buf);
                             break;
-
                         case SEMICOLON:
                             // Bogus semi colon
                             scanner.scan();
@@ -696,8 +698,11 @@ class Jcoder {
                             throw new SyntaxError();
                     }
                 } catch (SyntaxError e) {
-                    env.traceln("SyntaxError " + e.getMessage());
-                    e.printStackTrace();
+                    String msg = e.getMessage();
+                    env.traceln("SyntaxError " + (msg == null ? "" : msg));
+                    if( env.debugInfoFlag ) {
+                        e.printStackTrace();
+                    }
                     recoverFile();
                 }
             }
@@ -709,7 +714,7 @@ class Jcoder {
     } //end parseFile
 
     /*---------------------------------------------*/
-    static char fileSeparator; //=System.getProperty("file.separator");
+    private static char fileSeparator; //=System.getProperty("file.separator");
 
     /**
      * write to the directory passed with -d option
@@ -721,7 +726,7 @@ class Jcoder {
             return;
         }
 
-        env.traceln("writing class " + myname);
+        env.traceln("writing " + myname);
         File outfile;
         if (destdir == null) {
             int startofname = myname.lastIndexOf('/');
@@ -749,8 +754,7 @@ class Jcoder {
         out.write(cls.data, 0, cls.length);
         try {
             out.close();
-        } catch (IOException e) {
-        }
+        } catch (IOException ignored) { }
     }
 
     /**

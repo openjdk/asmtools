@@ -22,15 +22,15 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.jasm.Modifiers;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static java.lang.String.format;
+import org.openjdk.asmtools.common.Module;
+import org.openjdk.asmtools.jasm.JasmTokens;
+
+import static org.openjdk.asmtools.jdis.Main.i18n;
 
 /**
  *  The module attribute data.
@@ -47,79 +47,145 @@ public class ModuleData {
     this.out = clsData.out;
   }
 
+  public String getModuleName() {
+    return module == null ? "N/A" : module.getModuleName();
+  }
+
+  public String getModuleVersion() { return module.getModuleVersion();  }
+
+  public String getModuleHeader() {
+    if ( module == null ) {
+      return "N/A";
+    } else {
+      StringBuilder sb = new StringBuilder(module.getModuleFlags());
+      sb.append(JasmTokens.Token.MODULE.parsekey()).append(" ");
+      sb.append(module.getModuleName());
+      if (module.getModuleVersion() != null)
+        sb.append("// @").append(module.getModuleVersion());
+      return sb.toString();
+    }
+  }
+
   /**
    * Reads and resolve the method's attribute data called from ClassData.
    */
   public void read(DataInputStream in) throws IOException {
-    Module.Builder builder = new Module.Builder();
-    int requires_count = in.readUnsignedShort();
-    for (int i = 0; i < requires_count; i++) {
-      int index = in.readUnsignedShort();
-      int flags = in.readUnsignedShort();
-      String moduleName = pool.getString(index);
-
-      Set<Modifier> mods;
-      if (flags == 0) {
-        mods = Collections.emptySet();
-      } else {
-        mods = new HashSet<>();
-        if (Modifiers.isReexport(flags))
-          mods.add(Modifier.PUBLIC);
-        if (Modifiers.isSynthetic(flags))
-          mods.add(Modifier.SYNTHETIC);
-        if (Modifiers.isMandated(flags))
-          mods.add(Modifier.MANDATED);
-      }
-      builder.require(moduleName, mods);
+    int index, moduleFlags, versionIndex;
+    String moduleName, version;
+    Module.Builder builder;
+    try {
+    // u2 module_name_index;
+    index = in.readUnsignedShort();
+    moduleName = pool.getModule(index);
+    // u2 module_flags;
+    moduleFlags = in.readUnsignedShort();
+    // u2 module_version_index;
+    versionIndex = in.readUnsignedShort();
+    version = pool.getString(versionIndex);
+    builder = new Module.Builder(moduleName, moduleFlags, version);
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_header"));
+      throw ioe;
     }
 
-    int exports_count = in.readUnsignedShort();
-    if (exports_count > 0) {
-      for (int i = 0; i < exports_count; i++) {
-        int index = in.readUnsignedShort();
-        String packageName = pool.getString(index).replace('/', '.');
-        int exports_to_count = in.readUnsignedShort();
-        if (exports_to_count > 0) {
-          Set<String> targets = new HashSet<>(exports_to_count);
-          for (int j = 0; j < exports_to_count; j++) {
-            int exports_to_index = in.readUnsignedShort();
-            targets.add(pool.getString(exports_to_index));
+    try {
+      int requires_count = in.readUnsignedShort();
+      for (int i = 0; i < requires_count; i++) {
+        index = in.readUnsignedShort();
+        int requiresFlags = in.readUnsignedShort();
+        versionIndex = in.readUnsignedShort();
+
+        moduleName = pool.getModule(index);
+        version = pool.getString(versionIndex);
+        builder.require(moduleName, requiresFlags, version);
+      }
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_requires"));
+      throw ioe;
+    }
+
+    try {
+      int exports_count = in.readUnsignedShort();
+      if (exports_count > 0) {
+        for (int i = 0; i < exports_count; i++) {
+          index = in.readUnsignedShort();
+          String packageName = pool.getPackage(index);
+          int exportsFlags = in.readUnsignedShort();
+          int exports_to_count = in.readUnsignedShort();
+          if (exports_to_count > 0) {
+            Set<String> targets = new HashSet<>(exports_to_count);
+            for (int j = 0; j < exports_to_count; j++) {
+              int exports_to_index = in.readUnsignedShort();
+              targets.add(pool.getModule(exports_to_index));
+            }
+            builder.exports(packageName, exportsFlags, targets);
+          } else {
+            builder.exports(packageName, exportsFlags);
           }
-          builder.exports(packageName, targets);
-        } else {
-          builder.export(packageName);
         }
       }
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_exports"));
+      throw ioe;
     }
 
-    int uses_count = in.readUnsignedShort();
-    if (uses_count > 0) {
-      for (int i = 0; i < uses_count; i++) {
-        int index = in.readUnsignedShort();
-        String serviceName = pool.getClassName(index).replace('/', '.');
-        builder.use(serviceName);
-      }
-    }
-
-    int provides_count = in.readUnsignedShort();
-    if (provides_count > 0) {
-      Map<String, Set<String>> pm = new HashMap<>();
-      for (int i = 0; i < provides_count; i++) {
-        int index = in.readUnsignedShort();
-        int with_index = in.readUnsignedShort();
-        String sn = pool.getClassName(index).replace('/', '.');
-        String cn = pool.getClassName(with_index).replace('/', '.');
-        // computeIfAbsent
-        Set<String> providers = pm.get(sn);
-        if (providers == null) {
-          providers = new HashSet<>();
-          pm.put(sn, providers);
+    try {
+      int opens_count = in.readUnsignedShort();
+      if (opens_count > 0) {
+        for (int i = 0; i < opens_count; i++) {
+          index = in.readUnsignedShort();
+          String packageName = pool.getPackage(index);
+          int opensFlags = in.readUnsignedShort();
+          int opens_to_count = in.readUnsignedShort();
+          if (opens_to_count > 0) {
+            Set<String> targets = new HashSet<>(opens_to_count);
+            for (int j = 0; j < opens_to_count; j++) {
+              int opens_to_index = in.readUnsignedShort();
+              targets.add(pool.getModule(opens_to_index));
+            }
+            builder.opens(packageName, opensFlags, targets);
+          } else {
+            builder.opens(packageName, opensFlags);
+          }
         }
-        providers.add(cn);
       }
-      for (Map.Entry<String, Set<String>> e : pm.entrySet()) {
-        builder.provide(e.getKey(), e.getValue());
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_opens"));
+      throw ioe;
+    }
+
+    try {
+      int uses_count = in.readUnsignedShort();
+      if (uses_count > 0) {
+        for (int i = 0; i < uses_count; i++) {
+          index = in.readUnsignedShort();
+          String serviceName = pool.getClassName(index);
+          builder.uses(serviceName);
+        }
       }
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_uses"));
+      throw ioe;
+    }
+
+    try {
+      int provides_count = in.readUnsignedShort();
+      if (provides_count > 0) {
+        for (int i = 0; i < provides_count; i++) {
+          index = in.readUnsignedShort();
+          String serviceName = pool.getClassName(index);
+          int provides_with_count = in.readUnsignedShort();
+          Set<String> implNames = new HashSet<>(provides_with_count);
+          for (int j = 0; j < provides_with_count; j++) {
+            int provides_with_index = in.readUnsignedShort();
+            implNames.add(pool.getClassName(provides_with_index));
+          }
+          builder.provides(serviceName, implNames);
+        }
+      }
+    } catch (IOException ioe) {
+      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_provides"));
+      throw ioe;
     }
     module = builder.build();
   }
@@ -128,196 +194,5 @@ public class ModuleData {
   public void print() throws IOException {
     if (module != null)
       out.println(module.toString());
-  }
-
-
-  private enum Modifier {
-    PUBLIC(0x0020), SYNTHETIC(0x1000), MANDATED(0x8000);
-    private final int value;
-    Modifier(int value) {
-      this.value = value;
-    }
-  }
-
-  private final static class Module {
-    //* A service dependence's of this module
-    final Set<String> uses;
-    //* A module on which the current module has a dependence.
-    private final Set<Dependence> requires;
-    //* A module export, may be qualified or unqualified.
-    private final Map<String, Set<String>> exports;
-    //* A service that a module provides one or more implementations of.
-    private final Map<String, Set<String>> provides;
-
-    private Module(Set<Dependence> requires,
-                   Map<String, Set<String>> exports,
-                   Set<String> uses,
-                   Map<String, Set<String>> provides) {
-      this.requires = Collections.unmodifiableSet(requires);
-      this.exports = Collections.unmodifiableMap(exports);
-      this.uses = Collections.unmodifiableSet(uses);
-      this.provides = Collections.unmodifiableMap(provides);
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder();
-      requires.stream()
-          .sorted()
-          .forEach(d -> sb.append(format("  %s%n", d.toString())));
-      //
-      exports.entrySet().stream()
-          .filter(e -> e.getValue().isEmpty())
-          .sorted(Map.Entry.comparingByKey())
-          .map(e -> format("  exports %s;%n", e.getKey()))
-          .forEach(sb::append);
-      exports.entrySet().stream()
-          .filter(e -> !e.getValue().isEmpty())
-          .sorted(Map.Entry.comparingByKey())
-          .map(e -> format("  exports %s to%n%s;%n", e.getKey(),
-              e.getValue().stream().sorted()
-                  .map(mn -> format("      %s", mn))
-                  .collect(Collectors.joining(",\n"))))
-          .forEach(sb::append);
-      //
-      uses.stream().sorted()
-          .map(s -> format("  uses %s;%n", s))
-          .forEach(sb::append);
-      //
-      provides.entrySet().stream()
-          .sorted(Map.Entry.comparingByKey())
-          .flatMap(e -> e.getValue().stream().sorted()
-              .map(impl -> format("  provides %s with %s;%n", e.getKey(), impl)))
-          .forEach(sb::append);
-      return sb.toString();
-    }
-
-    //* A module on which the current module has a dependence.
-    private final static class Dependence implements Comparable<Dependence> {
-      private final String name;
-      private final Set<Modifier> flags;
-
-      public Dependence(String name, Set<Modifier> flags) {
-        this.name = name;
-        this.flags = flags;
-      }
-
-      /**
-       * Returns the module name.
-       *
-       * @return The module name
-       */
-      public String name() {
-        return name;
-      }
-
-      /**
-       * Returns the set of modifiers.
-       *
-       * @return A possibly-empty unmodifiable set of modifiers
-       */
-      public Set<Modifier> modifiers() {
-        return flags;
-      }
-
-      @Override
-      public int hashCode() {
-        return name.hashCode() * 11 + flags.hashCode();
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (o instanceof Dependence) {
-          Dependence d = (Dependence) o;
-          return this.name.equals(d.name) && flags.equals(d.flags);
-        }
-        return false;
-      }
-
-      @Override
-      public int compareTo(Dependence o) {
-        int rc = this.name.compareTo(o.name);
-        return rc != 0 ? rc : Integer.compare(this.flagsValue(), o.flagsValue());
-      }
-
-      @Override
-      public String toString() {
-        return format("requires %s%s;", flags.contains(Modifier.PUBLIC) ? "public " : "", name);
-      }
-
-      private int flagsValue() {
-        int value = 0;
-        for (Modifier m : flags) {
-          value |= m.value;
-        }
-        return value;
-      }
-    }
-
-    /**
-     * The module builder.
-     */
-    public static final class Builder {
-
-      public final Set<Dependence> requires = new HashSet<>();
-      final Map<String, Set<String>> exports = new HashMap<>();
-      final Set<String> uses = new HashSet<>();
-      final Map<String, Set<String>> provides = new HashMap<>();
-
-      public Builder() {
-      }
-
-      /**
-       * Adds a module on which the current module has a dependence.
-       */
-      public Builder require(String d, Set<Modifier> flags) {
-        requires.add(new Dependence(d, flags));
-        return this;
-      }
-
-      /**
-       * Adds a unqualified module export.
-       */
-      public Builder export(String p) {
-        Objects.requireNonNull(p);
-        if (!exports.containsKey(p)) exports.put(p, new HashSet<>());
-        return this;
-      }
-
-      /**
-       * Adds a qualified module exports.
-       */
-      public Builder exports(String p, Set<String> ms) {
-        Objects.requireNonNull(p);
-        Objects.requireNonNull(ms);
-        if (!exports.containsKey(p)) export(p);
-        exports.get(p).addAll(ms);
-        return this;
-      }
-
-
-      /**
-       * Adds a service dependence's of this module
-       */
-      public Builder use(String cn) {
-        uses.add(cn);
-        return this;
-      }
-
-      /**
-       * Adds a service that a module provides one or more implementations of.
-       */
-      public Builder provide(String s, Set<String> impl) {
-        provides.computeIfAbsent(s, _k -> new HashSet<>()).addAll(impl);
-        return this;
-      }
-
-      /**
-       * @return The new module
-       */
-      public Module build() {
-        return new Module(requires, exports, uses, provides);
-      }
-    }
   }
 }

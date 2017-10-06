@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -168,13 +168,13 @@ class iAtt {
         }
     }
 
-    public void printMapList(int[] map) {
+    public void printMapList(int[] map) throws IOException {
         boolean pr_cpx = options.contains(Options.PR.CPX);
 
         for (int k = 0; k < map.length; k++) {
             int fullmaptype = map[k];
             int mt_val = fullmaptype & 0xFF;
-            StackMapType maptype = stackMapType(mt_val);
+            StackMapType maptype = stackMapType(mt_val, out);
             int argument = fullmaptype >> 8;
             switch (maptype) {
                 case ITEM_Object:

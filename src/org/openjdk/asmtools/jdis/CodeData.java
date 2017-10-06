@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -65,8 +65,8 @@ public class CodeData {
             name_cpx = in.readShort();
             sig_cpx = in.readShort();
             slot = in.readShort();
-    //cls.traceln("   var #"+name_cpx+" start:"+start_pc
-            //+" length:"+length+"sig_cpx:"+sig_cpx+" sig_cpx:"+sig_cpx);
+            // cls.traceln("   var #"+name_cpx+" start:"+start_pc
+            // +" length:"+length+"sig_cpx:"+sig_cpx+" sig_cpx:"+sig_cpx);
         }
     }
 

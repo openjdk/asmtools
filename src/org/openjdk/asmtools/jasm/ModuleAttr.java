@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,34 +22,63 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.Module;
+
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import static org.openjdk.asmtools.jasm.RuntimeConstants.ACC_NONE;
-import static org.openjdk.asmtools.jasm.RuntimeConstants.ACC_REEXPORT;
-
-public class ModuleAttr extends AttrData {
+/**
+ * The module attribute
+ */
+class ModuleAttr extends AttrData {
   // shared data
-  private final Module.Builder builder;
+  private Module.Builder builder;
   private final ClassData clsData;
-  private Module module;
+  private final Function<String, ConstantPool.ConstCell> findCellAsciz;
+  private final Function<String, ConstantPool.ConstCell> findCellClassByName;
+  private final Function<String, ConstantPool.ConstCell> findCellModuleByName;
+  private final Function<String, ConstantPool.ConstCell> findCellPackageByName;
+
+  // entries to populate tables of the module attribute
+  BiConsumer<String, Integer> requires       = (mn, f) -> this.builder.require(mn, f);
+  BiConsumer<String, Set<String>> exports    = (pn, ms) -> this.builder.exports(new Module.Exported(pn), ms);
+  BiConsumer<String, Set<String>> opens      = (pn, ms) -> this.builder.opens(new Module.Opened(pn), ms);
+  BiConsumer<String, Set<String>> provides   = (tn, ts) -> this.builder.provides(new Module.Provided(tn), ts);
+  Consumer<Set<String>>           uses       = (ts) -> this.builder.uses(ts);
 
   ModuleAttr(ClassData cdata) {
     super(cdata, Tables.AttrTag.ATT_Module.parsekey());
     builder = new Module.Builder();
     clsData = cdata;
+    findCellAsciz = (name) -> clsData.pool.FindCellAsciz(name);
+    findCellClassByName = (name) -> clsData.pool.FindCellClassByName(name);
+    findCellModuleByName = (name) -> clsData.pool.FindCellModuleByName(name);
+    findCellPackageByName = (name) -> clsData.pool.FindCellPackageByName(name);
   }
 
-  public ModuleAttr build() {
-    Content.instance.requiresStruct = new RequiresStruct();
-    Content.instance.exportsStruct = new ExportsStruct();
-    Content.instance.usesStruct = new UsesStruct();
-    Content.instance.providesStruct = new ProvidesStruct();
+  void openModule() {
+    builder.setModuleFlags(Module.Modifier.ACC_OPEN);
+  }
+  void setModuleName(String value) { builder.setModuleName(value);}
+
+  ModuleAttr build() {
+    Module module = builder.build();
+    Content.instance.header = new HeaderStruct(module.header, findCellModuleByName, findCellAsciz);
+    Content.instance.requiresStruct = new SetStruct<>(module.requires, findCellModuleByName, findCellAsciz);
+    Content.instance.exportsMapStruct = new MapStruct<>(module.exports, findCellPackageByName, findCellModuleByName );
+    Content.instance.opensMapStruct = new MapStruct<>(module.opens,findCellPackageByName, findCellModuleByName );
+    Content.instance.usesStruct = new SetStruct<>(module.uses, findCellClassByName, null);
+    Content.instance.providesMapStruct = new MapStruct<>(module.provides, findCellClassByName, findCellClassByName);
     return this;
   }
 
   @Override
-  public int attrLength() { return Content.instance.getLength(); }
+  public int attrLength() {
+    return Content.instance.getLength();
+  }
 
   @Override
   public void write(CheckedDataOutputStream out) throws IOException {
@@ -57,178 +86,205 @@ public class ModuleAttr extends AttrData {
     Content.instance.write(out);
   }
 
-  /**
-   * Adds a module on which the current module has a dependence.
-   */
-  protected void require(String d, boolean reexports) {
-    builder.require(d, reexports);
-  }
-
-  /**
-   * Adds a qualified/an unqualified  module exports.
-   */
-  protected void exports(String p, Set<String> ms) { builder.exports(p, ms); }
-
-  /**
-   * Adds a service dependence's of this module
-   */
-  protected void use(String cn) {
-    builder.use(cn);
-  }
-
-  /**
-   * Adds a service that a module provides one implementation of.
-   */
-  protected void provide(String s, String impl) {
-    builder.provide(s, impl);
-  }
-
-  /**
-   * Gets the module if it is absent builds one
-   *
-   * @return the Module
-   */
-  private Module buildModuleIfAbsent() {
-    if (module == null) {
-      module = builder.build();
-    }
-    return module;
-  }
-
   private enum Content implements Data {
-
     instance {
       @Override
       public int getLength() {
-        return requiresStruct.getLength() + exportsStruct.getLength() +
-            usesStruct.getLength() + providesStruct.getLength();
+        return header.getLength() +
+            requiresStruct.getLength() +
+            exportsMapStruct.getLength() +
+            opensMapStruct.getLength() +
+            usesStruct.getLength() +
+            providesMapStruct.getLength();
       }
 
       @Override
       public void write(CheckedDataOutputStream out) throws IOException {
         // keep order!
+        header.write(out);
         requiresStruct.write(out);
-        exportsStruct.write(out);
+        exportsMapStruct.write(out);
+        opensMapStruct.write(out);
         usesStruct.write(out);
-        providesStruct.write(out);
+        providesMapStruct.write(out);
       }
     };
-    RequiresStruct requiresStruct;
-    ExportsStruct exportsStruct;
-    UsesStruct usesStruct;
-    ProvidesStruct providesStruct;
+
+    HeaderStruct header ;
+    SetStruct<Module.Dependence>  requiresStruct;
+    MapStruct<Module.Exported>    exportsMapStruct;
+    MapStruct<Module.Opened>      opensMapStruct;
+    SetStruct<Module.Uses>        usesStruct;
+    MapStruct<Module.Provided>    providesMapStruct;
   }
 
-  private final static class Module {
-    //* A service dependence's of this module
-    final Set<String> uses;
-    //* A module on which the current module has a dependence.
-    private final Set<Dependence> requires;
-    //* A module export, may be qualified or unqualified.
-    private final Map<String, Set<String>> exports;
-    //* A service that a module provides one or more implementations of.
-    private final Map<String, Set<String>> provides;
+  /**
+   * u2 {exports|opens}_count;
+   * {  u2 {exports|opens}_index;
+   * u2 {exports|opens}_flags;
+   * u2 {exports|opens}_to_count;
+   * u2 {exports|opens}_to_index[{exports|opens}_to_count];
+   * } {exports|opens}[{exports|opens}_count];
+   * or
+   * u2 provides_count;
+   * {  u2 provides_index;
+   * u2 provides_with_count;
+   * u2 provides_with_index[provides_with_count];
+   * } provides[provides_count];
+   */
+  private class MapStruct<T extends Module.TargetType> implements Data {
+    final List<Triplet<ConstantPool.ConstCell, Integer, List<ConstantPool.ConstCell>>> exportsOpensList = new ArrayList<>();
+    final List<Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>>> providesList = new ArrayList<>();
 
-    private Module(Set<Dependence> requires,
-                   Map<String, Set<String>> exports,
-                   Set<String> uses,
-                   Map<String, Set<String>> provides) {
-      this.requires = Collections.unmodifiableSet(requires);
-      this.exports = Collections.unmodifiableMap(exports);
-      this.uses = Collections.unmodifiableSet(uses);
-      this.provides = Collections.unmodifiableMap(provides);
+    MapStruct(Map<T, Set<String>> source,
+              Function<String,ConstantPool.ConstCell> nameFinder,
+              Function<String,ConstantPool.ConstCell> targetFinder) {
+      Objects.requireNonNull(source);
+      source.entrySet().stream()
+          .sorted(Map.Entry.comparingByKey())
+          .forEach(e -> {
+                ArrayList<ConstantPool.ConstCell> to = new ArrayList<>();
+                e.getValue().forEach(mn -> to.add(targetFinder.apply(mn)));
+                if (e.getKey().isFlagged()) {
+                  exportsOpensList.add(new Triplet<>
+                      ( nameFinder.apply(e.getKey().getTypeName()),
+                        ((Module.FlaggedTargetType) e.getKey()).getFlags(),
+                        to));
+                } else {
+                  providesList.add(new Pair<>(nameFinder.apply(e.getKey().getTypeName()),
+                      to));
+                }
+              }
+          );
     }
 
-    //* A module on which the current module has a dependence.
-    private final static class Dependence implements Comparable<Dependence> {
-      private final String mn;
-      private final boolean reexports;
-
-      public Dependence(String name, boolean reexports) {
-        this.mn = name;
-        this.reexports = reexports;
-      }
-
-      /**
-       * Returns the module name.
-       */
-      public String name() { return mn; }
-
-      /**
-       * Returns the public modifier of the requires.
-       */
-      public boolean isReexports() { return reexports; }
-
-      @Override
-      public int hashCode() {
-        return mn.hashCode() * 11 + Boolean.hashCode(reexports);
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (o instanceof Dependence) {
-          Dependence d = (Dependence) o;
-          return this.mn.equals(d.mn) && Boolean.compare(reexports, d.isReexports()) == 0;
+    @Override
+    public void write(CheckedDataOutputStream out) throws IOException {
+      if (providesList.isEmpty()) {
+        out.writeShort(exportsOpensList.size());          // u2 {exports|opens}_count;
+        for (Triplet<ConstantPool.ConstCell, Integer, List<ConstantPool.ConstCell>> triplet : exportsOpensList) {
+          out.writeShort(triplet.first.arg);              // {  u2 {exports|opens}_index;
+          out.writeShort(triplet.second);                 //    u2 {exports|opens}_flags;
+          out.writeShort(triplet.third.size());           //    u2 {exports|opens}_to_count;
+          for (ConstantPool.ConstCell to : triplet.third)
+            out.writeShort(to.arg);                       // u2 {exports|opens}_to_index[{exports|opens}_to_count]; }
         }
-        return false;
-      }
-
-      @Override
-      public int compareTo(Dependence o) {
-        int rc = this.mn.compareTo(o.mn);
-        return rc != 0 ? rc : Boolean.compare(reexports, o.isReexports());
+      } else {
+        out.writeShort(providesList.size());              // u2 provides_count;
+        for (Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>> pair : providesList) {
+          out.writeShort(pair.first.arg);                 // {  u2 provides_index;
+          out.writeShort(pair.second.size());             //    u2 provides_with_count;
+          for (ConstantPool.ConstCell to : pair.second)
+            out.writeShort(to.arg);                       // u2 provides_with_index[provides_with_count]; }
+        }
       }
     }
 
-    /**
-     * The module builder.
-     */
-    private static final class Builder {
-      public final Set<Dependence> requires = new HashSet<>();
-      final Map<String, Set<String>> exports = new HashMap<>();
-      final Set<String> uses = new HashSet<>();
-      final Map<String, Set<String>> provides = new HashMap<>();
-
-      public Builder() {
-      }
-
-      public Builder require(String d, boolean reexports) {
-        requires.add(new Dependence(d, reexports));
-        return this;
-      }
-
-      public Builder exports(String p, Set<String> ms) {
-        Objects.requireNonNull(p);
-        Objects.requireNonNull(ms);
-        if (!exports.containsKey(p))
-          exports.put(p, new HashSet<>());
-        exports.get(p).addAll(ms);
-        return this;
-      }
-
-      public Builder use(String cn) {
-        uses.add(cn);
-        return this;
-      }
-
-      public Builder provide(String s, String impl) {
-        provides.computeIfAbsent(s, _k -> new HashSet<>()).add(impl);
-        return this;
-      }
-
-      /**
-       * @return The new module
-       */
-      public Module build() {
-        return new Module(requires, exports, uses, provides);
+    @Override
+    public int getLength() {
+      if (providesList.isEmpty()) {
+        // (u2:{exports|opens}_count) + (u2:{exports|opens}_index + u2:{exports|opens}_flags u2:{exports|opens}_to_count) * {exports|opens}_count +
+        return 2 + 6 * exportsOpensList.size() +
+        //  (u2:{exports|opens}_to_index) * {exports|opens}_to_count
+            exportsOpensList.stream().mapToInt(p -> p.third.size()).filter(s -> s > 0).sum() * 2;
+      } else {
+        // (u2 : provides_count) + (u2:provides_index + u2:provides_with_count) * provides_count +
+        return 2 + 4 * providesList.size() +
+        // (u2:provides_with_index) * provides_with_count
+            providesList.stream().mapToInt(p -> p.second.size()).filter(s -> s > 0).sum() * 2;
       }
     }
   }
 
-  // Helper class
+  private class HeaderStruct implements Data {
+    final ConstantPool.ConstCell index;
+    final int flags;
+    final ConstantPool.ConstCell versionIndex;
+
+    HeaderStruct(Module.Header source,
+                 Function<String,ConstantPool.ConstCell> nameFinder,
+                 Function<String,ConstantPool.ConstCell> versionFinder) {
+      index = nameFinder.apply(source.getModuleName());
+      versionIndex = (source.getModuleVersion() == null ) ? null : versionFinder.apply(source.getModuleVersion());
+      flags = source.getModuleFlags();
+    }
+
+    @Override
+    public void write(CheckedDataOutputStream out) throws IOException {
+      out.writeShort(index.arg);                                    // u2 module_name_index;
+      out.writeShort(flags);                                        // u2 module_flags;
+      out.writeShort(versionIndex == null ? 0 : versionIndex.arg);  // u2 module_version_index;
+    }
+
+    @Override
+    public int getLength() {
+      // u2:module_name_index) +  u2:module_flags +u2:module_version_index
+      return 6;
+    }
+  }
+
+  /**
+   * u2 uses_count;
+   * u2 uses_index[uses_count];
+   * or
+   * u2 requires_count;
+   * {  u2 requires_index;
+   *    u2 requires_flags;
+   *    u2 requires_version_index;
+   * } requires[requires_count];
+   */
+  private class SetStruct<T extends Module.TargetType> implements Data {
+    final List<ConstantPool.ConstCell> usesList = new ArrayList<>();
+    final List<Triplet<ConstantPool.ConstCell, Integer, ConstantPool.ConstCell>> requiresList = new ArrayList<>();
+
+    SetStruct(Set<T> source,
+              Function<String,ConstantPool.ConstCell> nameFinder,
+              Function<String,ConstantPool.ConstCell> versionFinder) {
+      Objects.requireNonNull(source);
+      source.forEach(e -> {
+        if (e.isFlagged()) {
+          requiresList.add(new Triplet<>(
+              nameFinder.apply(e.getTypeName()),
+              ((Module.FlaggedTargetType) e).getFlags(),
+              (((Module.VersionedFlaggedTargetType) e).getVersion() == null) ?
+                  null :
+                  versionFinder.apply(((Module.VersionedFlaggedTargetType) e).getVersion())));
+        } else {
+          usesList.add(nameFinder.apply((e.getTypeName())));
+        }
+      });
+    }
+
+    @Override
+    public void write(CheckedDataOutputStream out) throws IOException {
+      if (usesList.isEmpty()) {
+        out.writeShort(requiresList.size());                  // u2 requires_count;
+        for (Triplet<ConstantPool.ConstCell, Integer, ConstantPool.ConstCell> r : requiresList) {
+          out.writeShort(r.first.arg);                        // u2 requires_index;
+          out.writeShort(r.second);                           // u2 requires_flags;
+          out.writeShort(r.third == null ? 0 : r.third.arg);  // u2 requires_version_index;
+        }
+      } else {
+        out.writeShort(usesList.size());                      // u2 uses_count;
+        for (ConstantPool.ConstCell u : usesList)
+          out.writeShort(u.arg);                              // u2 uses_index[uses_count];
+      }
+    }
+
+    @Override
+    public int getLength() {
+      return usesList.isEmpty() ?
+          // (u2:requires_count) + (u2:requires_index + u2:requires_flags + u2:requires_version_index) * requires_count
+          2 + 6 * requiresList.size() :
+          // (u2:uses_count) + (u2:uses_index) * uses_count
+          2 + 2 * usesList.size();
+    }
+  }
+
+  // Helper classes
   private class Pair<F, S> {
-    public final F first;
-    public final S second;
+    final F first;
+    final S second;
 
     Pair(F first, S second) {
       this.first = first;
@@ -236,132 +292,12 @@ public class ModuleAttr extends AttrData {
     }
   }
 
-  /**
-   * u2 requires_count;
-   * { u2 requires_index;
-   * u2 requires_flags;
-   * } requires[requires_count];
-   */
-  class RequiresStruct implements Data {
-    List<Pair<ConstantPool.ConstCell, Integer>> list = new ArrayList<>();
-
-    public RequiresStruct() {
-      buildModuleIfAbsent().requires.forEach(
-          r -> list.add(
-              new Pair<>(clsData.pool.FindCellAsciz(r.name()),
-                  r.isReexports() ? ACC_REEXPORT : ACC_NONE))
-      );
-    }
-
-    @Override
-    public int getLength() { return 2 + list.size() * 4; }
-
-    @Override
-    public void write(CheckedDataOutputStream out) throws IOException {
-      out.writeShort(list.size());    // u2 requires_count;
-      for (Pair<ConstantPool.ConstCell, Integer> p : list) {
-        out.writeShort(p.first.arg);      // u2 requires_index;
-        out.writeShort(p.second);         // u2 requires_flags;
-      }
+  public class Triplet<F, S, T>  extends Pair<F,S> {
+    private final T third;
+    Triplet(F first, S second, T third) {
+      super(first,second);
+      this.third = third;
     }
   }
 
-  /**
-   * u2 exports_count;
-   * { u2 exports_index;
-   * u2 exports_to_count;
-   * u2 exports_to_index[exports_to_count];
-   * } exports[exports_count];
-   */
-  private class ExportsStruct implements Data {
-    final List<Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>>> exports = new ArrayList<>();
-
-    ExportsStruct() {
-      Objects.requireNonNull(module);
-      //(un)qualified module exports
-      buildModuleIfAbsent().exports.entrySet().stream()
-          .sorted(Map.Entry.comparingByKey())
-          .forEach(e -> {
-                ArrayList<ConstantPool.ConstCell> to = new ArrayList<>();
-                e.getValue().forEach(mn -> to.add(clsData.pool.FindCellAsciz(mn)));
-                exports.add(new Pair<>(clsData.pool.FindCellAsciz(e.getKey()), to));
-              }
-          );
-    }
-
-    @Override
-    public int getLength() {
-      return 2 + 4 * exports.size() + exports.stream().mapToInt(p->p.second.size()).filter(s->s>0).sum() * 2;
-    }
-
-    @Override
-    public void write(CheckedDataOutputStream out) throws IOException {
-      out.writeShort(exports.size());         // u2 exports_count;
-      for (Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>> pair : exports) {
-        out.writeShort(pair.first.arg);       // u2 exports_index;
-        out.writeShort(pair.second.size());   // u2 exports_to_count;
-        for( ConstantPool.ConstCell to : pair.second ) {
-            out.writeShort(to.arg);           // u2 exports_to_index[exports_to_count];
-        }
-      }
-    }
-  }
-
-  /**
-   * u2 uses_count;
-   * u2 uses_index[uses_count];
-   */
-  private class UsesStruct implements Data {
-    final List<ConstantPool.ConstCell> uses = new ArrayList<>();
-
-    UsesStruct() {
-      buildModuleIfAbsent().uses.stream().sorted().forEach(u -> uses.add(clsData.pool.FindCellAsciz(u)));
-    }
-
-    @Override
-    public int getLength() {
-      return 2 + 2 * uses.size();
-    }
-
-    @Override
-    public void write(CheckedDataOutputStream out) throws IOException {
-      out.writeShort(uses.size());
-      for (ConstantPool.ConstCell u : uses)
-        out.writeShort(u.arg);
-    }
-  }
-
-  /**
-   * u2 provides_count;
-   * { u2 provides_index;
-   * u2 with_index;
-   * } provides[provides_count];
-   */
-  private class ProvidesStruct implements Data {
-    List<Pair<ConstantPool.ConstCell, ConstantPool.ConstCell>> list = new ArrayList<>();
-
-    protected ProvidesStruct() {
-      buildModuleIfAbsent().provides.entrySet().stream()
-          .sorted(Map.Entry.comparingByKey())
-          .forEach(e -> e.getValue().stream()
-              .sorted()
-              .forEach(impl -> list.add(new Pair<>(
-                  clsData.pool.FindCellAsciz(e.getKey()), clsData.pool.FindCellAsciz(impl))
-              )));
-    }
-
-    @Override
-    public int getLength() {
-      return 2 + list.size() * 4;
-    }
-
-    @Override
-    public void write(CheckedDataOutputStream out) throws IOException {
-      out.writeShort(list.size());        // u2 provides_count;
-      for (Pair<ConstantPool.ConstCell, ConstantPool.ConstCell> p : list) {
-        out.writeShort(p.first.arg);      // u2 requires_index;
-        out.writeShort(p.second.arg);     // u2 requires_flags;
-      }
-    }
-  }
 }

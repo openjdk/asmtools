@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,77 +22,69 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  */
 public interface RuntimeConstants {
-
-    /* Signature Characters */
-    public static final char   SIGC_VOID                  = 'V';
-    public static final String SIG_VOID                   = "V";
-    public static final char   SIGC_BOOLEAN               = 'Z';
-    public static final String SIG_BOOLEAN                = "Z";
-    public static final char   SIGC_BYTE                  = 'B';
-    public static final String SIG_BYTE                   = "B";
-    public static final char   SIGC_CHAR                  = 'C';
-    public static final String SIG_CHAR                   = "C";
-    public static final char   SIGC_SHORT                 = 'S';
-    public static final String SIG_SHORT                  = "S";
-    public static final char   SIGC_INT                   = 'I';
-    public static final String SIG_INT                    = "I";
-    public static final char   SIGC_LONG                  = 'J';
-    public static final String SIG_LONG                   = "J";
-    public static final char   SIGC_FLOAT                 = 'F';
-    public static final String SIG_FLOAT                  = "F";
-    public static final char   SIGC_DOUBLE                = 'D';
-    public static final String SIG_DOUBLE                 = "D";
-    public static final char   SIGC_ARRAY                 = '[';
-    public static final String SIG_ARRAY                  = "[";
-    public static final char   SIGC_CLASS                 = 'L';
-    public static final String SIG_CLASS                  = "L";
-    public static final char   SIGC_METHOD                = '(';
-    public static final String SIG_METHOD                 = "(";
-    public static final char   SIGC_ENDCLASS              = ';';
-    public static final String SIG_ENDCLASS               = ";";
-    public static final char   SIGC_ENDMETHOD             = ')';
-    public static final String SIG_ENDMETHOD              = ")";
-    public static final char   SIGC_PACKAGE               = '/';
-    public static final String SIG_PACKAGE                = "/";
-
-    /* Class File Constants */
-//    public static final int JAVA_MAGIC                   = 0xcafebabe;
-    public static final int JAVA_VERSION                 = 45;
-    public static final int JAVA_MINOR_VERSION           = 3;
     /* Access Flags */
 
-    public static final int ACC_NONE          = 0x0000; // <<everywhere>>
-    public static final int ACC_PUBLIC        = 0x0001; // class, inner, field, method
-    public static final int ACC_PRIVATE       = 0x0002; //        inner, field, method
-    public static final int ACC_PROTECTED     = 0x0004; //        inner, field, method
-    public static final int ACC_STATIC        = 0x0008; //        inner, field, method
-    public static final int ACC_FINAL         = 0x0010; // class, inner, field, method
-    public static final int ACC_SUPER         = 0x0020; // class
-    public static final int ACC_REEXPORT      = 0x0020; //                             requires (ACC_PUBLIC)
-    public static final int ACC_SYNCHRONIZED  = 0x0020; //                      method
-    public static final int ACC_VOLATILE      = 0x0040; //               field
-    public static final int ACC_BRIDGE        = 0x0040; //                      method
-    public static final int ACC_TRANSIENT     = 0x0080; //               field
-    public static final int ACC_VARARGS       = 0x0080; //                      method
-    public static final int ACC_NATIVE        = 0x0100; //                      method
-    public static final int ACC_INTERFACE     = 0x0200; // class, inner
-    public static final int ACC_ABSTRACT      = 0x0400; // class, inner,        method
-    public static final int ACC_STRICT        = 0x0800; //                      method
-    public static final int ACC_SYNTHETIC     = 0x1000; // class, inner, field, method requires
-    public static final int ACC_ANNOTATION    = 0x2000; // class, inner
-    public static final int ACC_ENUM          = 0x4000; // class, inner, field
-    public static final int ACC_MODULE        = 0x8000; // class
-    public static final int ACC_MANDATED      = 0x8000; //                      method requires
+    int ACC_NONE          = 0x0000; // <<everywhere>>
+    int ACC_PUBLIC        = 0x0001; // class, inner, field, method
+    int ACC_PRIVATE       = 0x0002; //        inner, field, method
+    int ACC_PROTECTED     = 0x0004; //        inner, field, method
+    int ACC_STATIC        = 0x0008; //        inner, field, method
+    int ACC_FINAL         = 0x0010; // class, inner, field, method
+    int ACC_TRANSITIVE    = 0x0010; //                                      requires(module)
+    int ACC_SUPER         = 0x0020; // class
+    int ACC_STATIC_PHASE  = 0x0020; //                                      requires(module)
+    int ACC_SYNCHRONIZED  = 0x0020; //                      method
+    int ACC_OPEN          = 0x0020; //                              module
+    int ACC_VOLATILE      = 0x0040; //               field
+    int ACC_BRIDGE        = 0x0040; //                      method
+    int ACC_TRANSIENT     = 0x0080; //               field
+    int ACC_VARARGS       = 0x0080; //                      method
+    int ACC_NATIVE        = 0x0100; //                      method
+    int ACC_INTERFACE     = 0x0200; // class, inner
+    int ACC_ABSTRACT      = 0x0400; // class, inner,        method
+    int ACC_STRICT        = 0x0800; //                      method
+    int ACC_SYNTHETIC     = 0x1000; // class, inner, field, method, module  requires(module) exports(module)
+    int ACC_ANNOTATION    = 0x2000; // class, inner
+    int ACC_ENUM          = 0x4000; // class, inner, field
+    int ACC_MODULE        = 0x8000; // class
+    int ACC_MANDATED      = 0x8000; //                      method  module  requires(module) exports(module)
 
-    /* Attribute codes */
-    public static final int SYNTHETIC_ATTRIBUTE          = 0x00010000; // actually, this is an attribute
-    public static final int DEPRECATED_ATTRIBUTE         = 0x00020000; // actually, this is an attribute
-    /* The version of a class file since which the compact format of stack map
-     * is necessary */
-    public final int SPLIT_VERIFIER_CFV = 50;
+   /* Attribute codes */
+   int SYNTHETIC_ATTRIBUTE          = 0x00010000; // actually, this is an attribute
+   int DEPRECATED_ATTRIBUTE         = 0x00020000; // actually, this is an attribute
+
+   Map<Integer,String> ACC_NAMES = new HashMap() {{
+                        put(ACC_PUBLIC       ,"public");
+                        put(ACC_PRIVATE      ,"private");
+                        put(ACC_PROTECTED    ,"protected");
+                        put(ACC_STATIC       ,"static");
+                        put(ACC_FINAL        ,"final");
+                        put(ACC_SUPER        ,"super");
+                        put(ACC_SYNCHRONIZED ,"synchronized");
+                        put(ACC_VOLATILE     ,"volatile");
+                        put(ACC_BRIDGE       ,"bridge");
+                        put(ACC_TRANSIENT    ,"transient");
+                        put(ACC_VARARGS      ,"varargs");
+                        put(ACC_NATIVE       ,"native");
+                        put(ACC_INTERFACE    ,"interface");
+                        put(ACC_ABSTRACT     ,"abstract");
+                        put(ACC_STRICT       ,"strict");
+                        put(ACC_SYNTHETIC    ,"synthetic");
+                        put(ACC_ANNOTATION   ,"annotation");
+                        put(ACC_ENUM         ,"enum");
+                        put(ACC_MODULE       ,"module");
+                        put(ACC_MANDATED     ,"mandated");
+                        put(SYNTHETIC_ATTRIBUTE     ,"synthetic");
+  }};
+
+    /* The version of a class file since which the compact format of stack map is necessary */
+    int SPLIT_VERIFIER_CFV = 50;
 
 }

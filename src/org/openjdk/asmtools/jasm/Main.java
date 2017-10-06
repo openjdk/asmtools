@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,8 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MAJOR_VERSION;
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MINOR_VERSION;
+import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MAJOR_VERSION;
+import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MINOR_VERSION;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 import java.io.File;
@@ -42,6 +42,7 @@ public class Main {
      * Name of the program.
      */
     String program;
+
     /**
      * The stream where error message are printed.
      */
@@ -61,14 +62,14 @@ public class Main {
     private boolean strict = false;
     private String props = null;
     private int nwarnings = 0;
-    private short major_version = DEFAULT_MAJOR_VERSION;
-    private short minor_version = DEFAULT_MINOR_VERSION;
+    private CFVersion cfv = new CFVersion();
     private int bytelimit = 0;
     private boolean debugScanner = false;
     private boolean debugMembers = false;
     private boolean debugCP = false;
     private boolean debugAnnot = false;
     private boolean debugInstr = false;
+
 
     /**
      * Constructor.
@@ -197,8 +198,7 @@ public class Main {
                         return false;
                     }
                     try {
-                        major_version = Short.parseShort(versions[0]);
-                        minor_version = Short.parseShort(versions[1]);
+                        cfv = new CFVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1]) );
                     } catch (NumberFormatException e) {
                         error(i18n.getString("jasm.error.invalid_major_minor_param"));
                         usage();
@@ -237,8 +237,7 @@ public class Main {
         strict = false;
         props = null;
         nwarnings = 0;
-        major_version = DEFAULT_MAJOR_VERSION;
-        minor_version = DEFAULT_MINOR_VERSION;
+        cfv = new CFVersion();
         bytelimit = 0;
     }
 
@@ -262,7 +261,7 @@ public class Main {
                     sf = new Environment(new File(inpname), out, nowarn);
                     sf.traceFlag = traceFlag;
                     sf.debugInfoFlag = debugInfoFlag;
-                    p = new Parser(sf, major_version, minor_version);
+                    p = new Parser(sf, cfv);
                     p.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
                     p.parseFile();
                 } catch (FileNotFoundException ex) {

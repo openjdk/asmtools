@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,7 @@ package org.openjdk.asmtools.jasm;
 import java.io.*;
 import java.util.ArrayList;
 
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MAJOR_VERSION;
-import static org.openjdk.asmtools.jasm.Constants.DEFAULT_MINOR_VERSION;
+import static org.openjdk.asmtools.jasm.Constants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
@@ -43,8 +42,7 @@ class ClassData extends MemberData {
 
     /*-------------------------------------------------------- */
     /* ClassData Fields */
-    short major_version = DEFAULT_MAJOR_VERSION;
-    short minor_version = DEFAULT_MINOR_VERSION;
+    CFVersion cfv = new CFVersion();
     ConstantPool.ConstCell me, father;
     String myClassName;
     AttrData sourceFileNameAttr;
@@ -86,12 +84,18 @@ class ClassData extends MemberData {
         }
         this.father = father;
         this.interfaces = interfaces;
+
+        cfv.initClassDefaults();
     }
 
-    public final void initAsModule(ConstantPool.ConstCell me) {
+    public final void initAsModule() {
         this.access = RuntimeConstants.ACC_MODULE;
-        this.me = me;
+        // this_class" module-info
+        this.me = pool.FindCellClassByName("module-info");
+        // super_class: zero
         this.father = new ConstantPool.ConstCell(0);
+
+        cfv.initModuleDefaults();
     }
 
     /**
@@ -114,13 +118,11 @@ class ClassData extends MemberData {
      * canonical default constructor
      *
      * @param env The error reporting environment.
-     * @param major_version The major version that this class file supports.
-     * @param minor_version The minor version that this class file supports
+     * @param cfv The class file version that this class file supports.
      */
-    public ClassData(Environment env, short major_version, short minor_version) {
+    public ClassData(Environment env, CFVersion cfv) {
         this(env);
-        this.major_version = major_version;
-        this.minor_version = minor_version;
+        this.cfv = cfv;
     }
 
     public ClassData(Environment env, int acc, ConstantPool.ConstCell me, ConstantPool.ConstCell father, ArrayList<Argument> impls) {
@@ -141,7 +143,6 @@ class ClassData extends MemberData {
     public final boolean isInterface() {
         return Modifiers.isInterface(access);
     }
-
 
     /*
      * After a constant pool has been explicitly declared,
@@ -348,8 +349,8 @@ class ClassData extends MemberData {
 
         // Write the header
         out.writeInt(JAVA_MAGIC);
-        out.writeShort(minor_version);
-        out.writeShort(major_version);
+        out.writeShort(cfv.minor_version());
+        out.writeShort(cfv.major_version());
 
         pool.write(out);
         out.writeShort(access); // & MM_CLASS; // Q
@@ -390,6 +391,10 @@ class ClassData extends MemberData {
 
         // Write the attributes
         if( moduleAttribute != null ) {
+            if (annotAttrVis != null)
+                attrs.add(annotAttrVis);
+            if (annotAttrInv != null)
+                attrs.add(annotAttrInv);
             attrs.add(moduleAttribute);
         } else {
             attrs.add(sourceFileNameAttr);
@@ -585,6 +590,5 @@ class ClassData extends MemberData {
          * */
 
     }
-
 }// end class ClassData
 

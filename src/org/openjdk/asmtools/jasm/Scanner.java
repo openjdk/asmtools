@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,10 +23,10 @@
 package org.openjdk.asmtools.jasm;
 
 import static org.openjdk.asmtools.jasm.JasmTokens.*;
-import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.Constants.EOF;
 import static org.openjdk.asmtools.jasm.Constants.OFFSETBITS;
 import java.io.IOException;
+import java.util.function.Predicate;
 
 /**
  * A Scanner for Jasm tokens. Errors are reported to the environment object.<p>
@@ -47,6 +47,9 @@ public class Scanner extends ParseBase {
      * SyntaxError is the generic error thrown for parsing problems.
      */
     protected static class SyntaxError extends Error {
+        boolean fatalError = false;
+        SyntaxError Fatal() { fatalError = true; return this; }
+        boolean isFatal() {return fatalError;}
     }
 
     /**
@@ -62,7 +65,7 @@ public class Scanner extends ParseBase {
     /**
      * Current token
      */
-//    protected int           token;
+//    protected int token;
     protected Token token;
 
     /**
@@ -88,7 +91,8 @@ public class Scanner extends ParseBase {
     /* A growable character buffer. */
     private int count;
     private char buffer[] = new char[32];
-
+    //
+    private Predicate<Integer> escapingAllowed;
     /**
      * The position of the previous token
      */
@@ -103,9 +107,19 @@ public class Scanner extends ParseBase {
      */
     protected Scanner(Environment env) throws IOException {
         super.init(this, null, env);
+        escapingAllowed = noFunc;
         this.in = env;
         ch = env.read();
         xscan();
+    }
+
+    protected void scanModuleStatement() throws IOException {
+        try {
+            escapingAllowed = yesAndProcessFunc;
+            scan();
+        } finally {
+            escapingAllowed = noFunc;
+        }
     }
 
     /**
@@ -181,7 +195,7 @@ prefix:
         scan();
     }
 
-    private void putc(int ch) {
+    private void putCh(int ch) {
         if (count == buffer.length) {
             char newBuffer[] = new char[buffer.length * 2];
             System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
@@ -207,33 +221,33 @@ prefix:
         }
         switch (ch >> 8) {
             case 0x06:
-                return ((ch >= 0x0660) && (ch <= 0x0669)) || // Arabic-Indic
-                        ((ch >= 0x06f0) && (ch <= 0x06f9));          // Eastern Arabic-Indic
+                return ((ch >= 0x0660) && (ch <= 0x0669)) ||        // Arabic-Indic
+                        ((ch >= 0x06f0) && (ch <= 0x06f9));         // Eastern Arabic-Indic
             case 0x07:
             case 0x08:
             default:
                 return false;
             case 0x09:
-                return ((ch >= 0x0966) && (ch <= 0x096f)) || // Devanagari
-                        ((ch >= 0x09e6) && (ch <= 0x09ef));          // Bengali
+                return ((ch >= 0x0966) && (ch <= 0x096f)) ||        // Devanagari
+                        ((ch >= 0x09e6) && (ch <= 0x09ef));         // Bengali
             case 0x0a:
-                return ((ch >= 0x0a66) && (ch <= 0x0a6f)) || // Gurmukhi
-                        ((ch >= 0x0ae6) && (ch <= 0x0aef));          // Gujarati
+                return ((ch >= 0x0a66) && (ch <= 0x0a6f)) ||        // Gurmukhi
+                        ((ch >= 0x0ae6) && (ch <= 0x0aef));         // Gujarati
             case 0x0b:
-                return ((ch >= 0x0b66) && (ch <= 0x0b6f)) || // Oriya
-                        ((ch >= 0x0be7) && (ch <= 0x0bef));          // Tamil
+                return ((ch >= 0x0b66) && (ch <= 0x0b6f)) ||        // Oriya
+                        ((ch >= 0x0be7) && (ch <= 0x0bef));         // Tamil
             case 0x0c:
-                return ((ch >= 0x0c66) && (ch <= 0x0c6f)) || // Telugu
-                        ((ch >= 0x0ce6) && (ch <= 0x0cef));          // Kannada
+                return ((ch >= 0x0c66) && (ch <= 0x0c6f)) ||        // Telugu
+                        ((ch >= 0x0ce6) && (ch <= 0x0cef));         // Kannada
             case 0x0d:
                 return ((ch >= 0x0d66) && (ch <= 0x0d6f));          // Malayalam
             case 0x0e:
-                return ((ch >= 0x0e50) && (ch <= 0x0e59)) || // Thai
-                        ((ch >= 0x0ed0) && (ch <= 0x0ed9));          // Lao
+                return ((ch >= 0x0e50) && (ch <= 0x0e59)) ||        // Thai
+                        ((ch >= 0x0ed0) && (ch <= 0x0ed9));         // Lao
             case 0x0f:
                 return false;
             case 0x10:
-                return ((ch >= 0x1040) && (ch <= 0x1049));        // Tibetan
+                return ((ch >= 0x1040) && (ch <= 0x1049));         // Tibetan
         }
     }
 
@@ -333,14 +347,14 @@ prefix:
                     env.error(pos, "eof.in.comment");
                     return bufferString();
                 case '\n':
-                    putc('\n');
+                    putCh('\n');
                     ch = in.read();
                     seenstar = false;
                     c = count;
                     break;
                 case ' ':
                 case '\t':
-                    putc(ch);
+                    putCh(ch);
                     ch = in.read();
                     break;
                 case '*':
@@ -350,7 +364,7 @@ prefix:
                             count = c;
                             return bufferString();
                         }
-                        putc('*');
+                        putCh('*');
                     } else {
                         seenstar = true;
                         count = c;
@@ -370,7 +384,7 @@ prefix:
                     if (!seenstar) {
                         seenstar = true;
                     }
-                    putc(ch);
+                    putCh(ch);
                     ch = in.read();
                     c = count;
                     break;
@@ -396,7 +410,7 @@ prefix:
                 boolean overflow = false;
                 long value = ch - '0';
                 count = 0;
-                putc(ch);                // save character in buffer
+                putCh(ch);                // save character in buffer
 numberLoop:
                 for (;;) {
                     switch (ch = in.read()) {
@@ -410,7 +424,7 @@ numberLoop:
                         case '7':
                         case '8':
                         case '9':
-                            putc(ch);
+                            putCh(ch);
                             if (overflow) {
                                 break;
                             }
@@ -448,7 +462,7 @@ numberLoop:
         radix = (ch == '0' ? 8 : 10);
         long value = ch - '0';
         count = 0;
-        putc(ch);                // save character in buffer
+        putCh(ch);                // save character in buffer
 numberLoop:
         for (;;) {
             switch (ch = in.read()) {
@@ -472,7 +486,7 @@ numberLoop:
                 case '5':
                 case '6':
                 case '7':
-                    putc(ch);
+                    putCh(ch);
                     if (radix == 10) {
                         overflow = overflow || (value * 10) / 10 != value;
                         value = (value * 10) + (ch - '0');
@@ -502,7 +516,7 @@ numberLoop:
                 case 'B':
                 case 'c':
                 case 'C':
-                    putc(ch);
+                    putCh(ch);
                     if (radix != 16) {
                         break numberLoop; // an illegal character
                     }
@@ -566,7 +580,7 @@ numberLoop:
         boolean isSingleFloat = false;
         char lastChar;
         if (ch == '.') {
-            putc(ch);
+            putCh(ch);
             ch = in.read();
         }
 
@@ -583,14 +597,14 @@ numberLoop:
                 case '7':
                 case '8':
                 case '9':
-                    putc(ch);
+                    putCh(ch);
                     break;
                 case 'e':
                 case 'E':
                     if (seenExponent) {
                         break numberLoop; // we'll get a format error
                     }
-                    putc(ch);
+                    putCh(ch);
                     seenExponent = true;
                     break;
                 case '+':
@@ -599,7 +613,7 @@ numberLoop:
                     if (lastChar != 'e' && lastChar != 'E') {
                         break numberLoop; // this isn't an error, though!
                     }
-                    putc(ch);
+                    putCh(ch);
                     break;
                 case 'f':
                 case 'F':
@@ -632,12 +646,12 @@ numberLoop:
                         || lastChar == '+' || lastChar == '-') {
                     env.error(in.pos - 1, "float.format");
                 } else if (isSingleFloat) {
-                    floatValue = Float.valueOf(bufferString()).floatValue();
+                    floatValue = Float.valueOf(bufferString());
                     if (Float.isInfinite(floatValue)) {
                         env.error(pos, "overflow");
                     }
                 } else {
-                    doubleValue = Double.valueOf(bufferString()).doubleValue();
+                    doubleValue = Double.valueOf(bufferString());
                     if (Double.isInfinite(doubleValue)) {
                         env.error(pos, "overflow");
                         env.error(pos, "overflow");
@@ -753,29 +767,54 @@ numberLoop:
                 case '\\': {
                     int c = scanEscapeChar();
                     if (c >= 0) {
-                        putc((char) c);
+                        putCh((char) c);
                     }
                     break;
                 }
                 default:
-                    putc(ch);
+                    putCh(ch);
                     ch = in.read();
                     break;
             }
         }
     }
 
+
     /**
      * Scan an Identifier. The current character should be the first character of the
      * identifier.
      */
-    private void scanIdentifier() throws IOException {
+    private void scanIdentifier(char[] prefix) throws IOException {
+        int firstChar;
         count = 0;
-        int firstChar = ch;
+        if(prefix != null) {
+            for(;;) {
+                for (int i = 0; i < prefix.length; i++)
+                    putCh(prefix[i]);
+                ch = in.read();
+                if (ch == '\\') {
+                    ch = in.read();
+                    if (ch == 'u') {
+                        ch = in.convertUnicode();
+                        if (!isUCLetter(ch) && !isUCDigit(ch)) {
+                            prefix = new char[]{(char)ch};
+                            continue;
+                        }
+                    } else if (escapingAllowed.test(ch)) {
+                        prefix = new char[]{(char)ch};
+                        continue;
+                    }
+                    int p = in.pos;
+                    env.error(p, "invalid.escape.char");
+                }
+                break;
+            }
+        }
+        firstChar = ch;
         boolean firstIteration = true;
 scanloop:
         while (true) {
-            putc(ch);
+            putCh(ch);
             ch = in.read();
 
             // Check to see if the annotation marker is at
@@ -783,7 +822,7 @@ scanloop:
             if (firstIteration && firstChar == '@') {
                 // May be a type annotation
                 if (ch == 'T') {  // type annotation
-                    putc(ch);
+                    putCh(ch);
                     ch = in.read();
                 }
 
@@ -791,7 +830,7 @@ scanloop:
                 if (ch == '+' || ch == '-') {  // regular annotation
                     // possible annotation -
                     // need to eat up the '@+' or '@-'
-                    putc(ch);
+                    putCh(ch);
                     ch = in.read();
                 }
                 idValue = bufferString();
@@ -882,15 +921,17 @@ scanloop:
                     break; // no, continue to parse identifier
                 }
                 case '\\':
-                    if ((ch = in.read()) == 'u') {
+                    ch = in.read();
+                    if ( ch == 'u') {
                         ch = in.convertUnicode();
                         if (isUCLetter(ch) || isUCDigit(ch)) {
                             break;
                         }
-                    } else {
-                        int p = in.pos;
-                        env.error(p, "invalid.escape.char");
+                    } else if( escapingAllowed.test(ch)) {
+                        break;
                     }
+                    int p = in.pos;
+                    env.error(p, "invalid.escape.char");
                 default:
 //                    if ((!isUCDigit(ch)) && (!isUCLetter(ch))) {
                     break scanloop;
@@ -977,7 +1018,7 @@ loop:
                         case '8':
                         case '9':
                             count = 0;
-                            putc('.');
+                            putCh('.');
                             scanReal();
                             break;
                         default:
@@ -1073,7 +1114,7 @@ loop:
                 case ')':
                 case '<':
                 case '>':
-                    scanIdentifier();
+                    scanIdentifier(null);
                     break loop;
                 case '\u001a':
                     // Our one concession to DOS.
@@ -1097,38 +1138,28 @@ loop:
                     scanCPRef();
                     break loop;
                 case '\\':
-                    if ((ch = in.read()) == 'u') {
+                    ch = in.read();
+                    if ( ch == 'u') {
                         ch = in.convertUnicode();
                         if (isUCLetter(ch)) {
-                            scanIdentifier();
+                            scanIdentifier(null);
                             break loop;
                         }
+                    } else if( escapingAllowed.test(ch)) {
+                        scanIdentifier(new char[]{'\\', (char)ch});
+                        break loop;
                     }
+//                    if ((ch = in.read()) == 'u') {
+//                        ch = in.convertUnicode();
+//                        if (isUCLetter(ch)) {
+//                            scanIdentifier();
+//                            break loop;
+//                        }
+//                    }
                 default:
                     env.out.println("funny.char:" + env.lineNumber(pos) + "/" + (pos & ((1 << OFFSETBITS) - 1)));
                     env.error(pos, "funny.char");
                     ch = in.read();
-            }
-        }
-    }
-
-    /**
-     * Scan to a matching '}', ']' or ')'. The current token must be a '{', '[' or '(';
-     */
-    protected void match(Token open, Token close) throws IOException {
-        int depth = 1;
-
-        while (true) {
-            xscan();
-            if (token == open) {
-                depth++;
-            } else if (token == close) {
-                if (--depth == 0) {
-                    return;
-                }
-            } else if (token == Token.EOF) {
-                env.error(pos, "unbalanced.paren");
-                return;
             }
         }
     }
@@ -1161,4 +1192,11 @@ loop:
         }
     }
 
+    private Predicate<Integer> noFunc = (ch)-> false;
+    private Predicate<Integer> yesAndProcessFunc = (ch) -> {
+        boolean res = ((ch == '\\') || (ch == ':') || (ch == '@'));
+        if (res)
+            putCh('\\');
+        return res;
+    };
 }

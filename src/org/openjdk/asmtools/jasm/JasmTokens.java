@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,11 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Optional;
+
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.ALL_TOKENS;
 
 /**
  *
@@ -61,21 +65,23 @@ public class JasmTokens {
     }
 
 
-    /*-------------------------------------------------------- */
-    /* Marker - describes the type of token */
-    /*    this is rather cosmetic, no function currently. */
+    /*--------------------------------------------------------  */
+    /* Marker - describes the type of token                     */
+    /*    this is rather cosmetic, no function currently.       */
     static public enum TokenType {
-        MODIFIER            (0, "Modifier"),
-        OPERATOR            (1, "Operator"),
-        VALUE               (2, "Value"),
-        TYPE                (3, "Type"),
-        EXPRESSION          (4, "Expression"),
-        STATEMENT           (5, "Statement"),
-        DECLARATION         (6, "Declaration"),
-        PUNCTUATION         (7, "Punctuation"),
-        SPECIAL             (8, "Special"),
-        JASM                (9, "Jasm"),
-        MISC                (10, "Misc");
+        MODIFIER            (1, "Modifier"),
+        OPERATOR            (2, "Operator"),
+        VALUE               (3, "Value"),
+        TYPE                (4, "Type"),
+        EXPRESSION          (5, "Expression"),
+        STATEMENT           (6, "Statement"),
+        DECLARATION         (7, "Declaration"),
+        PUNCTUATION         (8, "Punctuation"),
+        SPECIAL             (9, "Special"),
+        JASM                (10, "Jasm"),
+        MISC                (11, "Misc"),
+        JASM_IDENT          (12, "Jasm identifier"),
+        MODULE_NAME         (13, "Module Name");
 
         private final Integer value;
         private final String printval;
@@ -84,7 +90,6 @@ public class JasmTokens {
             value = val;
             printval = print;
         }
-
         public String printval() {
             return printval;
         }
@@ -95,257 +100,257 @@ public class JasmTokens {
      * Scanner Tokens (Definitive List)
      */
     static public enum Token {
-        EOF                 (-1, "EOF",         "EOF",  TokenType.MISC),
-        COMMA               (0, "COMMA",        ",",    TokenType.OPERATOR),
-        ASSIGN              (1, "ASSIGN",       "=",    TokenType.OPERATOR),
+        EOF                 (-1, "EOF",         "EOF",  EnumSet.of(TokenType.MISC)),
+        COMMA               (0, "COMMA",        ",",    EnumSet.of(TokenType.OPERATOR)),
+        ASSIGN              (1, "ASSIGN",       "=",    EnumSet.of(TokenType.OPERATOR)),
 
-        ASGMUL              (2, "ASGMUL",       "*=",   TokenType.OPERATOR),
-        ASGDIV              (3, "ASGDIV",       "/=",   TokenType.OPERATOR),
-        ASGREM              (4, "ASGREM",       "%=",   TokenType.OPERATOR),
-        ASGADD              (5, "ASGADD",       "+=",   TokenType.OPERATOR),
-        ASGSUB              (6, "ASGSUB",       "-=",   TokenType.OPERATOR),
-        ASGLSHIFT           (7, "ASGLSHIFT",    "<<=",  TokenType.OPERATOR),
-        ASGRSHIFT           (8, "ASGRSHIFT",    ">>=",  TokenType.OPERATOR),
-        ASGURSHIFT          (9, "ASGURSHIFT",   "<<<=", TokenType.OPERATOR),
-        ASGBITAND           (10, "ASGBITAND",   "&=",   TokenType.OPERATOR),
-        ASGBITOR            (11, "ASGBITOR",    "|=",   TokenType.OPERATOR),
-        ASGBITXOR           (12, "ASGBITXOR",   "^=",   TokenType.OPERATOR),
+        ASGMUL              (2, "ASGMUL",       "*=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGDIV              (3, "ASGDIV",       "/=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGREM              (4, "ASGREM",       "%=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGADD              (5, "ASGADD",       "+=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGSUB              (6, "ASGSUB",       "-=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGLSHIFT           (7, "ASGLSHIFT",    "<<=",  EnumSet.of(TokenType.OPERATOR)),
+        ASGRSHIFT           (8, "ASGRSHIFT",    ">>=",  EnumSet.of(TokenType.OPERATOR)),
+        ASGURSHIFT          (9, "ASGURSHIFT",   "<<<=", EnumSet.of(TokenType.OPERATOR)),
+        ASGBITAND           (10, "ASGBITAND",   "&=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGBITOR            (11, "ASGBITOR",    "|=",   EnumSet.of(TokenType.OPERATOR)),
+        ASGBITXOR           (12, "ASGBITXOR",   "^=",   EnumSet.of(TokenType.OPERATOR)),
 
-        COND                (13, "COND",        "?:",   TokenType.OPERATOR),
-        OR                  (14, "OR",          "||",   TokenType.OPERATOR),
-        AND                 (15, "AND",         "&&",   TokenType.OPERATOR),
-        BITOR               (16, "BITOR",       "|",    TokenType.OPERATOR),
-        BITXOR              (17, "BITXOR",      "^",    TokenType.OPERATOR),
-        BITAND              (18, "BITAND",      "&",    TokenType.OPERATOR),
-        NE                  (19, "NE",          "!=",   TokenType.OPERATOR),
-        EQ                  (20, "EQ",          "==",   TokenType.OPERATOR),
-        GE                  (21, "GE",          ">=",   TokenType.OPERATOR),
-        GT                  (22, "GT",          ">",    TokenType.OPERATOR),
-        LE                  (23, "LE",          "<=",   TokenType.OPERATOR),
-        LT                  (24, "LT",          "<",    TokenType.OPERATOR),
-        INSTANCEOF          (25, "INSTANCEOF",  "instanceof",  TokenType.OPERATOR),
-        LSHIFT              (26, "LSHIFT",      "<<",   TokenType.OPERATOR),
-        RSHIFT              (27, "RSHIFT",      ">>",   TokenType.OPERATOR),
-        URSHIFT             (28, "URSHIFT",     "<<<",  TokenType.OPERATOR),
-        ADD                 (29, "ADD",         "+",    TokenType.OPERATOR),
-        SUB                 (30, "SUB",         "-",    TokenType.OPERATOR),
-        DIV                 (31, "DIV",         "/",    TokenType.OPERATOR),
-        REM                 (32, "REM",         "%",    TokenType.OPERATOR),
-        MUL                 (33, "MUL",         "*",    TokenType.OPERATOR),
-        CAST                (34, "CAST",        "cast", TokenType.OPERATOR),
-        POS                 (35, "POS",         "+",    TokenType.OPERATOR),
-        NEG                 (36, "NEG",         "-",    TokenType.OPERATOR),
-        NOT                 (37, "NOT",         "!",    TokenType.OPERATOR),
-        BITNOT              (38, "BITNOT",      "~",    TokenType.OPERATOR),
-        PREINC              (39, "PREINC",      "++",   TokenType.OPERATOR),
-        PREDEC              (40, "PREDEC",      "--",   TokenType.OPERATOR),
-        NEWARRAY            (41, "NEWARRAY",    "new",  TokenType.OPERATOR),
-        NEWINSTANCE         (42, "NEWINSTANCE", "new",  TokenType.OPERATOR),
-        NEWFROMNAME         (43, "NEWFROMNAME", "new",  TokenType.OPERATOR),
-        POSTINC             (44, "POSTINC",     "++",   TokenType.OPERATOR),
-        POSTDEC             (45, "POSTDEC",     "--",   TokenType.OPERATOR),
-        FIELD               (46, "FIELD",       "field", TokenType.OPERATOR),
-        METHOD              (47, "METHOD",      "method",  TokenType.OPERATOR),
-        ARRAYACCESS         (48, "ARRAYACCESS", "[]",   TokenType.OPERATOR),
-        NEW                 (49, "NEW",         "new",  TokenType.OPERATOR),
-        INC                 (50, "INC",         "++",   TokenType.OPERATOR),
-        DEC                 (51, "DEC",         "--",   TokenType.OPERATOR),
+        COND                (13, "COND",        "?:",   EnumSet.of(TokenType.OPERATOR)),
+        OR                  (14, "OR",          "||",   EnumSet.of(TokenType.OPERATOR)),
+        AND                 (15, "AND",         "&&",   EnumSet.of(TokenType.OPERATOR)),
+        BITOR               (16, "BITOR",       "|",    EnumSet.of(TokenType.OPERATOR)),
+        BITXOR              (17, "BITXOR",      "^",    EnumSet.of(TokenType.OPERATOR)),
+        BITAND              (18, "BITAND",      "&",    EnumSet.of(TokenType.OPERATOR)),
+        NE                  (19, "NE",          "!=",   EnumSet.of(TokenType.OPERATOR)),
+        EQ                  (20, "EQ",          "==",   EnumSet.of(TokenType.OPERATOR)),
+        GE                  (21, "GE",          ">=",   EnumSet.of(TokenType.OPERATOR)),
+        GT                  (22, "GT",          ">",    EnumSet.of(TokenType.OPERATOR)),
+        LE                  (23, "LE",          "<=",   EnumSet.of(TokenType.OPERATOR)),
+        LT                  (24, "LT",          "<",    EnumSet.of(TokenType.OPERATOR)),
+        INSTANCEOF          (25, "INSTANCEOF",  "instanceof",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        LSHIFT              (26, "LSHIFT",      "<<",   EnumSet.of(TokenType.OPERATOR)),
+        RSHIFT              (27, "RSHIFT",      ">>",   EnumSet.of(TokenType.OPERATOR)),
+        URSHIFT             (28, "URSHIFT",     "<<<",  EnumSet.of(TokenType.OPERATOR)),
+        ADD                 (29, "ADD",         "+",    EnumSet.of(TokenType.OPERATOR)),
+        SUB                 (30, "SUB",         "-",    EnumSet.of(TokenType.OPERATOR)),
+        DIV                 (31, "DIV",         "/",    EnumSet.of(TokenType.OPERATOR)),
+        REM                 (32, "REM",         "%",    EnumSet.of(TokenType.OPERATOR)),
+        MUL                 (33, "MUL",         "*",    EnumSet.of(TokenType.OPERATOR)),
+        CAST                (34, "CAST",        "cast", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        POS                 (35, "POS",         "+",    EnumSet.of(TokenType.OPERATOR)),
+        NEG                 (36, "NEG",         "-",    EnumSet.of(TokenType.OPERATOR)),
+        NOT                 (37, "NOT",         "!",    EnumSet.of(TokenType.OPERATOR)),
+        BITNOT              (38, "BITNOT",      "~",    EnumSet.of(TokenType.OPERATOR)),
+        PREINC              (39, "PREINC",      "++",   EnumSet.of(TokenType.OPERATOR)),
+        PREDEC              (40, "PREDEC",      "--",   EnumSet.of(TokenType.OPERATOR)),
+        NEWARRAY            (41, "NEWARRAY",    "new",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        NEWINSTANCE         (42, "NEWINSTANCE", "new",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        NEWFROMNAME         (43, "NEWFROMNAME", "new",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        POSTINC             (44, "POSTINC",     "++",   EnumSet.of(TokenType.OPERATOR)),
+        POSTDEC             (45, "POSTDEC",     "--",   EnumSet.of(TokenType.OPERATOR)),
+        FIELD               (46, "FIELD",       "field", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        METHOD              (47, "METHOD",      "method",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        ARRAYACCESS         (48, "ARRAYACCESS", "[]",   EnumSet.of(TokenType.OPERATOR)),
+        NEW                 (49, "NEW",         "new",  EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        INC                 (50, "INC",         "++",   EnumSet.of(TokenType.OPERATOR)),
+        DEC                 (51, "DEC",         "--",   EnumSet.of(TokenType.OPERATOR)),
 
-        CONVERT             (55, "CONVERT",     "convert", TokenType.OPERATOR),
-        EXPR                (56, "EXPR",        "expr", TokenType.OPERATOR),
-        ARRAY               (57, "ARRAY",       "array", TokenType.OPERATOR),
-        GOTO                (58, "GOTO",        "goto", TokenType.OPERATOR),
-
-
+        CONVERT             (55, "CONVERT",     "convert", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        EXPR                (56, "EXPR",        "expr", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        ARRAY               (57, "ARRAY",       "array", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
+        GOTO                (58, "GOTO",        "goto", EnumSet.of(TokenType.OPERATOR, TokenType.MODULE_NAME)),
 
     /*
      * Value tokens
      */
-        IDENT               (60, "IDENT",       "Identifier", TokenType.VALUE, KeywordType.VALUE, true),
-        BOOLEANVAL          (61, "BOOLEANVAL",  "Boolean",  TokenType.VALUE, KeywordType.VALUE),
-        BYTEVAL             (62, "BYTEVAL",     "Byte",     TokenType.VALUE),
-        CHARVAL             (63, "CHARVAL",     "Char",     TokenType.VALUE),
-        SHORTVAL            (64, "SHORTVAL",    "Short",    TokenType.VALUE),
-        INTVAL              (65, "INTVAL",      "Integer",  TokenType.VALUE, KeywordType.VALUE),
-        LONGVAL             (66, "LONGVAL",     "Long",     TokenType.VALUE, KeywordType.VALUE),
-        FLOATVAL            (67, "FLOATVAL",    "Float",    TokenType.VALUE, KeywordType.VALUE),
-        DOUBLEVAL           (68, "DOUBLEVAL",   "Double",   TokenType.VALUE, KeywordType.VALUE),
-        STRINGVAL           (69, "STRINGVAL",   "String",   TokenType.VALUE, KeywordType.VALUE),
+        IDENT               (60, "IDENT",       "Identifier", EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME, TokenType.JASM_IDENT), KeywordType.VALUE),
+        BOOLEANVAL          (61, "BOOLEANVAL",  "Boolean",    EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
+        BYTEVAL             (62, "BYTEVAL",     "Byte",       EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME)),
+        CHARVAL             (63, "CHARVAL",     "Char",       EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME)),
+        SHORTVAL            (64, "SHORTVAL",    "Short",      EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME)),
+        INTVAL              (65, "INTVAL",      "Integer",    EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
+        LONGVAL             (66, "LONGVAL",     "Long",       EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
+        FLOATVAL            (67, "FLOATVAL",    "Float",      EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
+        DOUBLEVAL           (68, "DOUBLEVAL",   "Double",     EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
+        STRINGVAL           (69, "STRINGVAL",   "String",     EnumSet.of(TokenType.VALUE, TokenType.MODULE_NAME),   KeywordType.VALUE),
 
     /*
      * Type keywords
      */
-        BYTE                (70, "BYTE",        "byte",     TokenType.TYPE),
-        CHAR                (71, "CHAR",        "char",     TokenType.TYPE),
-        SHORT               (72, "SHORT",       "short",    TokenType.TYPE),
-        INT                 (73, "INT",         "int",      TokenType.TYPE),
-        LONG                (74, "LONG",        "long",     TokenType.TYPE),
-        FLOAT               (75, "FLOAT",       "float",    TokenType.TYPE),
-        DOUBLE              (76, "DOUBLE",      "double",   TokenType.TYPE),
-        VOID                (77, "VOID",        "void",     TokenType.TYPE),
-        BOOLEAN             (78, "BOOLEAN",     "boolean",  TokenType.TYPE),
+        BYTE                (70, "BYTE",        "byte",     EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME )),
+        CHAR                (71, "CHAR",        "char",     EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME )),
+        SHORT               (72, "SHORT",       "short",    EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME )),
+        INT                 (73, "INT",         "int",      EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME )),
+        LONG                (74, "LONG",        "long",     EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME )),
+        FLOAT               (75, "FLOAT",       "float",    EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME)),
+        DOUBLE              (76, "DOUBLE",      "double",   EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME)),
+        VOID                (77, "VOID",        "void",     EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME)),
+        BOOLEAN             (78, "BOOLEAN",     "boolean",  EnumSet.of(TokenType.TYPE, TokenType.MODULE_NAME)),
 
     /*
      * Expression keywords
      */
-        TRUE                (80, "TRUE",        "true",     TokenType.EXPRESSION),
-        FALSE               (81, "FALSE",       "false",    TokenType.EXPRESSION),
-        THIS                (82, "THIS",        "this",     TokenType.EXPRESSION),
-        SUPER               (83, "SUPER",       "super",     TokenType.MODIFIER, KeywordType.KEYWORD),
-        NULL                (84, "NULL",        "null",     TokenType.EXPRESSION),
+        TRUE                (80, "TRUE",        "true",     EnumSet.of(TokenType.EXPRESSION, TokenType.MODULE_NAME )),
+        FALSE               (81, "FALSE",       "false",    EnumSet.of(TokenType.EXPRESSION, TokenType.MODULE_NAME )),
+        THIS                (82, "THIS",        "this",     EnumSet.of(TokenType.EXPRESSION, TokenType.MODULE_NAME )),
+        SUPER               (83, "SUPER",       "super",    EnumSet.of(TokenType.MODIFIER,   TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NULL                (84, "NULL",        "null",     EnumSet.of(TokenType.EXPRESSION, TokenType.MODULE_NAME )),
 
     /*
      * Statement keywords
      */
-        IF                  (90, "IF",          "if",       TokenType.STATEMENT),
-        ELSE                (91, "ELSE",        "else",     TokenType.STATEMENT),
-        FOR                 (92, "FOR",         "for",      TokenType.STATEMENT),
-        WHILE               (93, "WHILE",       "while",    TokenType.STATEMENT),
-        DO                  (94, "DO",          "do",       TokenType.STATEMENT),
-        SWITCH              (95, "SWITCH",      "switch",   TokenType.STATEMENT),
-        CASE                (96, "CASE",        "case",     TokenType.STATEMENT),
-        DEFAULT             (97,  "DEFAULT",    "default",  TokenType.STATEMENT, KeywordType.KEYWORD),
-        BREAK               (98, "BREAK",       "break",    TokenType.STATEMENT),
-        CONTINUE            (99, "CONTINUE",    "continue", TokenType.STATEMENT),
-        RETURN              (100, "RETURN",     "return",   TokenType.STATEMENT),
-        TRY                 (101, "TRY",        "try",      TokenType.STATEMENT),
-        CATCH               (102, "CATCH",      "catch",    TokenType.STATEMENT),
-        FINALLY             (103, "FINALLY",    "finally",  TokenType.STATEMENT),
-        THROW               (104, "THROW",      "throw",    TokenType.STATEMENT),
-        STAT                (105, "STAT",       "stat",     TokenType.STATEMENT),
-        EXPRESSION          (106, "EXPRESSION", "expression",  TokenType.STATEMENT),
-        DECLARATION         (107, "DECLARATION", "declaration",   TokenType.STATEMENT),
-        VARDECLARATION      (108, "VARDECLARATION", "vdeclaration", TokenType.STATEMENT),
+        IF                  (90, "IF",          "if",       EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        ELSE                (91, "ELSE",        "else",     EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        FOR                 (92, "FOR",         "for",      EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        WHILE               (93, "WHILE",       "while",    EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        DO                  (94, "DO",          "do",       EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        SWITCH              (95, "SWITCH",      "switch",   EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        CASE                (96, "CASE",        "case",     EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        DEFAULT             (97,  "DEFAULT",    "default",  EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        BREAK               (98, "BREAK",       "break",    EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        CONTINUE            (99, "CONTINUE",    "continue", EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        RETURN              (100, "RETURN",     "return",   EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        TRY                 (101, "TRY",        "try",      EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+
+        CATCH               (102, "CATCH",      "catch",    EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        FINALLY             (103, "FINALLY",    "finally",  EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        THROW               (104, "THROW",      "throw",            EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        STAT                (105, "STAT",       "stat",             EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        EXPRESSION          (106, "EXPRESSION", "expression",       EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        DECLARATION         (107, "DECLARATION", "declaration",     EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
+        VARDECLARATION      (108, "VARDECLARATION", "vdeclaration", EnumSet.of(TokenType.STATEMENT, TokenType.MODULE_NAME )),
 
     /*
      * Declaration keywords
      */
-        IMPORT              (110, "IMPORT",     "import",   TokenType.DECLARATION),
-        CLASS               (111, "CLASS",      "class",    TokenType.DECLARATION, KeywordType.KEYWORD),
-        EXTENDS             (112, "EXTENDS",    "extends",  TokenType.DECLARATION, KeywordType.KEYWORD),
-        IMPLEMENTS          (113, "IMPLEMENTS", "implements", TokenType.DECLARATION, KeywordType.KEYWORD),
-        INTERFACE           (114, "INTERFACE",  "interface", TokenType.DECLARATION, KeywordType.KEYWORD),
-        PACKAGE             (115, "PACKAGE",    "package",  TokenType.DECLARATION, KeywordType.KEYWORD),
-        ENUM                (116, "ENUM",       "enum",     TokenType.DECLARATION, KeywordType.KEYWORD),
-        MANDATED            (117, "MANDATED",   "mandated", TokenType.DECLARATION, KeywordType.KEYWORD),
-     /*
+        IMPORT              (110, "IMPORT",     "import",   EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME )),
+        CLASS               (111, "CLASS",      "class",    EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        EXTENDS             (112, "EXTENDS",    "extends",  EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        IMPLEMENTS          (113, "IMPLEMENTS", "implements",   EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        INTERFACE           (114, "INTERFACE",  "interface",    EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PACKAGE             (115, "PACKAGE",    "package",  EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        ENUM                (116, "ENUM",       "enum",     EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        MANDATED            (117, "MANDATED",   "mandated", EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        THROWS              (118, "THROWS",     "throws",   EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+
+    /*
      * Modifier keywords
      */
-        PRIVATE             (120, "PRIVATE",    "private",  TokenType.MODIFIER, KeywordType.KEYWORD),
-        PUBLIC              (121, "PUBLIC",     "public",   TokenType.MODIFIER, KeywordType.KEYWORD),
-        PROTECTED           (122, "PROTECTED",  "protected", TokenType.MODIFIER, KeywordType.KEYWORD),
-        CONST               (123, "CONST",      "const",    TokenType.DECLARATION, KeywordType.KEYWORD),
-        STATIC              (124, "STATIC",     "static",   TokenType.MODIFIER, KeywordType.KEYWORD),
-        TRANSIENT           (125, "TRANSIENT",  "transient", TokenType.MODIFIER, KeywordType.KEYWORD),
-        SYNCHRONIZED        (126, "SYNCHRONIZED", "synchronized", TokenType.MODIFIER, KeywordType.KEYWORD),
-        NATIVE              (127, "NATIVE",     "native",   TokenType.MODIFIER, KeywordType.KEYWORD),
-        FINAL               (128, "FINAL",      "final",    TokenType.MODIFIER, KeywordType.KEYWORD),
-        VOLATILE            (129, "VOLATILE",   "volatile", TokenType.MODIFIER, KeywordType.KEYWORD),
-        ABSTRACT            (130, "ABSTRACT",   "abstract", TokenType.MODIFIER, KeywordType.KEYWORD),
+        ANNOTATION_ACCESS   (119, "ANNOTATION_ACCESS",  "annotation",       EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PRIVATE             (120, "PRIVATE",            "private",          EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PUBLIC              (121, "PUBLIC",             "public",           EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PROTECTED           (122, "PROTECTED",          "protected",        EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        CONST               (123, "CONST",              "const",            EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        STATIC              (124, "STATIC",             "static",           EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        TRANSIENT           (125, "TRANSIENT",          "transient",        EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        SYNCHRONIZED        (126, "SYNCHRONIZED",       "synchronized",     EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NATIVE              (127, "NATIVE",             "native",           EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        FINAL               (128, "FINAL",              "final",            EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        VOLATILE            (129, "VOLATILE",           "volatile",         EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        ABSTRACT            (130, "ABSTRACT",           "abstract",         EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        TRANSITIVE          (131, "TRANSITIVE",         "transitive",       EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        OPEN                (132, "OPEN",               "open",             EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
     /*
      * Punctuation
      */
-        SEMICOLON           (135, "SEMICOLON",  ";",    TokenType.PUNCTUATION, KeywordType.VALUE),
-        COLON               (136, "COLON",      ":",    TokenType.PUNCTUATION, KeywordType.VALUE),
-        QUESTIONMARK        (137, "QUESTIONMARK", "?",  TokenType.PUNCTUATION),
-        LBRACE              (138, "LBRACE",     "{",    TokenType.PUNCTUATION, KeywordType.VALUE),
-        RBRACE              (139, "RBRACE",     "}",    TokenType.PUNCTUATION, KeywordType.VALUE),
-        LPAREN              (140, "LPAREN",     "(",    TokenType.PUNCTUATION),
-        RPAREN              (141, "RPAREN",     ")",    TokenType.PUNCTUATION),
-        LSQBRACKET          (142, "LSQBRACKET", "[",    TokenType.PUNCTUATION),
-        RSQBRACKET          (143, "RSQBRACKET", "]",    TokenType.PUNCTUATION),
-        THROWS              (144, "THROWS",     "throws",  TokenType.DECLARATION, KeywordType.KEYWORD),
+        AT_SIGN             (133, "AT",         ";",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        SEMICOLON           (134, "SEMICOLON",  ";",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        COLON               (135, "COLON",      ":",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        QUESTIONMARK        (136, "QUESTIONMARK", "?",     EnumSet.of(TokenType.PUNCTUATION)),
+        LBRACE              (137, "LBRACE",     "{",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        RBRACE              (138, "RBRACE",     "}",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        LPAREN              (139, "LPAREN",     "(",       EnumSet.of(TokenType.PUNCTUATION)),
+        RPAREN              (140, "RPAREN",     ")",       EnumSet.of(TokenType.PUNCTUATION)),
+        LSQBRACKET          (141, "LSQBRACKET", "[",       EnumSet.of(TokenType.PUNCTUATION)),
+        RSQBRACKET          (142, "RSQBRACKET", "]",       EnumSet.of(TokenType.PUNCTUATION)),
+
+        ESCAPED_COLON       (201, "ESCCOLON",     "\\:",     EnumSet.of(TokenType.PUNCTUATION, TokenType.MODULE_NAME)),
+        ESCAPED_ATSIGH      (202, "ESCATSIGH",    "\\@",     EnumSet.of(TokenType.PUNCTUATION, TokenType.MODULE_NAME)),
+        ESCAPED_BACKSLASH   (203, "ESCBACKSLASH", "\\\\",    EnumSet.of(TokenType.PUNCTUATION, TokenType.MODULE_NAME)),
     /*
      * Special tokens
      */
-        ERROR               (145, "ERROR",      "error",    TokenType.MODIFIER),
-        COMMENT             (146, "COMMENT",    "comment",   TokenType.MODIFIER),
-        TYPE                (147, "TYPE",       "type",     TokenType.MODIFIER),
-        LENGTH              (148, "LENGTH",     "length",   TokenType.DECLARATION),
-        INLINERETURN        (149, "INLINERETURN", "inline-return", TokenType.MODIFIER),
-        INLINEMETHOD        (150, "INLINEMETHOD", "inline-method", TokenType.MODIFIER),
-        INLINENEWINSTANCE   (151, "INLINENEWINSTANCE", "inline-new", TokenType.MODIFIER),
+        ERROR               (145, "ERROR",      "error",    EnumSet.of(TokenType.MODIFIER,    TokenType.MODULE_NAME)),
+        COMMENT             (146, "COMMENT",    "comment",  EnumSet.of(TokenType.MODIFIER,    TokenType.MODULE_NAME)),
+        TYPE                (147, "TYPE",       "type",     EnumSet.of(TokenType.MODIFIER,    TokenType.MODULE_NAME)),
+        LENGTH              (148, "LENGTH",     "length",   EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME )),
+        INLINERETURN        (149, "INLINERETURN", "inline-return",  EnumSet.of(TokenType.MODIFIER)),
+        INLINEMETHOD        (150, "INLINEMETHOD", "inline-method",  EnumSet.of(TokenType.MODIFIER)),
+        INLINENEWINSTANCE   (151, "INLINENEWINSTANCE", "inline-new",EnumSet.of(TokenType.MODIFIER)),
 
     /*
      * Added for jasm
      */
-        METHODREF           (152, "METHODREF",  "Method",   TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        FIELDREF            (153, "FIELD",      "Field",    TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        STACK               (154, "STACK",      "stack",    TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        LOCAL               (155, "LOCAL",      "locals",   TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        CPINDEX             (156, "CPINDEX",    "CPINDEX",  TokenType.DECLARATION, true),
-        CPNAME              (157, "CPNAME",     "CPName",   TokenType.DECLARATION, true),
-        SIGN                (158, "SIGN",       "SIGN",     TokenType.DECLARATION, true),
-        BITS                (159, "BITS",       "bits",     TokenType.MISC, KeywordType.KEYWORD, true),
-        INF                 (160, "INF",        "Inf", "Infinity", TokenType.MISC, KeywordType.KEYWORD),
-        NAN                 (161, "NAN",        "NaN",      TokenType.MISC, KeywordType.KEYWORD, true),
-        INNERCLASS          (162, "INNERCLASS", "InnerClass", TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        OF                  (163, "OF",         "of",       TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        SYNTHETIC           (164, "SYNTHETIC",  "synthetic", TokenType.MODIFIER, KeywordType.KEYWORD, true),
-        STRICT              (165, "STRICT",     "strict",   TokenType.MODIFIER, KeywordType.KEYWORD, true),
-        DEPRECATED          (166, "DEPRECATED", "deprecated", TokenType.MODIFIER, KeywordType.KEYWORD, true),
-        VERSION             (167, "VERSION",    "version",  TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        MODULE              (168, "MODULE",     "module",   TokenType.DECLARATION, KeywordType.KEYWORD),
-        ANNOTATION          (169, "ANNOTATION", "@",        TokenType.MISC),
-        PARAM_NAME          (173, "PARAM_NAME", "#",        TokenType.MISC),
+        METHODREF           (152, "METHODREF",  "Method",   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        FIELDREF            (153, "FIELD",      "Field",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        STACK               (154, "STACK",      "stack",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        LOCAL               (155, "LOCAL",      "locals",   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        CPINDEX             (156, "CPINDEX",    "CPINDEX",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
+        CPNAME              (157, "CPNAME",     "CPName",   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
+        SIGN                (158, "SIGN",       "SIGN",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
+        BITS                (159, "BITS",       "bits",             EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        INF                 (160, "INF",        "Inf", "Infinity",  EnumSet.of(TokenType.MISC, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NAN                 (161, "NAN",        "NaN",              EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        INNERCLASS          (162, "INNERCLASS", "InnerClass",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        OF                  (163, "OF",         "of",               EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        SYNTHETIC           (164, "SYNTHETIC",  "synthetic",  EnumSet.of(TokenType.MODIFIER, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        STRICT              (165, "STRICT",     "strict",     EnumSet.of(TokenType.MODIFIER, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        DEPRECATED          (166, "DEPRECATED", "deprecated", EnumSet.of(TokenType.MODIFIER, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        VERSION             (167, "VERSION",    "version",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        MODULE              (168, "MODULE",     "module",   EnumSet.of(TokenType.DECLARATION, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        ANNOTATION          (169, "ANNOTATION", "@",        EnumSet.of(TokenType.MISC, TokenType.MODULE_NAME )),
+        PARAM_NAME          (173, "PARAM_NAME", "#",        EnumSet.of(TokenType.MISC, TokenType.MODULE_NAME )),
 
-        VARARGS             (170, "VARARGS",    "varargs",  TokenType.MODIFIER, KeywordType.KEYWORD),
-        BRIDGE              (171, "BRIDGE",     "bridge",   TokenType.MODIFIER, KeywordType.KEYWORD),
+        VARARGS             (170, "VARARGS",    "varargs",  EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        BRIDGE              (171, "BRIDGE",     "bridge",   EnumSet.of(TokenType.MODIFIER, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
         // Declaration keywords
-        BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", TokenType.DECLARATION, KeywordType.KEYWORD, true),
+        BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
         //Module statements
-        REQUIRES            (180, "REQUIRES", "requires", TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        EXPORTS             (182, "EXPORTS",  "exports",  TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        TO                  (183, "TO",       "to",       TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        USES                (184, "USES",     "uses",     TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        PROVIDES            (185, "PROVIDES", "provides", TokenType.DECLARATION, KeywordType.KEYWORD, true),
-        WITH                (186, "WITH",     "with",     TokenType.DECLARATION, KeywordType.KEYWORD, true);
+        REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        EXPORTS             (182, "EXPORTS",  "exports",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        TO                  (183, "TO",       "to",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        USES                (184, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PROVIDES            (185, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        WITH                (186, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        OPENS               (187, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD);
 
+        final static EnumSet<Token> ALL_TOKENS = EnumSet.allOf(Token.class);
         // Misc Keywords
-        private Integer value;
-        private String printval;
-        private String alias;
-        private TokenType tok_type;
-        private KeywordType key_type;
-        private String parsekey;
-        private boolean possible_jasm_identifier;
+        final private Integer value;                    // 160
+        final private String  printval;                 // INF
+        final private String  parsekey;                 // inf
+        final private String  alias;                    // Infinity
+        final private EnumSet<TokenType>  tokenType;    // TokenType.MISC, TokenType.MODULE_NAME
+        final private KeywordType key_type;             // KeywordType.KEYWORD
+
+        public static Optional<Token> get(String  parsekey, KeywordType ktype) {
+            return ALL_TOKENS.stream().filter(t->t.key_type == ktype).filter(t->t.parsekey.equals(parsekey)).findFirst();
+        }
 
         // By default, if a KeywordType is not specified, it has the value 'TOKEN'
-        Token(Integer val, String print, String op, TokenType ttype) {
-            init(val, print, op, null, ttype, KeywordType.TOKEN, false);
+        Token(Integer val, String print, String op, EnumSet<TokenType> ttype) {
+            this(val, print, op, null, ttype, KeywordType.TOKEN);
         }
 
-        Token(Integer val, String print, String op, TokenType ttype, boolean ident) {
-            init(val, print, op, null, ttype, KeywordType.TOKEN, ident);
+        Token(Integer val, String print, String op, String als, EnumSet<TokenType> ttype) {
+            this(val, print, op, als, ttype, KeywordType.TOKEN);
         }
 
-        Token(Integer val, String print, String op, String als, TokenType ttype) {
-            init(val, print, op, als, ttype, KeywordType.TOKEN, false);
+        Token(Integer val, String print, String op, EnumSet<TokenType> ttype, KeywordType ktype) {
+            this(val, print, op, null, ttype, ktype);
         }
 
-        Token(Integer val, String print, String op, TokenType ttype, KeywordType ktype) {
-            init(val, print, op, null, ttype, ktype, false);
-        }
-
-        Token(Integer val, String print, String op, TokenType ttype, KeywordType ktype, boolean ident) {
-            init(val, print, op, null, ttype, ktype, ident);
-        }
-
-        Token(Integer val, String print, String op, String als, TokenType ttype, KeywordType ktype) {
-            init(val, print, op, als, ttype, ktype, false);
-        }
-
-        private void init(Integer val, String print, String op, String als, TokenType ttype, KeywordType ktype, boolean ident) {
-            value = val;
-            printval = print;
-            parsekey = op;
-            tok_type = ttype;
-            key_type = ktype;
-            alias = als;
-            possible_jasm_identifier = ident;
+        Token(Integer val, String print, String op, String als, EnumSet<TokenType> ttype, KeywordType ktype) {
+            this.value = val;
+            this.printval = print;
+            this.parsekey = op;
+            this.tokenType = ttype;
+            this.key_type = ktype;
+            this.alias = als;
         }
 
         public String printval() {
@@ -361,153 +366,18 @@ public class JasmTokens {
         }
 
         public boolean possibleJasmIdentifier() {
-            return possible_jasm_identifier;
+            return tokenType.contains(TokenType.JASM_IDENT);
         }
+
+        public boolean possibleModuleName() {  return tokenType.contains(TokenType.MODULE_NAME)  && !tokenType.contains(TokenType.PUNCTUATION); }
 
         @Override
         public String toString() {
             return "<" + printval + "> [" + value + "]";
         }
-
-    }
-
-    /**
-     * Initialized keyword and token Hash Maps (and Reverse Tables)
-     */
-    static protected final int MaxTokens = 172;
-    private static HashMap<Integer, Token> TagToTokens = new HashMap<>(MaxTokens);
-    private static HashMap<String, Token> SymbolToTokens = new HashMap<>(MaxTokens);
-    private static HashMap<String, Token> ParsekeyToTokens = new HashMap<>(MaxTokens);
-
-    static protected final int MaxValTokens = 12;
-    private static HashMap<Integer, Token> TagToValTokens = new HashMap<>(MaxValTokens);
-    private static HashMap<String, Token> SymbolToValTokens = new HashMap<>(MaxValTokens);
-    private static HashMap<String, Token> ParsekeyToValTokens = new HashMap<>(MaxValTokens);
-
-    private static HashMap<Integer, Token> PossibleJasmIdentifiers = new HashMap<>(MaxValTokens);
-
-    static protected final int MaxKeywords = 40;
-    private static HashMap<Integer, Token> TagToKeywords = new HashMap<>(MaxKeywords);
-    private static HashMap<String, Token> SymbolToKeywords = new HashMap<>(MaxKeywords);
-    private static HashMap<String, Token> ParsekeyToKeywords = new HashMap<>(MaxKeywords);
-
-    static {
-
-        // register all of the tokens
-        for (Token tk : Token.values()) {
-            registerToken(tk);
-        }
-    }
-
-    private static void registerToken(Token tk) {
-        // Tag is a keyword
-        if (tk.key_type == KeywordType.KEYWORD) {
-            TagToKeywords.put(tk.value, tk);
-            if (tk.alias != null) {
-                ParsekeyToKeywords.put(tk.alias, tk);
-            }
-            SymbolToKeywords.put(tk.printval, tk);
-            if (tk.parsekey != null) {
-                ParsekeyToKeywords.put(tk.parsekey, tk);
-            }
-        }
-
-        // Values (and Keywords) go on the Val tokens list
-        if (tk.key_type == KeywordType.KEYWORD
-                || tk.key_type == KeywordType.VALUE) {
-            TagToValTokens.put(tk.value, tk);
-            SymbolToValTokens.put(tk.printval, tk);
-            if (tk.alias != null) {
-                SymbolToValTokens.put(tk.alias, tk);
-            }
-            if (tk.parsekey != null) {
-                ParsekeyToValTokens.put(tk.parsekey, tk);
-            }
-        }
-
-        // make the list of 'possible jasm identifiers'
-        if (tk.possible_jasm_identifier) {
-            PossibleJasmIdentifiers.put(tk.value(), tk);
-        }
-
-        // Finally, register all tokens
-        TagToTokens.put(tk.value, tk);
-        SymbolToTokens.put(tk.printval, tk);
-        ParsekeyToTokens.put(tk.printval, tk);
-    }
-
-    /* Token accessors */
-    public static Token token(int tk) {
-        return TagToTokens.get(tk);
-    }
-
-    public static Token val_token(int tk) {
-        return TagToValTokens.get(tk);
-    }
-
-    public static Token keyword_token(int tk) {
-        return TagToKeywords.get(tk);
-    }
-
-    public static Token possibleJasmIdentifiers(int token) {
-        return PossibleJasmIdentifiers.get(token);
-    }
-
-    /* Reverse lookup accessors */
-    public static Token token(String parsekey) {
-        return ParsekeyToTokens.get(parsekey);
-    }
-
-    public static Token val_token(String parsekey) {
-        return ParsekeyToValTokens.get(parsekey);
-    }
-
-    public static Token keyword_token(String parsekey) {
-        return ParsekeyToKeywords.get(parsekey);
-    }
-
-    /* Reverse lookup by ID accessors */
-    public static Token token_ID(String ID) {
-        return ParsekeyToTokens.get(ID);
-    }
-
-    public static Token val_token_ID(String ID) {
-        return ParsekeyToValTokens.get(ID);
-    }
-
-    public static Token keyword_token_ID(String ID) {
-        return ParsekeyToKeywords.get(ID);
-    }
-
-    public static String keywordName(int token) {
-        String retval = null;
-        Token tk = keyword_token(token);
-        if (tk != null) {
-            retval = tk.parsekey;
-        }
-        return retval;
-    }
-
-    public static int val_token_int(String idValue) {
-        Token kwd = val_token(idValue);
-        int retval = Token.IDENT.value;
-
-        if (kwd != null) {
-            retval = kwd.value;
-        }
-        return retval;
     }
 
     public static Token keyword_token_ident(String idValue) {
-        Token kwd = keyword_token(idValue);
-
-        if (kwd == null) {
-            kwd = Token.IDENT;
-        }
-        return kwd;
-    }
-
-    public static int keyword_token_int(String idValue) {
-        return keyword_token_ident(idValue).value();
+        return Token.get(idValue,KeywordType.KEYWORD).orElse(Token.IDENT);
     }
 }

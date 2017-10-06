@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,10 +75,9 @@ public class Main {
     public void usage() {
         out.println(i18n.getString("jcoder.usage"));
         out.println(i18n.getString("jcoder.opt.nowrite"));
+        out.println(i18n.getString("jcoder.opt.ignore"));
         out.println(i18n.getString("jcoder.opt.d"));
         out.println(i18n.getString("jcoder.opt.version"));
-
-//      out.println("     -D<macroDef>=<string>   macro declaration");
     }
 
     /**
@@ -91,7 +90,7 @@ public class Main {
         long tm = System.currentTimeMillis();
         ArrayList<String> v = new ArrayList<>();
         boolean nowrite = false;
-        String props = null;
+        boolean ignore  = false;
         int nwarnings = 0;
         HashMap<String, String> macros = new HashMap<>();
         macros.put("VERSION", "3;45");
@@ -130,10 +129,15 @@ public class Main {
                     macro = arg.substring(index, argLength);
                 }
                 macros.put(macroId, macro);
+            } else if (arg.equals("-vv")) {
+                debugInfoFlag = true;
+                traceFlag = true;
             } else if (arg.equals("-v")) {
                 traceFlag = true;
             } else if (arg.equals("-nowrite")) {
                 nowrite = true;
+            } else if (arg.equals("-ignore")) {
+                ignore = true;
             } else if (arg.equals("-d")) {
                 if ((i + 1) == argv.length) {
                     error(i18n.getString("jcoder.error.d_requires_argument"));
@@ -176,7 +180,7 @@ public class Main {
                 }
                 nerrors += env.nerrors;
                 nwarnings += env.nwarnings;
-                if (nowrite || (nerrors > 0)) {
+                if (nowrite || (nerrors > 0 & !ignore)) {
                     continue;
                 }
                 try {

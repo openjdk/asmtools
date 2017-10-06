@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,7 +42,6 @@ public class ConstantPool {
     private static final Hashtable<Byte, TAG> taghash = new Hashtable<>();
     private static final Hashtable<Byte, SUBTAG> subtaghash = new Hashtable<>();
 
-
     /*-------------------------------------------------------- */
     /* ConstantPool Inner Classes */
     /**
@@ -66,8 +65,9 @@ public class ConstantPool {
         CONSTANT_NAMEANDTYPE        ((byte) 12, "NameAndType", "CONSTANT_NAMEANDTYPE"),
         CONSTANT_METHODHANDLE       ((byte) 15, "MethodHandle", "CONSTANT_METHODHANDLE"),
         CONSTANT_METHODTYPE         ((byte) 16, "MethodType", "CONSTANT_METHODTYPE"),
-//            CONSTANT_INVOKEDYNAMIC_TRANS               ((byte) 17, "InvokeDynamicTrans", "method reciever"),
-        CONSTANT_INVOKEDYNAMIC      ((byte) 18, "InvokeDynamic", "CONSTANT_INVOKEDYNAMIC");
+        CONSTANT_INVOKEDYNAMIC      ((byte) 18, "InvokeDynamic", "CONSTANT_INVOKEDYNAMIC"),
+        CONSTANT_MODULE             ((byte) 19, "Module", "CONSTANT_MODULE"),
+        CONSTANT_PACKAGE            ((byte) 20, "Package", "CONSTANT_PACKAGE");
 
         private final Byte value;
         private final String tagname;
@@ -164,8 +164,9 @@ public class ConstantPool {
         taghash.put(new Byte(TAG.CONSTANT_NAMEANDTYPE.value()), TAG.CONSTANT_NAMEANDTYPE);
         taghash.put(new Byte(TAG.CONSTANT_METHODHANDLE.value()), TAG.CONSTANT_METHODHANDLE);
         taghash.put(new Byte(TAG.CONSTANT_METHODTYPE.value()), TAG.CONSTANT_METHODTYPE);
-//        taghash.put(new Byte(TAG.CONSTANT_INVOKEDYNAMIC_TRANS.value()), TAG.CONSTANT_INVOKEDYNAMIC_TRANS);
         taghash.put(new Byte(TAG.CONSTANT_INVOKEDYNAMIC.value()), TAG.CONSTANT_INVOKEDYNAMIC);
+        taghash.put(new Byte(TAG.CONSTANT_MODULE.value()), TAG.CONSTANT_MODULE);
+        taghash.put(new Byte(TAG.CONSTANT_PACKAGE.value()), TAG.CONSTANT_PACKAGE);
 
         subtaghash.put(new Byte(SUBTAG.REF_GETFIELD.value()), SUBTAG.REF_GETFIELD);
         subtaghash.put(new Byte(SUBTAG.REF_GETSTATIC.value()), SUBTAG.REF_GETSTATIC);
@@ -431,7 +432,7 @@ public class ConstantPool {
      * CPX
      *
      * Constant entries that contain a single constant-pool index. Usually, this includes:
-     * CONSTANT_CLASS CONSTANT_METHODTYPE CONSTANT_STRING
+     * CONSTANT_CLASS CONSTANT_METHODTYPE CONSTANT_STRING CONSTANT_MODULE CONSTANT_PACKAGE
      *
      */
     class CPX extends Constant {
@@ -445,11 +446,14 @@ public class ConstantPool {
 
         @Override
         public String stringVal() {
-
             String str = "UnknownTag";
             switch (tag) {
                 case CONSTANT_CLASS:
                     str = getShortClassName(getClassName(this), cd.pkgPrefix);
+                    break;
+                case CONSTANT_PACKAGE:
+                case CONSTANT_MODULE:
+                    str = getString(value);
                     break;
                 case CONSTANT_METHODTYPE:
                 case CONSTANT_STRING:
@@ -468,6 +472,8 @@ public class ConstantPool {
                 case CONSTANT_CLASS:
                 case CONSTANT_STRING:
                 case CONSTANT_METHODTYPE:
+                case CONSTANT_PACKAGE:
+                case CONSTANT_MODULE:
                     out.println("#" + (value) + ";\t//  " + stringVal());
                     break;
             }
@@ -509,10 +515,6 @@ public class ConstantPool {
                 case CONSTANT_METHODHANDLE:
                     str = subtagToString(value1) + ":" + StringValue(value2);
                     break;
-                // Removed INVOKEDYNAMIC_TRANS
-//              case: CONSTANT_INVOKEDYNAMIC_TRANS:
-//                  str = StringValue(value1) + ":" + StringValue(value2);
-//                  break;
                 case CONSTANT_INVOKEDYNAMIC:
                     int bsm_attr_idx = value1;
                     int nape_idx = value2;
@@ -562,7 +564,6 @@ public class ConstantPool {
                     out.println(value1 + ":#" + value2 + ";\t//  " + stringVal());
                     break;
                 case CONSTANT_NAMEANDTYPE:
-                    //            case CONSTANT_INVOKEDYNAMIC_TRANS:
                     out.println("#" + value1 + ":#" + value2 + ";\t//  " + stringVal());
                     break;
                 case CONSTANT_INVOKEDYNAMIC:
@@ -641,6 +642,8 @@ public class ConstantPool {
                 case CONSTANT_CLASS:
                 case CONSTANT_STRING:
                 case CONSTANT_METHODTYPE:
+                case CONSTANT_PACKAGE:
+                case CONSTANT_MODULE:
                     pool.add(i, new CPX(tagobj, in.readUnsignedShort()));
                     break;
                 case CONSTANT_FIELD:
@@ -648,7 +651,6 @@ public class ConstantPool {
                 case CONSTANT_INTERFACEMETHOD:
                 case CONSTANT_NAMEANDTYPE:
                 case CONSTANT_INVOKEDYNAMIC:
-//                case CONSTANT_INVOKEDYNAMIC_TRANS:
                     pool.add(i, new CPX2(tagobj, in.readUnsignedShort(), in.readUnsignedShort()));
                     break;
                 case CONSTANT_METHODHANDLE:
@@ -730,7 +732,49 @@ public class ConstantPool {
 
     /**
      *
-     * getName
+     * getModule
+     *
+     * Public string val - Safely gets the string-rep of a ConstantModule from the CP at a
+     * given index.
+     *
+     * Returns either null (if invalid), or the string value of the ConstantModule
+     *
+     */
+    public String getModule(int cpx) {
+        String str = null;
+        if (inbounds(cpx)) {
+            Constant cns = pool.get(cpx);
+            if (cns != null && cns.tag == TAG.CONSTANT_MODULE) {
+                str = cns.stringVal();
+            }
+        }
+        return str;
+    }
+
+    /**
+     *
+     * getPackage
+     *
+     * Public string val - Safely gets the string-rep of a ConstantPackage from the CP at a
+     * given index.
+     *
+     * Returns either null (if invalid), or the string value of the ConstantPackage
+     *
+     */
+    public String getPackage(int cpx) {
+        String str = null;
+        if (inbounds(cpx)) {
+            Constant cns = pool.get(cpx);
+            if (cns != null && cns.tag == TAG.CONSTANT_PACKAGE) {
+                str = cns.stringVal();
+            }
+        }
+        return str;
+    }
+
+    /**
+     *
+     * getTypeName
      *
      * Safely gets a Java name from a ConstantUTF8 from the CP at a given index.
      *
@@ -769,38 +813,6 @@ public class ConstantPool {
         }
 
         return getClassName((CPX) cns);
-    }
-
-    /**
-     *
-     * getModuleName
-     *
-     * Gets a Java module name from a ConstantClass from the CP at a given index
-     * where this_class is presented in the form: [Module's name in internal form (JVMS 4.2.1)]/module-info
-     * Traditionally, if this_class indicates P/Q/R, then the ClassFile occupies a file R.class in a directory representing
-     * the package P.Q. Similarly, if this_class indicates P/Q/module-info, then the ClassFile occupies a file module-info.class
-     * in a directory representing the module P.Q.
-     *
-     * Returns the Java module name, or an empty string in any other case.
-     */
-    public String getModuleName(int cpx) {
-        String this_class = getClassName(cpx);
-        if(this_class.equals("#" + cpx)) {
-            return "";
-        }
-        return _getModuleName(this_class);
-    }
-
-  /**
-   * _getModuleName
-   *
-   * Helper for getting Module's name from the this_class string.
-   *
-   * Returns an empty string if this_class is not [Module's name in internal form (JVMS 4.2.1)]/module-info
-   */
-    private String _getModuleName(String this_class) {
-        int i = this_class.lastIndexOf("/module-info");
-        return (i>0) ? this_class.substring(0,i).replace('/', '.') : "";
     }
 
     /**
@@ -942,7 +954,6 @@ public class ConstantPool {
     }
 
     /**
-     *
      * ConstantStrValue
      *
      * Safely gets the string value of any Constant at any CP index. This string is either
@@ -962,10 +973,8 @@ public class ConstantPool {
             return "#" + cpx;
         }
         switch (cns.tag) {
-
             case CONSTANT_METHODHANDLE:
             case CONSTANT_INVOKEDYNAMIC:
-//            case CONSTANT_INVOKEDYNAMIC_TRANS:
             case CONSTANT_METHOD:
             case CONSTANT_INTERFACEMETHOD:
             case CONSTANT_FIELD: {
@@ -975,21 +984,11 @@ public class ConstantPool {
                 }
             }
         }
-        if(cns.tag == TAG.CONSTANT_CLASS) {
-            String moduleName = _getModuleName(StringValue(cpx));
-            if( !moduleName.isEmpty() ) {
-                return " " + moduleName;
-            }
-        }
         return cns.tag.tagname + " " + StringValue(cpx);
     }
 
     /**
-     *
-     * print
-     *
      * prints the entire constant pool.
-     *
      */
     public void print(PrintWriter out) throws IOException {
         int cpx = 0;

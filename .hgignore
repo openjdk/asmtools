@@ -5,3 +5,4 @@ re:.*\.log$
 re:.*\.pyc$
 re:.*\.swp$
 re:.*\.DS_Store$
+re:.*\iml$

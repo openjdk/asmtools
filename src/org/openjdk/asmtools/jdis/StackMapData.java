@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -144,7 +144,7 @@ class StackMapData {
         int[] map = new int[num];
         for (int k = 0; k < num; k++) {
             int mt_val = in.readUnsignedByte();
-            StackMapType maptype = stackMapType(mt_val);
+            StackMapType maptype = stackMapType(mt_val, null);
             switch (maptype) {
                 case ITEM_Object:
                     mt_val = mt_val | (in.readUnsignedShort() << 8);
@@ -153,6 +153,7 @@ class StackMapData {
                     int pc = in.readUnsignedShort();
                     code.get_iAtt(pc).referred = true;
                     mt_val = mt_val | (pc << 8);
+                    break;
                 }
             }
             map[k] = mt_val;

@@ -619,13 +619,21 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         public R visitInvokedynamic(ConstType tag) {
             return null;
         }
-
         ;
-//        public R visitInvokedynamicTrans() { return null; };
+
+        public R visitModule(ConstType tag) {
+            return null;
+        }
+        ;
+
+        public R visitPackage(ConstType tag) {
+            return null;
+        }
+        ;
+
         public void visitDefault(ConstType tag) {
         }
-    ;
-
+        ;
     }
 
     /**
@@ -684,9 +692,12 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
                 case CONSTANT_INVOKEDYNAMIC:
                     retVal = visitInvokedynamic((ConstValue_IndyPair) val);
                     break;
-//                case CONSTANT_INVOKEDYNAMIC_TRANS:
-//                    retVal = visitInvokedynamicTrans((ConstValue_Pair) val);
-//                    break;
+                case CONSTANT_MODULE:
+                    retVal = visitModule((ConstValue_Cell) val);
+                    break;
+                case CONSTANT_PACKAGE:
+                    retVal = visitPackage((ConstValue_Cell) val);
+                    break;
                 default:
                     visitDefault(tag);
             }
@@ -758,15 +769,17 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         }
 
         ;
-        public R visitInvokedynamic(ConstValue_IndyPair p) {
-            return null;
-        }
+        public R visitInvokedynamic(ConstValue_IndyPair p) { return null;}
 
         ;
-//        public R visitInvokedynamicTrans(ConstValue_Pair p) { return null; };
-        public void visitDefault(ConstType tag) {
-        }
-    ;
+        public R visitModule(ConstValue_Cell p) { return null; }
+
+        ;
+        public R visitPackage(ConstValue_Cell p) { return null; }
+        ;
+
+        public void visitDefault(ConstType tag) {}
+        ;
 
     }
 
@@ -970,8 +983,22 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         public Void visitInvokedynamic(ConstValue_IndyPair p) {
             return null;
         }
-
         ;
+
+        @Override
+        public Void visitModule(ConstValue_Cell p) {
+            handleClassRef(p);
+            return null;
+        }
+        ;
+
+        @Override
+        public Void visitPackage(ConstValue_Cell p) {
+            handleClassRef(p);
+            return null;
+        }
+        ;
+
 
         public void handleClassRef(ConstValue_Cell cv) {
             ConstCell clref = cv.cell;
@@ -1170,9 +1197,11 @@ find:
         return FindCell(ConstType.CONSTANT_UTF8, str);
     }
 
-    public ConstCell FindCellClassByName(String name) {
-        return FindCell(ConstType.CONSTANT_CLASS, FindCellAsciz(name));
-    }
+    public ConstCell FindCellClassByName(String name) { return FindCell(ConstType.CONSTANT_CLASS, FindCellAsciz(name)); }
+
+    public ConstCell FindCellModuleByName(String name) { return FindCell(ConstType.CONSTANT_MODULE, FindCellAsciz(name)); }
+
+    public ConstCell FindCellPackageByName(String name) { return FindCell(ConstType.CONSTANT_PACKAGE, FindCellAsciz(name)); }
 
     public void write(CheckedDataOutputStream out) throws IOException {
         // Write the constant pool
@@ -1186,7 +1215,6 @@ find:
             if (cell.arg != i) {
                 throw new Parser.CompilerError(env.errorStr("comperr.constcell.invarg", Integer.toString(i), cell.arg));
             }
-// System.out.print("         WRITE CONST[" + i + "]:");
             value.write(out);
             i += value.size();
         }

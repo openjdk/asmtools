@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -78,7 +78,6 @@ public class Main {
      * Run the decoder
      */
     public synchronized boolean decode(String argv[]) {
-//      int flags = F_WARNINGS;
         long tm = System.currentTimeMillis();
         ArrayList<String> vargs = new ArrayList<>();
         ArrayList<String> vj = new ArrayList<>();
@@ -88,10 +87,10 @@ public class Main {
         // Parse arguments
         int i = 0;
         for (String arg : argv) {
+            //
             if (arg.equals("-g")) {
                 printFlags = printFlags | 1;
                 vargs.add(arg);
-//out.println("arg["+i+"]="+argv[i]+"/printFlags");
             } else if (arg.equals("-v")) {
                 DebugFlag = true;
                 vargs.add(arg);
@@ -99,7 +98,6 @@ public class Main {
             } else if (arg.equals("-version")) {
                 out.println(ProductInfo.FULL_VERSION);
             } else if (arg.startsWith("-")) {
-//out.println("arg["+i+"]="+argv[i]+"/invalid flag");
                 error(i18n.getString("jdec.error.invalid_flag", arg));
                 usage();
                 return false;
@@ -117,24 +115,23 @@ public class Main {
 
         String[] names = new String[0];
         names = vj.toArray(names);
-decode:
-        for (String inpname : names) {
-            try {
-                ClassData cc = new ClassData(inpname, printFlags, out);
-                cc.DebugFlag = DebugFlag;
-                cc.decodeClass();
-                continue decode;
-            } catch (FileNotFoundException ee) {
-                error(i18n.getString("jdec.error.cannot_read", inpname));
-            } catch (Error ee) {
-                ee.printStackTrace();
-                error(i18n.getString("jdec.error.fatal_error"));
-            } catch (Exception ee) {
-                ee.printStackTrace();
-                error(i18n.getString("jdec.error.fatal_exception"));
-            }
-            return false;
+      for (String inpname : names) {
+        try {
+          ClassData cc = new ClassData(inpname, printFlags, out);
+          cc.DebugFlag = DebugFlag;
+          cc.decodeClass();
+          continue;
+        } catch (FileNotFoundException ee) {
+          error(i18n.getString("jdec.error.cannot_read", inpname));
+        } catch (Error ee) {
+          ee.printStackTrace();
+          error(i18n.getString("jdec.error.fatal_error"));
+        } catch (Exception ee) {
+          ee.printStackTrace();
+          error(i18n.getString("jdec.error.fatal_exception"));
         }
+        return false;
+      }
         return true;
     }
 

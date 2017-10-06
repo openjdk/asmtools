@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -258,6 +258,8 @@ public class ParserAnnotation extends ParseBase {
                 annttns.add(parseAnnotation());
             } else if (isTypeAnnotationToken(scanner.stringValue)) {
                 annttns.add(parseTypeAnnotation());
+            } else {
+                return null;
             }
         }
 
@@ -369,7 +371,7 @@ public class ParserAnnotation extends ParseBase {
             // First - validate that the parameter number (integer)
             // (eg >= 0, < numParams, and param num is not previously set)
             int paramNum = scanner.intValue;
-            Integer iParamNum = new Integer(paramNum);
+            Integer iParamNum = Integer.valueOf(paramNum);
             if (paramNum < 0 || paramNum >= totalParams) {
                 //invalid Parameter number.  Throw an error.
                 env.error(scanner.pos, "invalid.paramnum", paramNum);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -434,7 +434,7 @@ class CodeAttr extends AttrData {
     public StackMapData getStackMap() {
         if (curMapEntry == null) {
             curMapEntry = new StackMapData(env);
-            if (cls.major_version >= SPLIT_VERIFIER_CFV) {
+            if (cls.cfv.major_version() >= SPLIT_VERIFIER_CFV) {
                 curMapEntry.setIsStackMapTable(true);
             }
         }
@@ -473,7 +473,7 @@ class CodeAttr extends AttrData {
             curMapEntry.pc = cur_pc;
             StackMapData prevStackFrame = null;
             if (stackMap == null) {
-                if (cls.major_version >= SPLIT_VERIFIER_CFV) {
+                if (cls.cfv.major_version() >= SPLIT_VERIFIER_CFV) {
                     stackMap = new DataVectorAttr<>(cls, AttrTag.ATT_StackMapTable.parsekey());
                 } else {
                     stackMap = new DataVectorAttr<>(cls, AttrTag.ATT_StackMap.parsekey());

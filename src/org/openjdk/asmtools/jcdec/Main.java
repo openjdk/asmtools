@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -250,7 +250,7 @@ public class Main {
                     out_println("class #" + in.readUnsignedShort() + "; // #" + i);
                     break;
 
-                case CONSTANT_PACKAGE:
+                case CONSTANT_JAVACARD_PACKAGE:
                     out_begin("package { // #" + i);
                     out_println(toHex(in.readUnsignedByte(), 1) + ";  // flags");
                     out_println("#" + in.readUnsignedShort() + "; // name");
