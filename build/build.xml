@@ -45,12 +45,10 @@ questions.
     <property name="ws.test.dir" location="${ws.src.dir}/test"/>
 
     <!-- Build output area -->
-    <property name="build.root" location="${ws.top.dir}/.." />
-    <property name="build.base.dir" location="${build.root}/${PRODUCT_NAME}-${PRODUCT_VERSION}-build" />
+    <property name="build.base.dir" location="${BUILD_DIR}" />
 
     <!-- BuildProduct Area -->
-    <property name="buildprod.root" location="${ws.top.dir}/../"/>
-    <property name="buildprod.dir" location="${buildprod.root}/${proj.build.product.name}-${proj.build.product.version}-build"/>
+    <property name="buildprod.dir" location="${BUILD_DIR}" />
     <tstamp>
         <format  pattern="MM-dd-yyyy_hh-mm-aa" property="touch.time"/>
     </tstamp>
