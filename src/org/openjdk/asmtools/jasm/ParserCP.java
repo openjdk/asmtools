@@ -469,6 +469,50 @@ d2l:            {
             return obj;
         }
 
+        @Override
+        public ConstantPool.ConstValue_CondyPair visitConstantdynamic(ConstType tag) {
+            debugStr("------- [ParserCPVisitor.visitConstantDynamic]: ");
+            ConstantPool.ConstValue_CondyPair obj = null;
+            try {
+                if (scanner.token == Token.INTVAL) {
+                    // Handle explicit constant pool form
+                    int bsmIndex = scanner.intValue;
+                    scanner.scan();
+                    scanner.expect(Token.COLON);
+                    if (scanner.token != Token.CPINDEX) {
+                        env.traceln("token=" + scanner.token);
+                        env.error(scanner.pos, "token.expected", "<CPINDEX>");
+                        throw new Scanner.SyntaxError();
+                    }
+                    int cpx = scanner.intValue;
+                    scanner.scan();
+                    // Put a placeholder in place of BSM.
+                    // resolve placeholder after the attributes are scanned.
+                    BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
+                    obj = new ConstantPool.ConstValue_CondyPair(bsmData, parser.pool.getCell(cpx));
+
+                } else {
+                    // Handle full form
+                    ConstantPool.ConstCell MHCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
+                    scanner.expect(Token.COLON);
+                    ConstantPool.ConstCell NapeCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
+
+                    ArrayList<ConstantPool.ConstCell> bsm_args = new ArrayList<>(256);
+                    while (scanner.token != Token.SEMICOLON) {
+                        if (scanner.token == Token.COMMA) {
+                            scanner.scan();
+                        }
+                        bsm_args.add(parseConstRef(null));
+                    }
+                    BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
+                    parser.cd.addBootstrapMethod(bsmData);
+                    obj = new ConstantPool.ConstValue_CondyPair(bsmData, NapeCell);
+                }
+            } catch (IOException e) {
+                IOProb = e;
+            }
+            return obj;
+        }
     } // End Visitor
 
     /**

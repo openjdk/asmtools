@@ -65,6 +65,7 @@ public class ConstantPool {
         CONSTANT_NAMEANDTYPE        ((byte) 12, "NameAndType", "CONSTANT_NAMEANDTYPE"),
         CONSTANT_METHODHANDLE       ((byte) 15, "MethodHandle", "CONSTANT_METHODHANDLE"),
         CONSTANT_METHODTYPE         ((byte) 16, "MethodType", "CONSTANT_METHODTYPE"),
+        CONSTANT_CONSTANTDYNAMIC    ((byte) 17, "ConstantDynamic", "CONSTANT_CONSTANTDYNAMIC"),
         CONSTANT_INVOKEDYNAMIC      ((byte) 18, "InvokeDynamic", "CONSTANT_INVOKEDYNAMIC"),
         CONSTANT_MODULE             ((byte) 19, "Module", "CONSTANT_MODULE"),
         CONSTANT_PACKAGE            ((byte) 20, "Package", "CONSTANT_PACKAGE");
@@ -164,6 +165,7 @@ public class ConstantPool {
         taghash.put(new Byte(TAG.CONSTANT_NAMEANDTYPE.value()), TAG.CONSTANT_NAMEANDTYPE);
         taghash.put(new Byte(TAG.CONSTANT_METHODHANDLE.value()), TAG.CONSTANT_METHODHANDLE);
         taghash.put(new Byte(TAG.CONSTANT_METHODTYPE.value()), TAG.CONSTANT_METHODTYPE);
+        taghash.put(new Byte(TAG.CONSTANT_CONSTANTDYNAMIC.value()), TAG.CONSTANT_CONSTANTDYNAMIC);
         taghash.put(new Byte(TAG.CONSTANT_INVOKEDYNAMIC.value()), TAG.CONSTANT_INVOKEDYNAMIC);
         taghash.put(new Byte(TAG.CONSTANT_MODULE.value()), TAG.CONSTANT_MODULE);
         taghash.put(new Byte(TAG.CONSTANT_PACKAGE.value()), TAG.CONSTANT_PACKAGE);
@@ -486,7 +488,7 @@ public class ConstantPool {
      *
      * Constant entries that contain two constant-pool indices. Usually, this includes:
      * CONSTANT_FIELD CONSTANT_METHOD CONSTANT_INTERFACEMETHOD CONSTANT_NAMEANDTYPE
-     * CONSTANT_METHODHANDLE CONSTANT_INVOKEDYNAMIC
+     * CONSTANT_METHODHANDLE CONSTANT_CONSTANTDYNAMIC CONSTANT_INVOKEDYNAMIC
      *
      */
     class CPX2 extends Constant {
@@ -515,6 +517,7 @@ public class ConstantPool {
                 case CONSTANT_METHODHANDLE:
                     str = subtagToString(value1) + ":" + StringValue(value2);
                     break;
+                case CONSTANT_CONSTANTDYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
                     int bsm_attr_idx = value1;
                     int nape_idx = value2;
@@ -542,7 +545,7 @@ public class ConstantPool {
                     }
 
                     str = StringValue(bsm_ref) + ":" + StringValue(nape_idx)
-                            + bsm_args_str.toString();
+                          + bsm_args_str.toString();
                     break;
                 default:
                     break;
@@ -566,6 +569,7 @@ public class ConstantPool {
                 case CONSTANT_NAMEANDTYPE:
                     out.println("#" + value1 + ":#" + value2 + ";\t//  " + stringVal());
                     break;
+                case CONSTANT_CONSTANTDYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
                     out.println(value1 + ":#" + value2 + ";\t//  " + stringVal());
                     break;
@@ -650,6 +654,7 @@ public class ConstantPool {
                 case CONSTANT_METHOD:
                 case CONSTANT_INTERFACEMETHOD:
                 case CONSTANT_NAMEANDTYPE:
+                case CONSTANT_CONSTANTDYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
                     pool.add(i, new CPX2(tagobj, in.readUnsignedShort(), in.readUnsignedShort()));
                     break;
@@ -974,6 +979,7 @@ public class ConstantPool {
         }
         switch (cns.tag) {
             case CONSTANT_METHODHANDLE:
+            case CONSTANT_CONSTANTDYNAMIC:
             case CONSTANT_INVOKEDYNAMIC:
             case CONSTANT_METHOD:
             case CONSTANT_INTERFACEMETHOD:

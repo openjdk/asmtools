@@ -231,6 +231,7 @@ class ClassData {
                 case CONSTANT_NAMEANDTYPE:
                     cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
                     break;
+                case CONSTANT_CONSTANTDYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
                     cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
                     break;
@@ -340,6 +341,9 @@ class ClassData {
                         valstr = (String) cpool[i];
                         break;
                     case CONSTANT_METHODTYPE:
+                        valstr = (String) cpool[i];
+                        break;
+                    case CONSTANT_CONSTANTDYNAMIC:
                         valstr = (String) cpool[i];
                         break;
                     case CONSTANT_INVOKEDYNAMIC:

@@ -304,7 +304,7 @@ public class JcodTokens {
         // Constant 14 reserved
         CONSTANT_METHODHANDLE               (15, "CONSTANT_METHODHANDLE", "MethodHandle"),
         CONSTANT_METHODTYPE                 (16, "CONSTANT_METHODTYPE", "MethodType"),
-      // Constant 17 reserved
+        CONSTANT_CONSTANTDYNAMIC            (17, "CONSTANT_CONSTANTDYNAMIC", "ConstantDynamic"),
         CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic"),
         CONSTANT_MODULE                     (19, "CONSTANT_MODULE",  "Module"),
         CONSTANT_MODULE_PACKAGE             (20, "CONSTANT_PACKAGE", "Package");

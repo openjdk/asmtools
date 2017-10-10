@@ -146,8 +146,8 @@ class ClassData extends MemberData {
 
     /*
      * After a constant pool has been explicitly declared,
-     * this method links the Constant_InvokeDynamic constants
-     * with any bootstrap methods that they index in the
+     * this method links the Constant_InvokeDynamic Constant_ConstantDynamic
+     * constants with any bootstrap methods that they index in the
      * Bootstrap Methods Attribute
      */
     protected void relinkBootstrapMethods() {
@@ -163,27 +163,25 @@ class ClassData extends MemberData {
                 ref = cell.ref;
             }
             if (ref != null
-                    && ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC) {
+                    && (ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC || ref.tag == ConstType.CONSTANT_CONSTANTDYNAMIC)) {
                 // Find only the Constant
-                ConstantPool.ConstValue_IndyPair refval = (ConstantPool.ConstValue_IndyPair) ref;
-                if (refval != null) {
-                    BootstrapMethodData bsmdata = refval.bsmData;
-                    // only care about BSM Data that were placeholders
-                    if (bsmdata != null && bsmdata.isPlaceholder()) {
-                        // find the real BSM Data at the index
-                        int bsmindex = bsmdata.placeholder_index;
-                        if (bsmindex < 0 || bsmindex > bootstrapMethodsAttr.size()) {
-                            // bad BSM index --
-                            // give a warning, but place the index in the arg anyway
-                            env.traceln("Warning: (ClassData.relinkBootstrapMethods()): Bad bootstrapMethods index: " + bsmindex);
-                            // env.error("const.bsmindex", bsmindex);
-                            bsmdata.arg = bsmindex;
-                        } else {
+                ConstantPool.ConstValue_IndyOrCondyPair refval = (ConstantPool.ConstValue_IndyOrCondyPair) ref;
+                BootstrapMethodData bsmdata = refval.bsmData;
+                // only care about BSM Data that were placeholders
+                if (bsmdata != null && bsmdata.isPlaceholder()) {
+                    // find the real BSM Data at the index
+                    int bsmindex = bsmdata.placeholder_index;
+                    if (bsmindex < 0 || bsmindex > bootstrapMethodsAttr.size()) {
+                        // bad BSM index --
+                        // give a warning, but place the index in the arg anyway
+                        env.traceln("Warning: (ClassData.relinkBootstrapMethods()): Bad bootstrapMethods index: " + bsmindex);
+                        // env.error("const.bsmindex", bsmindex);
+                        bsmdata.arg = bsmindex;
+                    } else {
 
-                            BootstrapMethodData realbsmdata = bootstrapMethodsAttr.get(bsmindex);
-                            // make the IndyPairs BSM Data point to the one from the attribute
-                            refval.bsmData = realbsmdata;
-                        }
+                        BootstrapMethodData realbsmdata = bootstrapMethodsAttr.get(bsmindex);
+                        // make the IndyPairs BSM Data point to the one from the attribute
+                        refval.bsmData = realbsmdata;
                     }
                 }
             }
