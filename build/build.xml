@@ -27,12 +27,16 @@ questions.
 
 <project name="asmtools" default="build" basedir=".">
 
+    <!--****************************************************************-->
+    <!--Property & FileSet Definitions					                -->
+    <!--****************************************************************-->
+    <concat destfile="asmtools.properties" >
+        <fileset file="build.properties" />
+        <fileset file="productinfo.properties" />
+    </concat>
+    <property file="asmtools.properties"/>
+    <delete file="asmtools.properties"/>
 
-    <!--****************************************************************-->
-    <!--Property & FileSet Definitions					-->
-    <!--****************************************************************-->
-    <property file="build.properties"/>
-    <property file="productinfo.properties"/>
     <property name="proj.build.product.version" value="${PRODUCT_VERSION}"/>
     <property name="proj.build.product.name.prefix" value="${PRODUCT_NAME}"/>
     <property name="proj.build.product.name" value="${proj.build.product.name.prefix}"/>

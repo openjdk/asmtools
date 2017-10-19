@@ -455,9 +455,7 @@ d2l:            {
                         if (sep) scanner.expect(Token.COMMA);
                         bsm_args.add(parseConstRef(null));
                         scanner.idValue = null; // Clear tag
-                        bsm_args.add(parseConstRef(null));
                     }
-
 
                     BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
                     parser.cd.addBootstrapMethod(bsmData);
