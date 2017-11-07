@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.IllegalFormatException;
 
 /**
  *
@@ -41,6 +42,8 @@ public class ConstantPool {
 
     private static final Hashtable<Byte, TAG> taghash = new Hashtable<>();
     private static final Hashtable<Byte, SUBTAG> subtaghash = new Hashtable<>();
+
+    private Throwable foundProblem;
 
     /*-------------------------------------------------------- */
     /* ConstantPool Inner Classes */
@@ -216,6 +219,17 @@ public class ConstantPool {
         public String toString() {
             return "<CONSTANT " + tag.toString() + " " + stringVal() + ">";
         }
+
+        private IOException issue;
+
+        public IOException getIssue() {
+            return issue;
+        }
+
+        public void setIssue(IOException value) {
+            issue = value;
+        }
+
     }
 
     /* -------------------------------------------------------- */
@@ -527,8 +541,7 @@ public class ConstantPool {
                     } catch (NullPointerException npe) {
                         return "<Missing BootstrapMethods attribute>";
                     } catch (IndexOutOfBoundsException ioob) {
-                        return "<Invalid bootstrap method index:"
-                                + bsm_attr_idx + ">";
+                        return "<Invalid bootstrap method index:" + bsm_attr_idx + ">";
                     }
 
                     int bsm_ref = bsmData.bsm_index;
@@ -537,16 +550,25 @@ public class ConstantPool {
                     int bsm_args_len = bsmData.bsm_args_indexes.size();
                     for (int i = 0; i < bsm_args_len; i++) {
                         int bsm_arg_idx = bsmData.bsm_args_indexes.get(i);
-                        bsm_args_str.append(" ")
-                                .append(ConstantStrValue(bsm_arg_idx));
-                        if (i + 1 < bsm_args_len) {
-                            bsm_args_str.append(",");
+                        Constant cnt = pool.get(bsm_arg_idx);
+                        if(cnt.equals(this)) {
+                            String s = "circular reference to " + cnt.tag.tagname() + " #" + bsm_arg_idx;
+                            bsm_args_str.append("  <")
+                                    .append(s)
+                                    .append(">");
+                            cnt.setIssue(new IOException(s));
+                        } else {
+                            bsm_args_str.append(" ")
+                                    .append(ConstantStrValue(bsm_arg_idx));
+                            if (i + 1 < bsm_args_len) {
+                                bsm_args_str.append(",");
+                            }
                         }
                     }
-
-                    str = StringValue(bsm_ref) + ":" + StringValue(nape_idx)
-                          + bsm_args_str.toString();
-                    break;
+                    str = StringValue(bsm_ref) +
+                            ":" +
+                            StringValue(nape_idx) +
+                            bsm_args_str.toString();
                 default:
                     break;
             }

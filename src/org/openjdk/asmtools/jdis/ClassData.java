@@ -28,7 +28,9 @@ import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
@@ -493,11 +495,22 @@ printSugar:
                 out.print(" @" + moduleData.getModuleVersion());
             out.println();
         }
+
+        List<IOException> issues = getIssues();
+        if( !issues.isEmpty() ) {
+
+            throw issues.get(0);
+        }
     } // end ClassData.print()
 
     // Gets the type of processed binary
     private boolean isModuleUnit() {
         return moduleData != null;
     }
+
+    private List<IOException> getIssues() {
+        return this.pool.pool.stream().filter(c->c!=null).filter(c->c.getIssue() != null).map(c->c.getIssue()).collect(Collectors.toList());
+    }
+
 }// end class ClassData
 
