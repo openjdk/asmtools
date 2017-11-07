@@ -37,11 +37,12 @@ public class HexUtils {
     private static final char hexTable[] = hexString.toCharArray();
 
     public static String toHex(long val, int width) {
-        StringBuffer s = new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         for (int i = width - 1; i >= 0; i--) {
-            s.append(hexTable[((int) (val >> (4 * i))) & 0xF]);
+            sb.append(hexTable[((int) (val >> (4 * i))) & 0xF]);
         }
-        return "0x" + s.toString();
+        String s = sb.toString();
+        return "0x" + (s.isEmpty() ? "0" : s);
     }
 
     public static String toHex(long val) {

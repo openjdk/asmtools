@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.asmutils.HexUtils;
 import static org.openjdk.asmtools.jasm.Tables.*;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -143,7 +144,13 @@ class StackMapData {
     private int[] readMapElements(CodeData code, DataInputStream in, int num) throws IOException {
         int[] map = new int[num];
         for (int k = 0; k < num; k++) {
-            int mt_val = in.readUnsignedByte();
+            int mt_val = 0;
+            try {
+                mt_val = in.readUnsignedByte();
+            } catch (EOFException eofe) {
+                TraceUtils.traceln("");
+                throw eofe;
+            }
             StackMapType maptype = stackMapType(mt_val, null);
             switch (maptype) {
                 case ITEM_Object:
