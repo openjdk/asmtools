@@ -33,7 +33,6 @@ import java.io.*;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.Tables.AnnotElemType.AE_UNKNOWN;
-import static org.openjdk.asmtools.jasm.Tables.StackMapType.ITEM_UNKNOWN;
 import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
 
 /**
@@ -231,7 +230,7 @@ class ClassData {
                 case CONSTANT_NAMEANDTYPE:
                     cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
                     break;
-                case CONSTANT_CONSTANTDYNAMIC:
+                case CONSTANT_DYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
                     cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
                     break;
@@ -343,7 +342,7 @@ class ClassData {
                     case CONSTANT_METHODTYPE:
                         valstr = (String) cpool[i];
                         break;
-                    case CONSTANT_CONSTANTDYNAMIC:
+                    case CONSTANT_DYNAMIC:
                         valstr = (String) cpool[i];
                         break;
                     case CONSTANT_INVOKEDYNAMIC:

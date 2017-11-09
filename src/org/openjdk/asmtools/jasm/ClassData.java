@@ -25,7 +25,6 @@ package org.openjdk.asmtools.jasm;
 import java.io.*;
 import java.util.ArrayList;
 
-import static org.openjdk.asmtools.jasm.Constants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
@@ -146,7 +145,7 @@ class ClassData extends MemberData {
 
     /*
      * After a constant pool has been explicitly declared,
-     * this method links the Constant_InvokeDynamic Constant_ConstantDynamic
+     * this method links the Constant_InvokeDynamic Constant_Dynamic
      * constants with any bootstrap methods that they index in the
      * Bootstrap Methods Attribute
      */
@@ -163,7 +162,7 @@ class ClassData extends MemberData {
                 ref = cell.ref;
             }
             if (ref != null
-                    && (ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC || ref.tag == ConstType.CONSTANT_CONSTANTDYNAMIC)) {
+                    && (ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC || ref.tag == ConstType.CONSTANT_DYNAMIC)) {
                 // Find only the Constant
                 ConstantPool.ConstValue_IndyOrCondyPair refval = (ConstantPool.ConstValue_IndyOrCondyPair) ref;
                 BootstrapMethodData bsmdata = refval.bsmData;

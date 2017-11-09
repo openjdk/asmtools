@@ -376,7 +376,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
 
         protected ConstValue_IndyOrCondyPair(ConstType tag, BootstrapMethodData bsmdata, ConstCell napeCell) {
             super(tag);
-            assert (tag == ConstType.CONSTANT_CONSTANTDYNAMIC && ConstValue_CondyPair.class.isAssignableFrom(getClass())) ||
+            assert (tag == ConstType.CONSTANT_DYNAMIC && ConstValue_CondyPair.class.isAssignableFrom(getClass())) ||
                    tag == ConstType.CONSTANT_INVOKEDYNAMIC && ConstValue_IndyPair.class.isAssignableFrom(getClass());
 
             this.bsmData = bsmdata;
@@ -422,7 +422,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     static public class ConstValue_CondyPair extends ConstValue_IndyOrCondyPair {
 
         public ConstValue_CondyPair(BootstrapMethodData bsmdata, ConstCell napeCell) {
-            super(ConstType.CONSTANT_CONSTANTDYNAMIC, bsmdata, napeCell);
+            super(ConstType.CONSTANT_DYNAMIC, bsmdata, napeCell);
         }
     }
 
@@ -559,8 +559,8 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
                 case CONSTANT_METHODHANDLE:
                     retVal = visitMethodhandle(tag);
                     break;
-                case CONSTANT_CONSTANTDYNAMIC:
-                    retVal = visitConstantdynamic(tag);
+                case CONSTANT_DYNAMIC:
+                    retVal = visitDynamic(tag);
                     break;
                 case CONSTANT_INVOKEDYNAMIC:
                     retVal = visitInvokedynamic(tag);
@@ -636,7 +636,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         }
 
         ;
-        public R visitConstantdynamic(ConstType tag) {
+        public R visitDynamic(ConstType tag) {
             return null;
         }
 
@@ -713,8 +713,8 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
                 case CONSTANT_METHODHANDLE:
                     retVal = visitMethodhandle((ConstValue_Pair) val);
                     break;
-                case CONSTANT_CONSTANTDYNAMIC:
-                    retVal = visitConstantdynamic((ConstValue_CondyPair) val);
+                case CONSTANT_DYNAMIC:
+                    retVal = visitDynamic((ConstValue_CondyPair) val);
                     break;
                 case CONSTANT_INVOKEDYNAMIC:
                     retVal = visitInvokedynamic((ConstValue_IndyPair) val);
@@ -796,7 +796,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         }
 
         ;
-        public R visitConstantdynamic(ConstValue_CondyPair p) { return null;}
+        public R visitDynamic(ConstValue_CondyPair p) { return null;}
 
         ;
         public R visitInvokedynamic(ConstValue_IndyPair p) { return null;}
@@ -1010,7 +1010,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
 
         ;
         @Override
-        public Void visitConstantdynamic(ConstValue_CondyPair p) {
+        public Void visitDynamic(ConstValue_CondyPair p) {
             return null;
         }
 

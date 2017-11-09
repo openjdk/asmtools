@@ -468,8 +468,8 @@ d2l:            {
         }
 
         @Override
-        public ConstantPool.ConstValue_CondyPair visitConstantdynamic(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitConstantDynamic]: ");
+        public ConstantPool.ConstValue_CondyPair visitDynamic(ConstType tag) {
+            debugStr("------- [ParserCPVisitor.visitDynamic]: ");
             ConstantPool.ConstValue_CondyPair obj = null;
             try {
                 if (scanner.token == Token.INTVAL) {
