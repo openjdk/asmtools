@@ -41,7 +41,7 @@ class ClassData extends MemberData {
 
     /*-------------------------------------------------------- */
     /* ClassData Fields */
-    CFVersion cfv = new CFVersion();
+    CFVersion cfv;
     ConstantPool.ConstCell me, father;
     String myClassName;
     AttrData sourceFileNameAttr;
@@ -83,7 +83,7 @@ class ClassData extends MemberData {
         }
         this.father = father;
         this.interfaces = interfaces;
-
+        // Set default class file version if it is not set.
         cfv.initClassDefaults();
     }
 
@@ -93,25 +93,8 @@ class ClassData extends MemberData {
         this.me = pool.FindCellClassByName("module-info");
         // super_class: zero
         this.father = new ConstantPool.ConstCell(0);
-
         cfv.initModuleDefaults();
     }
-
-    /**
-     * default constructor
-     *
-     * @param env
-     */
-    public ClassData(Environment env) {
-        super(null, 0);  // for a class, these get inited in the super - later.
-        cls = this;
-
-        this.env = env;
-        pool = new ConstantPool(env);
-        cdos = new CDOutputStream();
-
-    }
-
 
     /**
      * canonical default constructor
@@ -120,15 +103,15 @@ class ClassData extends MemberData {
      * @param cfv The class file version that this class file supports.
      */
     public ClassData(Environment env, CFVersion cfv) {
-        this(env);
+        super(null, 0);  // for a class, these get inited in the super - later.
+        cls = this;
+
+        this.env = env;
         this.cfv = cfv;
-    }
 
-    public ClassData(Environment env, int acc, ConstantPool.ConstCell me, ConstantPool.ConstCell father, ArrayList<Argument> impls) {
-        this(env);
-        init(acc, me, father, impls);
+        pool = new ConstantPool(env);
+        cdos = new CDOutputStream();
     }
-
 
     /* *********************************************** */
     /**

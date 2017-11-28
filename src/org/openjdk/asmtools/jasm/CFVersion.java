@@ -25,7 +25,7 @@ package org.openjdk.asmtools.jasm;
 /*
  * Class File Version
  */
-public class CFVersion {
+public class CFVersion implements Cloneable{
     /**
      * Default versions of class file
      */
@@ -37,6 +37,7 @@ public class CFVersion {
 
     private short major_version;
     private short minor_version;
+    private boolean frozen = false;
 
     public CFVersion() {
         major_version = UNDEFINED_VERSION;
@@ -44,17 +45,18 @@ public class CFVersion {
     }
 
     public CFVersion(short major_version, short minor_version) {
+        frozen = true;
         this.major_version = major_version;
         this.minor_version = minor_version;
     }
 
     public void setMajorVersion(short major_version) {
-        if ( !isSet() )
+        if ( !frozen )
             this.major_version = major_version;
     }
 
     public void setMinorVersion(short minor_version) {
-        if ( !isSet() )
+        if (!frozen)
             this.minor_version = minor_version;
     }
 
@@ -74,7 +76,7 @@ public class CFVersion {
     }
 
     public void initClassDefaults() {
-        if( ! isSet()) {
+        if( !isSet() ) {
             major_version = DEFAULT_MAJOR_VERSION;
             minor_version = DEFAULT_MINOR_VERSION;
         }
@@ -86,5 +88,13 @@ public class CFVersion {
 
     public short major_version() {
         return this.major_version;
+    }
+
+    public CFVersion clone() {
+        try {
+            return (CFVersion)super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

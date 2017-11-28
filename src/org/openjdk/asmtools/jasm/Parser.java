@@ -102,7 +102,7 @@ class Parser extends ParseBase {
     private boolean                     explicitcp = false;
     private String                      moduleName = null;
     private ModuleAttr                  moduleAttribute;
-    private CFVersion                   cfv;
+    private CFVersion                   currentCFV;
 
 
     /** other parser components */
@@ -119,10 +119,10 @@ class Parser extends ParseBase {
      */
     protected Parser(Environment sf, CFVersion cfVersion) throws IOException {
         super.init(new Scanner(sf), this, sf);
-        this.cfv = cfVersion;
-        this.annotParser = new ParserAnnotation(scanner, this, env);
-        this.cpParser = new ParserCP(scanner, this, env);
-        this.instrParser = new ParserInstr(scanner, this, cpParser, env);
+        this.currentCFV   = cfVersion;
+        this.annotParser  = new ParserAnnotation(scanner, this, env);
+        this.cpParser     = new ParserCP(scanner, this, env);
+        this.instrParser  = new ParserInstr(scanner, this, cpParser, env);
     }
 
 
@@ -160,7 +160,7 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cfv.setMajorVersion((short)scanner.intValue);
+            currentCFV.setMajorVersion((short)scanner.intValue);
             scanner.scan();
             if (scanner.token != Token.COLON) {
                 break parse_ver;
@@ -169,9 +169,9 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cfv.setMinorVersion((short)scanner.intValue);
+            currentCFV.setMinorVersion((short)scanner.intValue);
             scanner.scan();
-            debugScan("     [Parser.parseVersionPkg]: " + cfv.asString());
+            debugScan("     [Parser.parseVersionPkg]: " + currentCFV.asString());
             return;
         }
         env.error(scanner.pos, "version.expected");
@@ -190,7 +190,7 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cfv.setMajorVersion((short)scanner.intValue);
+            cd.cfv.setMajorVersion((short)scanner.intValue);
             scanner.scan();
             if (scanner.token != Token.COLON) {
                 break parse_ver;
@@ -199,9 +199,9 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cfv.setMinorVersion((short)scanner.intValue);
+            cd.cfv.setMinorVersion((short)scanner.intValue);
             scanner.scan();
-            debugStr( "parseVersion: " + cfv.asString());
+            debugStr( "parseVersion: " + cd.cfv.asString());
             return;
         }
         env.error(scanner.pos, "version.expected");
@@ -1117,7 +1117,7 @@ class Parser extends ParseBase {
         Modifiers.checkClassModifiers(env, mod, scanner);
 
         if (cd == null) {
-            cd = new ClassData(env, cfv);
+            cd = new ClassData(env, currentCFV.clone());
             pool = cd.pool;
         }
 
@@ -1274,7 +1274,7 @@ class Parser extends ParseBase {
   private void parseModule() throws IOException {
     debugStr("   [Parser.parseModule]:  Begin ");
     if (cd == null) {
-      cd = new ClassData(env, cfv);
+      cd = new ClassData(env, currentCFV.clone());
       pool = cd.pool;
     }
     if (clsAnnttns != null) {
@@ -1593,7 +1593,6 @@ class Parser extends ParseBase {
             // Fix any bootstrap Method references too
             cd.relinkBootstrapMethods();
         }
-
         cd.endClass();
         clsDataList.add(cd);
         cd = null;
@@ -1626,7 +1625,7 @@ class Parser extends ParseBase {
             // a package annotation, or a class annotation
             if (scanner.token == Token.ANNOTATION) {
                 if (cd == null) {
-                    cd = new ClassData(env, cfv);
+                    cd = new ClassData(env, currentCFV.clone());
                     pool = cd.pool;
                 }
                 pkgAnnttns = annotParser.scanAnnotations();
@@ -1663,17 +1662,18 @@ class Parser extends ParseBase {
 
             // package-info
             if (sourceName.endsWith("package-info.jasm")) {
-                env.traceln("Creating \"package-info.jasm\": package: " + pkg + " " + cfv.asString());
+                env.traceln("Creating \"package-info.jasm\": package: " + pkg + " " + currentCFV.asString());
 
                 if (cd == null) {
-                    cd = new ClassData(env, cfv);
+                    cd = new ClassData(env, currentCFV.clone());
                     pool = cd.pool;
                 } else {
-                    cd.cfv = cfv;
+                    cd.cfv = currentCFV.clone();
                 }
                 ConstCell me = pool.FindCellClassByName(pkgPrefix + "package-info");
 
-                if (cfv.major_version() > 49) {
+                // Interface package-info should be marked synthetic and abstract
+                if (currentCFV.major_version() > 49) {
                     mod |= SYNTHETIC_ATTRIBUTE;
                 }
                 cd.init(mod, me, new ConstCell(0), null);
@@ -1707,8 +1707,10 @@ class Parser extends ParseBase {
                     // Parse annotations
                     if (scanner.token == Token.ANNOTATION) {
                         if (cd == null) {
-                            cd = new ClassData(env, cfv);
+                            cd = new ClassData(env, currentCFV.clone());
                             pool = cd.pool;
+                        } else {
+                            cd.cfv = currentCFV.clone();
                         }
                         clsAnnttns = annotParser.scanAnnotations();
                     }

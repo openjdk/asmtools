@@ -237,7 +237,6 @@ public class Main {
         strict = false;
         props = null;
         nwarnings = 0;
-        cfv = new CFVersion();
         bytelimit = 0;
     }
 
@@ -261,7 +260,7 @@ public class Main {
                     sf = new Environment(new File(inpname), out, nowarn);
                     sf.traceFlag = traceFlag;
                     sf.debugInfoFlag = debugInfoFlag;
-                    p = new Parser(sf, cfv);
+                    p = new Parser(sf, cfv.clone() );
                     p.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
                     p.parseFile();
                 } catch (FileNotFoundException ex) {
