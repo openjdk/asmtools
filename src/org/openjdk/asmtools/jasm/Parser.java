@@ -416,6 +416,7 @@ class Parser extends ParseBase {
             case STRINGVAL:
                 v = scanner.stringValue;
                 scanner.scan();
+                v = prependPackage(v, uncond);
                 return pool.FindCellAsciz(v);
                 // Some identifiers might coincide with token names.
                 // these should be OK to use as identifier names.
@@ -435,12 +436,7 @@ class Parser extends ParseBase {
             case IDENT:
                 v = scanner.idValue;
                 scanner.scan();
-                if (uncond || (scanner.token == Token.FIELD)) {
-                    if ((!v.contains("/"))             // class identifier doesn't contain "/"
-                            && (!v.contains("["))){    // class identifier doesn't contain "["
-                        v = pkgPrefix + v; // add package
-                    }
-                }
+                v = prependPackage(v, uncond);
                 return pool.FindCellAsciz(v);
             default:
                 ConstType key = Tables.tag(scanner.token.value());
@@ -448,6 +444,16 @@ class Parser extends ParseBase {
                 env.error(scanner.prevPos, "name.expected", "\"" + scanner.token.parsekey() + "\"");
                 throw new Scanner.SyntaxError();
         }
+    }
+
+    private String prependPackage(String className, boolean uncond) {
+        if (uncond || (scanner.token == Token.FIELD)) {
+            if ((!className.contains("/"))             // class identifier doesn't contain "/"
+                    && (!className.contains("["))){    // class identifier doesn't contain "["
+                className = pkgPrefix + className; // add package
+            }
+        }
+        return className;
     }
 
 
