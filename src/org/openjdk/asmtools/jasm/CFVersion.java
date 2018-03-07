@@ -44,8 +44,8 @@ public class CFVersion implements Cloneable{
         minor_version = UNDEFINED_VERSION;
     }
 
-    public CFVersion(short major_version, short minor_version) {
-        frozen = true;
+    public CFVersion(boolean frozenCFV, short major_version, short minor_version) {
+        frozen = frozenCFV;
         this.major_version = major_version;
         this.minor_version = minor_version;
     }

@@ -107,6 +107,7 @@ public class Main {
      */
     private synchronized boolean parseArgs(String argv[]) {
         // Parse arguments
+        boolean frozenCFV = false;
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
             switch (arg) {
@@ -180,6 +181,10 @@ public class Main {
                         }
                     }
                     break;
+                case "-fixcv":
+                    // overrides cf version if it's defined in the source file.
+                    frozenCFV = true;
+                // public options
                 case "-cv":
                     if ((i + 1) >= argv.length) {
                         error(i18n.getString("jasm.error.cv_requires_arg"));
@@ -198,7 +203,7 @@ public class Main {
                         return false;
                     }
                     try {
-                        cfv = new CFVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1]) );
+                        cfv = new CFVersion(frozenCFV, Short.parseShort(versions[0]), Short.parseShort(versions[1]) );
                     } catch (NumberFormatException e) {
                         error(i18n.getString("jasm.error.invalid_major_minor_param"));
                         usage();

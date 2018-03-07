@@ -188,7 +188,7 @@ public class Tables {
         // Constant for ME Spec (StackMap does not appear in SE VM Spec)
         ATT_Unrecognized                            (0, "ATT_Unrecognized", ""),
         ATT_StackMap                                (1, "ATT_StackMap", "StackMap"),
-    // Numbers corespond to VM spec (chapter 4.7.X)
+        // Numbers corespond to VM spec (chapter 4.7.X)
         ATT_ConstantValue                           (2, "ATT_ConstantValue", "ConstantValue"),
         ATT_Code                                    (3, "ATT_Code", "Code"),
         ATT_StackMapTable                           (4, "ATT_StackMapTable", "StackMapTable"),
@@ -218,7 +218,10 @@ public class Tables {
         ATT_MainClass                               (28, "ATT_MainClass", "MainClass"),
         ATT_ModulePackages                          (29, "ATT_ModulePackages", "ModulePackages"),
         ATT_ModuleMainClass                         (30, "ATT_ModuleMainClass", "ModuleMainClass"),
-        ATT_ModuleTarget                            (31, "ATT_ModuleTarget", "ModuleTarget");
+        ATT_ModuleTarget                            (31, "ATT_ModuleTarget", "ModuleTarget"),
+        // JEP 181: class file 55.0
+        ATT_NestHost                                (32, "ATT_NestHost", "NestHost"),
+        ATT_NestMembers                             (33, "ATT_NestMembers", "NestMembers");
 
         private final Integer value;
         private final String printval;

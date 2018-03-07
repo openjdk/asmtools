@@ -355,7 +355,7 @@ class ClassData {
                 if (printDetails) {
                     out_println(" at " + toHex(pos));
                 } else {
-                    out_println("");
+                    out.println();
                 }
             }
         } finally {
@@ -928,6 +928,21 @@ class ClassData {
                         out_end("}");
                     }
                     break;
+                // JEP 181: class file 55.0
+                case ATT_NestHost:
+                    decodeCPXAttr(in, len, AttrName, out);
+                    break;
+                case ATT_NestMembers:
+                    int cls_num = in.readUnsignedShort();
+                    startArrayCmt(cls_num, AttrName);
+                    try {
+                        for (int i = 0; i < cls_num; i++) {
+                            out_println("#" + in.readUnsignedShort() + ";" + getCommentPosCond());
+                        }
+                    } finally {
+                        out_end("}");
+                    }
+                    break;
                 default:
                     if (AttrName == null) {
                         printBytes(out, in, len);
@@ -985,7 +1000,7 @@ class ClassData {
         if (printDetails) {
             out_print(" : " + entityName);
         }
-        out_println("");
+        out.println();
 
         // u2 module_flags
         int moduleFlags = in.readUnsignedShort();
@@ -993,7 +1008,7 @@ class ClassData {
         if (printDetails) {
             out_print(" " + Module.Modifier.getModuleFlags(moduleFlags));
         }
-        out_println("");
+        out.println();
 
         //u2 module_version
         int versionIndex = in.readUnsignedShort();

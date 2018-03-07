@@ -1,3 +1,4 @@
+re:data
 re:data/.*
 re:asmtools-6.0-build/.*
 re:.*~$
