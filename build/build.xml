@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
 This code is free software; you can redistribute it and/or modify it
@@ -96,7 +96,7 @@ questions.
     <property name="jvmPropertiesFile" location="${build.base.dir}/jvmSystem.properties"/>
 
     <!--************************************************************************-->
-    <!-- Help:  Describes Top Level Targets	                		-->
+    <!-- Help:  Describes Top Level Targets	                		            -->
     <!--************************************************************************-->
 
     <target name="help" description="Describes the top-level targets for this build.">
@@ -105,22 +105,21 @@ Usage:
      ant &lt;TARGET&gt; -D&lt;OPTIONS&gt;
 
 where TARGET is:
-     build (default):        builds all binaries, doc,  and distributions.
+     build (default):        builds all binaries, doc and distributions.
      clean:                  removes all generated files and directories.
      clean-build:            cleans then builds the project
      help:                   prints a usage message (this message).
 
 Other values for TARGET are:
-     bin:                    produces binaries.
      devbuild:               produces binaries and javadocs.
      javadoc:                produces javadocs.
      test:                   runs sanity tests. (not currently available)
-            </echo>
+        </echo>
     </target>
 
 
     <!--************************************************************************-->
-    <!-- Clean Targets                                -->
+    <!-- Clean Targets                                                          -->
     <!--************************************************************************-->
 
     <target name="clean" description="Remove all generated files.">
@@ -157,12 +156,12 @@ Other values for TARGET are:
     <!-- Make build area dir and temp dir					-->
     <target name="preparebuildarea" depends="prepareGenArea" >
 	    <!--make temp dirs-->
-	<mkdir dir="${buildArea.dir}"/>
-	<mkdir dir="${build.tmp.dir}"/>
-	<mkdir dir="${build.classes.dir}"/>
-	<mkdir dir="${build.src.classes.dir}"/>
-	<mkdir dir="${build.lib.dir}"/>
-	<mkdir dir="${build.doc.dir}"/>
+        <mkdir dir="${buildArea.dir}"/>
+        <mkdir dir="${build.tmp.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.src.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${build.doc.dir}"/>
 
         <mkdir dir="${build.src.dir}" />
         <copy todir="${build.src.dir}">
@@ -171,7 +170,7 @@ Other values for TARGET are:
 
         <copy file="${ws.top.dir}/LICENSE" todir="${buildArea.dir}"/>
         <copy file="${ws.top.dir}/README.html" todir="${buildArea.dir}"/>
- </target>
+    </target>
 
     <!-- Make build area dir and temp dir					-->
     <target name="preparereleasearea" depends="prepareGenArea" >
@@ -216,19 +215,19 @@ Other values for TARGET are:
     </target>
 
     <!--========================================================================-->
-    <!-- Build Sub Targets                            -->
+    <!-- Build Sub Targets                                                      -->
     <!--========================================================================-->
 
-    <target name="build"  depends="release" description="Build asmtools product." />
+    <target name="build"  depends="release" description="Build the asmtools product." />
 
     <target name="release" depends="devbuild, examples, releaseproduct"/>
 
     <target name="devbuild"  depends="prepare, replace-tokens, jar, javadoc"/>
 
-    <target name="clean-build"  depends="clean, build" description="Build asmtools product." />
+    <target name="clean-build"  depends="clean, build" description="Clean then build the asmtools product." />
 
     <!--========================================================================-->
-    <!-- Binaries / Libraries                                -->
+    <!-- Binaries / Libraries                                                   -->
     <!--========================================================================-->
 
     <!-- Jar file                            -->
@@ -270,9 +269,9 @@ Other values for TARGET are:
 
 
     <!--========================================================================-->
-    <!-- Release                                       -->
+    <!-- Release                                                                -->
     <!--========================================================================-->
-    <target name="releaseproduct" depends="preparereleasearea,preparerelease" description="Build and Bundle the HelloWorld product.">
+    <target name="releaseproduct" depends="preparereleasearea,preparerelease" description="Bundle the asmtools product.">
 	    <property name="bundle.name" value="${proj.build.product.name}-${proj.build.product.version}.zip"/>
 	    <basename property="bundle.prefix" file="${proj.build.product.name}-${proj.build.product.version}" suffix=".zip"/>
 
@@ -294,18 +293,16 @@ Other values for TARGET are:
     <target name="javadoc" depends="prepare">
         <mkdir dir="${build.javadoc.dir}"/>
         <loadfile property="copyright.text" srcFile='${ws.top.dir}/LICENSE' failonerror='false'/>
-        <javadoc sourcepath="${build.src.classes.dir}"
-            destdir="${build.javadoc.dir}"
-            author="false"
-            version="false"
-            additionalparam="-breakiterator -Xdoclint:none"
+        <javadoc
+                sourcepath="${build.src.classes.dir}"
+                destdir="${build.javadoc.dir}"
+                author="false"
+                version="false"
+                additionalparam="-breakiterator -Xdoclint:none"
         >
             <classpath>
                 <path path="${javac.classpath}"/>
             </classpath>
-            <fileset dir="${build.src.classes.dir}">
-                <filename name="**/*.java"/>
-            </fileset>
             <bottom><![CDATA[
            ]]>
             </bottom>
