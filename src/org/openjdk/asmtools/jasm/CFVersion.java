@@ -37,46 +37,50 @@ public class CFVersion implements Cloneable{
 
     private short major_version;
     private short minor_version;
-    private boolean frozen = false;
+    private boolean frozen;
+    private boolean isSet;
 
     public CFVersion() {
+        frozen = false;
+        isSet = false;
         major_version = UNDEFINED_VERSION;
         minor_version = UNDEFINED_VERSION;
     }
 
     public CFVersion(boolean frozenCFV, short major_version, short minor_version) {
+        isSet = true;
         frozen = frozenCFV;
         this.major_version = major_version;
         this.minor_version = minor_version;
     }
 
     public void setMajorVersion(short major_version) {
-        if ( !frozen )
+        if ( !frozen ) {
+            isSet = true;
             this.major_version = major_version;
+        }
     }
 
     public void setMinorVersion(short minor_version) {
-        if (!frozen)
+        if (!frozen) {
+            isSet = true;
             this.minor_version = minor_version;
-    }
-
-    private boolean isSet() {
-        return this.major_version != UNDEFINED_VERSION && this.minor_version != UNDEFINED_VERSION;
+        }
     }
 
     public String asString() {
-        return (isSet()) ? this.major_version + ":" +this.minor_version : "(undef):(undef)";
+        return (isSet) ? this.major_version + ":" +this.minor_version : "(undef):(undef)";
     }
 
     public void initModuleDefaults() {
-        if( ! isSet()) {
+        if( ! isSet) {
             major_version = DEFAULT_MODULE_MAJOR_VERSION;
             minor_version = DEFAULT_MODULE_MINOR_VERSION;
         }
     }
 
     public void initClassDefaults() {
-        if( !isSet() ) {
+        if( !isSet ) {
             major_version = DEFAULT_MAJOR_VERSION;
             minor_version = DEFAULT_MINOR_VERSION;
         }
