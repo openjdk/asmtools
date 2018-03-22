@@ -598,6 +598,10 @@ public class ConstantPool {
                     break;
             }
         }
+
+        public boolean refersClassMember() {
+            return tag == TAG.CONSTANT_FIELD || tag == TAG.CONSTANT_METHOD || tag == TAG.CONSTANT_INTERFACEMETHOD;
+        }
     }
 
     /* -------------------------------------------------------- */
@@ -998,17 +1002,10 @@ public class ConstantPool {
         if (cns == null) {
             return "#" + cpx;
         }
-        switch (cns.tag) {
-            case CONSTANT_METHODHANDLE:
-            case CONSTANT_DYNAMIC:
-            case CONSTANT_INVOKEDYNAMIC:
-            case CONSTANT_METHOD:
-            case CONSTANT_INTERFACEMETHOD:
-            case CONSTANT_FIELD: {
-                CPX2 cns2 = (CPX2) cns;
-                if (cns2.value1 == cd.this_cpx) {
-                    cpx = cns2.value2;
-                }
+        if (cns instanceof CPX2) {
+            CPX2 cns2 = (CPX2) cns;
+            if (cns2.value1 == cd.this_cpx && cns2.refersClassMember()) {
+                cpx = cns2.value2;
             }
         }
         return cns.tag.tagname + " " + StringValue(cpx);
