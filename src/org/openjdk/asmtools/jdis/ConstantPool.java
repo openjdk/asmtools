@@ -28,7 +28,10 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -41,7 +44,30 @@ public class ConstantPool {
     private static final Hashtable<Byte, TAG> taghash = new Hashtable<>();
     private static final Hashtable<Byte, SUBTAG> subtaghash = new Hashtable<>();
 
-    private Throwable foundProblem;
+    class Indent {
+        private int length, offset, step;
+
+        void inc() {  length+=step; }
+
+        void dec() { length-=step; }
+
+        Indent(int offset, int step) {
+            this.length = 0;
+            this.step = step;
+            this.offset = offset;
+        }
+
+        int size() { return  offset + length; }
+
+        /**
+         * Creates indent string based on current indent size.
+         */
+        private String get() {
+            return Collections.nCopies(size(), "\t").stream().collect(Collectors.joining());
+        }
+    }
+
+    private final Indent indent = new Indent(2, 1);
 
     /**
      * TAG
@@ -374,7 +400,7 @@ public class ConstantPool {
 
         CP_Float(TAG tagval, float fltvl) {
             super(tagval);
-            this.value = new Float(fltvl);
+            this.value = fltvl;
         }
 
         @Override
@@ -412,7 +438,7 @@ public class ConstantPool {
 
         CP_Double(TAG tagval, double fltvl) {
             super(tagval);
-            this.value = new Double(fltvl);
+            this.value = fltvl;
         }
 
         @Override
@@ -504,7 +530,6 @@ public class ConstantPool {
     class CPX2 extends Constant {
 
         int value1, value2;
-
         CPX2(TAG tagval, int cpx1, int cpx2) {
             super(tagval);
             this.value1 = cpx1;
@@ -539,36 +564,37 @@ public class ConstantPool {
                     } catch (IndexOutOfBoundsException ioob) {
                         return "<Invalid bootstrap method index:" + bsm_attr_idx + ">";
                     }
-
-                    int bsm_ref = bsmData.bsm_index;
-
                     StringBuilder bsm_args_str = new StringBuilder();
+                    String offsetParm,offsetBrace;
+                    int bsm_ref = bsmData.bsm_index;
                     int bsm_args_len = bsmData.bsm_args_indexes.size();
-                    for (int i = 0; i < bsm_args_len; i++) {
-                        int bsm_arg_idx = bsmData.bsm_args_indexes.get(i);
-                        Constant cnt = pool.get(bsm_arg_idx);
-                        if(cnt.equals(this)) {
-                            String s = "circular reference to " + cnt.tag.tagname() + " #" + bsm_arg_idx;
-                            bsm_args_str.append("  <")
-                                    .append(s)
-                                    .append(">");
-                            cnt.setIssue(new IOException(s));
-                        } else {
-                            bsm_args_str.append(" ")
-                                    .append(ConstantStrValue(bsm_arg_idx));
-                            if (i + 1 < bsm_args_len) {
-                                bsm_args_str.append(",");
+                    if (bsm_args_len > 0) {
+                        bsm_args_str.append(" {\n");
+                        offsetBrace = indent.get();
+                        indent.inc();
+                        offsetParm = indent.get();
+                        for (int i = 0; i < bsm_args_len; i++) {
+                            int bsm_arg_idx = bsmData.bsm_args_indexes.get(i);
+                            Constant cnt = pool.get(bsm_arg_idx);
+                            if (cnt.equals(this)) {
+                                String s = "circular reference to " + cnt.tag.tagname() + " #" + bsm_arg_idx;
+                                bsm_args_str.append(offsetParm).append("  <").append(s).append(">");
+                                cnt.setIssue(new IOException(s));
+                            } else {
+                                bsm_args_str.append(offsetParm).append(ConstantStrValue(bsm_arg_idx));
+                                if (i + 1 < bsm_args_len) {
+                                    bsm_args_str.append(",");
+                                }
                             }
+                            bsm_args_str.append('\n');
                         }
+                        indent.dec();
+                        bsm_args_str.append(offsetBrace).append("}");
                     }
-                    str = StringValue(bsm_ref) +
-                            ":" +
-                            StringValue(nape_idx) +
-                            bsm_args_str.toString();
+                    str = StringValue(bsm_ref) + ":" + StringValue(nape_idx) + bsm_args_str.toString();
                 default:
                     break;
             }
-
             return str;
         }
 

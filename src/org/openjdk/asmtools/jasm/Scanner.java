@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -169,9 +169,17 @@ prefix:
     }
 
     /**
-     * Expect a token, return its value, scan the next token or throw an exception.
+     * Expects a token, scans the next token or throws an exception.
      */
     protected final void expect(Token t) throws SyntaxError, IOException {
+        check(t);
+        scan();
+    }
+
+    /**
+     * Checks a token, throws an exception if not the same
+     */
+    protected final void check(Token t) throws SyntaxError, IOException {
         if (token != t) {
             if ((t != Token.IDENT) || !checkTokenIdent()) {
                 env.traceln("expect:" + t + " instead of " + token);
@@ -192,7 +200,6 @@ prefix:
                 }
             }
         }
-        scan();
     }
 
     private void putCh(int ch) {

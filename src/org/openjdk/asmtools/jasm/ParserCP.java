@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,11 @@ public class ParserCP extends ParseBase {
      * Visitor object
      */
     private ParserCPVisitor pConstVstr;
+    /**
+     * counter of left braces
+     */
+    private int lbrace = 0;
+
 
     /**
      * main constructor
@@ -69,6 +74,7 @@ public class ParserCP extends ParseBase {
 
         private IOException IOProb;
         private Scanner.SyntaxError SyProb;
+
 
         public ParserCPVisitor() {
             IOProb = null;
@@ -494,13 +500,30 @@ d2l:            {
                     ConstantPool.ConstCell MHCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
                     scanner.expect(Token.COLON);
                     ConstantPool.ConstCell NapeCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
-
+                    if(scanner.token == Token.LBRACE) {
+                        ParserCP.this.lbrace++;
+                        scanner.scan();
+                    }
                     ArrayList<ConstantPool.ConstCell> bsm_args = new ArrayList<>(256);
-                    while (scanner.token != Token.SEMICOLON) {
+                    while(true) {
+                        if( ParserCP.this.lbrace > 0 ) {
+                            if(scanner.token == Token.RBRACE ) {
+                                ParserCP.this.lbrace--;
+                                scanner.scan();
+                                break;
+                            } else if(scanner.token == Token.SEMICOLON) {
+                                scanner.expect(Token.RBRACE);
+                            }
+                        } else if(scanner.token == Token.SEMICOLON) {
+                            break;
+                        }
                         if (scanner.token == Token.COMMA) {
                             scanner.scan();
                         }
                         bsm_args.add(parseConstRef(null));
+                    }
+                    if( ParserCP.this.lbrace == 0 ) {
+                        scanner.check(Token.SEMICOLON);
                     }
                     BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
                     parser.cd.addBootstrapMethod(bsmData);
