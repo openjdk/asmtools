@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jasm;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.openjdk.asmtools.jasm.Tables.*;
 
@@ -50,6 +51,11 @@ class ClassData extends MemberData {
     ArrayList<MethodData> methods = new ArrayList<>();
     DataVectorAttr<InnerClassData> innerClasses = null;
     DataVectorAttr<BootstrapMethodData> bootstrapMethodsAttr = null;
+    // JEP 181 - NestHost, NestMembers attributes since class version 55.0
+    CPXAttr nestHostAttr;
+    NestMembersAttr nestMembersAttr;
+
+
     ModuleAttr moduleAttribute = null;
     Environment env;
     protected ConstantPool pool;
@@ -266,6 +272,16 @@ class ClassData extends MemberData {
         bootstrapMethodsAttr.add(bsmData);
     }
 
+    public void addNestHost(ConstantPool.ConstCell hostClass) {
+        env.traceln("addNestHost");
+        nestHostAttr = new CPXAttr(this, AttrTag.ATT_NestHost.parsekey(), hostClass);
+    }
+
+    public void addNestMembers(List<ConstantPool.ConstCell> nestMemberClasses) {
+        env.traceln("addNestMembers");
+        nestMembersAttr = new NestMembersAttr(this, nestMemberClasses);
+    }
+
     public void endClass() {
         sourceFileNameAttr = new CPXAttr(this,
                 AttrTag.ATT_SourceFile.parsekey(),
@@ -394,6 +410,11 @@ class ClassData extends MemberData {
                 attrs.add(type_annotAttrInv);
             if (bootstrapMethodsAttr != null)
                 attrs.add(bootstrapMethodsAttr);
+            // since class version 55.0
+            if(nestHostExists())
+                attrs.add(nestHostAttr);
+             if(nestMembersExist())
+                 attrs.add(nestMembersAttr);
         }
         attrs.write(out);
     } // end ClassData.write()
@@ -440,6 +461,14 @@ class ClassData extends MemberData {
     public void setByteLimit(int bytelimit) {
         cdos.enable();
         cdos.setLimit(bytelimit);
+    }
+
+    public boolean nestHostExists() {
+        return nestHostAttr != null;
+    }
+
+    public boolean nestMembersExist() {
+        return nestMembersAttr != null;
     }
 
     /**

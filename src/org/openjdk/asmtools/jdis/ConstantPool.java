@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,8 +34,7 @@ import java.util.Hashtable;
  *
  * ConstantPool
  *
- * Class representing the ConstantPool and inner-classes representing the Constants and
- * their tags.
+ * Class representing the ConstantPool
  */
 public class ConstantPool {
 
@@ -44,8 +43,6 @@ public class ConstantPool {
 
     private Throwable foundProblem;
 
-    /*-------------------------------------------------------- */
-    /* ConstantPool Inner Classes */
     /**
      * TAG
      *

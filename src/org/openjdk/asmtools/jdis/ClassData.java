@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -97,6 +97,16 @@ public class ClassData extends MemberData {
      * The module this class file presents
      */
     protected ModuleData moduleData;
+
+    /**
+     * The NestHost of this class (since class file: 55.0)
+     */
+    protected NestHostData nestHost;
+
+    /**
+     * The NestMembers of this class (since class file: 55.0)
+     */
+    protected NestMembersData nestMembers;
 
     // other parsing fields
     protected PrintWriter out;
@@ -199,7 +209,7 @@ public class ClassData extends MemberData {
             case ATT_SourceFile:
                 // Read SourceFile Attr
                 if (attrlen != 2) {
-                    throw new ClassFormatError("invalid attr length");
+                    throw new ClassFormatError("ATT_SourceFile: Invalid attribute length");
                 }
                 source_cpx = in.readUnsignedShort();
                 break;
@@ -207,7 +217,7 @@ public class ClassData extends MemberData {
                 // Read InnerClasses Attr
                 int num1 = in.readUnsignedShort();
                 if (2 + num1 * 8 != attrlen) {
-                    throw new ClassFormatError("invalid attr length");
+                    throw new ClassFormatError("ATT_InnerClasses: Invalid attribute length");
                 }
                 innerClasses = new ArrayList<>(num1);
                 for (int j = 0; j < num1; j++) {
@@ -230,6 +240,14 @@ public class ClassData extends MemberData {
                 // Read Module Attribute
                 moduleData = new ModuleData(this);
                 moduleData.read(in);
+                break;
+            case ATT_NestHost:
+                // Read NestHost Attribute (since class file: 55.0)
+                nestHost = new NestHostData(this).read(in, attrlen);
+                break;
+            case ATT_NestMembers:
+                // Read NestMembers Attribute (since class file: 55.0)
+                nestMembers = new NestMembersData(this).read(in, attrlen);
                 break;
             default:
                 handled = false;
@@ -468,7 +486,14 @@ printSugar:
                 }
                 out.println();
             }
-
+            // Print the NestHost (since class file: 55.0)
+            if(nestHost != null) {
+                nestHost.print();
+            }
+            // Print the NestMembers (since class file: 55.0)
+            if( nestMembers  != null) {
+                nestMembers.print();
+            }
             // Print the inner classes
             if (innerClasses != null && !innerClasses.isEmpty()) {
                 for (InnerClassData icd : innerClasses) {
@@ -509,7 +534,11 @@ printSugar:
     }
 
     private List<IOException> getIssues() {
-        return this.pool.pool.stream().filter(c->c!=null).filter(c->c.getIssue() != null).map(c->c.getIssue()).collect(Collectors.toList());
+        return this.pool.pool.stream().
+                filter(c->c!=null).
+                filter(c->c.getIssue() != null).
+                map(c->c.getIssue()).
+                collect(Collectors.toList());
     }
 
 }// end class ClassData

@@ -40,78 +40,54 @@ import static org.openjdk.asmtools.jasm.Tables.*;
 /**
  * This class is used to parse Jasm statements and expressions.
  * The result is a parse tree.<p>
- *
+ * <p>
  * This class implements an operator precedence parser. Errors are
  * reported to the Environment object, if the error can't be
  * resolved immediately, a SyntaxError exception is thrown.<p>
- *
+ * <p>
  * Error recovery is implemented by catching Scanner.SyntaxError exceptions
  * and discarding input scanner.tokens until an input token is reached that
  * is possibly a legal continuation.<p>
- *
+ * <p>
  * The parse tree that is constructed represents the input
  * exactly (no rewrites to simpler forms). This is important
  * if the resulting tree is to be used for code formatting in
  * a programming environment. Currently only documentation comments
  * are retained.<p>
- *
+ * <p>
  * A parser owns several components (scanner, constant-parser,
  * instruction-parser, annotations-parser) to which it delegates certain
  * parsing responsibilities.  This parser contains functions to parse the
  * overall form of a class, and any members (fields, methods, inner-classes).
  * <p>
- *
+ * <p>
  * Syntax errors, should always be caught inside the
  * parser for error recovery.
  */
 class Parser extends ParseBase {
-    @FunctionalInterface
-    interface NameSupplier {
-        String get() throws IOException;
-    }
 
-    @FunctionalInterface
-    interface Method {
-        void call() throws IOException;
-    }
+    /* Parser Fields */
+    protected ConstantPool pool = null;
 
+    ClassData cd = null;
 
-  /*-------------------------------------------------------- */
-  /* Annotation Inner Classes */
+    CodeAttr curCode;
+
+    private ArrayList clsDataList = new ArrayList<>();
+    private String pkg = null;
+    private String pkgPrefix = "";
+    private ArrayList<AnnotationData> pkgAnnttns = null;
+    private ArrayList<AnnotationData> clsAnnttns = null;
+    private ArrayList<AnnotationData> memberAnnttns = null;
+    private boolean explicitcp = false;
+    private ModuleAttr moduleAttribute;
+    private CFVersion currentCFV;
     /**
-     * The main compile error for the parser
+     * other parser components
      */
-    static class CompilerError extends Error {
-
-        CompilerError(String message) {
-            super(message);
-        }
-    }
-  /*-------------------------------------------------------- */
-  /* Parser Fields */
-
-    private ArrayList                   clsDataList = new ArrayList<>();
-    ClassData                           cd = null;
-    CodeAttr                            curCode;
-    protected ConstantPool              pool = null;
-    private String                      pkg = null;
-    private String                      pkgPrefix = "";
-    private ArrayList<AnnotationData>   pkgAnnttns = null;
-    private ArrayList<AnnotationData>   clsAnnttns = null;
-    private ArrayList<AnnotationData>   memberAnnttns = null;
-    private boolean                     explicitcp = false;
-    private String                      moduleName = null;
-    private ModuleAttr                  moduleAttribute;
-    private CFVersion                   currentCFV;
-
-
-    /** other parser components */
-    private ParserAnnotation            annotParser = null;     // For parsing Annotations
-    private ParserCP                    cpParser    = null;     // for parsing Constants
-    private ParserInstr                 instrParser = null;     // for parsing Instructions
-
-
-   /*-------------------------------------------------------- */
+    private ParserAnnotation annotParser;       // For parsing Annotations
+    private ParserCP cpParser;                  // for parsing Constants
+    private ParserInstr instrParser;            // for parsing Instructions
 
 
     /**
@@ -119,12 +95,11 @@ class Parser extends ParseBase {
      */
     protected Parser(Environment sf, CFVersion cfVersion) throws IOException {
         super.init(new Scanner(sf), this, sf);
-        this.currentCFV   = cfVersion;
-        this.annotParser  = new ParserAnnotation(scanner, this, env);
-        this.cpParser     = new ParserCP(scanner, this, env);
-        this.instrParser  = new ParserInstr(scanner, this, cpParser, env);
+        this.currentCFV = cfVersion;
+        this.annotParser = new ParserAnnotation(scanner, this, env);
+        this.cpParser = new ParserCP(scanner, this, env);
+        this.instrParser = new ParserInstr(scanner, this, cpParser, env);
     }
-
 
     void setDebugFlags(boolean debugScanner, boolean debugMembers,
                        boolean debugCP, boolean debugAnnot, boolean debugInstr) {
@@ -136,23 +111,23 @@ class Parser extends ParseBase {
         instrParser.enableDebug(debugInstr);
     }
 
-
-    /*---------------------------------------------*/
-
     String encodeClassString(String classname) {
         return "L" + classname + ";";
     }
 
 
+    /*-------------------------------------------------------- */
+
     /**
      * Parses version in package statements
      */
 
-    private void parseVersionPkg() throws IOException  {
+    private void parseVersionPkg() throws IOException {
         if (scanner.token == Token.SEMICOLON) {
             return;
         }
-        parse_ver: {
+        parse_ver:
+        {
             if (scanner.token != Token.VERSION) {
                 break parse_ver;
             }
@@ -160,7 +135,7 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            currentCFV.setMajorVersion((short)scanner.intValue);
+            currentCFV.setMajorVersion((short) scanner.intValue);
             scanner.scan();
             if (scanner.token != Token.COLON) {
                 break parse_ver;
@@ -169,7 +144,7 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            currentCFV.setMinorVersion((short)scanner.intValue);
+            currentCFV.setMinorVersion((short) scanner.intValue);
             scanner.scan();
             debugScan("     [Parser.parseVersionPkg]: " + currentCFV.asString());
             return;
@@ -178,11 +153,12 @@ class Parser extends ParseBase {
         throw new Scanner.SyntaxError();
     }
 
-    private void parseVersion() throws IOException  {
+    private void parseVersion() throws IOException {
         if (scanner.token == Token.LBRACE) {
             return;
         }
-        parse_ver: {
+        parse_ver:
+        {
             if (scanner.token != Token.VERSION) {
                 break parse_ver;
             }
@@ -190,7 +166,7 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cd.cfv.setMajorVersion((short)scanner.intValue);
+            cd.cfv.setMajorVersion((short) scanner.intValue);
             scanner.scan();
             if (scanner.token != Token.COLON) {
                 break parse_ver;
@@ -199,14 +175,17 @@ class Parser extends ParseBase {
             if (scanner.token != Token.INTVAL) {
                 break parse_ver;
             }
-            cd.cfv.setMinorVersion((short)scanner.intValue);
+            cd.cfv.setMinorVersion((short) scanner.intValue);
             scanner.scan();
-            debugStr( "parseVersion: " + cd.cfv.asString());
+            debugStr("parseVersion: " + cd.cfv.asString());
             return;
         }
         env.error(scanner.pos, "version.expected");
         throw new Scanner.SyntaxError();
     }
+
+
+    /*---------------------------------------------*/
 
     /**
      * Parse an internal name: identifier.
@@ -270,7 +249,8 @@ class Parser extends ParseBase {
         int iValue = scanner.intValue;
         String sValue = scanner.stringValue;
         scanner.scan();
-        resolve: {
+        resolve:
+        {
             switch (ptoken) {
                 case INTVAL:
                     break resolve;
@@ -289,11 +269,11 @@ class Parser extends ParseBase {
                         if ((tag != null) // ambiguity: "int," or "int 77,"?
                                 && (scanner.token != Token.SEMICOLON)
                                 && (scanner.token != Token.COMMA)) {
-                            itemType=StackMapType.ITEM_Object;
+                            itemType = StackMapType.ITEM_Object;
                         }
                         break resolve;
                     } else if (tag != null) { // tag OK
-                        itemType=StackMapType.ITEM_Object;
+                        itemType = StackMapType.ITEM_Object;
                         break resolve;
                     }
             }
@@ -317,7 +297,6 @@ class Parser extends ParseBase {
         }
     }
 
-
     /**
      * Parse an external name: CPINDEX, string, or identifier.
      */
@@ -335,8 +314,8 @@ class Parser extends ParseBase {
                 scanner.scan();
                 return pool.FindCellAsciz(v);
 
-                // In many cases, Identifiers can correctly have the same
-                // names as keywords.  We need to allow these.
+            // In many cases, Identifiers can correctly have the same
+            // names as keywords.  We need to allow these.
             case SYNTHETIC:
             case DEPRECATED:
             case VERSION:
@@ -366,12 +345,16 @@ class Parser extends ParseBase {
     ConstCell parseMethodHandle(SubTag subtag) throws Scanner.SyntaxError, IOException {
         ConstCell refCell;
         switch (subtag) {
-            case REF_GETFIELD: case REF_GETSTATIC:
-            case REF_PUTFIELD: case REF_PUTSTATIC:
+            case REF_GETFIELD:
+            case REF_GETSTATIC:
+            case REF_PUTFIELD:
+            case REF_PUTSTATIC:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_FIELD));
                 break;
-            case REF_INVOKEVIRTUAL: case REF_INVOKESTATIC:
-            case REF_INVOKESPECIAL: case REF_NEWINVOKESPECIAL:
+            case REF_INVOKEVIRTUAL:
+            case REF_INVOKESTATIC:
+            case REF_INVOKESPECIAL:
+            case REF_NEWINVOKESPECIAL:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_METHOD));
                 break;
             case REF_INVOKEINTERFACE:
@@ -394,7 +377,7 @@ class Parser extends ParseBase {
                 subtag = subtag(scanner.stringValue);
                 break;
             case INTVAL:
-                subtag  = subtag(scanner.intValue);
+                subtag = subtag(scanner.intValue);
                 break;
         }
         if (subtag == null) {
@@ -418,8 +401,8 @@ class Parser extends ParseBase {
                 scanner.scan();
                 v = prependPackage(v, uncond);
                 return pool.FindCellAsciz(v);
-                // Some identifiers might coincide with token names.
-                // these should be OK to use as identifier names.
+            // Some identifiers might coincide with token names.
+            // these should be OK to use as identifier names.
             case SYNTHETIC:
             case DEPRECATED:
             case VERSION:
@@ -440,7 +423,7 @@ class Parser extends ParseBase {
                 return pool.FindCellAsciz(v);
             default:
                 ConstType key = Tables.tag(scanner.token.value());
-                env.traceln("%%%%% Unrecognized token [" + scanner.token + "]: '" + (key == null? "null":key.parseKey()) + "'.");
+                env.traceln("%%%%% Unrecognized token [" + scanner.token + "]: '" + (key == null ? "null" : key.parseKey()) + "'.");
                 env.error(scanner.prevPos, "name.expected", "\"" + scanner.token.parsekey() + "\"");
                 throw new Scanner.SyntaxError();
         }
@@ -449,17 +432,16 @@ class Parser extends ParseBase {
     private String prependPackage(String className, boolean uncond) {
         if (uncond || (scanner.token == Token.FIELD)) {
             if ((!className.contains("/"))             // class identifier doesn't contain "/"
-                    && (!className.contains("["))){    // class identifier doesn't contain "["
+                    && (!className.contains("["))) {    // class identifier doesn't contain "["
                 className = pkgPrefix + className; // add package
             }
         }
         return className;
     }
 
-
     /**
      * Parse a signed integer of size bytes long.
-     *  size = 1 or 2
+     * size = 1 or 2
      */
     Argument parseInt(int size) throws Scanner.SyntaxError, IOException {
         if (scanner.token == Token.BITS) {
@@ -490,7 +472,7 @@ class Parser extends ParseBase {
                 }
                 break;
             default:
-                throw new InternalError("parseInt("+size+")");
+                throw new InternalError("parseInt(" + size + ")");
         }
         scanner.scan();
         return new Argument(arg);
@@ -498,7 +480,7 @@ class Parser extends ParseBase {
 
     /**
      * Parse an unsigned integer of size bytes long.
-     *  size = 1 or 2
+     * size = 1 or 2
      */
     Argument parseUInt(int size) throws Scanner.SyntaxError, IOException {
         if (scanner.token != Token.INTVAL) {
@@ -524,7 +506,7 @@ class Parser extends ParseBase {
                 }
                 break;
             default:
-                throw new InternalError("parseUInt("+size+")");
+                throw new InternalError("parseUInt(" + size + ")");
         }
         scanner.scan();
         return new Argument(arg);
@@ -534,12 +516,12 @@ class Parser extends ParseBase {
      * Parse constant declaration
      */
     private void parseConstDef() throws IOException {
-        for (;;) {
+        for (; ; ) {
             if (scanner.token == Token.CPINDEX) {
                 int cpx = scanner.intValue;
                 scanner.scan();
                 scanner.expect(Token.ASSIGN);
-                env.traceln("parseConstDef:"+cpx);
+                env.traceln("parseConstDef:" + cpx);
                 pool.setCell(cpx, cpParser.parseConstRef(null));
             } else {
                 env.error("const.def.expected");
@@ -648,7 +630,7 @@ class Parser extends ParseBase {
     /**
      * Scan method's signature to determine size of parameters.
      */
-    private int countParams(ConstCell sigCell) throws Scanner.SyntaxError, IOException {
+    private int countParams(ConstCell sigCell) throws Scanner.SyntaxError {
         String sig;
         try {
             ConstValue_String strConst = (ConstValue_String) sigCell.ref;
@@ -658,7 +640,8 @@ class Parser extends ParseBase {
         }
         int siglen = sig.length(), k = 0, loccnt = 0, errparam = 0;
         boolean arraytype = false;
-        scan: {
+        scan:
+        {
             if (k >= siglen) {
                 break scan;
             }
@@ -691,13 +674,12 @@ class Parser extends ParseBase {
                         loccnt++;
                         if (arraytype) {
                             arraytype = false;
-                        }
-                        else {
+                        } else {
                             loccnt++;
                         }
                         break;
                     case 'L':
-                        for (;;k++) {
+                        for (; ; k++) {
                             if (k >= siglen) {
                                 errparam = 3;
                                 break scan;
@@ -715,7 +697,7 @@ class Parser extends ParseBase {
                 }
             }
         }
-        env.error(scanner.pos, "msig.malformed", Integer.toString(k),Integer.toString(errparam));
+        env.error(scanner.pos, "msig.malformed", Integer.toString(k), Integer.toString(errparam));
         return loccnt;
     }
 
@@ -741,7 +723,7 @@ class Parser extends ParseBase {
         scanner.expect(Token.COLON);
         ConstCell typeCell = parseName();
         int paramcnt = countParams(typeCell);
-        if ((! Modifiers.isStatic(mod)) && ! is_clinit) {
+        if ((!Modifiers.isStatic(mod)) && !is_clinit) {
             paramcnt++;
         }
         if (paramcnt > 255) {
@@ -751,15 +733,15 @@ class Parser extends ParseBase {
         ArrayList<ConstCell> exc_table = null;
         if (scanner.token == Token.THROWS) {
             scanner.scan();
-            exc_table = new  ArrayList<>();
-            for (;;) {
+            exc_table = new ArrayList<>();
+            for (; ; ) {
                 posa = scanner.pos;
                 ConstCell exc = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
                 if (exc_table.contains(exc)) {
                     env.error(posa, "warn.exc.repeated");
                 } else {
                     exc_table.add(exc);
-                    env.traceln("THROWS:"+exc.arg);
+                    env.traceln("THROWS:" + exc.arg);
                 }
                 if (scanner.token != Token.COMMA) {
                     break;
@@ -772,7 +754,7 @@ class Parser extends ParseBase {
             defAnnot = annotParser.parseDefaultAnnotation();
         }
 
-      MethodData curMethod = cd.StartMethod(mod, nameCell, typeCell, exc_table);
+        MethodData curMethod = cd.StartMethod(mod, nameCell, typeCell, exc_table);
         Argument max_stack = null, max_locals = null;
 
         if (scanner.token == Token.STACK) {
@@ -792,7 +774,7 @@ class Parser extends ParseBase {
                 env.error("token.expected", "{");
             }
             scanner.scan();
-        }  else {
+        } else {
             scanner.expect(Token.LBRACE);
             curCode = curMethod.startCode(posa, paramcnt, max_stack, max_locals);
             while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
@@ -817,7 +799,6 @@ class Parser extends ParseBase {
         debugStr("  [Parser.parseMethod]: Method: " + curMethod);
 
     }  // end parseMethod
-
 
     /**
      * Parse a (CPX based) BootstrapMethod entry.
@@ -850,9 +831,42 @@ class Parser extends ParseBase {
             env.error(scanner.pos, "invalid.bootstrapmethod");
             throw new Scanner.SyntaxError();
         }
-     }
+    }
 
+    /**
+     * Parse a NestHost entry
+     */
+    private void parseNestHost() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // NESTHOST IDENT;
+        debugStr("  [Parser.parseNestHost]: <<<Begin>>>");
+        String className = prependPackage(parseIdent(), true);
+        ConstCell hostClass = pool.FindCellClassByName(className);
+        debugScan("  [Parser.parseNestHost]: NestHost: class " + className);
+        scanner.expect(Token.SEMICOLON);
+        cd.addNestHost(hostClass);
+    }
 
+    /**
+     * Parse a NestMembers entry
+     */
+    private void parseNestMembers() throws Scanner.SyntaxError, IOException {
+        ArrayList<ConstCell> nestMembers = new ArrayList<>();
+        // Parses in the form:
+        // NESTMEMBERS IDENT(, IDENT)*;
+        debugStr("  [Parser.parseNestMembers]: <<<Begin>>>");
+        while (true) {
+            String className = prependPackage(parseIdent(), true);
+            nestMembers.add(pool.FindCellClassByName(className));
+            debugScan("  [Parser.parseNestMembers]: NestMembers: class " + className);
+            if (scanner.token != Token.COMMA) {
+                scanner.expect(Token.SEMICOLON);
+                cd.addNestMembers(nestMembers);
+                return;
+            }
+            scanner.scan();
+        }
+    }
 
     /**
      * Parse an inner class.
@@ -895,8 +909,8 @@ class Parser extends ParseBase {
 
                 if (nameCellValue instanceof ConstValue_String) {
                     // got a name cell
-                   scanner.scan();
-                   parseInnerClass_s1(mod, nameCell, innerClass, outerClass);
+                    scanner.scan();
+                    parseInnerClass_s1(mod, nameCell, innerClass, outerClass);
                 } else {
                     // got a CPRef cell
                     nameCell = pool.getCell(0);  // no NameIndex
@@ -924,7 +938,7 @@ class Parser extends ParseBase {
         // scanner.token is either "CLASS IDENT" or "CPX_Class"
         if ((scanner.token == Token.CPINDEX) || (scanner.token == Token.CLASS)) {
             if (scanner.token == Token.CPINDEX) {
-              innerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
+                innerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
             }
 
             if (scanner.token == Token.CLASS) {
@@ -952,22 +966,21 @@ class Parser extends ParseBase {
 
     }
 
-
     private void parseInnerClass_s3(int mod, ConstCell nameCell, ConstCell innerClass, ConstCell outerClass) throws IOException {
         scanner.scan();
         if ((scanner.token == Token.CLASS) || (scanner.token == Token.CPINDEX)) {
             if (scanner.token == Token.CLASS) {
                 // next symbol needs to be InnerClass
-               scanner.scan();
-               outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
+                scanner.scan();
+                outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
             }
             if (scanner.token == Token.CPINDEX) {
-              outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
+                outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
             }
 
             if (scanner.token == Token.SEMICOLON) {
-               pic_tracecreate(mod, nameCell, innerClass, outerClass);
-               cd.addInnerClass(mod, nameCell, innerClass, outerClass);
+                pic_tracecreate(mod, nameCell, innerClass, outerClass);
+                cd.addInnerClass(mod, nameCell, innerClass, outerClass);
             } else {
                 pic_error();
             }
@@ -977,63 +990,63 @@ class Parser extends ParseBase {
     }
 
     private void pic_tracecreate(int mod, ConstCell nameCell, ConstCell innerClass, ConstCell outerClass) {
-            // throw error, IC is not recognizable
-            env.trace(" Creating InnerClass: [" + Modifiers.toString(mod, CF_Context.CTX_INNERCLASS) + "], ");
+        // throw error, IC is not recognizable
+        env.trace(" Creating InnerClass: [" + Modifiers.toString(mod, CF_Context.CTX_INNERCLASS) + "], ");
 
-            if (nameCell != pool.getCell(0)) {
-                ConstValue value = nameCell.ref;
-                if (value != null) {
-                    env.trace(value.toString() + " = ");
-                }
+        if (nameCell != pool.getCell(0)) {
+            ConstValue value = nameCell.ref;
+            if (value != null) {
+                env.trace(value.toString() + " = ");
             }
+        }
 
-            ConstValue_Cell ici_val = (ConstValue_Cell) innerClass.ref;
-            ConstCell ici_ascii = ici_val.cell;
-            // Constant pool may not be numberized yet.
-            //
-            // check values before dereference on a trace.
-            if (ici_ascii.ref == null) {
-                env.trace("<#cpx-unresolved> ");
+        ConstValue_Cell ici_val = (ConstValue_Cell) innerClass.ref;
+        ConstCell ici_ascii = ici_val.cell;
+        // Constant pool may not be numberized yet.
+        //
+        // check values before dereference on a trace.
+        if (ici_ascii.ref == null) {
+            env.trace("<#cpx-unresolved> ");
+        } else {
+            ConstValue_String cval = (ConstValue_String) ici_ascii.ref;
+            if (cval.value == null) {
+                env.trace("<#cpx-0> ");
             } else {
-                ConstValue_String cval = ( ConstValue_String) ici_ascii.ref;
-                if (cval.value == null){
-                    env.trace("<#cpx-0> ");
-                } else {
-                    env.trace(cval.value + " ");
-                }
+                env.trace(cval.value + " ");
             }
+        }
 
-            if (outerClass != pool.getCell(0)) {
-                if (outerClass.arg != 0) {
-                    ConstValue_Cell oci_val = (ConstValue_Cell) outerClass.ref;
-                    ConstCell  oci_ascii = oci_val.cell;
-                    if (oci_ascii.ref == null) {
-                        env.trace(" of <#cpx-unresolved>  ");
+        if (outerClass != pool.getCell(0)) {
+            if (outerClass.arg != 0) {
+                ConstValue_Cell oci_val = (ConstValue_Cell) outerClass.ref;
+                ConstCell oci_ascii = oci_val.cell;
+                if (oci_ascii.ref == null) {
+                    env.trace(" of <#cpx-unresolved>  ");
+                } else {
+                    ConstValue_String cval = (ConstValue_String) oci_ascii.ref;
+                    if (cval.value == null) {
+                        env.trace(" of <#cpx-0>  ");
                     } else {
-                        ConstValue_String cval = ( ConstValue_String) oci_ascii.ref;
-                        if (cval.value == null) {
-                            env.trace(" of <#cpx-0>  ");
-                        } else {
-                            env.trace(" of " + cval.value);
-                        }
+                        env.trace(" of " + cval.value);
                     }
                 }
             }
+        }
 
-            env.traceln("");
+        env.traceln("");
     }
 
     private void pic_error() {
-            // throw error, IC is not recognizable
-            env.error(scanner.pos, "invalid.innerclass");
-            throw new Scanner.SyntaxError();
+        // throw error, IC is not recognizable
+        env.error(scanner.pos, "invalid.innerclass");
+        throw new Scanner.SyntaxError();
     }
 
     /**
      * The match() method is used to quickly match opening
      * brackets (ie: '(', '{', or '[') with their closing
      * counter part. This is useful during error recovery.<p>
-     *
+     * <p>
      * Scan to a matching '}', ']' or ')'. The current scanner.token must be
      * a '{', '[' or '(';
      */
@@ -1076,9 +1089,8 @@ class Parser extends ParseBase {
 //                case INTERFACE: see below
                 case ABSTRACT:
                 case ANNOTATION_ACCESS:
-
-                // possible begin of a field, continue
-                return;
+                    // possible begin of a field, continue
+                    return;
 
                 case LBRACE:
                     match(Token.LBRACE, Token.RBRACE);
@@ -1136,7 +1148,7 @@ class Parser extends ParseBase {
             scanner.scan();
         } else if (scanner.token == Token.ANNOTATION) {
             scanner.scan();
-            if( scanner.token == Token.INTERFACE ) {
+            if (scanner.token == Token.INTERFACE) {
                 mod |= ACC_ANNOTATION | ACC_INTERFACE;
                 scanner.scan();
             } else {
@@ -1163,9 +1175,9 @@ class Parser extends ParseBase {
                     throw new Scanner.SyntaxError();
             }
             scanner.scan();
-            cd.fileExtension="."+fileExtension;
+            cd.fileExtension = "." + fileExtension;
         } else if (scanner.token == Token.MODULE) {
-            env.error(scanner.prevPos, "token.expected", Token.OPEN.parsekey() );
+            env.error(scanner.prevPos, "token.expected", Token.OPEN.parsekey());
             throw new Scanner.SyntaxError();
         } else if (scanner.token == Token.SEMICOLON) {
             // drop the semi-colon following a name
@@ -1203,7 +1215,7 @@ class Parser extends ParseBase {
         // Begin a new class
         cd.init(mod, nm, sup, impl);
 
-       // Parse constant declarations
+        // Parse constant declarations
 
         // Parse class members
         while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
@@ -1226,20 +1238,20 @@ class Parser extends ParseBase {
         endClass();
     } // end parseClass
 
-  /**
-   * Parses a package or type name in a module statement(s)
-   */
+    /**
+     * Parses a package or type name in a module statement(s)
+     */
     private String parseTypeName() throws IOException {
         String name = "", field = "";
         while (true) {
-            if ( scanner.token.possibleModuleName() ) {
+            if (scanner.token.possibleModuleName()) {
                 name = name + field + scanner.idValue;
                 scanner.scan();
             } else {
-                env.error(scanner.pos, "name.expected",  "\"" + scanner.token.parsekey() + "\"");
+                env.error(scanner.pos, "name.expected", "\"" + scanner.token.parsekey() + "\"");
                 throw new Scanner.SyntaxError();
             }
-            if(scanner.token == Token.FIELD) {
+            if (scanner.token == Token.FIELD) {
                 env.error(scanner.pos, "warn.dot.will.be.converted");
                 field = "/";
                 scanner.scan();
@@ -1256,14 +1268,14 @@ class Parser extends ParseBase {
     private String parseModuleName() throws IOException {
         String name = "", field = "";
         while (true) {
-            if ( scanner.token.possibleModuleName() ) {
+            if (scanner.token.possibleModuleName()) {
                 name = name + field + scanner.idValue;
                 scanner.scanModuleStatement();
             } else {
-                env.error(scanner.pos, "module.name.expected",  "\"" + scanner.token.parsekey() + "\"");
+                env.error(scanner.pos, "module.name.expected", "\"" + scanner.token.parsekey() + "\"");
                 throw new Scanner.SyntaxError().Fatal();
             }
-            if(scanner.token == Token.FIELD) {
+            if (scanner.token == Token.FIELD) {
                 field = Character.toString((char) scanner.token.value());
                 scanner.scanModuleStatement();
             } else {
@@ -1274,150 +1286,149 @@ class Parser extends ParseBase {
         return name;
     }
 
-  /**
-   * Parse a module declaration.
-   */
-  private void parseModule() throws IOException {
-    debugStr("   [Parser.parseModule]:  Begin ");
-    if (cd == null) {
-      cd = new ClassData(env, currentCFV.clone());
-      pool = cd.pool;
-    }
-    if (clsAnnttns != null) {
-        cd.addAnnotations(clsAnnttns);
-    }
-    moduleAttribute    = new ModuleAttr(cd);
+    /**
+     * Parse a module declaration.
+     */
+    private void parseModule() throws IOException {
+        debugStr("   [Parser.parseModule]:  Begin ");
+        if (cd == null) {
+            cd = new ClassData(env, currentCFV.clone());
+            pool = cd.pool;
+        }
+        if (clsAnnttns != null) {
+            cd.addAnnotations(clsAnnttns);
+        }
+        moduleAttribute = new ModuleAttr(cd);
 
-    if( scanner.token == Token.OPEN ) {
-        moduleAttribute.openModule();
-        scanner.scan();
-    }
+        if (scanner.token == Token.OPEN) {
+            moduleAttribute.openModule();
+            scanner.scan();
+        }
 
-    // move the tokenizer to the identifier:
-    if (scanner.token == Token.MODULE) {
+        // move the tokenizer to the identifier:
+        if (scanner.token == Token.MODULE) {
+            scanner.scanModuleStatement();
+            // scanner.scan();
+        } else {
+            env.error(scanner.pos, "token.expected", Token.MODULE.parsekey());
+            throw new Scanner.SyntaxError().Fatal();
+        }
+        // Parse the module name
+        String moduleName = parseModuleName();
+        if (moduleName.isEmpty()) {
+            env.error(scanner.pos, "name.expected");
+            throw new Scanner.SyntaxError().Fatal();
+        }
+        moduleAttribute.setModuleName(moduleName);
+
+        parseVersion();
+        scanner.expect(Token.LBRACE);
+
+        // Begin a new class as module
+        cd.initAsModule();
+
+        // Parse module statement(s)
+        while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
+            switch (scanner.token) {
+                case REQUIRES:
+                    scanRequires(moduleAttribute.requires);
+                    break;
+                case EXPORTS:
+                    scanStatement(moduleAttribute.exports,
+                            this::parseTypeName,
+                            this::parseModuleName,
+                            Token.TO,
+                            true,
+                            "exports.expected");
+                    break;
+                case OPENS:
+                    scanStatement(moduleAttribute.opens,
+                            this::parseTypeName,
+                            this::parseModuleName,
+                            Token.TO, true, "opens.expected");
+                    break;
+                case USES:
+                    scanStatement(moduleAttribute.uses, "uses.expected");
+                    break;
+                case PROVIDES:
+                    scanStatement(moduleAttribute.provides,
+                            this::parseTypeName,
+                            this::parseTypeName,
+                            Token.WITH,
+                            false,
+                            "provides.expected");
+                    break;
+                case SEMICOLON:
+                    // Empty fields are allowed
+                    scanner.scan();
+                    break;
+                default:
+                    env.error(scanner.pos, "module.statement.expected");
+                    throw new Scanner.SyntaxError().Fatal();
+            }  // end switch
+        } // while
+        scanner.expect(Token.RBRACE);
+        // End the module
+        endModule();
+    } // end parseModule
+
+    /**
+     * Scans  ModuleStatement: requires [transitive] [static] ModuleName ;
+     */
+    private void scanRequires(BiConsumer<String, Integer> action) throws IOException {
+        int flags = 0;
+        String mn = "";
         scanner.scanModuleStatement();
-        // scanner.scan();
-    } else {
-        env.error(scanner.pos, "token.expected", Token.MODULE.parsekey() );
-        throw new Scanner.SyntaxError().Fatal();
-    }
-    // Parse the module name
-    moduleName = parseModuleName();
-    if (moduleName.isEmpty()) {
-        env.error(scanner.pos, "name.expected");
-        throw new Scanner.SyntaxError().Fatal();
-    }
-    moduleAttribute.setModuleName(moduleName);
-
-    parseVersion();
-    scanner.expect(Token.LBRACE);
-
-    // Begin a new class as module
-    cd.initAsModule();
-
-    // Parse module statement(s)
-    while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
-      switch (scanner.token) {
-        case REQUIRES:
-          scanRequires(moduleAttribute.requires);
-          break;
-        case EXPORTS:
-          scanStatement(moduleAttribute.exports,
-              this::parseTypeName,
-              this::parseModuleName,
-              Token.TO,
-              true,
-              "exports.expected");
-          break;
-        case OPENS:
-          scanStatement(moduleAttribute.opens,
-              this::parseTypeName,
-              this::parseModuleName,
-              Token.TO,  true, "opens.expected");
-          break;
-        case USES:
-            scanStatement(moduleAttribute.uses, "uses.expected");
-          break;
-        case PROVIDES:
-          scanStatement(moduleAttribute.provides,
-              this::parseTypeName,
-              this::parseTypeName,
-              Token.WITH,
-              false,
-              "provides.expected");
-          break;
-        case SEMICOLON:
-          // Empty fields are allowed
-          scanner.scan();
-          break;
-        default:
-          env.error(scanner.pos, "module.statement.expected");
-          throw new Scanner.SyntaxError().Fatal();
-      }  // end switch
-    } // while
-    scanner.expect(Token.RBRACE);
-    // End the module
-    endModule();
-  } // end parseModule
-
-
-  /**
-   * Scans  ModuleStatement: requires [transitive] [static] ModuleName ;
-   */
-  private void scanRequires(BiConsumer<String, Integer> action) throws IOException {
-    int flags = 0;
-    String mn = "";
-    scanner.scanModuleStatement();
-    while (scanner.token != Token.SEMICOLON) {
-      switch (scanner.token) {
-        case STATIC:
-          if (  ((flags & (1 << Module.Modifier.ACC_STATIC_PHASE.asInt())) != 0) || !mn.isEmpty()) {
+        while (scanner.token != Token.SEMICOLON) {
+            switch (scanner.token) {
+                case STATIC:
+                    if (((flags & (1 << Module.Modifier.ACC_STATIC_PHASE.asInt())) != 0) || !mn.isEmpty()) {
+                        env.error(scanner.pos, "requires.expected");
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+                    flags |= Module.Modifier.ACC_STATIC_PHASE.asInt();
+                    break;
+                case TRANSITIVE:
+                    if (((flags & (1 << Module.Modifier.ACC_TRANSITIVE.asInt())) != 0) || !mn.isEmpty()) {
+                        env.error(scanner.pos, "requires.expected");
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+                    flags |= Module.Modifier.ACC_TRANSITIVE.asInt();
+                    break;
+                case IDENT:
+                    if (!mn.isEmpty()) {
+                        env.error(scanner.pos, "requires.expected");
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+                    mn = parseModuleName();
+                    continue;
+                default:
+                    if (mn.isEmpty() && scanner.token.possibleModuleName()) {
+                        mn = parseModuleName();
+                        continue;
+                    } else {
+                        env.error(scanner.pos, "requires.expected");
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+            }
+            scanner.scanModuleStatement();
+        }
+        // Token.SEMICOLON
+        if (mn.isEmpty()) {
             env.error(scanner.pos, "requires.expected");
             throw new Scanner.SyntaxError().Fatal();
-          }
-          flags |= Module.Modifier.ACC_STATIC_PHASE.asInt();
-          break;
-        case TRANSITIVE:
-          if (  ((flags & (1 << Module.Modifier.ACC_TRANSITIVE.asInt())) != 0) || !mn.isEmpty()) {
-            env.error(scanner.pos, "requires.expected");
-            throw new Scanner.SyntaxError().Fatal();
-          }
-          flags |= Module.Modifier.ACC_TRANSITIVE.asInt();
-          break;
-        case IDENT:
-          if (!mn.isEmpty()) {
-            env.error(scanner.pos, "requires.expected");
-            throw new Scanner.SyntaxError().Fatal();
-          }
-          mn = parseModuleName();
-          continue;
-        default:
-          if( mn.isEmpty() && scanner.token.possibleModuleName() ) {
-              mn = parseModuleName();
-              continue;
-          } else {
-              env.error(scanner.pos, "requires.expected");
-              throw new Scanner.SyntaxError().Fatal();
-          }
-      }
-      scanner.scanModuleStatement();
+        }
+        action.accept(mn, flags);
+        scanner.scanModuleStatement();
     }
-    // Token.SEMICOLON
-    if (mn.isEmpty()) {
-      env.error(scanner.pos, "requires.expected");
-      throw new Scanner.SyntaxError().Fatal();
-    }
-    action.accept(mn, flags);
-    scanner.scanModuleStatement();
-  }
 
     /**
      * Scans  ModuleStatement: uses TypeName;
      */
     private void scanStatement(Consumer<Set<String>> action, String err) throws IOException {
-        HashSet<String> names = scanList( ()->scanner.scan(), this::parseTypeName, err, true);
+        HashSet<String> names = scanList(() -> scanner.scan(), this::parseTypeName, err, true);
         // Token.SEMICOLON
-        if (names.size() != 1 ) {
+        if (names.size() != 1) {
             env.error(scanner.pos, err);
             throw new Scanner.SyntaxError().Fatal();
         }
@@ -1425,95 +1436,95 @@ class Parser extends ParseBase {
         scanner.scan();
     }
 
+    /**
+     * Scans  Module Statement(s):
+     * exports  packageName [to ModuleName {, ModuleName}] ;
+     * opens    packageName [to ModuleName {, ModuleName}] ;
+     * provides TypeName with TypeName [,typeName] ;
+     */
+    private void scanStatement(BiConsumer<String, Set<String>> action,
+                               NameSupplier source,
+                               NameSupplier target,
+                               Token startList,
+                               boolean emptyListAllowed,
+                               String err) throws IOException {
+        String typeName = "";
+        HashSet<String> names = new HashSet<>();
+        scanner.scan();
+        while (scanner.token != Token.SEMICOLON) {
+            if (scanner.token == Token.IDENT) {
+                if (typeName.isEmpty()) {
+                    typeName = source.get();
+                    continue;
+                }
+                env.error(scanner.pos, err);
+                throw new Scanner.SyntaxError().Fatal();
+            }
+            if (scanner.token == startList) {
+                if (typeName.isEmpty()) {
+                    env.error(scanner.pos, err);
+                    throw new Scanner.SyntaxError().Fatal();
+                }
+                names = scanList(scanner.token == Token.TO ? () -> scanner.scanModuleStatement() : () -> scanner.scan(), target, err, false);
+                break;
+            } else {
+                env.error(scanner.pos, err);
+                throw new Scanner.SyntaxError().Fatal();
+            }
+        }
+        // Token.SEMICOLON
+        if (typeName.isEmpty() || (names.isEmpty() && !emptyListAllowed)) {
+            env.error(scanner.pos, err);
+            throw new Scanner.SyntaxError().Fatal();
+        }
+        action.accept(typeName, names);
+        scanner.scan();
+    }
 
     /**
-   * Scans  Module Statement(s):
-   * exports  packageName [to ModuleName {, ModuleName}] ;
-   * opens    packageName [to ModuleName {, ModuleName}] ;
-   * provides TypeName with TypeName [,typeName] ;
-   */
-  private void scanStatement(BiConsumer<String, Set<String>> action,
-                             NameSupplier source,
-                             NameSupplier target,
-                             Token startList,
-                             boolean emptyListAllowed,
-                             String err) throws IOException {
-    String typeName = "";
-    HashSet<String> names = new HashSet<>();
-    scanner.scan();
-    while (scanner.token != Token.SEMICOLON) {
-      if( scanner.token == Token.IDENT) {
-        if (typeName.isEmpty()) {
-            typeName = source.get();
-          continue;
+     * Scans the "to" or "with" part of ModuleStatement: exports PackageName  [to  ModuleName {, ModuleName}] ;,
+     * opens  packageName   [to  ModuleName {, ModuleName}] ;
+     * provides TypeName with TypeName [,typeName] ;
+     * uses TypeName;
+     * : [ModuleName {, ModuleName}]; , [TypeName [,typeName]]; or TypeName;
+     */
+    private HashSet<String> scanList(Method scanMethod, NameSupplier target, String err, boolean onlyOneElement) throws IOException {
+        HashSet<String> names = new HashSet<>();
+        boolean comma = false, first = true;
+        scanMethod.call();
+        while (scanner.token != Token.SEMICOLON) {
+            switch (scanner.token) {
+                case COMMA:
+                    if (comma || first || onlyOneElement) {
+                        env.error(scanner.pos, err);
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+                    comma = true;
+                    break;
+                case IDENT:
+                    if (!first && !comma) {
+                        env.error(scanner.pos, err);
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
+                    names.add(target.get());
+                    comma = false;
+                    first = false;
+                    continue;
+                default:
+                    env.error(scanner.pos, err);
+                    throw new Scanner.SyntaxError().Fatal();
+            }
+            scanner.scan();
         }
-        env.error(scanner.pos, err);
-        throw new Scanner.SyntaxError().Fatal();
-      } if( scanner.token == startList ) {
-        if (typeName.isEmpty()) {
-          env.error(scanner.pos, err);
-          throw new Scanner.SyntaxError().Fatal();
-        }
-        names = scanList( scanner.token == Token.TO ? ()->scanner.scanModuleStatement() : ()->scanner.scan() , target, err, false);
-        break;
-      } else {
-        env.error(scanner.pos, err);
-        throw new Scanner.SyntaxError().Fatal();
-      }
-    }
-    // Token.SEMICOLON
-    if (typeName.isEmpty() || ( names.isEmpty() && ! emptyListAllowed) ) {
-          env.error(scanner.pos, err);
-          throw new Scanner.SyntaxError().Fatal();
-    }
-    action.accept(typeName, names);
-    scanner.scan();
-  }
-
-  /**
-   * Scans the "to" or "with" part of ModuleStatement: exports PackageName  [to  ModuleName {, ModuleName}] ;,
-   *                                                   opens  packageName   [to  ModuleName {, ModuleName}] ;
-   *                                                   provides TypeName with TypeName [,typeName] ;
-   *                                                   uses TypeName;
-   * : [ModuleName {, ModuleName}]; , [TypeName [,typeName]]; or TypeName;
-   */
-  private HashSet<String> scanList(Method scanMethod, NameSupplier target, String err, boolean onlyOneElement) throws IOException {
-    HashSet<String> names = new HashSet<>();
-    boolean comma = false, first = true;
-    scanMethod.call();
-    while (scanner.token != Token.SEMICOLON) {
-      switch (scanner.token) {
-        case COMMA:
-          if (comma || first || onlyOneElement) {
+        // Token.SEMICOLON
+        if (names.isEmpty() || comma) {
             env.error(scanner.pos, err);
             throw new Scanner.SyntaxError().Fatal();
-          }
-          comma = true;
-          break;
-        case IDENT:
-          if (!first && !comma) {
-            env.error(scanner.pos, err);
-            throw new Scanner.SyntaxError().Fatal();
-          }
-          names.add(target.get());
-          comma = false;
-          first = false;
-          continue;
-        default:
-          env.error(scanner.pos, err);
-          throw new Scanner.SyntaxError().Fatal();
-      }
-      scanner.scan();
+        }
+        return names;
     }
-    // Token.SEMICOLON
-    if (names.isEmpty() || comma) {
-      env.error(scanner.pos, err);
-      throw new Scanner.SyntaxError().Fatal();
-    }
-    return names;
-  }
 
-  private void parseClassMembers() throws IOException {
+    private void parseClassMembers() throws IOException {
         debugScan("[Parser.parseClassMembers]:  Begin ");
         // Parse annotations
         if (scanner.token == Token.ANNOTATION) {
@@ -1538,6 +1549,28 @@ class Parser extends ParseBase {
                 case BOOTSTRAPMETHOD:
                     scanner.scan();
                     parseCPXBootstrapMethod();
+                    break;
+                case NESTHOST:
+                    if (cd.nestHostExists()) {
+                        env.error(scanner.pos, "extra.nesthost.attribute");
+                        throw new Scanner.SyntaxError();
+                    } else if (cd.nestMembersExist()) {
+                        env.error(scanner.pos, "both.nesthost.nestmembers.found");
+                        throw new Scanner.SyntaxError();
+                    }
+                    scanner.scan();
+                    parseNestHost();
+                    break;
+                case NESTMEMBERS:
+                    if (cd.nestMembersExist()) {
+                        env.error(scanner.pos, "extra.nestmembers.attribute");
+                        throw new Scanner.SyntaxError();
+                    } else if (cd.nestHostExists()) {
+                        env.error(scanner.pos, "both.nesthost.nestmembers.found");
+                        throw new Scanner.SyntaxError();
+                    }
+                    scanner.scan();
+                    parseNestMembers();
                     break;
                 default:
                     env.error(scanner.pos, "field.expected");
@@ -1620,7 +1653,7 @@ class Parser extends ParseBase {
     /**
      * Determines whether the JASM file is for a package-info class
      * or for a module-info class.
-     *
+     * <p>
      * creates the correct kind of ClassData accordingly.
      *
      * @throws IOException
@@ -1703,7 +1736,7 @@ class Parser extends ParseBase {
      * Parse an Jasm file.
      */
     void parseFile() {
-        try{
+        try {
             // First, parse any package identifiers (and associated package annotations)
             parseJasmPackages();
 
@@ -1748,7 +1781,7 @@ class Parser extends ParseBase {
                         // interface <ident> == abstract interface class <ident>
                         mod |= ACC_ABSTRACT;
                     }
-                    if( scanner.token == Token.MODULE || scanner.token == Token.OPEN)
+                    if (scanner.token == Token.MODULE || scanner.token == Token.OPEN)
                         parseModule();
                     else
                         parseClass(mod);
@@ -1771,4 +1804,24 @@ class Parser extends ParseBase {
             er.printStackTrace();
         }
     } //end parseFile
+
+    @FunctionalInterface
+    interface NameSupplier {
+        String get() throws IOException;
+    }
+
+    @FunctionalInterface
+    interface Method {
+        void call() throws IOException;
+    }
+
+    /**
+     * The main compile error for the parser
+     */
+    static class CompilerError extends Error {
+
+        CompilerError(String message) {
+            super(message);
+        }
+    }
 }  //end Parser

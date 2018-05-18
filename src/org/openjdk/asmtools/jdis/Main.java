@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,7 +44,6 @@ public class Main {
      * The stream where error message are printed.
      */
     PrintWriter out;
-    boolean DebugFlag = false;
     /* debugging value, output stream will only allow this many
      * bytes to be written before throwing an error.
      */
