@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,19 +26,25 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
- *
+ * Exception table entry (JVMS 4.7.3 The Code Attribute) describes one exception handler
+ * in the code array {@link CodeData}.
  */
 class TrapData {
 
-    short start_pc, end_pc, handler_pc, catch_cpx;
     int num;
+
+    // exception_table
+    int start_pc,       // u2
+        end_pc,         // u2
+        handler_pc,     // u2
+        catch_cpx;      // u2
 
     public TrapData(DataInputStream in, int num) throws IOException {
         this.num = num;
-        start_pc = in.readShort();
-        end_pc = in.readShort();
-        handler_pc = in.readShort();
-        catch_cpx = in.readShort();
+        start_pc = in.readUnsignedShort();
+        end_pc = in.readUnsignedShort();
+        handler_pc = in.readUnsignedShort();
+        catch_cpx = in.readUnsignedShort();
     }
 
     /* returns recommended identifier

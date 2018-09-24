@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -156,7 +156,7 @@ public class CodeData {
     }
 
     protected iAtt get_iAtt(int pc) {
-        Integer PC = new Integer(pc);
+        Integer PC = pc;
         iAtt res = iattrs.get(PC);
         if (res == null) {
             res = new iAtt(this);
@@ -365,7 +365,7 @@ public class CodeData {
         }
     }
 
-    private void loadLocVarTable() throws IOException {
+    private void loadLocVarTable() {
         for (LocVarData entry : loc_var_tb) {
             get_iAtt(entry.start_pc).add_var(entry);
             get_iAtt(entry.start_pc + entry.length).add_endvar(entry);
@@ -388,7 +388,7 @@ public class CodeData {
         cls.pool.PrintConstant(out, cpx);
     }
 
-    private int printInstr(int pc) throws IOException {
+    private int printInstr(int pc) {
         boolean pr_cpx = meth.options.contains(Options.PR.CPX);
         int opc = getUbyte(pc);
         int opc2;
@@ -422,7 +422,7 @@ public class CodeData {
                     mnem = opcode2.parsekey();
                 }
                 out.print(mnem + " " + getUShort(pc + 2));
-                if (opcode2 == Opcode.opc_iinc) {
+                if (opcode2 == Opcode.opc_iinc_w) {
                     out.print(", " + getShort(pc + 4));
                     return 6;
                 }
@@ -654,7 +654,7 @@ public class CodeData {
 
         out.println("{");
 
-        iAtt iatt = iattrs.get(new Integer(0));
+        iAtt iatt = iattrs.get(0);
         for (int pc = 0; pc < code.length;) {
             if (iatt != null) {
                 iatt.printBegins(); // equ. print("\t");
@@ -673,7 +673,7 @@ public class CodeData {
             }
             pc = pc + printInstr(pc);
             out.println(";");
-            iatt = iattrs.get(new Integer(pc));
+            iatt = iattrs.get(pc);
             if (iatt != null) {
                 iatt.printEnds();
             }
