@@ -270,8 +270,8 @@ public class ClassData extends MemberData {
         if (magic != JAVA_MAGIC) {
             throw new ClassFormatError("wrong magic: " + HexUtils.toHex(magic) + ", expected " + HexUtils.toHex(JAVA_MAGIC));
         }
-        minor_version = in.readShort();
-        major_version = in.readShort();
+        minor_version = in.readUnsignedShort();
+        major_version = in.readUnsignedShort();
 
         // Read the constant pool
         // -----------------------------------------------
