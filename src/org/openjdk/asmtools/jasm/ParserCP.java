@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.BiFunction;
 
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.Tables.*;
@@ -430,53 +431,21 @@ d2l:            {
         @Override
         public ConstantPool.ConstValue_IndyPair visitInvokedynamic(ConstType tag) {
             debugStr("------- [ParserCPVisitor.visitInvokeDynamic]: ");
-            ConstantPool.ConstValue_IndyPair obj = null;
-            try {
-                if (scanner.token == Token.INTVAL) {
-                    // Handle explicit constant pool form
-                    int bsmIndex = scanner.intValue;
-                    scanner.scan();
-                    scanner.expect(Token.COLON);
-                    if (scanner.token != Token.CPINDEX) {
-                        env.traceln("token=" + scanner.token);
-                        env.error(scanner.pos, "token.expected", "<CPINDEX>");
-                        throw new Scanner.SyntaxError();
-                    }
-                    int cpx = scanner.intValue;
-                    scanner.scan();
-                    // Put a placeholder in place of BSM.
-                    // resolve placeholder after the attributes are scanned.
-                    BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
-                    obj = new ConstantPool.ConstValue_IndyPair(bsmData, parser.pool.getCell(cpx));
-
-                } else {
-                    // Handle full form
-                    ConstantPool.ConstCell MHCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
-                    scanner.expect(Token.COLON);
-                    ConstantPool.ConstCell NapeCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
-
-                    ArrayList<ConstantPool.ConstCell> bsm_args = new ArrayList<>(256);
-
-                    for (boolean sep = false; scanner.token != Token.SEMICOLON; sep = true) {
-                        if (sep) scanner.expect(Token.COMMA);
-                        bsm_args.add(parseConstRef(null));
-                        scanner.idValue = null; // Clear tag
-                    }
-
-                    BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
-                    parser.cd.addBootstrapMethod(bsmData);
-                    obj = new ConstantPool.ConstValue_IndyPair(bsmData, NapeCell);
-                }
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
+            final BiFunction<BootstrapMethodData, ConstantPool.ConstCell, ConstantPool.ConstValue_IndyPair> ctor =
+                    (bsmData, napeCell) -> new ConstantPool.ConstValue_IndyPair(bsmData, napeCell);
+            return visitBsm(ctor);
         }
 
         @Override
         public ConstantPool.ConstValue_CondyPair visitDynamic(ConstType tag) {
             debugStr("------- [ParserCPVisitor.visitDynamic]: ");
-            ConstantPool.ConstValue_CondyPair obj = null;
+            final BiFunction<BootstrapMethodData, ConstantPool.ConstCell, ConstantPool.ConstValue_CondyPair> ctor =
+                    (bsmData, napeCell) -> new ConstantPool.ConstValue_CondyPair(bsmData, napeCell);
+            return visitBsm(ctor);
+        }
+
+        private <E extends ConstantPool.ConstValue_IndyOrCondyPair> E visitBsm(BiFunction<BootstrapMethodData, ConstantPool.ConstCell, E> ctor) {
+            E obj = null;
             try {
                 if (scanner.token == Token.INTVAL) {
                     // Handle explicit constant pool form
@@ -493,8 +462,7 @@ d2l:            {
                     // Put a placeholder in place of BSM.
                     // resolve placeholder after the attributes are scanned.
                     BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
-                    obj = new ConstantPool.ConstValue_CondyPair(bsmData, parser.pool.getCell(cpx));
-
+                    obj =   ctor.apply(bsmData, parser.pool.getCell(cpx));
                 } else {
                     // Handle full form
                     ConstantPool.ConstCell MHCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
@@ -527,7 +495,7 @@ d2l:            {
                     }
                     BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
                     parser.cd.addBootstrapMethod(bsmData);
-                    obj = new ConstantPool.ConstValue_CondyPair(bsmData, NapeCell);
+                    obj = ctor.apply(bsmData, NapeCell);
                 }
             } catch (IOException e) {
                 IOProb = e;
