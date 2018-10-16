@@ -352,10 +352,27 @@ class Parser extends ParseBase {
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_FIELD));
                 break;
             case REF_INVOKEVIRTUAL:
-            case REF_INVOKESTATIC:
-            case REF_INVOKESPECIAL:
             case REF_NEWINVOKESPECIAL:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_METHOD));
+                break;
+            case REF_INVOKESTATIC:
+            case REF_INVOKESPECIAL:
+                // CODETOOLS-7902333
+                // 4.4.8. The CONSTANT_MethodHandle_info Structure
+                // reference_index
+                // The value of the reference_index item must be a valid index into the constant_pool table.
+                // The constant_pool entry at that index must be as follows:
+                // If the value of the reference_kind item is 6 (REF_invokeStatic) or 7 (REF_invokeSpecial),
+                // then if the class file version number is less than 52.0, the constant_pool entry at that index must be
+                // a CONSTANT_Methodref_info structure representing a class's method for which a method handle is to be created;
+                // if the class file version number is 52.0 or above, the constant_pool entry at that index must be
+                // either a CONSTANT_Methodref_info structure or a CONSTANT_InterfaceMethodref_info structure (§4.4.2)
+                // representing a class's or interface's method for which a method handle is to be created.
+                ConstType ctype = ConstType.CONSTANT_METHOD;
+                if ( this.cd.cfv.major_version() >= 52 && Modifiers.isInterface(this.cd.access) ) {
+                    ctype = ConstType.CONSTANT_INTERFACEMETHOD;
+                }
+                refCell = pool.FindCell(cpParser.parseConstValue(ctype));
                 break;
             case REF_INVOKEINTERFACE:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_INTERFACEMETHOD));
