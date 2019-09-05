@@ -1299,7 +1299,6 @@ class Parser extends ParseBase {
                 break;
             }
         }
-        System.out.println(name);
         return name;
     }
 

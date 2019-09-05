@@ -903,7 +903,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             }
             ConstValue cval = cell.ref;
             if ((cval == null) || !cval.hasValue()) {
-                String name = (new Integer(cpx)).toString();
+                String name = Integer.toString(cpx);
                 env.error("const.undecl", name);
             }
         }

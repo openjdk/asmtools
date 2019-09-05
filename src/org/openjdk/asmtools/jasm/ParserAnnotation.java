@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,7 +54,7 @@ public class ParserAnnotation extends ParseBase {
 
         AnnotationData annotation;
 
-        public AnnotationElemValue(AnnotationData annotation) {
+        AnnotationElemValue(AnnotationData annotation) {
             this.annotation = annotation;
         }
 
@@ -75,11 +75,11 @@ public class ParserAnnotation extends ParseBase {
      *
      * Annotation Element value referring to a class
      */
-    class ClassElemValue implements Data {
+    static class ClassElemValue implements Data {
 
         ConstCell indx;
 
-        public ClassElemValue(ConstCell indx) {
+        ClassElemValue(ConstCell indx) {
             this.indx = indx;
         }
 
@@ -100,12 +100,12 @@ public class ParserAnnotation extends ParseBase {
      *
      * Annotation Element value referring to an Array
      */
-    class ArrayElemValue implements Data {
+    static class ArrayElemValue implements Data {
 
         ArrayList<Data> elemValues;
         int arrayLength = 0;
 
-        public ArrayElemValue() {
+        ArrayElemValue() {
             this.elemValues = new ArrayList<>();
         }
 
@@ -135,12 +135,12 @@ public class ParserAnnotation extends ParseBase {
      *
      * Annotation Element value referring to a Constant
      */
-    class ConstElemValue implements Data {
+    static class ConstElemValue implements Data {
 
         char tag;
         ConstCell indx;
 
-        public ConstElemValue(char tag, ConstCell indx) {
+        ConstElemValue(char tag, ConstCell indx) {
             this.tag = tag;
             this.indx = indx;
         }
@@ -162,12 +162,12 @@ public class ParserAnnotation extends ParseBase {
      *
      * Element Value for Enums
      */
-    class EnumElemValue implements Data {
+    static class EnumElemValue implements Data {
 
         ConstCell type;
         ConstCell value;
 
-        public EnumElemValue(ConstCell type, ConstCell value) {
+        EnumElemValue(ConstCell type, ConstCell value) {
             this.type = type;
             this.value = value;
         }
@@ -211,7 +211,7 @@ public class ParserAnnotation extends ParseBase {
         scanner.scan();
         scanner.expect(Token.LBRACE);
         // First scan the Name (String, or CPX to name)
-        ConstCell nameCell = null;
+        ConstCell nameCell;
         if ((scanner.token == Token.IDENT) || scanner.checkTokenIdent()) {
             // Got a Class Name
             nameCell = parser.parseName();
@@ -250,7 +250,7 @@ public class ParserAnnotation extends ParseBase {
      * @return An ArrayList of parsed annotations
      * @throws IOException
      */
-    protected ArrayList<AnnotationData> scanAnnotations() throws IOException {
+    ArrayList<AnnotationData> scanAnnotations() throws IOException {
         ArrayList<AnnotationData> annttns = new ArrayList<>();
 
         while (scanner.token == Token.ANNOTATION) {
@@ -887,7 +887,7 @@ public class ParserAnnotation extends ParseBase {
             case CPINDEX:
                 // could be a reference to a class name
                 env.traceln("[AnnotationParser.scanAnnotationData]:: Constant Class Field: " + name + " = " + scanner.stringValue);
-                Integer ConstNmCPX = new Integer(scanner.stringValue);
+                Integer ConstNmCPX = Integer.valueOf(scanner.stringValue);
                 constVal = new ClassElemValue(parser.pool.getCell(ConstNmCPX));
                 scanner.scan();
                 break;
@@ -935,12 +935,12 @@ public class ParserAnnotation extends ParseBase {
                 }
                 break;
             case CPINDEX:
-                Integer typeNmCPX = new Integer(scanner.stringValue);
+                Integer typeNmCPX = Integer.valueOf(scanner.stringValue);
                 scanner.scan();
                 //need two indexes to form a proper enum
                 switch (scanner.token) {
                     case CPINDEX:
-                        Integer ConstNmCPX = new Integer(scanner.stringValue);
+                        Integer ConstNmCPX = Integer.valueOf(scanner.stringValue);
                         env.traceln("[AnnotationParser.scanAnnotationEnum]:: Enumeration Field: " + name + " = #" + typeNmCPX + " #" + ConstNmCPX);
                         enumval = new EnumElemValue(parser.pool.getCell(typeNmCPX), parser.pool.getCell(ConstNmCPX));
                         scanner.scan();
@@ -971,28 +971,28 @@ public class ParserAnnotation extends ParseBase {
             // Some primitive types (Boolean, char, short, byte) are identified by a keyword.
             case INTVAL:
                 env.traceln("[AnnotationParser.scanAnnotationData]:: Integer Field: " + name + " = " + scanner.intValue);
-                data = new ConstElemValue('I', parser.pool.FindCell(ConstType.CONSTANT_INTEGER, new Integer(scanner.intValue)));
+                data = new ConstElemValue('I', parser.pool.FindCell(ConstType.CONSTANT_INTEGER, scanner.intValue));
                 scanner.scan();
                 break;
             case DOUBLEVAL:
                 env.traceln("[AnnotationParser.scanAnnotationData]:: Double Field: " + name + " = " + scanner.doubleValue);
-                double dval = new Double(scanner.doubleValue);
+                double dval = scanner.doubleValue;
                 long ivdal = Double.doubleToLongBits(dval);
-                Long val = new Long(ivdal);
+                Long val = ivdal;
                 data = new ConstElemValue('D', parser.pool.FindCell(ConstType.CONSTANT_DOUBLE, val));
                 scanner.scan();
                 break;
             case FLOATVAL:
                 env.traceln("[AnnotationParser.scanAnnotationData]:: Float Field: " + name + " = " + scanner.floatValue);
-                float fval = new Float(scanner.floatValue);
+                float fval = scanner.floatValue;
                 int ifval = Float.floatToIntBits(fval);
-                Integer val1 = new Integer(ifval);
+                Integer val1 = ifval;
                 data = new ConstElemValue('F', parser.pool.FindCell(ConstType.CONSTANT_FLOAT, val1));
                 scanner.scan();
                 break;
             case LONGVAL:
                 env.traceln("[AnnotationParser.scanAnnotationData]:: Long Field: " + name + " = " + scanner.longValue);
-                data = new ConstElemValue('J', parser.pool.FindCell(ConstType.CONSTANT_LONG, new Long(scanner.longValue)));
+                data = new ConstElemValue('J', parser.pool.FindCell(ConstType.CONSTANT_LONG, scanner.longValue));
                 scanner.scan();
                 break;
             case STRINGVAL:
@@ -1042,7 +1042,7 @@ public class ParserAnnotation extends ParseBase {
      */
     private Data scanAnnotationIdent(String ident, String name) throws IOException {
         // Handle JASM annotation Keyword Identifiers
-        Data data = null;
+        Data data;
         BasicType type = basictype(ident);
         switch (type) {
 
@@ -1053,7 +1053,7 @@ public class ParserAnnotation extends ParseBase {
                     case INTVAL:
                         // Handle Boolean value in integer form
                         env.traceln("Boolean Field: " + name + " = " + scanner.intValue);
-                        Integer val = new Integer(scanner.intValue);
+                        Integer val = scanner.intValue;
                         if (val > 1 || val < 0) {
                             env.traceln("Warning: Boolean Field: " + name + " value is not 0 or 1, value = " + scanner.intValue);
                         }
@@ -1062,7 +1062,7 @@ public class ParserAnnotation extends ParseBase {
                         break;
                     case IDENT:
                         // handle boolean value with true/false keywords
-                        int val1 = 0;
+                        int val1;
                         switch (scanner.stringValue) {
                             case "true":
                                 val1 = 1;
@@ -1074,7 +1074,7 @@ public class ParserAnnotation extends ParseBase {
                                 throw new IOException("Incorrect Annotation (boolean), expected true/false), got \"" + scanner.stringValue + "\".");
                         }
                         env.traceln("Boolean Field: " + name + " = " + scanner.stringValue);
-                        data = new ConstElemValue('Z', parser.pool.FindCell(ConstType.CONSTANT_INTEGER, new Integer(val1)));
+                        data = new ConstElemValue('Z', parser.pool.FindCell(ConstType.CONSTANT_INTEGER, val1));
                         scanner.scan();
                         break;
                     default:
@@ -1088,7 +1088,7 @@ public class ParserAnnotation extends ParseBase {
                 switch (scanner.token) {
                     case INTVAL:
                         env.traceln("Byte Field: " + name + " = " + scanner.intValue);
-                        Integer val = new Integer(scanner.intValue);
+                        Integer val = scanner.intValue;
                         if (val > 0xFF) {
                             env.traceln("Warning: Byte Field: " + name + " value is greater than 0xFF, value = " + scanner.intValue);
                         }
@@ -1106,7 +1106,7 @@ public class ParserAnnotation extends ParseBase {
                 switch (scanner.token) {
                     case INTVAL:
                         env.traceln("Char Field: " + name + " = " + scanner.intValue);
-                        Integer val = new Integer(scanner.intValue);
+                        Integer val = scanner.intValue;
                         // Bounds check?
                         data = new ConstElemValue('C', parser.pool.FindCell(ConstType.CONSTANT_INTEGER, val));
                         scanner.scan();
@@ -1122,7 +1122,7 @@ public class ParserAnnotation extends ParseBase {
                 switch (scanner.token) {
                     case INTVAL:
                         env.traceln("Short Field: " + name + " = " + scanner.intValue);
-                        Integer val = new Integer(scanner.intValue);
+                        Integer val = scanner.intValue;
                         if (val > 0xFFFF) {
                             env.traceln("Warning: Short Field: " + name + " value is greater than 0xFFFF, value = " + scanner.intValue);
                         }

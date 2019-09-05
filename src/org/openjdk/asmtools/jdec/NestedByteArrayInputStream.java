@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,14 +42,13 @@ public class NestedByteArrayInputStream extends ByteArrayInputStream {
         super(buf, offset, length);
     }
 
-    /*----  */
     public int getPos() {
         return pos;
     }
     Stack savedStates = new Stack();
 
     public void enter(int range) {
-        savedStates.push(new Integer(count));
+        savedStates.push(count);
         if (pos + range < count) {
             count = pos + range;
         }

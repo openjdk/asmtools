@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,7 +128,7 @@ public class ParserCP extends ParseBase {
             } catch (IOException e) {
                 IOProb = e;
             }
-            obj = new ConstantPool.ConstValue_Integer(tag, new Integer(v));
+            obj = new ConstantPool.ConstValue_Integer(tag, v);
             return obj;
         }
 
@@ -153,7 +153,7 @@ public class ParserCP extends ParseBase {
                         env.error(scanner.prevPos, "token.expected", "Integer");
                         throw new Scanner.SyntaxError();
                 }
-                obj = new ConstantPool.ConstValue_Long(tag, new Long(v * scanner.sign));
+                obj = new ConstantPool.ConstValue_Long(tag, v * scanner.sign);
                 scanner.scan();
             } catch (IOException e) {
                 IOProb = e;
@@ -207,7 +207,7 @@ i2f:            {
                 if (scanner.sign == -1) {
                     v = v ^ 0x80000000;
                 }
-                obj = new ConstantPool.ConstValue_Integer(tag, new Integer(v));
+                obj = new ConstantPool.ConstValue_Integer(tag, v);
                 scanner.scan();
             } catch (IOException e) {
                 IOProb = e;
@@ -235,7 +235,7 @@ d2l:            {
                                 v = scanner.intValue;
                                 break d2l;
                             } else {
-                                d = (double) scanner.intValue;
+                                d = scanner.intValue;
                                 break;
                             }
                         case LONGVAL:
@@ -267,7 +267,7 @@ d2l:            {
                 if (scanner.sign == -1) {
                     v = v ^ 0x8000000000000000L;
                 }
-                obj = new ConstantPool.ConstValue_Long(tag, new Long(v));
+                obj = new ConstantPool.ConstValue_Long(tag, v);
                 scanner.scan();
             } catch (IOException e) {
                 IOProb = e;

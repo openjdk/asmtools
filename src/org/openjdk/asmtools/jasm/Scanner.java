@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -451,7 +451,7 @@ numberLoop:
                 break;
             }
             default:
-                stringValue = (new Character((char) ch)).toString();
+                stringValue = Character.toString((char)ch);
                 env.error(in.pos, "invalid.number", stringValue);
                 intValue = 0;
                 token = Token.CPINDEX;
@@ -557,7 +557,7 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (isUCDigit(ch) || isUCLetter(ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", (new Character((char) ch)).toString());
+            env.error(in.pos, "invalid.number", Character.toString((char)ch));
             do {
                 ch = in.read();
             } while (isUCDigit(ch) || isUCLetter(ch) || ch == '.');
@@ -639,7 +639,7 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (isUCDigit(ch) || isUCLetter(ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", (new Character((char) ch)).toString());
+            env.error(in.pos, "invalid.number", Character.toString((char)ch));
             do {
                 ch = in.read();
             } while (isUCDigit(ch) || isUCLetter(ch) || ch == '.');

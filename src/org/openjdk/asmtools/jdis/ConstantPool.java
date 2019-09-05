@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -176,34 +176,34 @@ public class ConstantPool {
         // Class initializer Code
         //
         // Make sure all of the tags get initialized before being used.
-        taghash.put(new Byte(TAG.CONSTANT_UTF8.value()), TAG.CONSTANT_UTF8);
-        taghash.put(new Byte(TAG.CONSTANT_UNICODE.value()), TAG.CONSTANT_UNICODE);
-        taghash.put(new Byte(TAG.CONSTANT_INTEGER.value()), TAG.CONSTANT_INTEGER);
-        taghash.put(new Byte(TAG.CONSTANT_FLOAT.value()), TAG.CONSTANT_FLOAT);
-        taghash.put(new Byte(TAG.CONSTANT_LONG.value()), TAG.CONSTANT_LONG);
-        taghash.put(new Byte(TAG.CONSTANT_DOUBLE.value()), TAG.CONSTANT_DOUBLE);
-        taghash.put(new Byte(TAG.CONSTANT_CLASS.value()), TAG.CONSTANT_CLASS);
-        taghash.put(new Byte(TAG.CONSTANT_STRING.value()), TAG.CONSTANT_STRING);
-        taghash.put(new Byte(TAG.CONSTANT_FIELD.value()), TAG.CONSTANT_FIELD);
-        taghash.put(new Byte(TAG.CONSTANT_METHOD.value()), TAG.CONSTANT_METHOD);
-        taghash.put(new Byte(TAG.CONSTANT_INTERFACEMETHOD.value()), TAG.CONSTANT_INTERFACEMETHOD);
-        taghash.put(new Byte(TAG.CONSTANT_NAMEANDTYPE.value()), TAG.CONSTANT_NAMEANDTYPE);
-        taghash.put(new Byte(TAG.CONSTANT_METHODHANDLE.value()), TAG.CONSTANT_METHODHANDLE);
-        taghash.put(new Byte(TAG.CONSTANT_METHODTYPE.value()), TAG.CONSTANT_METHODTYPE);
-        taghash.put(new Byte(TAG.CONSTANT_DYNAMIC.value()), TAG.CONSTANT_DYNAMIC);
-        taghash.put(new Byte(TAG.CONSTANT_INVOKEDYNAMIC.value()), TAG.CONSTANT_INVOKEDYNAMIC);
-        taghash.put(new Byte(TAG.CONSTANT_MODULE.value()), TAG.CONSTANT_MODULE);
-        taghash.put(new Byte(TAG.CONSTANT_PACKAGE.value()), TAG.CONSTANT_PACKAGE);
+        taghash.put(TAG.CONSTANT_UTF8.value(), TAG.CONSTANT_UTF8);
+        taghash.put(TAG.CONSTANT_UNICODE.value(), TAG.CONSTANT_UNICODE);
+        taghash.put(TAG.CONSTANT_INTEGER.value(), TAG.CONSTANT_INTEGER);
+        taghash.put(TAG.CONSTANT_FLOAT.value(), TAG.CONSTANT_FLOAT);
+        taghash.put(TAG.CONSTANT_LONG.value(), TAG.CONSTANT_LONG);
+        taghash.put(TAG.CONSTANT_DOUBLE.value(), TAG.CONSTANT_DOUBLE);
+        taghash.put(TAG.CONSTANT_CLASS.value(), TAG.CONSTANT_CLASS);
+        taghash.put(TAG.CONSTANT_STRING.value(), TAG.CONSTANT_STRING);
+        taghash.put(TAG.CONSTANT_FIELD.value(), TAG.CONSTANT_FIELD);
+        taghash.put(TAG.CONSTANT_METHOD.value(), TAG.CONSTANT_METHOD);
+        taghash.put(TAG.CONSTANT_INTERFACEMETHOD.value(), TAG.CONSTANT_INTERFACEMETHOD);
+        taghash.put(TAG.CONSTANT_NAMEANDTYPE.value(), TAG.CONSTANT_NAMEANDTYPE);
+        taghash.put(TAG.CONSTANT_METHODHANDLE.value(), TAG.CONSTANT_METHODHANDLE);
+        taghash.put(TAG.CONSTANT_METHODTYPE.value(), TAG.CONSTANT_METHODTYPE);
+        taghash.put(TAG.CONSTANT_DYNAMIC.value(), TAG.CONSTANT_DYNAMIC);
+        taghash.put(TAG.CONSTANT_INVOKEDYNAMIC.value(), TAG.CONSTANT_INVOKEDYNAMIC);
+        taghash.put(TAG.CONSTANT_MODULE.value(), TAG.CONSTANT_MODULE);
+        taghash.put(TAG.CONSTANT_PACKAGE.value(), TAG.CONSTANT_PACKAGE);
 
-        subtaghash.put(new Byte(SUBTAG.REF_GETFIELD.value()), SUBTAG.REF_GETFIELD);
-        subtaghash.put(new Byte(SUBTAG.REF_GETSTATIC.value()), SUBTAG.REF_GETSTATIC);
-        subtaghash.put(new Byte(SUBTAG.REF_PUTFIELD.value()), SUBTAG.REF_PUTFIELD);
-        subtaghash.put(new Byte(SUBTAG.REF_PUTSTATIC.value()), SUBTAG.REF_PUTSTATIC);
-        subtaghash.put(new Byte(SUBTAG.REF_INVOKEVIRTUAL.value()), SUBTAG.REF_INVOKEVIRTUAL);
-        subtaghash.put(new Byte(SUBTAG.REF_INVOKESTATIC.value()), SUBTAG.REF_INVOKESTATIC);
-        subtaghash.put(new Byte(SUBTAG.REF_INVOKESPECIAL.value()), SUBTAG.REF_INVOKESPECIAL);
-        subtaghash.put(new Byte(SUBTAG.REF_NEWINVOKESPECIAL.value()), SUBTAG.REF_NEWINVOKESPECIAL);
-        subtaghash.put(new Byte(SUBTAG.REF_INVOKEINTERFACE.value()), SUBTAG.REF_INVOKEINTERFACE);
+        subtaghash.put(SUBTAG.REF_GETFIELD.value(), SUBTAG.REF_GETFIELD);
+        subtaghash.put(SUBTAG.REF_GETSTATIC.value(), SUBTAG.REF_GETSTATIC);
+        subtaghash.put(SUBTAG.REF_PUTFIELD.value(), SUBTAG.REF_PUTFIELD);
+        subtaghash.put(SUBTAG.REF_PUTSTATIC.value(), SUBTAG.REF_PUTSTATIC);
+        subtaghash.put(SUBTAG.REF_INVOKEVIRTUAL.value(), SUBTAG.REF_INVOKEVIRTUAL);
+        subtaghash.put(SUBTAG.REF_INVOKESTATIC.value(), SUBTAG.REF_INVOKESTATIC);
+        subtaghash.put(SUBTAG.REF_INVOKESPECIAL.value(), SUBTAG.REF_INVOKESPECIAL);
+        subtaghash.put(SUBTAG.REF_NEWINVOKESPECIAL.value(), SUBTAG.REF_NEWINVOKESPECIAL);
+        subtaghash.put(SUBTAG.REF_INVOKEINTERFACE.value(), SUBTAG.REF_INVOKEINTERFACE);
 
     }
 
@@ -331,7 +331,7 @@ public class ConstantPool {
 
         CP_Int(TAG tagval, int intval) {
             super(tagval);
-            this.value = new Integer(intval);
+            this.value = intval;
         }
 
         @Override
@@ -364,7 +364,7 @@ public class ConstantPool {
 
         CP_Long(TAG tagval, long intval) {
             super(tagval);
-            this.value = new Long(intval);
+            this.value = intval;
         }
 
         @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -337,7 +337,7 @@ class CodeAttr extends AttrData {
         if ((max_locals != null) && (max_locals.arg < slots.size())) {
 
 //        if ((max_locals != null) && (max_locals.arg < slots.length)) {
-            env.error("warn.illslot", new Integer(slot).toString());
+            env.error("warn.illslot", Integer.toString(slot));
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -348,7 +348,7 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", (new Character((char) ch)).toString());
+            env.error(in.pos, "invalid.number", Character.toString((char)ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
@@ -414,7 +414,7 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", (new Character((char) ch)).toString());
+            env.error(in.pos, "invalid.number", Character.toString((char)ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
