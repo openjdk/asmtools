@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,18 +36,16 @@ import java.util.ArrayList;
 public class Main {
 
     private Options options = Options.OptionObject();
+
     /**
      * Name of the program.
      */
     public static String programName;
+
     /**
      * The stream where error message are printed.
      */
     PrintWriter out;
-    /* debugging value, output stream will only allow this many
-     * bytes to be written before throwing an error.
-     */
-    private int bytelimit = 0;
 
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
@@ -90,10 +88,10 @@ public class Main {
             String arg = argv[i];
             switch (arg) {
                 case "-g":
-                    options.set(Options.PR.DEBUG);
+                    options.setCodeOptions();
                     break;
                 case "-v":
-                    options.setCodeOptions();
+                    options.set(Options.PR.DEBUG);
                     break;
                 case "-sl":
                     options.set(Options.PR.SRC);

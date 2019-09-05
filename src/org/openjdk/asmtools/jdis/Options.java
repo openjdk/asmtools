@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@ package org.openjdk.asmtools.jdis;
 import java.util.EnumSet;
 
 /**
- *
+ * The singleton class to share global options among jdis classes.
  */
 public class Options {
 
@@ -39,7 +39,7 @@ public class Options {
         LNT, // print Line Number table
         PC, // print Program Counter - for all instr
         LABS, // print Labels (as identifiers)
-        CPX, // print CP indeX along with arguments
+        CPX, // print CP index along with arguments
         SRC, // print Source Line as comment
         HEX, // print numbers as hexadecimals
         VAR, // print local variables declarations
@@ -73,7 +73,7 @@ public class Options {
     }
 
     public void setCodeOptions() {
-        printOptions = CODE;
+        printOptions.addAll(CODE);
     }
 
     public boolean contains(PR val) {
