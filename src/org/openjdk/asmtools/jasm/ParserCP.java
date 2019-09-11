@@ -331,27 +331,40 @@ d2l:            {
                 ConstantPool.ConstCell refCell;
                 ConstantPool.ConstCell subtagCell;
                 SubTag subtag;
+                // MethodHandle    [INVOKESUBTAG|INVOKESUBTAG_INDEX] :    CONSTANT_FIELD | [FIELDREF|METHODREF|INTERFACEMETHODREF]
                 if (scanner.token == Token.INTVAL) {
+                    // INVOKESUBTAG_INDEX
                     // Handle explicit constant pool form
                     subtag = subtag(scanner.intValue);
                     subtagCell = new ConstantPool.ConstCell(subtag.value());
                     scanner.scan();
                     scanner.expect(Token.COLON);
-                    if (scanner.token != Token.CPINDEX) {
-                        env.traceln("token=" + scanner.token);
-                        env.error(scanner.pos, "token.expected", "<CPINDEX>");
-                        throw new Scanner.SyntaxError();
+                    if (scanner.token == Token.CPINDEX) {
+                        // CONSTANT_FIELD
+                        int cpx = scanner.intValue;
+                        refCell = parser.pool.getCell(cpx);
+                        scanner.scan();
+                    } else {
+                        // [FIELDREF|METHODREF|INTERFACEMETHODREF]
+                        refCell = parser.parseMethodHandle(subtag);
                     }
-                    int cpx = scanner.intValue;
-                    refCell = parser.pool.getCell(cpx);
-                    scanner.scan();
-
                 } else {
+                    // INVOKESUBTAG : REF_INVOKEINTERFACE, REF_NEWINVOKESPECIAL, ...
                     // normal JASM
                     subtag = parser.parseSubtag();
                     subtagCell = new ConstantPool.ConstCell(subtag.value());
                     scanner.expect(Token.COLON);
-                    refCell = parser.parseMethodHandle(subtag);
+                    if (scanner.token == Token.CPINDEX) {
+                        // CODETOOLS-7901522: Jasm doesn't allow to create REF_invoke* referring an InterfaceMethod
+                        // Parsing the case when refCell is CP index (#1)
+                        // const #1 = InterfaceMethod m:"()V";
+                        // const #2 = MethodHandle REF_invokeSpecial:#1;
+                        int cpx = scanner.intValue;
+                        refCell = parser.pool.getCell(cpx);
+                        scanner.scan();
+                    } else {
+                        refCell = parser.parseMethodHandle(subtag);
+                    }
                 }
                 obj = new ConstantPool.ConstValue_Pair(tag, subtagCell, refCell);
             } catch (IOException e) {

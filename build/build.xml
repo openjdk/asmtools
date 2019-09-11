@@ -251,8 +251,8 @@ Other values for TARGET are:
     <target name="compileClasses" depends="prepare">
         <mkdir dir="${build.classes.dir}"/>
         <javac fork="true"
-            target="1.8"
-            source="1.8"
+            target="9"
+            source="9"
             srcdir="${build.src.classes.dir}"
             destdir="${build.classes.dir}"
             debug="${javac.debug}"
