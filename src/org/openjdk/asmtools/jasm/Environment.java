@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,10 +25,8 @@ package org.openjdk.asmtools.jasm;
 import static org.openjdk.asmtools.jasm.Constants.EOF;
 import static org.openjdk.asmtools.jasm.Constants.OFFSETBITS;
 import org.openjdk.asmtools.util.I18NResourceBundle;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.text.MessageFormat;
 
 /**
@@ -68,38 +66,42 @@ public class Environment {
     static boolean traceFlag = false;
     boolean debugInfoFlag = false;
 
-    private File source;
-    public PrintStream out;
-    boolean nowarn;
-    private byte data[];
+    private String inputFileName;
+    private String simpleInputFileName;
+    public PrintWriter out;
+    private boolean nowarn;
+    private byte[] data;
     private int bytepos;
     private int linepos;
     public int pos;
     /*-------------------------------------------------------- */
 
-    public Environment(File source, PrintStream out, boolean nowarn) throws IOException {
+    public Environment(DataInputStream dis, String inputFileName, PrintWriter out, boolean nowarn) throws IOException {
         this.out = out;
-        errorFileName = source.getPath();
-        this.source = source;
+        this.inputFileName = inputFileName;
         this.nowarn = nowarn;
         // Read the file
-        FileInputStream in = new FileInputStream(source);
-        data = new byte[in.available()];
-        in.read(data);
-        in.close();
+        data = new byte[dis.available()];
+        dis.read(data);
+        dis.close();
         bytepos = 0;
         linepos = 1;
     }
 
-    public String getErrorFile() {
-        return errorFileName;
+    public String getInputFileName() {
+        return inputFileName;
     }
 
-    public String getSourceName() {
-        return source.getName();
+    public String getSimpleInputFileName() {
+        if( simpleInputFileName == null ) {
+            char separatorChar = (inputFileName.matches("^[A-Za-z]+:.*")) ? '/' : File.separatorChar;
+            int index = inputFileName.lastIndexOf(separatorChar);
+            simpleInputFileName = (index < 0) ? inputFileName.substring(0) : inputFileName.substring(index + 1);
+        }
+        return simpleInputFileName;
     }
 
-    public int lookForward() {
+    int lookForward() {
         try {
             return data[bytepos];
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -107,7 +109,7 @@ public class Environment {
         }
     }
 
-    public int convertUnicode() {
+    int convertUnicode() {
         int c;
         try {
             while ((c = data[bytepos]) == 'u') {
@@ -192,19 +194,19 @@ public class Environment {
         }
     }
 
-    public int lineNumber(int lcpos) {
+    int lineNumber(int lcpos) {
         return lcpos >>> OFFSETBITS;
     }
 
-    public int lineNumber() {
+    int lineNumber() {
         return lineNumber(pos);
     }
 
-    public int lineOffset(int lcpos) {
+    int lineOffset(int lcpos) {
         return lcpos & ((1 << OFFSETBITS) - 1);
     }
 
-    public int lineOffset() {
+    int lineOffset() {
         return lineOffset(pos);
     }
 

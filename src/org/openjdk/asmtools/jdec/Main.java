@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,56 +22,36 @@
  */
 package org.openjdk.asmtools.jdec;
 
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.jdis.uEscWriter;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
-import java.io.FileNotFoundException;
+
+import java.io.DataInputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
  * Main program of the Java DeCoder
  */
-public class Main {
+public class Main extends Tool {
 
-    /*-------------------------------------------------------- */
-    /* Main Fields */
-    /**
-     * Name of the program.
-     */
-    String program;
-
-    /**
-     * The stream where error message are printed.
-     */
-    PrintWriter out;
-    boolean DebugFlag = false;
-    int printFlags = 0;
+    int     printFlags = 0;
 
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
-    /*-------------------------------------------------------- */
-    /**
-     * Constructor.
-     */
-    public Main(PrintWriter out, String program) {
-        this.out = out;
-        this.program = program;
-    }
-    /*-------------------------------------------------------- */
-
-    public void error(String msg) {
-        out.println(program + ": " + msg);
+    public Main(PrintWriter out, PrintWriter err, String programName) {
+        super(out, err, programName);
+        printCannotReadMsg = (fname) ->
+                error( i18n.getString("jdec.error.cannot_read", fname));
     }
 
-    /**
-     * Usage
-     */
+    @Override
     public void usage() {
-        out.println(i18n.getString("jdec.usage"));
-        out.println(i18n.getString("jdec.opt.g"));
-        out.println(i18n.getString("jdec.opt.version"));
+        println(i18n.getString("jdec.usage"));
+        println(i18n.getString("jdec.opt.g"));
+        println(i18n.getString("jdec.opt.version"));
     }
 
     /**
@@ -92,7 +72,7 @@ public class Main {
                 printFlags = printFlags | 1;
                 vargs.add(arg);
             } else if (arg.equals("-v")) {
-                DebugFlag = true;
+                DebugFlag = () -> true;
                 vargs.add(arg);
                 out.println("arg[" + i + "]=" + argv[i] + "/verbose");
             } else if (arg.equals("-version")) {
@@ -115,23 +95,26 @@ public class Main {
 
         String[] names = new String[0];
         names = vj.toArray(names);
-      for (String inpname : names) {
-        try {
-          ClassData cc = new ClassData(inpname, printFlags, out);
-          cc.DebugFlag = DebugFlag;
-          cc.decodeClass();
-          continue;
-        } catch (FileNotFoundException ee) {
-          error(i18n.getString("jdec.error.cannot_read", inpname));
-        } catch (Error ee) {
-          ee.printStackTrace();
-          error(i18n.getString("jdec.error.fatal_error"));
-        } catch (Exception ee) {
-          ee.printStackTrace();
-          error(i18n.getString("jdec.error.fatal_exception"));
+        for (String inpname : names) {
+            try {
+                DataInputStream dataInputStream = getDataInputStream(inpname);
+                if( dataInputStream == null )
+                    return false;
+                ClassData cc = new ClassData(dataInputStream, printFlags, out);
+                cc.DebugFlag = DebugFlag.getAsBoolean();
+                cc.decodeClass(inpname);
+                continue;
+            } catch (Error ee) {
+                if (DebugFlag.getAsBoolean())
+                    ee.printStackTrace();
+                error(i18n.getString("jdec.error.fatal_error"));
+            } catch (Exception ee) {
+                if (DebugFlag.getAsBoolean())
+                    ee.printStackTrace();
+                error(i18n.getString("jdec.error.fatal_exception"));
+            }
+            return false;
         }
-        return false;
-      }
         return true;
     }
 
@@ -139,7 +122,7 @@ public class Main {
      * Main program
      */
     public static void main(String argv[]) {
-        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), "jdec");
+        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), new PrintWriter(System.err), "jdec");
         System.exit(decoder.decode(argv) ? 0 : 1);
     }
 }

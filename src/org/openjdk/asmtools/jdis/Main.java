@@ -22,66 +22,47 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 /**
- * Main program of the Java Disassembler
+ * Main program of the Java Disassembler :: class -> jasm
  */
-public class Main {
+public class Main extends Tool {
 
-    private Options options = Options.OptionObject();
-
-    /**
-     * Name of the program.
-     */
-    public static String programName;
-
-    /**
-     * The stream where error message are printed.
-     */
-    PrintWriter out;
+    private Options options;
 
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
-    /**
-     * Constructor.
-     */
-    public Main(PrintWriter out, String program) {
-        this.out = out;
-        Main.programName = program;
+    public Main(PrintWriter out, PrintWriter err, String programName) {
+        super(out, err, programName);
+        // tool specific initialization
+        options = Options.OptionObject();
+        DebugFlag = () -> options.contains(Options.PR.DEBUG);
+        printCannotReadMsg = (fname) -> error( i18n.getString("jdis.error.cannot_read", fname));
     }
 
-    /**
-     * Top level error message
-     */
-    public void error(String msg) {
-        System.err.println(programName + ": " + msg);
-    }
-
-    /**
-     * Usage
-     */
+    @Override
     public void usage() {
-        error(i18n.getString("jdis.usage"));
-        error(i18n.getString("jdis.opt.g"));
-        error(i18n.getString("jdis.opt.sl"));
-        error(i18n.getString("jdis.opt.hx"));
-        error(i18n.getString("jdis.opt.v"));
-        error(i18n.getString("jdis.opt.version"));
+        println(i18n.getString("jdis.usage"));
+        println(i18n.getString("jdis.opt.g"));
+        println(i18n.getString("jdis.opt.sl"));
+        println(i18n.getString("jdis.opt.hx"));
+        println(i18n.getString("jdis.opt.v"));
+        println(i18n.getString("jdis.opt.version"));
     }
 
     /**
      * Run the disassembler
      */
     public synchronized boolean disasm(String argv[]) {
-        ArrayList<String> vj = new ArrayList<>();
+        ArrayList<String> files = new ArrayList<>();
 
         // Parse arguments
         for (int i = 0; i < argv.length; i++) {
@@ -108,34 +89,36 @@ public class Main {
                         usage();
                         return false;
                     } else {
-                        vj.add(arg);
+                        files.add(arg);
                     }
                     break;
             }
         }
 
-        if (vj.isEmpty()) {
+        if (files.isEmpty()) {
             usage();
             return false;
         }
 
-        for (String inpname : vj) {
+        for (String inpname : files) {
             if (inpname == null) {
                 continue;
             } // cross out by CompilerChoice.compile
             try {
-                ClassData cc = new ClassData(out);
-                cc.read(new DataInputStream(new FileInputStream(inpname)));
+                DataInputStream dataInputStream = getDataInputStream(inpname);
+                if( dataInputStream == null )
+                    return false;
+                ClassData cc = new ClassData(out, this);
+                cc.read(dataInputStream);
                 cc.print();
+                dataInputStream.close();
                 continue;
-            } catch (FileNotFoundException ee) {
-                error(i18n.getString("jdis.error.cannot_read", inpname));
             } catch (Error ee) {
-                if (options.contains(Options.PR.DEBUG))
+                if (DebugFlag.getAsBoolean())
                     ee.printStackTrace();
                 error(i18n.getString("jdis.error.fatal_error", inpname));
             } catch (Exception ee) {
-                if (options.contains(Options.PR.DEBUG))
+                if (DebugFlag.getAsBoolean())
                     ee.printStackTrace();
                 error(i18n.getString("jdis.error.fatal_exception", inpname));
             }
@@ -148,7 +131,7 @@ public class Main {
      * Main program
      */
     public static void main(String argv[]) {
-        Main disassembler = new Main(new PrintWriter(new uEscWriter(System.out)), "jdis");
+        Main disassembler = new Main(new PrintWriter(new uEscWriter(System.out)), new PrintWriter(System.err), "jdis");
         boolean result = disassembler.disasm(argv);
         System.exit(result ? 0 : 1);
     }

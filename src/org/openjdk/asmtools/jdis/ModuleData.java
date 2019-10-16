@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import org.openjdk.asmtools.common.Module;
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.jasm.JasmTokens;
 
 import static org.openjdk.asmtools.jdis.Main.i18n;
@@ -38,11 +39,14 @@ import static org.openjdk.asmtools.jdis.Main.i18n;
 public class ModuleData {
 
   // internal references
+  private final Tool tool;
+
   private ConstantPool pool;
   private PrintWriter out;
   private Module module;
 
   public ModuleData(ClassData clsData) {
+    this.tool = clsData.tool;
     this.pool = clsData.pool;
     this.out = clsData.out;
   }
@@ -84,7 +88,7 @@ public class ModuleData {
     version = pool.getString(versionIndex);
     builder = new Module.Builder(moduleName, moduleFlags, version);
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_header"));
+      tool.error(i18n.getString("jdis.error.invalid_header"));
       throw ioe;
     }
 
@@ -100,7 +104,7 @@ public class ModuleData {
         builder.require(moduleName, requiresFlags, version);
       }
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_requires"));
+      tool.error(i18n.getString("jdis.error.invalid_requires"));
       throw ioe;
     }
 
@@ -125,7 +129,7 @@ public class ModuleData {
         }
       }
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_exports"));
+      tool.error(i18n.getString("jdis.error.invalid_exports"));
       throw ioe;
     }
 
@@ -150,7 +154,7 @@ public class ModuleData {
         }
       }
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_opens"));
+      tool.error(i18n.getString("jdis.error.invalid_opens"));
       throw ioe;
     }
 
@@ -164,7 +168,7 @@ public class ModuleData {
         }
       }
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_uses"));
+      tool.error(i18n.getString("jdis.error.invalid_uses"));
       throw ioe;
     }
 
@@ -184,7 +188,7 @@ public class ModuleData {
         }
       }
     } catch (IOException ioe) {
-      System.err.println(Main.programName + ": " + i18n.getString("jdis.error.invalid_provides"));
+      tool.error(i18n.getString("jdis.error.invalid_provides"));
       throw ioe;
     }
     module = builder.build();

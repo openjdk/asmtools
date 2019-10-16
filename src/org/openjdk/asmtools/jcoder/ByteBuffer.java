@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -115,11 +115,6 @@ class ByteBuffer extends java.io.OutputStream {
     }
 
     /*======================================*/
-    /**
-     * Adds the specified object as the last element of the vector.
-     *
-     * @param obj the element to be added
-     */
     public void write(int val) {
         ensureCapacity(length + 1);
         data[length++] = (byte) val;

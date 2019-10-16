@@ -707,7 +707,7 @@ class Jcoder {
                 }
             }
         } catch (IOException e) {
-            env.error(scanner.pos, "io.exception", env.getSource());
+            env.error(scanner.pos, "io.exception", env.getInputFileName());
             return Classes;
         }
         return Classes;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019ß, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -221,7 +221,15 @@ public class Tables {
         ATT_ModuleTarget                            (31, "ATT_ModuleTarget", "ModuleTarget"),
         // JEP 181: class file 55.0
         ATT_NestHost                                (32, "ATT_NestHost", "NestHost"),
-        ATT_NestMembers                             (33, "ATT_NestMembers", "NestMembers");
+        ATT_NestMembers                             (33, "ATT_NestMembers", "NestMembers"),
+        //  JEP 359 Record(Preview): class file 58.65535
+        //  Record_attribute {
+        //    u2 attribute_name_index;
+        //    u4 attribute_length;
+        //    u2 components_count;
+        //    component_info components[components_count];
+        // }
+        ATT_Record                                  (34, "ATT_Recrod", "Record");
 
         private final Integer value;
         private final String printval;

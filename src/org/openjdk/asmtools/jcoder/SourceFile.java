@@ -22,14 +22,10 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.Hashtable;
 
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 /**
@@ -44,33 +40,35 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
  */
 public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
 
-    public boolean traceFlag = false;
-    public boolean debugInfoFlag = false;
+    Tool tool;
+
+    boolean traceFlag = false;
+    boolean debugInfoFlag = false;
     /**
      * The increment for each character.
      */
-    protected static final int OFFSETINC = 1;
+    static final int OFFSETINC = 1;
     /**
      * The increment for each line.
      */
-    protected static final int LINEINC = 1 << OFFSETBITS;
-    File source;
+    static final int LINEINC = 1 << OFFSETBITS;
+    String inputFileName;
     InputStream in;
-    PrintStream out;
+    PrintWriter out;
     int pos;
     private int chpos;
     private int pushBack = -1;
 
-    public SourceFile(File source, PrintStream out) throws IOException {
-        this.source = source;
-        this.in = new BufferedInputStream(new FileInputStream(source));
+    public SourceFile(Tool tool, DataInputStream dataInputStream, String inputFileName, PrintWriter out) {
+        this.tool = tool;
+        this.inputFileName = inputFileName;
+        this.in = new BufferedInputStream(dataInputStream);
         chpos = LINEINC;
         this.out = out;
-        errorFileName = source.getPath();
     }
 
-    public String getSource() {
-        return source.getPath();
+    public String getInputFileName() {
+        return inputFileName;
     }
 
     public void closeInp() {
@@ -286,10 +284,7 @@ public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
         }
         return buf.toString();
     }
-    /**
-     * The filename where the last errors have occurred
-     */
-    String errorFileName;
+
     /**
      * List of outstanding error messages
      */
@@ -327,10 +322,13 @@ public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
 
         try {
             // Read the file
-            FileInputStream in = new FileInputStream(errorFileName);
-            byte data[] = new byte[in.available()];
-            in.read(data);
-            in.close();
+            DataInputStream dataInputStream = tool.getDataInputStream(inputFileName);
+            if (dataInputStream == null)
+                return;
+
+            byte data[] = new byte[dataInputStream.available()];
+            dataInputStream.read(data);
+            dataInputStream.close();
 
             // Report the errors
             for (ErrorMessage msg = errors; msg != null; msg = msg.next) {
@@ -345,7 +343,7 @@ public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
                     ;
                 }
 
-                String prefix = errorFileName + ":" + ln + ":";
+                String prefix = inputFileName + ":" + ln + ":";
                 outputln(prefix + " " + msg.message);
                 outputln(new String(data, i, j - i));
 
@@ -367,13 +365,11 @@ public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
      * This should be used instead of print.
      */
     public void output(String msg) {
-//      try {
         int len = msg.length();
         for (int i = 0; i < len; i++) {
             out.write(msg.charAt(i));
         }
-//      } catch (IOException e) {
-//      }
+        out.flush();
     }
 
     /**
@@ -383,6 +379,7 @@ public class SourceFile implements org.openjdk.asmtools.jasm.Constants {
     public void outputln(String msg) {
         output(msg);
         out.write('\n');
+        out.flush();
     }
 
     /**

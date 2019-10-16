@@ -472,6 +472,10 @@ numberLoop:
                 }
                 return n;
             }
+            // Utf8 "\%pattern\%NonNegativePoint\%(II)";
+            case '%':
+               readCh();
+               return '%';
             case '@':
                 readCh();
                 return '@';

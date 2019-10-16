@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,10 @@ import org.openjdk.asmtools.jcoder.JcodTokens;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.Tables.*;
@@ -41,13 +44,12 @@ import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
  */
 class ClassData {
 
-    private byte types[];
-    private Object cpool[];
+    private byte[] types;
+    private Object[] cpool;
     private int CPlen;
     private NestedByteArrayInputStream countedin;
     private DataInputStream in;
     private PrintWriter out;
-    private String inpname;
     private int[] cpe_pos;
     private boolean printDetails;
     private String entityType = "";
@@ -56,19 +58,22 @@ class ClassData {
     public static I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
-    public ClassData(String inpname, int printFlags, PrintWriter out) throws IOException {
-        FileInputStream filein = new FileInputStream(inpname);
-        byte buf[] = new byte[filein.available()];
-        filein.read(buf);
+    ClassData(DataInputStream dis, int printFlags, PrintWriter out) throws IOException {
+        byte[] buf = new byte[dis.available()];
+        try {
+            if (dis.read(buf) <= 0)
+                throw new IOException("The file is empty");
+        } finally {
+            dis.close();
+        }
         countedin = new NestedByteArrayInputStream(buf);
         in = new DataInputStream(countedin);
         this.out = out;
-        this.inpname = inpname;
         printDetails = ((printFlags & 1) == 1);
     }
 
     /*========================================================*/
-    private static final char hexTable[] = {
+    private static final char[] hexTable = {
             '0', '1', '2', '3', '4', '5', '6', '7',
             '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
@@ -115,7 +120,7 @@ class ClassData {
         }
     }
 
-    private void printRestOfBytes() throws IOException {
+    private void printRestOfBytes() {
         for (int i = 0; ; i++) {
             try {
                 byte b = in.readByte();
@@ -127,10 +132,18 @@ class ClassData {
                     out.print(";\n");
                 }
             } catch (IOException e) {
-                // out.println();
                 return;
             }
         }
+    }
+
+    private void printUtf8InfoIndex(int index, String indexName) {
+        String name = (String) cpool[index];
+        out_print("#" + index + "; // " + String.format("%-16s",indexName));
+        if (printDetails) {
+            out.print(" : " + name);
+        }
+        out.println();
     }
 
     /*========================================================*/
@@ -188,7 +201,7 @@ class ClassData {
         cpe_pos = new int[length];
         for (int i = 1; i < length; i++) {
             byte btag;
-            int v1, n = i;
+            int v1;
             long lv;
             cpe_pos[i] = countedin.getPos();
             btag = in.readByte();
@@ -266,6 +279,8 @@ class ClassData {
                 long lv;
                 if (tg != null) {
                     tagstr = tg.parseKey();
+                } else {
+                    throw new Error("Can't get a tg representing the type of Constant in the Constant Pool at: " + i);
                 }
                 switch (tg) {
                     case CONSTANT_UTF8: {
@@ -297,18 +312,11 @@ class ClassData {
                     }
                     break;
                     case CONSTANT_FLOAT:
-                        v1 = (Integer) cpool[i];
-                        valstr = toHex(v1, 4);
-                        break;
                     case CONSTANT_INTEGER:
                         v1 = (Integer) cpool[i];
                         valstr = toHex(v1, 4);
                         break;
                     case CONSTANT_DOUBLE:
-                        lv = (Long) cpool[i];
-                        valstr = toHex(lv, 8) + ";";
-                        size = 2;
-                        break;
                     case CONSTANT_LONG:
                         lv = (Long) cpool[i];
                         valstr = toHex(lv, 8) + ";";
@@ -317,34 +325,17 @@ class ClassData {
                     case CONSTANT_CLASS:
                     case CONSTANT_MODULE:
                     case CONSTANT_PACKAGE:
-                        v1 = (Integer) cpool[i];
-                        valstr = "#" + v1;
-                        break;
                     case CONSTANT_STRING:
                         v1 = (Integer) cpool[i];
                         valstr = "#" + v1;
                         break;
                     case CONSTANT_INTERFACEMETHOD:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_FIELD:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_METHOD:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_NAMEANDTYPE:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_METHODHANDLE:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_METHODTYPE:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_DYNAMIC:
-                        valstr = (String) cpool[i];
-                        break;
                     case CONSTANT_INVOKEDYNAMIC:
                         valstr = (String) cpool[i];
                         break;
@@ -421,7 +412,7 @@ class ClassData {
                 StackMapType mptyp = stackMapType(maptype, out);
                 String maptypeImg;
                 if (printDetails) {
-                    maptypeImg = Integer.toString(maptype) + "b";
+                    maptypeImg = maptype + "b";
                 } else {
                     try {
                         maptypeImg = mptyp.parsekey();
@@ -435,7 +426,7 @@ class ClassData {
                         maptypeImg = maptypeImg + "," + in.readUnsignedShort();
                         break;
                     case ITEM_UNKNOWN:
-                        maptypeImg = Integer.toString(maptype) + "b";
+                        maptypeImg = maptype + "b";
                         break;
                     default:
                 }
@@ -453,7 +444,7 @@ class ClassData {
      * Processes 4.7.20 The RuntimeVisibleTypeAnnotations Attribute, 4.7.21 The RuntimeInvisibleTypeAnnotations Attribute
      * <code>type_annotation</code> structure.
      */
-    private void decodeTargetTypeAndRefInfo(DataInputStream in, boolean isWildcard) throws IOException {
+    private void decodeTargetTypeAndRefInfo(DataInputStream in) throws IOException {
         int tt = in.readUnsignedByte(); // [4.7.20] annotations[], type_annotation { u1 target_type; ...}
         TargetType target_type = targetTypeEnum(tt);
         InfoType info_type = target_type.infoType();
@@ -621,10 +612,55 @@ class ClassData {
         }
     }
 
+    /**
+     * component_info {     JEP 359 Record(Preview): class file 58.65535
+     *     u2               name_index;
+     *     u2               descriptor_index;
+     *     u2               attributes_count;
+     *     attribute_info attributes[attributes_count];
+     * }
+     *
+     * or
+     * field_info {
+     *     u2             access_flags;
+     *     u2             name_index;
+     *     u2             descriptor_index;
+     *     u2             attributes_count;
+     *     attribute_info attributes[attributes_count];
+     * }
+     * or
+     * method_info {
+     *     u2             access_flags;
+     *     u2             name_index;
+     *     u2             descriptor_index;
+     *     u2             attributes_count;
+     *     attribute_info attributes[attributes_count];
+     * }
+     *
+     */
+    private void decodeInfo(DataInputStream in, PrintWriter out, String elementName, boolean hasAccessFlag) throws IOException {
+        out_begin("{  // " + elementName + (printDetails ? getStringPos() : ""));
+        try {
+            if(hasAccessFlag) {
+                //  u2 access_flags;
+                out_println(toHex(in.readShort(), 2) + "; // access");
+            }
+            // u2 name_index
+            printUtf8InfoIndex(in.readUnsignedShort(), "name_index");
+            // u2 descriptor_index
+            printUtf8InfoIndex(in.readUnsignedShort(), "descriptor_index");
+            // u2 attributes_count;
+            // attribute_info attributes[attributes_count]
+            decodeAttrs(in, out);
+        } finally {
+            out_end("}");
+        }
+    }
+
     private void decodeTypeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
         out_begin("{  //  type_annotation");
         try {
-            decodeTargetTypeAndRefInfo(in, false);
+            decodeTargetTypeAndRefInfo(in);
             decodeCPXAttr(in, 2, "field descriptor", out);
             int evp_num = in.readUnsignedShort();
             decodeElementValuePairs(evp_num, in, out);
@@ -943,6 +979,27 @@ class ClassData {
                         out_end("}");
                     }
                     break;
+                //  JEP 359 Record(Preview): class file 58.65535
+                //  Record_attribute {
+                //      u2 attribute_name_index;
+                //      u4 attribute_length;
+                //      u2 components_count;
+                //      component_info components[components_count];
+                //  }
+                case ATT_Record:
+                    int ncomps = in.readUnsignedShort();
+                    startArrayCmt(ncomps, "components");
+                    try {
+                        for (int i = 0; i < ncomps; i++) {
+                            decodeInfo(in,out,"component",false);
+                            if (i < ncomps - 1) {
+                                out_println(";");
+                            }
+                        }
+                    } finally {
+                        out_end("}");
+                    }
+                    break;
                 default:
                     if (AttrName == null) {
                         printBytes(out, in, len);
@@ -995,12 +1052,7 @@ class ClassData {
     private void decodeModule(DataInputStream in) throws IOException {
         //u2 module_name_index
         int index = in.readUnsignedShort();
-        entityName = (String) cpool[(Integer) cpool[index]];
-        out_print("#" + index + "; // name_index");
-        if (printDetails) {
-            out_print(" : " + entityName);
-        }
-        out.println();
+        printUtf8InfoIndex((Integer)cpool[index], "name_index");
 
         // u2 module_flags
         int moduleFlags = in.readUnsignedShort();
@@ -1083,36 +1135,24 @@ class ClassData {
         }
     }
 
-    private void decodeMembers(DataInputStream in, PrintWriter out, String comment) throws IOException {
+    private void decodeMembers(DataInputStream in, PrintWriter out, String groupName, String elementName) throws IOException {
         int nfields = in.readUnsignedShort();
-        traceln(comment + "=" + nfields);
-        startArrayCmt(nfields, "" + comment);
+        traceln(groupName + "=" + nfields);
+        startArrayCmt(nfields, groupName);
         try {
             for (int i = 0; i < nfields; i++) {
-                out_begin("{ // Member" + getStringPosCond());
-                try {
-                    int access = in.readShort();
-                    out_println(toHex(access, 2) + "; // access");
-                    int name_cpx = in.readUnsignedShort();
-                    out_println("#" + name_cpx + "; // name_cpx");
-                    int sig_cpx = in.readUnsignedShort();
-                    out_println("#" + sig_cpx + "; // sig_cpx");
-                    // Read the attributes
-                    decodeAttrs(in, out);
-                } finally {
-                    out_end("} // Member");
-                }
+                decodeInfo(in,out,elementName,true);
                 if (i + 1 < nfields) {
                     out_println(";");
                 }
             }
         } finally {
-            out_end("} // " + comment);
+            out_end("} // " + groupName);
             out.println();
         }
     }
 
-    void decodeClass() throws IOException {
+    void decodeClass(String fileName) throws IOException {
         // Read the header
         try {
             int magic = in.readInt();
@@ -1140,7 +1180,7 @@ class ClassData {
                     out_begin(format("%s %s {", entityType, entityName));
                 }
             } catch (Exception e) {
-                entityName = inpname;
+                entityName = fileName;
                 out.println("// " + e.getMessage() + " while accessing entityName");
                 out_begin(format("%s %s { // source file name", entityType, entityName));
             }
@@ -1177,10 +1217,10 @@ class ClassData {
                 out_end("} // Interfaces\n");
             }
             // Read the fields
-            decodeMembers(in, out, "fields");
+            decodeMembers(in, out, "Fields", "field");
 
             // Read the methods
-            decodeMembers(in, out, "methods");
+            decodeMembers(in, out, "Methods", "method");
 
             // Read the attributes
             decodeAttrs(in, out);

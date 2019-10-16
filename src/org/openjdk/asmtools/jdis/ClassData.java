@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
-import org.openjdk.asmtools.jasm.JasmTokens;
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
@@ -39,6 +39,9 @@ import static org.openjdk.asmtools.jasm.Tables.*;
  * Central class data for of the Java Disassembler
  */
 public class ClassData extends MemberData {
+
+    // Owner of this ClassData
+    protected Tool tool;
 
     /*-------------------------------------------------------- */
     /* ClassData Fields                                        */
@@ -119,8 +122,9 @@ public class ClassData extends MemberData {
 
     /* -------------------------------------------------------- */
     /* ClassData Methods */
-    public ClassData(PrintWriter out) {
+    public ClassData(PrintWriter out, Tool tool) {
         this.out = out;
+        this.tool = tool;
         init(this);
         memberType = "ClassData";
         TraceUtils.traceln("printOptions=" + options.toString());

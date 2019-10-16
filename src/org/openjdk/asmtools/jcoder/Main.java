@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,11 +22,14 @@
  */
 package org.openjdk.asmtools.jcoder;
 
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
+
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -34,50 +37,25 @@ import java.util.HashMap;
  *
  *
  */
-public class Main {
-
-    /*-------------------------------------------------------- */
-    /* Main Fields */
-    /**
-     * Name of the program.
-     */
-    String program;
-    /**
-     * The stream where error message are printed.
-     */
-    PrintStream out;
-    int nerrors = 0;
+public class Main extends Tool {
 
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
-    /*-------------------------------------------------------- */
 
-    /**
-     * Constructor.
-     */
-    public Main(PrintStream out, String program) {
-        this.out = out;
-        this.program = program;
-    }
-    /*-------------------------------------------------------- */
-
-    /**
-     * Top level error message
-     */
-    public void error(String msg) {
-        nerrors++;
-        out.println(program + ": " + msg);
+    public Main(PrintWriter out, String programName) {
+        super(out, programName);
+        printCannotReadMsg = (fname) -> {
+            error(i18n.getString("jcoder.error.cannot_read", fname));
+        };
     }
 
-    /**
-     * Usage
-     */
+    @Override
     public void usage() {
-        out.println(i18n.getString("jcoder.usage"));
-        out.println(i18n.getString("jcoder.opt.nowrite"));
-        out.println(i18n.getString("jcoder.opt.ignore"));
-        out.println(i18n.getString("jcoder.opt.d"));
-        out.println(i18n.getString("jcoder.opt.version"));
+        println(i18n.getString("jcoder.usage"));
+        println(i18n.getString("jcoder.opt.nowrite"));
+        println(i18n.getString("jcoder.opt.ignore"));
+        println(i18n.getString("jcoder.opt.d"));
+        println(i18n.getString("jcoder.opt.version"));
     }
 
     /**
@@ -86,7 +64,7 @@ public class Main {
     public synchronized boolean compile(String argv[]) {
         File destDir = null;
         boolean traceFlag = false;
-        boolean debugInfoFlag = false;
+        DebugFlag = () -> false;
         long tm = System.currentTimeMillis();
         ArrayList<String> v = new ArrayList<>();
         boolean nowrite = false;
@@ -103,18 +81,18 @@ public class Main {
             } else if (arg.startsWith("-D")) {
                 int argLength = arg.length();
                 if (argLength == 2) {
-                    error(i18n.getString("jcoder.error.D_needs_marco"));
+                    error(i18n.getString("jcoder.error.D_needs_macro"));
                     return false;
                 }
                 int index = arg.indexOf('=');
                 if (index == -1) {
-                    error(i18n.getString("jcoder.error.D_needs_marco"));
+                    error(i18n.getString("jcoder.error.D_needs_macro"));
                     return false;
                 }
                 String macroId = arg.substring(2, index);
                 index++;
                 if (argLength == index) {
-                    error(i18n.getString("jcoder.error.D_needs_marco"));
+                    error(i18n.getString("jcoder.error.D_needs_macro"));
                     return false;
                 }
                 String macro;
@@ -130,7 +108,7 @@ public class Main {
                 }
                 macros.put(macroId, macro);
             } else if (arg.equals("-vv")) {
-                debugInfoFlag = true;
+                DebugFlag = () -> true;
                 traceFlag = true;
             } else if (arg.equals("-v")) {
                 traceFlag = true;
@@ -150,7 +128,7 @@ public class Main {
                     return false;
                 }
             } else if (arg.equals("-version")) {
-                out.println(ProductInfo.FULL_VERSION);
+                println(ProductInfo.FULL_VERSION);
             } else {
                 error(i18n.getString("jcoder.error.invalid_option", arg));
                 usage();
@@ -166,18 +144,20 @@ public class Main {
             for (String inpname : v) {
                 SourceFile env;
                 Jcoder p;
-                try {
-                    env = new SourceFile(new File(inpname), out);
-                    env.traceFlag = traceFlag;
-                    env.debugInfoFlag = debugInfoFlag;
-                    p = new Jcoder(env, macros);
-                    p.parseFile();
-                    env.traceln("END PARSER");
-                    env.closeInp();
-                } catch (FileNotFoundException ex) {
-                    error(i18n.getString("jcoder.error.cannot_read", inpname));
+
+                DataInputStream dataInputStream = getDataInputStream(inpname);
+                if( dataInputStream == null ) {
+                    nerrors++;
                     continue;
                 }
+                env = new SourceFile(this, dataInputStream, inpname, out);
+                env.traceFlag = traceFlag;
+                env.debugInfoFlag = DebugFlag.getAsBoolean();
+                p = new Jcoder(env, macros);
+                p.parseFile();
+                env.traceln("END PARSER");
+                env.closeInp();
+
                 nerrors += env.nerrors;
                 nwarnings += env.nwarnings;
                 if (nowrite || (nerrors > 0 & !ignore)) {
@@ -203,7 +183,8 @@ public class Main {
         if (!errs && !warns) {
             return true;
         }
-        out.println(errs ? (nerrors > 1 ? (nerrors + " errors") : "1 error") : "" + ((errs && warns) ? ", " : "") + (warns ? (nwarnings > 1 ? (nwarnings + " warnings") : "1 warning") : ""));
+        println(errs ? (nerrors > 1 ? (nerrors + " errors") : "1 error")
+                : "" + ((errs && warns) ? ", " : "") + (warns ? (nwarnings > 1 ? (nwarnings + " warnings") : "1 warning") : ""));
         return !errs;
     }
 
@@ -211,7 +192,7 @@ public class Main {
      * main program
      */
     public static void main(String argv[]) {
-        Main compiler = new Main(System.out, "jcoder");
+        Main compiler = new Main(new PrintWriter(System.out), "jcoder");
         System.exit(compiler.compile(argv) ? 0 : 1);
     }
 }

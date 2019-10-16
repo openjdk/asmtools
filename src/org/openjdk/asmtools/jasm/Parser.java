@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1712,7 +1712,7 @@ class Parser extends ParseBase {
         // checks that we compile module or package compilation unit
         if (scanner.token == Token.EOF) {
             env.traceln("Scanner:  EOF");
-            String sourceName = env.getSourceName();
+            String sourceName = env.getSimpleInputFileName();
             int mod = ACC_INTERFACE | ACC_ABSTRACT;
 
             // package-info
@@ -1815,7 +1815,7 @@ class Parser extends ParseBase {
                 }
             }
         } catch (IOException e) {
-            env.error(scanner.pos, "io.exception", env.getSourceName());
+            env.error(scanner.pos, "io.exception", env.getSimpleInputFileName());
         } catch (Error er) {
             er.printStackTrace();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,37 +24,25 @@ package org.openjdk.asmtools.jasm;
 
 import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MAJOR_VERSION;
 import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MINOR_VERSION;
+
+import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.util.ArrayList;
 
 /**
  *
  *
  */
-public class Main {
-
-    /**
-     * Name of the program.
-     */
-    String program;
-
-    /**
-     * The stream where error message are printed.
-     */
-    PrintStream out;
-    int nerrors = 0;
+public class Main extends Tool {
 
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
     private File destDir = null;
     private boolean traceFlag = false;
-    private boolean debugInfoFlag = false;
     private long tm = System.currentTimeMillis();
     private ArrayList<String> v = new ArrayList<>();
     private boolean nowrite = false;
@@ -71,35 +59,23 @@ public class Main {
     private boolean debugInstr = false;
 
 
-    /**
-     * Constructor.
-     */
-    public Main(PrintStream out, String program) {
-        this.out = out;
-        this.program = program;
+    public Main(PrintWriter out, String programName) {
+        super(out, programName);
+        printCannotReadMsg = (fname) ->
+            error( i18n.getString("jasm.error.cannot_read", fname));
     }
 
-    /**
-     * Top level error message
-     */
-    public void error(String msg) {
-        nerrors++;
-        out.println(program + ": " + msg);
-    }
-
-    /**
-     * Usage
-     */
+    @Override
     public void usage() {
-        out.println(i18n.getString("jasm.usage"));
-        out.println(i18n.getString("jasm.opt.d"));
-        out.println(i18n.getString("jasm.opt.g"));
-        out.println(i18n.getString("jasm.opt.v"));
-        out.println(i18n.getString("jasm.opt.nowrite"));
-        out.println(i18n.getString("jasm.opt.nowarn"));
-        out.println(i18n.getString("jasm.opt.strict"));
-        out.println(i18n.getString("jasm.opt.cv", DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION));
-        out.println(i18n.getString("jasm.opt.version"));
+        println(i18n.getString("jasm.usage"));
+        println(i18n.getString("jasm.opt.d"));
+        println(i18n.getString("jasm.opt.g"));
+        println(i18n.getString("jasm.opt.v"));
+        println(i18n.getString("jasm.opt.nowrite"));
+        println(i18n.getString("jasm.opt.nowarn"));
+        println(i18n.getString("jasm.opt.strict"));
+        println(i18n.getString("jasm.opt.cv", DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION));
+        println(i18n.getString("jasm.opt.version"));
     }
 
     /**
@@ -115,7 +91,7 @@ public class Main {
                     traceFlag = true;
                     break;
                 case "-g":
-                    debugInfoFlag = true;
+                    super.DebugFlag = () -> true;
                     break;
                 case "-nowrite":
                     nowrite = true;
@@ -127,7 +103,7 @@ public class Main {
                     nowarn = true;
                     break;
                 case "-version":
-                    out.println(ProductInfo.FULL_VERSION);
+                    println(ProductInfo.FULL_VERSION);
                     break;
                 case "-d":
                     if ((i + 1) >= argv.length) {
@@ -167,7 +143,7 @@ public class Main {
                 case "-Xdlimit":
                     // parses file until the specified byte number
                     if (i + 1 > argv.length) {
-                        out.println(" Error: Unspecified byte-limit");
+                        println(" Error: Unspecified byte-limit");
                         return false;
                     } else {
                         i++;
@@ -176,7 +152,7 @@ public class Main {
                         try {
                             bytelimit = Integer.parseInt(bytelimstr);
                         } catch (NumberFormatException e) {
-                            out.println(" Error: Unspecified byte-limit");
+                            println(" Error: Unspecified byte-limit");
                             return false;
                         }
                     }
@@ -234,7 +210,7 @@ public class Main {
     private void reset() {
         destDir = null;
         traceFlag = false;
-        debugInfoFlag = false;
+        super.DebugFlag = () -> false;
         System.currentTimeMillis();
         v = new ArrayList<>();
         nowrite = false;
@@ -261,17 +237,19 @@ public class Main {
         try {
             for (String inpname : v) {
                 Parser p;
-                try {
-                    sf = new Environment(new File(inpname), out, nowarn);
-                    sf.traceFlag = traceFlag;
-                    sf.debugInfoFlag = debugInfoFlag;
-                    p = new Parser(sf, cfv.clone() );
-                    p.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
-                    p.parseFile();
-                } catch (FileNotFoundException ex) {
-                    error(i18n.getString("jasm.error.cannot_read", inpname));
+
+                DataInputStream dataInputStream = getDataInputStream(inpname);
+                if( dataInputStream == null ) {
+                    nerrors++;
                     continue;
                 }
+                sf = new Environment(dataInputStream, inpname, out, nowarn);
+                sf.traceFlag = traceFlag;
+                sf.debugInfoFlag = DebugFlag.getAsBoolean();
+                p = new Parser(sf, cfv.clone() );
+                p.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
+                p.parseFile();
+
                 nerrors += sf.nerrors;
                 nwarnings += sf.nwarnings;
                 if (nowrite || (nerrors > 0)) {
@@ -289,28 +267,30 @@ public class Main {
                     }
                 } catch (IOException ex) {
                     if (bytelimit > 0) {
-                        // IO Error thrown from user-specified byte ount
+                        // IO Error thrown from user-specified byte count
                         ex.printStackTrace();
-                        error("UserSpecified byte-limit at byte[" + bytelimit + "]: " + ex.getMessage() + "\n" + sf.getErrorFile() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+                        error("UserSpecified byte-limit at byte[" + bytelimit + "]: " +
+                                ex.getMessage() + "\n" +
+                                inpname + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
                     } else {
                         String er = i18n.getString("jasm.error.cannot_write", ex.getMessage());
-                        error(er + "\n" + sf.getErrorFile() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+                        error(er + "\n" + inpname + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
                     }
                 }
                 sf.flushErrors(); // possible errors from write()
             }
         } catch (Error ee) {
-            if (debugInfoFlag) {
+            if (DebugFlag.getAsBoolean()) {
                 ee.printStackTrace();
             }
             String er = ee.getMessage() + "\n" + i18n.getString("jasm.error.fatal_error");
-            error(er + "\n" + sf.getErrorFile() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+            error(er + "\n" + sf.getInputFileName() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
         } catch (Exception ee) {
-            if (debugInfoFlag) {
+            if (DebugFlag.getAsBoolean()) {
                 ee.printStackTrace();
             }
             String er = ee.getMessage() + "\n" + ee.getMessage() + "\n" + i18n.getString("jasm.error.fatal_exception");
-            error(er + "\n" + sf.getErrorFile() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+            error(er + "\n" + sf.getInputFileName() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
         }
 
         boolean errs = nerrors > 0;
@@ -328,7 +308,7 @@ public class Main {
         if (warns) {
             out.print(nwarnings > 1 ? (nwarnings + " warnings") : "1 warning");
         }
-        out.println();
+        println();
         if (strict) {
             return !errsOrWarns;
         } else {
@@ -340,7 +320,7 @@ public class Main {
      * main program
      */
     public static void main(String argv[]) {
-        Main compiler = new Main(System.out, "jasm");
+        Main compiler = new Main(new PrintWriter(System.out), "jasm");
         System.exit(compiler.compile(argv) ? 0 : 1);
     }
 }
