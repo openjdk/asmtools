@@ -28,7 +28,6 @@ import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,96 +42,72 @@ public class ClassData extends MemberData {
     // Owner of this ClassData
     protected Tool tool;
 
-    /*-------------------------------------------------------- */
-    /* ClassData Fields                                        */
     // -----------------------------
     // Header Info
     // -----------------------------
-    /**
-     * Version info
-     */
+    // Version info
     protected int minor_version, major_version;
 
-    /**
-     * Constant Pool index to this class
-     */
+    // Constant Pool index to this class
     protected int this_cpx;
-    /**
-     * Constant Pool index to this classes parent (super)
-     */
+
+    // Constant Pool index to this classes parent (super)
     protected int super_cpx;
-    /**
-     * Constant Pool index to a file reference to the Java source
-     */
+
+    // Constant Pool index to a file reference to the Java source
     protected int source_cpx = 0;
 
-    /**
-     * The Constant Pool
-     */
+    // -----------------------------
+    // The Constant Pool
+    // -----------------------------
     protected ConstantPool pool;
 
-    /**
-     * The interfaces this class implements
-     */
+    // -----------------------------
+    // Interfaces,Fields,Methods && Attributes
+    // -----------------------------
+    // The interfaces this class implements
     protected int[] interfaces;
 
-    /**
-     * The fields of this class
-     */
+    // The fields of this class
     protected ArrayList<FieldData> fields;
 
-    /**
-     * The methods of this class
-     */
+    // The methods of this class
     protected ArrayList<MethodData> methods;
 
-    /**
-     * The inner-classes of this class
-     */
+    // The record attribute of this class (since class file 58.65535)
+    protected RecordData record;
+
+    // The inner-classes of this class
     protected ArrayList<InnerClassData> innerClasses;
 
-    /**
-     * The bootstrapmethods this class implements
-     */
+    // The bootstrapmethods this class implements
     protected ArrayList<BootstrapMethodData> bootstrapMethods;
 
-    /**
-     * The module this class file presents
-     */
+    //The module this class file presents
     protected ModuleData moduleData;
 
-    /**
-     * The NestHost of this class (since class file: 55.0)
-     */
+    // The NestHost of this class (since class file: 55.0)
     protected NestHostData nestHost;
 
-    /**
-     * The NestMembers of this class (since class file: 55.0)
-     */
+    // The NestMembers of this class (since class file: 55.0)
     protected NestMembersData nestMembers;
 
     // other parsing fields
     protected PrintWriter out;
     protected String pkgPrefix = "";
     private int pkgPrefixLen = 0;
-    private int length; //The number of elements in the buffer
     private TextLines source = null;
     private static final String initialTab = ""; //The number of elements in the buffer
 
-
-    /* -------------------------------------------------------- */
-    /* ClassData Methods */
     public ClassData(PrintWriter out, Tool tool) {
-        this.out = out;
+        this.out  = out;
         this.tool = tool;
-        init(this);
         memberType = "ClassData";
         TraceUtils.traceln("printOptions=" + options.toString());
         pool = new ConstantPool(this);
+        init(this);
     }
 
-    /*========================================================*/
-    /* Read Methods */
     public void read(File in) throws IOException {
         read(new DataInputStream(new FileInputStream(in)));
     }
@@ -142,11 +117,7 @@ public class ClassData extends MemberData {
     }
 
     /**
-     *
-     * readFields
-     *
-     * read and resolve the field data
-     *
+     * Read and resolve the field data
      */
     protected void readFields(DataInputStream in) throws IOException {
         int nfields = in.readUnsignedShort();
@@ -161,11 +132,7 @@ public class ClassData extends MemberData {
     }
 
     /**
-     *
-     * readMethods
-     *
-     * read and resolve the method data
-     *
+     * Read and resolve the method data
      */
     protected void readMethods(DataInputStream in) throws IOException {
         int nmethods = in.readUnsignedShort();
@@ -180,11 +147,7 @@ public class ClassData extends MemberData {
     }
 
     /**
-     *
-     * readInterfaces
-     *
-     * read and resolve the interface data
-     *
+     * Read and resolve the interface data
      */
     protected void readInterfaces(DataInputStream in) throws IOException {
         // Read the interface names
@@ -199,11 +162,7 @@ public class ClassData extends MemberData {
     }
 
     /**
-     *
-     * readAttributes
-     *
-     * read and resolve the attribute data
-     *
+     * Read and resolve the attribute data
      */
     @Override
     protected boolean handleAttributes(DataInputStream in, AttrTag attrtag, int attrlen) throws IOException {
@@ -253,6 +212,9 @@ public class ClassData extends MemberData {
                 // Read NestMembers Attribute (since class file: 55.0)
                 nestMembers = new NestMembersData(this).read(in, attrlen);
                 break;
+            case ATT_Record:
+                record = new RecordData(this).read(in);
+                break;
             default:
                 handled = false;
                 break;
@@ -261,15 +223,10 @@ public class ClassData extends MemberData {
     }
 
     /**
-     *
-     * read
-     *
-     * read and resolve the class data
-     *
+     * Read and resolve the class data
      */
     public void read(DataInputStream in) throws IOException {
         // Read the header
-        // -----------------------------------------------
         int magic = in.readInt();
         if (magic != JAVA_MAGIC) {
             throw new ClassFormatError("wrong magic: " + HexUtils.toHex(magic) + ", expected " + HexUtils.toHex(JAVA_MAGIC));
@@ -278,40 +235,33 @@ public class ClassData extends MemberData {
         major_version = in.readUnsignedShort();
 
         // Read the constant pool
-        // -----------------------------------------------
         pool.read(in);
         access = in.readUnsignedShort(); // & MM_CLASS; // Q
         this_cpx = in.readUnsignedShort();
         super_cpx = in.readUnsignedShort();
-        TraceUtils.traceln("access=" + access + " " + Modifiers.accessString(access, CF_Context.CTX_INNERCLASS) + " this_cpx=" + this_cpx + " super_cpx=" + super_cpx);
+        TraceUtils.traceln("access=" + access + " " + Modifiers.accessString(access, CF_Context.CTX_INNERCLASS) +
+                " this_cpx=" + this_cpx +
+                " super_cpx=" + super_cpx);
 
         // Read the interfaces
-        // -----------------------------------------------
         readInterfaces(in);
 
         // Read the fields
-        // -----------------------------------------------
         readFields(in);
 
         // Read the methods
-        // -----------------------------------------------
         readMethods(in);
 
         // Read the attributes
         readAttributes(in);
 
         TraceUtils.traceln("");
-        TraceUtils.traceln("--------------------------------------------------------------------");
+        TraceUtils.traceln("Reading is done-----------------------------------------------------");
         TraceUtils.traceln("");
     }
 
-    /*========================================================*/
     /**
-     *
-     * getSrcLine
-     *
-     * read and resolve the attribute data
-     *
+     * Read and resolve the attribute data
      */
     public String getSrcLine(int lnum) {
         if (source == null) {
@@ -426,7 +376,7 @@ printSugar:
                     out.print("deprecated ");
                 }
                 if (options.contains(Options.PR.CPX)) {
-                    out.print("\t#" + this_cpx + "; //");
+                    out.print("\t#" + this_cpx + " //");
                 }
                 pool.PrintConstant(out, this_cpx);
             }
@@ -490,6 +440,12 @@ printSugar:
                 }
                 out.println();
             }
+
+            // Print the Record (since class file 58.65535 JEP 359)
+            if( record != null && !record.isEmpty()) {
+                record.print();
+            }
+
             // Print the NestHost (since class file: 55.0)
             if(nestHost != null) {
                 nestHost.print();

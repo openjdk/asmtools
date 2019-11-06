@@ -29,7 +29,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- *
+ * Base class for ClassData, MethodData, FieldData and RecordData(JEP 360)
  */
 public class MemberData {
 
@@ -43,27 +43,27 @@ public class MemberData {
     protected boolean isDeprecated = false;
 
     /**
-     * The visible annotations for this class
+     * The visible annotations for this class, member( field or method) or record component
      */
     protected ArrayList<AnnotationData> visibleAnnotations;
 
     /**
-     * The invisible annotations for this class
+     * The invisible annotations for this class, member( field or method) or record component
      */
     protected ArrayList<AnnotationData> invisibleAnnotations;
 
     /**
-     * The visible annotations for this class
+     * The visible annotations for this class, member( field or method) or record component
      */
     protected ArrayList<TypeAnnotationData> visibleTypeAnnotations;
 
     /**
-     * The invisible annotations for this class
+     * The invisible annotations for this class, member( field or method) or record component
      */
     protected ArrayList<TypeAnnotationData> invisibleTypeAnnotations;
 
     /**
-     * The remaining attributes of this class
+     * The remaining attributes of this class, member( field or method) or record component
      */
     protected ArrayList<AttrData> attrs;
 
@@ -73,8 +73,10 @@ public class MemberData {
     protected PrintWriter out;
     protected String memberType = "";
 
-    /* -------------------------------------------------------- */
-    /* ClassData Methods */
+    public MemberData(ClassData cls) {
+        init(cls);
+    }
+
     public MemberData() {
     }
 
@@ -83,7 +85,6 @@ public class MemberData {
         this.cls = cls;
         this.options = cls.options;
     }
-
     protected boolean handleAttributes(DataInputStream in, Tables.AttrTag attrtag, int attrlen) throws IOException {
         // sub-classes override
         return false;

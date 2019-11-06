@@ -285,11 +285,6 @@ public class Environment {
     }
 
     /**
-     * The filename where the last errors have occurred
-     */
-    String errorFileName;
-
-    /**
      * List of outstanding error messages
      */
     ErrorMessage errors;
@@ -332,7 +327,7 @@ public class Environment {
             for (i = off; (i > 0) && (data[i - 1] != '\n') && (data[i - 1] != '\r'); i--);
             for (j = off; (j < data.length) && (data[j] != '\n') && (data[j] != '\r'); j++);
 
-            String prefix = errorFileName + ":" + ln + ":";
+            String prefix = simpleInputFileName + ":" + ln + ":";
             outputln(prefix + " " + msg.message);
             outputln(new String(data, i, j - i));
 
@@ -351,13 +346,11 @@ public class Environment {
      * This should be used instead of print.
      */
     public void output(String msg) {
-//        try {
         int len = msg.length();
         for (int i = 0; i < len; i++) {
             out.write(msg.charAt(i));
         }
-//        } catch (IOException e) {
-//        }
+        out.flush();
     }
 
     /**
@@ -365,8 +358,7 @@ public class Environment {
      * This should be used instead of println.
      */
     public void outputln(String msg) {
-        output(msg);
-        out.write('\n');
+        output((msg == null ? "" : msg) + "\n");
     }
 
     /**

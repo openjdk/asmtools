@@ -32,7 +32,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- * Main program of the Java DeCoder
+ * Main program of the Java DECoder :: class to jcod
  */
 public class Main extends Tool {
 

@@ -243,8 +243,6 @@ public class ParserAnnotation extends ParseBase {
     }
 
     /**
-     * scanAnnotations
-     *
      * The main entry for parsing an annotation list.
      *
      * @return An ArrayList of parsed annotations
@@ -358,7 +356,7 @@ public class ParserAnnotation extends ParseBase {
      */
     protected void parseParamAnnots(int _totalParams, MethodData curMethod) throws Scanner.SyntaxError, IOException {
         debugScan(" - - - > [ParserAnnotation.parseParamAnnots]: Begin, totalParams =  " + _totalParams + " ");
-        // _The method thinks there are N+1 params in the signature
+        // The _method thinks there are N+1 params in the signature
         // (N = total params in the call list) + 1 (return value)
         int totalParams = _totalParams - 1;
         TreeMap<Integer, ArrayList<AnnotationData>> pAnnots = new TreeMap<>();
@@ -387,7 +385,7 @@ public class ParserAnnotation extends ParseBase {
             // 3rd - parse either an optional ParamName, or a list of annotations
             if (scanner.token == Token.PARAM_NAME) {
                 //parse the ParamName
-                scanParamName(_totalParams, iParamNum, curMethod);
+                scanParamName(totalParams, iParamNum, curMethod);
             }
 
             // 4th - parse each Annotation (followed by comma, followed by annotation

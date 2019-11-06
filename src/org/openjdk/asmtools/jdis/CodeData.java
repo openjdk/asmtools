@@ -24,6 +24,8 @@ package org.openjdk.asmtools.jdis;
 
 import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.OpcodeTables.*;
+import static org.openjdk.asmtools.jdis.Utils.commentString;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -388,6 +390,10 @@ public class CodeData {
         cls.pool.PrintConstant(out, cpx);
     }
 
+    private void PrintCommentedConstant(int cpx) {
+        out.print(commentString(cls.pool.ConstantStrValue(cpx)));
+    }
+
     private int printInstr(int pc) {
         boolean pr_cpx = meth.options.contains(Options.PR.CPX);
         int opc = getUbyte(pc);
@@ -577,8 +583,8 @@ public class CodeData {
                 // getUbyte(pc + 3); // reserved byte
                 // getUbyte(pc + 4); // reserved byte
                 if (pr_cpx) {
-                    out.print("\t#" + index + "; //");
-                    PrintConstant(index);
+                    out.print("\t#" + index + ";\t");
+                    PrintCommentedConstant(index);
                 } else {
                     PrintConstant(index);
                 }

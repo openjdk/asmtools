@@ -36,23 +36,23 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
     private ArrayList<T> elements;
     private boolean byteIndex;
 
-    public DataVectorAttr(ClassData cls, String name, boolean byteIndex, ArrayList<T> initialData) {
+    private DataVectorAttr(ClassData cls, String name, boolean byteIndex, ArrayList<T> initialData) {
         super(cls, name);
         this.elements = initialData;
         this.byteIndex = byteIndex;
     }
 
-    public DataVectorAttr(ClassData cls, String name, ArrayList<T> initialData) {
+    DataVectorAttr(ClassData cls, String name, ArrayList<T> initialData) {
         this(cls, name, false, initialData);
     }
 
-    public DataVectorAttr(ClassData cls, String name) {
-        this(cls, name, false, new ArrayList<T>());
+    DataVectorAttr(ClassData cls, String name) {
+        this(cls, name, false, new ArrayList<>());
 
     }
 
-    public DataVectorAttr(ClassData cls, String name, boolean byteIndex) {
-        this(cls, name, byteIndex, new ArrayList<T>());
+    DataVectorAttr(ClassData cls, String name, boolean byteIndex) {
+        this(cls, name, byteIndex, new ArrayList<>());
 
     }
 
@@ -64,8 +64,8 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
         elements.add(element);
     }
 
-    public void add(int i, T element) {
-        elements.add(i, element);
+    public void put(int i, T element) {
+        elements.set(i, element);
     }
 
     public int size() {

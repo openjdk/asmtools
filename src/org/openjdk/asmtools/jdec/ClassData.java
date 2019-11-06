@@ -39,8 +39,7 @@ import static org.openjdk.asmtools.jasm.Tables.AnnotElemType.AE_UNKNOWN;
 import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
 
 /**
- *
- *
+ * Class data of the Java Decoder
  */
 class ClassData {
 
@@ -139,11 +138,12 @@ class ClassData {
 
     private void printUtf8InfoIndex(int index, String indexName) {
         String name = (String) cpool[index];
-        out_print("#" + index + "; // " + String.format("%-16s",indexName));
+        out_print("#" + index + "; // ");
         if (printDetails) {
-            out.print(" : " + name);
+            out.println(String.format("%-16s",indexName) + " : " + name);
+        } else {
+            out.println(indexName);
         }
-        out.println();
     }
 
     /*========================================================*/
@@ -728,7 +728,11 @@ class ClassData {
                     startArrayCmt(trap_num, "Traps");
                     try {
                         for (int i = 0; i < trap_num; i++) {
-                            out_println(in.readUnsignedShort() + " " + in.readUnsignedShort() + " " + in.readUnsignedShort() + " " + in.readUnsignedShort() + ";" + getCommentPosCond());
+                            out_println(in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + ";" +
+                                    getCommentPosCond());
                         }
                     } finally {
                         out_end("} // end Traps");
@@ -740,11 +744,13 @@ class ClassData {
                     decodeCPXAttr(in, len, AttrName, out);
                     break;
                 case ATT_Exceptions:
-                    int exc_num = in.readUnsignedShort();
-                    startArrayCmt(exc_num, AttrName);
+                case ATT_NestMembers:
+                    int count = in.readUnsignedShort();
+                    startArrayCmt(count, AttrName);
                     try {
-                        for (int i = 0; i < exc_num; i++) {
-                            out_println("#" + in.readUnsignedShort() + ";" + getCommentPosCond());
+                        for (int i = 0; i < count; i++) {
+                            out_println("#" + in.readUnsignedShort() + ";" +
+                                    getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -755,7 +761,9 @@ class ClassData {
                     startArrayCmt(ll_num, AttrName);
                     try {
                         for (int i = 0; i < ll_num; i++) {
-                            out_println(in.readUnsignedShort() + "  " + in.readUnsignedShort() + ";" + getCommentPosCond());
+                            out_println(in.readUnsignedShort() + "  " +
+                                    in.readUnsignedShort() + ";" +
+                                    getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -767,7 +775,12 @@ class ClassData {
                     startArrayCmt(lvt_num, AttrName);
                     try {
                         for (int i = 0; i < lvt_num; i++) {
-                            out_println(in.readUnsignedShort() + " " + in.readUnsignedShort() + " " + in.readUnsignedShort() + " " + in.readUnsignedShort() + " " + in.readUnsignedShort() + ";" + getCommentPosCond());
+                            out_println(in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + ";" +
+                                    getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -778,7 +791,10 @@ class ClassData {
                     startArrayCmt(ic_num, AttrName);
                     try {
                         for (int i = 0; i < ic_num; i++) {
-                            out_println("#" + in.readUnsignedShort() + " #" + in.readUnsignedShort() + " #" + in.readUnsignedShort() + " " + in.readUnsignedShort() + ";" + getCommentPosCond());
+                            out_println("#" + in.readUnsignedShort() + " #" +
+                                    in.readUnsignedShort() + " #" +
+                                    in.readUnsignedShort() + " " +
+                                    in.readUnsignedShort() + ";" + getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -968,12 +984,22 @@ class ClassData {
                 case ATT_NestHost:
                     decodeCPXAttr(in, len, AttrName, out);
                     break;
-                case ATT_NestMembers:
-                    int cls_num = in.readUnsignedShort();
-                    startArrayCmt(cls_num, AttrName);
+                //  MethodParameters_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u1 parameters_count;
+                //    {   u2 name_index;
+                //        u2 access_flags;
+                //    } parameters[parameters_count];
+                //  }
+                case ATT_MethodParameters:
+                    int pcount = in.readUnsignedByte();
+                    startArrayCmtB(pcount, AttrName);
                     try {
-                        for (int i = 0; i < cls_num; i++) {
-                            out_println("#" + in.readUnsignedShort() + ";" + getCommentPosCond());
+                        for (int i = 0; i < pcount; i++) {
+                            out_println("#" + in.readUnsignedShort() + "  " +
+                                    toHex(in.readUnsignedShort(), 2) + ";" +
+                                    getCommentPosCond());
                         }
                     } finally {
                         out_end("}");

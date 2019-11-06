@@ -40,6 +40,10 @@ class AttrData implements Data {
         attrNameCPX = cdata.pool.FindCellAsciz(name);
     }
 
+    protected ClassData getClassData() {
+        return clsData;
+    }
+
     // full length of the attribute
     // declared in Data
     public int getLength() {

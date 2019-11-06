@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jasm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -49,7 +50,11 @@ public class DataVector<T extends Data> implements Iterable<T> {
         elements.add(element);
     }
 
-    // full length of the attribute
+    public void addAll(List<T> collection) {
+        elements.addAll(collection);
+    }
+
+    // full length of the attribute conveyor
     // declared in Data
     public int getLength() {
         int length = 0;

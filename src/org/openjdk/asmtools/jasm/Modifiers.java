@@ -22,10 +22,12 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
-import static org.openjdk.asmtools.jasm.JasmTokens.*;
 import static org.openjdk.asmtools.jasm.Tables.CF_Context;
 
 /**
@@ -40,20 +42,37 @@ public class Modifiers {
      * Modifier masks
      */
     public static final int MM_ATTR        = SYNTHETIC_ATTRIBUTE | DEPRECATED_ATTRIBUTE;
+
     public static final int MM_ACCESS      = ACC_PUBLIC | ACC_PRIVATE | ACC_PROTECTED;
 
     public static final int MM_INTRF       = MM_ACCESS  | ACC_ABSTRACT  | ACC_INTERFACE | MM_ATTR | ACC_ANNOTATION;
-    public static final int MM_CLASS       = MM_ACCESS  | ACC_FINAL     |  ACC_SUPER    | ACC_ABSTRACT | ACC_ENUM | MM_ATTR |  ACC_MODULE ;
 
-    public static final int MM_FIELD       = MM_ACCESS | ACC_STATIC | ACC_FINAL |  ACC_VOLATILE | ACC_TRANSIENT |  ACC_SYNTHETIC | ACC_ENUM | MM_ATTR ;
-    public static final int MM_I_METHOD    = ACC_ABSTRACT | ACC_PUBLIC | ACC_PRIVATE | ACC_STATIC | ACC_VARARGS | ACC_BRIDGE | ACC_SYNTHETIC ; // interface method
+    public static final int MM_CLASS       = MM_ACCESS  | ACC_FINAL     |  ACC_SUPER    | ACC_ABSTRACT | ACC_ENUM |
+                                             MM_ATTR    |  ACC_MODULE ;
+
+    public static final int MM_FIELD       = MM_ACCESS    | ACC_STATIC | ACC_FINAL    |  ACC_VOLATILE | ACC_TRANSIENT |
+                                            ACC_SYNTHETIC | ACC_ENUM   |
+                                            ACC_MANDATED |         // JEP 359 Record
+                                            MM_ATTR;
+
+    public static final int MM_I_METHOD    = ACC_ABSTRACT | ACC_PUBLIC | ACC_PRIVATE | ACC_STATIC | ACC_VARARGS |
+                                            ACC_BRIDGE    | ACC_SYNTHETIC ; // interface method
+
     public static final int MM_A_METHOD    = MM_ACCESS | ACC_ABSTRACT | MM_ATTR;
-    public static final int MM_N_METHOD    = MM_ACCESS | ACC_STRICT | ACC_VARARGS | ACC_SYNTHETIC | MM_ATTR;                                   // <init>
-    public static final int MM_METHOD      = MM_ACCESS | ACC_STATIC | ACC_FINAL | ACC_SYNCHRONIZED |  ACC_BRIDGE | ACC_VARARGS | ACC_NATIVE | ACC_ABSTRACT |  ACC_STRICT | ACC_SYNTHETIC | MM_ATTR ; // |  ACC_MODULE ;
-    public static final int MM_INNERCLASS  = MM_ACCESS | ACC_STATIC | ACC_FINAL | ACC_SUPER | ACC_INTERFACE | ACC_ABSTRACT | ACC_SYNTHETIC | ACC_ANNOTATION | ACC_ENUM | MM_ATTR ; // |  ACC_MODULE ;
-    public static final int MM_REQUIRES    = ACC_TRANSITIVE | ACC_STATIC_PHASE  | ACC_SYNTHETIC | ACC_MANDATED ;
-    public static final int MM_EXPORTS     = ACC_SYNTHETIC | ACC_MANDATED ;
 
+    public static final int MM_N_METHOD    = MM_ACCESS | ACC_STRICT | ACC_VARARGS | ACC_SYNTHETIC | MM_ATTR;  // <init>
+
+    public static final int MM_METHOD      = MM_ACCESS    | ACC_STATIC | ACC_FINAL    | ACC_SYNCHRONIZED |  ACC_BRIDGE |
+                                             ACC_VARARGS  | ACC_NATIVE | ACC_ABSTRACT |  ACC_STRICT      | ACC_SYNTHETIC |
+                                             ACC_MANDATED |         // JEP 359 Record
+                                             MM_ATTR ;
+
+    public static final int MM_INNERCLASS  = MM_ACCESS    | ACC_STATIC    | ACC_FINAL      | ACC_SUPER | ACC_INTERFACE |
+                                             ACC_ABSTRACT | ACC_SYNTHETIC | ACC_ANNOTATION | ACC_ENUM  | MM_ATTR ;
+
+    public static final int MM_REQUIRES    = ACC_TRANSITIVE | ACC_STATIC_PHASE  | ACC_SYNTHETIC | ACC_MANDATED ;
+
+    public static final int MM_EXPORTS     = ACC_SYNTHETIC | ACC_MANDATED ;
 
     private Modifiers() {
     }
@@ -230,13 +249,6 @@ public class Modifiers {
         return (mod & (flagA | flagB)) == (flagA | flagB);
     }
 
-    private static String getNames(int bits) {
-        return RuntimeConstants.ACC_NAMES.entrySet().stream()
-                .filter(e -> (e.getKey() & bits) != 0 && !e.getValue().isEmpty())
-                .map(s->s.getValue())
-                .collect(Collectors.joining(", "));
-    }
-
     /**
      * Check the modifier flags for the class
      *
@@ -249,8 +261,8 @@ public class Modifiers {
             if( isEnum(mod) ) {
                 env.error(scanner.pos, "warn.invalid.modifier.class.intenum");
             } else if ( !validInterface(mod) ) {
-                String names = getNames(getInvalidModifiers4Interface(mod));
-                env.error(scanner.pos, "warn.invalid.modifier.int", (names.isEmpty() ? "." : " - " + names));
+                env.error(scanner.pos, "warn.invalid.modifier.int",
+                        toString(mod & ~MM_INTRF, CF_Context.CTX_CLASS));
             }
             if (!isAbstract(mod)) {
                 env.error(scanner.pos, "warn.invalid.modifier.int.abs");
@@ -260,8 +272,8 @@ public class Modifiers {
                 env.error(scanner.pos, "warn.missing.modifier.class");
             }
             if (! validClass(mod)) {
-                String names = getNames(getInvalidModifiers4Class(mod));
-                env.error(scanner.pos, "warn.invalid.modifier.class", (names.isEmpty() ? "." : " - " + names));
+                env.error(scanner.pos, "warn.invalid.modifier.class",
+                            toString(mod & ~MM_CLASS, CF_Context.CTX_CLASS));
             }
             if (isAbstract(mod) && Modifiers.isFinal(mod)) {
                 env.error(scanner.pos, "warn.invalid.modifier.class.finabs");
@@ -286,7 +298,8 @@ public class Modifiers {
         } else {
             // For non-interfaces
             if (!validField(mod)) {
-                env.error(pos, "warn.invalid.modifier.field");
+                env.error(pos, "warn.invalid.modifier.field",
+                        toString(mod & ~MM_FIELD, CF_Context.CTX_METHOD));
             }
             if (both(mod, ACC_FINAL, ACC_VOLATILE)) {
                 env.error(pos, "warn.invalid.modifier.fiva");
@@ -329,7 +342,8 @@ public class Modifiers {
                     }
                 } else {
                     if (!validMethod(mod)) {
-                        env.error(pos, "warn.invalid.modifier.mth");
+                        env.error(pos, "warn.invalid.modifier.mth",
+                                toString(mod & ~MM_METHOD, CF_Context.CTX_METHOD));
                     }
                 }
                 if (!validAccess(mod)) {
@@ -403,10 +417,10 @@ public class Modifiers {
                 sb.append(Token.ABSTRACT.parsekey() + " ");
             }
         }
-        if ((context == CF_Context.CTX_CLASS || context == CF_Context.CTX_INNERCLASS || context == CF_Context.CTX_FIELD) && isFinal(mod)) {
+        if ( Set.of(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS, CF_Context.CTX_FIELD).contains(context) && isFinal(mod)) {
             sb.append(Token.FINAL.parsekey() + " ");
         }
-        if ((context == CF_Context.CTX_CLASS || context == CF_Context.CTX_INNERCLASS) && isInterface(mod)) {
+        if (Set.of(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS).contains(context) && isInterface(mod)) {
             if (isAnnotation(mod)) {
                 sb.append(Token.ANNOTATION_ACCESS.parsekey() + " ");
             }
@@ -424,7 +438,7 @@ public class Modifiers {
         if (isEnum(mod)) {
             sb.append(Token.ENUM.parsekey() + " ");
         }
-        if (context == CF_Context.CTX_METHOD && isMandated(mod)) {
+        if (Set.of(CF_Context.CTX_METHOD, CF_Context.CTX_FIELD).contains(context) && isMandated(mod)) {
             sb.append(Token.MANDATED.parsekey() + " ");
         }
 
@@ -441,12 +455,10 @@ public class Modifiers {
             sb.append("Deprecated(Pseudo) ");
         }
 
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     public static String moduleFlags( int flags ) {
-
-
         return "";
     }
 

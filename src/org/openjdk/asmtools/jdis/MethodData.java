@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,22 +39,9 @@ public class MethodData extends MemberData {
 
     /*-------------------------------------------------------- */
     /* MethodData Fields */
-    /**
-     * MethodParamData
-     */
-    class ParamNameData {
 
-        public int access;
-        public int name_cpx;
-
-        public ParamNameData(int name, int access) {
-            this.access = access;
-            this.name_cpx = name;
-        }
-
-    }
+    public static final String initialTab = "";
     /*-------------------------------------------------------- */
-
     /**
      * CP index to the method name
      */
@@ -64,43 +51,34 @@ public class MethodData extends MemberData {
      * CP index to the method type
      */
     protected int sig_cpx;
-
+    protected String lP;        // labelPrefix
+    /**
+     * The parameter names for this method
+     */
+    protected ArrayList<ParamNameData> paramNames;
+    /**
+     * The visible parameter annotations for this method
+     */
+    protected ParameterAnnotationData visibleParameterAnnotations;
+    /**
+     * The invisible parameter annotations for this method
+     */
+    protected ParameterAnnotationData invisibleParameterAnnotations;
+    /**
+     * The invisible parameter annotations for this method
+     */
+    protected AnnotElem.AnnotValue defaultAnnotation;
     /**
      * The code data for this method. May be null
      */
     private CodeData code;
-
     /**
      * The exception table (thrown exceptions) for this method. May be null
      */
     private int[] exc_table = null;
 
-    protected String lP;        // labelPrefix
-    public static final String initialTab = "";
-
-    /**
-     * The parameter names for this method
-     */
-    protected ArrayList<ParamNameData> paramNames;
-
-    /**
-     * The visible parameter annotations for this method
-     */
-    protected ParameterAnnotationData visibleParameterAnnotations;
-
-    /**
-     * The invisible parameter annotations for this method
-     */
-    protected ParameterAnnotationData invisibleParameterAnnotations;
-
-    /**
-     * The invisible parameter annotations for this method
-     */
-    protected AnnotElem.AnnotValue defaultAnnotation;
-
-    /*-------------------------------------------------------- */
     public MethodData(ClassData cls) {
-        init(cls);
+        super(cls);
         memberType = "MethodData";
         lP = (options.contains(Options.PR.LABS)) ? "L" : "";
         paramNames = null;
@@ -145,12 +123,9 @@ public class MethodData extends MemberData {
     }
 
     /**
-     *
      * read
-     *
-     * read and resolve the method data called from ClassData. precondition: NumFields has
-     * already been read from the stream.
-     *
+     * read and resolve the method data called from ClassData.
+     * Precondition: NumFields has already been read from the stream.
      */
     public void read(DataInputStream in) throws IOException {
         // read the Methods CP indexes
@@ -190,15 +165,11 @@ public class MethodData extends MemberData {
         }
     }
 
-    /*========================================================*/
-    /* Print Methods */
     /**
-     *
      * printPAnnotations
-     *
+     * <p>
      * prints the parameter annotations for this method. called from CodeAttr (since JASM
      * code integrates the PAnnotation Syntax inside the method body).
-     *
      */
     // This is called from the CodeAttr
     public void printPAnnotations() throws IOException {
@@ -289,13 +260,11 @@ public class MethodData extends MemberData {
 
     }
 
+    /*========================================================*/
+    /* Print Methods */
+
     /**
-     *
-     * print
-     *
-     * prints the method data to the current output stream. called from ClassData.
-     * precondition: NumMethods has already been printed to the stream.
-     *
+     * Prints the method data to the current output stream. called from ClassData.
      */
     public void print(boolean skipBlankLine) throws IOException {
         // Print the Annotations
@@ -349,32 +318,23 @@ public class MethodData extends MemberData {
 
         if (pr_cpx) {
             // print the CPX method descriptor
-            out.print("#" + name_cpx + ":#" + sig_cpx);
-            out.print("\t // ");
-            out.println(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
+            out.print("#" + name_cpx + ":#" + sig_cpx +
+                    ((code == null && exc_table == null && defaultAnnotation == null) ? ";" : "") +
+                    "\t // " + cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
         } else {
-            out.print(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
+            out.print(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx) +
+                    ((code == null && exc_table == null && defaultAnnotation == null) ? ";" : ""));
         }
         // followed by default annotation
         if (defaultAnnotation != null) {
             out.print(" default { ");
             defaultAnnotation.print(out, initialTab);
-            out.print(" } ");
+            out.print(" }" + ((code == null && exc_table == null) ? ";" : " "));
         }
         // followed by exception table
         printExceptionTable();
 
-        //       if ((code == null) || ((access & ACC_ABSTRACT) != 0)) {
-        if (code == null) {
-            out.print(";");
-
-            if (pr_cpx) {
-                out.print("\t // ");
-
-                out.print(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
-            }
-            out.println("");
-        } else {
+        if (code != null) {
             code.print();
         }
     }
@@ -391,5 +351,19 @@ public class MethodData extends MemberData {
             }
         }
     }
-} // end MethodData
 
+    /**
+     * MethodParamData
+     */
+    class ParamNameData {
+
+        public int access;
+        public int name_cpx;
+
+        public ParamNameData(int name, int access) {
+            this.access = access;
+            this.name_cpx = name;
+        }
+
+    }
+} // end MethodData

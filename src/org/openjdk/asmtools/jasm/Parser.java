@@ -886,6 +886,47 @@ class Parser extends ParseBase {
     }
 
     /**
+     * Parse a Record entry
+     */
+    private void parseRecord() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // RECORD COMPONENT (, COMPONENT)*;
+        // where
+        // COMPONENT NAME:DESCRIPTOR SIGNATURE? (ANNOTATION)*
+        // NAME = (CPINDEX | IDENT)
+        // DESCRIPTOR = (CPINDEX | STRING)
+        // SIGNATURE  = (CPINDEX | STRING)
+        debugScan("[Parser.parseRecord]:  Begin ");
+        RecordData rd = cd.setRecord(scanner.pos);
+Component:
+        while (true) {
+            ConstCell nameCell, descCell, signatureCell = null;
+            nameCell = parseName();
+            scanner.expect(Token.COLON);
+            descCell = parseName();
+            rd.addComponent(nameCell, descCell);
+            while (true) {
+                switch (scanner.token) {
+                    case COMMA:
+                        scanner.scan();
+                        continue Component;   // next component
+                    case SEMICOLON:
+                        return;     // EOR
+                    case ANNOTATION:
+                        rd.setAnnotations( annotParser.scanAnnotations());
+                        break;
+                    default:
+                        if( signatureCell != null ) {
+                            env.error(scanner.pos, "warn.signature.repeated");
+                        }
+                        signatureCell = parseName();
+                        rd.setComponentSignature(signatureCell);
+                }
+            }
+        }  // end while
+    }
+
+    /**
      * Parse an inner class.
      */
     private void parseInnerClass(int mod) throws Scanner.SyntaxError, IOException {
@@ -1567,10 +1608,10 @@ class Parser extends ParseBase {
                     parseCPXBootstrapMethod();
                     break;
                 case NESTHOST:
-                    if (cd.nestHostExists()) {
+                    if (cd.nestHostAttributeExists()) {
                         env.error(scanner.pos, "extra.nesthost.attribute");
                         throw new Scanner.SyntaxError();
-                    } else if (cd.nestMembersExist()) {
+                    } else if (cd.nestMembersAttributesExist()) {
                         env.error(scanner.pos, "both.nesthost.nestmembers.found");
                         throw new Scanner.SyntaxError();
                     }
@@ -1578,15 +1619,23 @@ class Parser extends ParseBase {
                     parseNestHost();
                     break;
                 case NESTMEMBERS:
-                    if (cd.nestMembersExist()) {
+                    if (cd.nestMembersAttributesExist()) {
                         env.error(scanner.pos, "extra.nestmembers.attribute");
                         throw new Scanner.SyntaxError();
-                    } else if (cd.nestHostExists()) {
+                    } else if (cd.nestHostAttributeExists()) {
                         env.error(scanner.pos, "both.nesthost.nestmembers.found");
                         throw new Scanner.SyntaxError();
                     }
                     scanner.scan();
                     parseNestMembers();
+                    break;
+                case RECORD:
+                    if( cd.recordAttributeExists() ) {
+                        env.error(scanner.pos, "extra.record.attribute");
+                        throw new Scanner.SyntaxError();
+                    }
+                    scanner.scan();
+                    parseRecord();
                     break;
                 default:
                     env.error(scanner.pos, "field.expected");

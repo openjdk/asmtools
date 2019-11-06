@@ -26,16 +26,16 @@ import static org.openjdk.asmtools.jasm.RuntimeConstants.DEPRECATED_ATTRIBUTE;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.SYNTHETIC_ATTRIBUTE;
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  *
  */
-public class MemberData {
+abstract public class MemberData {
 
     protected int access;
-    protected AttrData syntheticAttr,
-            deprecatedAttr;
+    protected AttrData syntheticAttr, deprecatedAttr;
     protected DataVectorAttr<AnnotationData> annotAttrVis = null;
     protected DataVectorAttr<AnnotationData> annotAttrInv = null;
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrVis = null;
@@ -45,6 +45,10 @@ public class MemberData {
     public MemberData(ClassData cls, int access) {
         this.cls = cls;
         init(access);
+    }
+
+    public MemberData(ClassData cls) {
+        this.cls = cls;
     }
 
     public void init(int access) {
@@ -67,6 +71,28 @@ public class MemberData {
                     AttrTag.ATT_Deprecated.parsekey());
             access &= ~DEPRECATED_ATTRIBUTE;
         }
+    }
+
+    protected abstract DataVector getAttrVector();
+
+    protected final DataVector getDataVector(List<Data> extraAttrs) {
+        DataVector attrs = new DataVector();
+        if (extraAttrs != null) {
+            attrs.addAll(extraAttrs);
+        }
+        if (annotAttrVis != null) {
+            attrs.add(annotAttrVis);
+        }
+        if (annotAttrInv != null) {
+            attrs.add(annotAttrInv);
+        }
+        if (type_annotAttrVis != null) {
+            attrs.add(type_annotAttrVis);
+        }
+        if (type_annotAttrInv != null) {
+            attrs.add(type_annotAttrInv);
+        }
+        return attrs;
     }
 
     public void addAnnotations(ArrayList<AnnotationData> annttns) {

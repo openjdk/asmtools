@@ -59,19 +59,12 @@ class MethodData extends MemberData {
                 nm = name.arg;
                 ac = access;
             }
-
-// short acc = (short) ac;
-// env.traceln("ParamNameData.write() (name[" + nm + "], Flags: (" + access + ").  [TESTING: short_access=" + acc + "]");
             out.writeShort(nm);
             out.writeShort(ac);
         }
     }// end class MethodParamData
-  /*-------------------------------------------------------- */
-    /* MethodParamData Inner Classes */
 
     /**
-     * DataPArrayAttr
-     *
      * Used to store Parameter Arrays (as attributes)
      */
     static public class DataPArrayAttr<T extends Data> extends AttrData implements Constants {
@@ -105,7 +98,7 @@ class MethodData extends MemberData {
 
         @Override
         public int attrLength() {
-            int length = 1;  // One byte for the paramater count
+            int length = 1;  // One byte for the parameter count
 
             // calculate overall size here rather than in add()
             // because it may not be available at the time of invoking of add()
@@ -144,7 +137,6 @@ class MethodData extends MemberData {
     }// end class DataPArrayAttr
 
 
-    /*-------------------------------------------------------- */
     /* Method Data Fields */
     protected Environment env;
     protected ConstCell nameCell, sigCell;
@@ -154,8 +146,6 @@ class MethodData extends MemberData {
     protected DataPArrayAttr<AnnotationData> pannotAttrVis = null;
     protected DataPArrayAttr<AnnotationData> pannotAttrInv = null;
     protected DefaultAnnotationAttr defaultAnnot = null;
-    protected DataVector attrs = new DataVector();
-    /*-------------------------------------------------------- */
 
     public MethodData(ClassData cls, int acc,
             ConstCell name, ConstCell sig, ArrayList<ConstCell> exc_table) {
@@ -183,7 +173,7 @@ class MethodData extends MemberData {
                 paramNames.add(new ParamNameData(0, null));
             }
         }
-        paramNames.add(paramNum, new ParamNameData(access, name));
+        paramNames.put(paramNum, new ParamNameData(access, name));
     }
 
     public CodeAttr startCode(int pos, int paramcnt, Argument max_stack, Argument max_locals) {
@@ -214,50 +204,46 @@ class MethodData extends MemberData {
         }
     }
 
+    @Override
+    protected DataVector getAttrVector() {
+        DataVector dv = getDataVector( new ArrayList<>(){{
+            if (exceptions != null) {
+                add(exceptions);
+            }
+            if (syntheticAttr != null) {
+                add(syntheticAttr);
+            }
+            if (deprecatedAttr != null) {
+                add(deprecatedAttr);
+            }
+            if (paramNames != null) {
+                add(paramNames);
+            }
+            if (code != null) {
+                add(code);
+            }
+            if (defaultAnnot != null) {
+                add(defaultAnnot);
+            }
+        }});
+        dv.addAll(
+                new ArrayList<>() {{
+                    if (pannotAttrVis != null) {
+                        add(pannotAttrVis);
+                    }
+                    if (pannotAttrInv != null) {
+                        add(pannotAttrInv);
+                    }
+                }});
+        return dv;
+    }
 
     /*====================================================== Write */
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
         out.writeShort(access);
         out.writeShort(nameCell.arg);
         out.writeShort(sigCell.arg);
-        if (exceptions != null) {
-            attrs.add(exceptions);
-        }
-        if (syntheticAttr != null) {
-            attrs.add(syntheticAttr);
-        }
-        if (deprecatedAttr != null) {
-            attrs.add(deprecatedAttr);
-        }
-        if (paramNames != null) {
-            attrs.add(paramNames);
-        }
-        if (code != null) {
-            attrs.add(code);
-        }
-        if (defaultAnnot != null) {
-            attrs.add(defaultAnnot);
-        }
-        if (annotAttrVis != null) {
-            attrs.add(annotAttrVis);
-        }
-        if (annotAttrInv != null) {
-            attrs.add(annotAttrInv);
-        }
-        if (type_annotAttrVis != null) {
-            attrs.add(type_annotAttrVis);
-        }
-        if (type_annotAttrInv != null) {
-            attrs.add(type_annotAttrInv);
-        }
-        if (pannotAttrVis != null) {
-            attrs.add(pannotAttrVis);
-        }
-        if (pannotAttrInv != null) {
-            attrs.add(pannotAttrInv);
-        }
-
-        attrs.write(out);
+        getAttrVector().write(out);
     }
 } // end MethodData
 

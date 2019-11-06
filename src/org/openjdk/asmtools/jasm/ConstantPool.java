@@ -23,8 +23,12 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.jasm.Tables.ConstType;
+
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
 
 /**
  * ConstantPool
@@ -345,7 +349,13 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             if (tag != dobj.tag) {
                 return false;
             }
-            return (dobj.left == left) && (dobj.right == right);
+            if (dobj.left != null)
+                if (!dobj.left.equals(left))
+                    return false;
+            if (dobj.right != null)
+                if (!dobj.right.equals(right))
+                    return false;
+            return true;
         }
 
         @Override
@@ -494,7 +504,11 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             if (obj == null) {
                 return false;
             }
-            return obj == this;
+            ConstCell cc = (ConstCell)obj;
+            if( cc.ref == null ) {
+                return this.ref == null && cc.rank == this.rank;
+            }
+            return cc.ref.equals(this.ref) && cc.rank == this.rank;
         }
 
         public boolean isUnset() {

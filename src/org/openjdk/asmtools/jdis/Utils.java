@@ -67,4 +67,12 @@ fullname:
         return retval;
     }
 
+    static public String commentString(String  str) {
+        return commentString(str,"// ");
+    }
+
+    static public String commentString(String  str, String prefix) {
+        return prefix + str.replace("\n", "\n" + prefix);
+    }
+
 }

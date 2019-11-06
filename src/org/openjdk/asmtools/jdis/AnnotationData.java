@@ -101,7 +101,7 @@ public class AnnotationData {
                 out.print(", ");
             }
         }
-        out.print("}");
+        out.print(tab + "}");
     }
 
     @Override

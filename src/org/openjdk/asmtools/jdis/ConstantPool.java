@@ -33,6 +33,8 @@ import java.util.Hashtable;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.openjdk.asmtools.jdis.Utils.commentString;
+
 /**
  *
  * ConstantPool
@@ -598,6 +600,8 @@ public class ConstantPool {
             return str;
         }
 
+
+
         @Override
         public void print(PrintWriter out) {
             super.print(out);
@@ -615,7 +619,7 @@ public class ConstantPool {
                     break;
                 case CONSTANT_DYNAMIC:
                 case CONSTANT_INVOKEDYNAMIC:
-                    out.println(value1 + ":#" + value2 + ";\t//  " + stringVal());
+                    out.println(value1 + ":#" + value2 + ";\t" + commentString(stringVal()));
                     break;
                 default:
                     break;
@@ -1060,22 +1064,14 @@ public class ConstantPool {
     }
 
     /**
-     *
-     * print
-     *
      * prints the Constant value at a given CP index.
-     *
      */
     void PrintConstant(PrintWriter out, int cpx) {
         out.print(ConstantStrValue(cpx));
     }
 
     /**
-     *
-     * printlnClassId
-     *
      * prints a constant value, with the print format based on the print options.
-     *
      */
     public void printlnClassId(PrintWriter out, int cpx) throws IOException {
         printlnClassId(out, cpx, false);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,6 +21,8 @@
  * questions.
  */
 package org.openjdk.asmtools.jdis;
+
+import org.openjdk.asmtools.jasm.JasmTokens;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -73,10 +75,8 @@ public class BootstrapMethodData {
     /*========================================================*/
     /* Print Methods */
     public void print() throws IOException {
-        out.print("BootstrapMethod ");
-        out.print("#" + bsm_index);
+        out.print(JasmTokens.Token.BOOTSTRAPMETHOD.parsekey() + " #" + bsm_index);
         for (int i = 0; i < bsm_args_indexes.size(); i++) {
-//            cls.PrintConstant(bsm_args_indexes.elementAt(i));
             out.print(" #" + bsm_args_indexes.get(i));
         }
         out.println(";");

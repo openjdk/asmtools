@@ -24,17 +24,17 @@ package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
 class FieldData extends MemberData {
 
-    /*-------------------------------------------------------- */
     /* FieldData Fields */
-    protected ConstantPool.ConstValue_Pair nape;
+    private ConstantPool.ConstValue_Pair nape;
     private AttrData initValue;
-    /*-------------------------------------------------------- */
 
     public FieldData(ClassData cls, int acc, ConstantPool.ConstValue_Pair nape) {
         super(cls, acc);
@@ -44,38 +44,36 @@ class FieldData extends MemberData {
         }
     }
 
+    public ConstantPool.ConstValue_Pair getNameDesc() {
+        return nape;
+    }
+
+
     public void SetValue(Argument value_cpx) {
         initValue = new CPXAttr(cls, AttrTag.ATT_ConstantValue.parsekey(),
                 value_cpx);
+    }
+
+    @Override
+    protected DataVector getAttrVector() {
+        return getDataVector( new ArrayList<>(){{
+            if (initValue != null) {
+                add(initValue);
+            };
+            if (syntheticAttr != null) {
+                add(syntheticAttr);
+            }
+            if (deprecatedAttr != null) {
+                add(deprecatedAttr);
+            }
+        }} );
     }
 
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
         out.writeShort(access);
         out.writeShort(nape.left.arg);
         out.writeShort(nape.right.arg);
-
-        DataVector attrs = new DataVector();
-        if (initValue != null) {
-            attrs.add(initValue);
-        }
-        if (syntheticAttr != null) {
-            attrs.add(syntheticAttr);
-        }
-        if (deprecatedAttr != null) {
-            attrs.add(deprecatedAttr);
-        }
-        if (annotAttrVis != null) {
-            attrs.add(annotAttrVis);
-        }
-        if (annotAttrInv != null) {
-            attrs.add(annotAttrInv);
-        }
-        if (type_annotAttrVis != null) {
-            attrs.add(type_annotAttrVis);
-        }
-        if (type_annotAttrInv != null) {
-            attrs.add(type_annotAttrInv);
-        }
+        DataVector attrs = getAttrVector();
         attrs.write(out);
     }
 } // end FieldData

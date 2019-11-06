@@ -37,10 +37,6 @@ import static org.openjdk.asmtools.jasm.Tables.*;
  */
 class ClassData extends MemberData {
 
-    /*-------------------------------------------------------- */
-    /* ClassData inner classes */
-
-    /*-------------------------------------------------------- */
     /* ClassData Fields */
     CFVersion cfv;
     ConstantPool.ConstCell me, father;
@@ -51,24 +47,23 @@ class ClassData extends MemberData {
     ArrayList<MethodData> methods = new ArrayList<>();
     DataVectorAttr<InnerClassData> innerClasses = null;
     DataVectorAttr<BootstrapMethodData> bootstrapMethodsAttr = null;
+
     // JEP 181 - NestHost, NestMembers attributes since class version 55.0
     CPXAttr nestHostAttr;
     NestMembersAttr nestMembersAttr;
 
+    // JEP 359 - Record attribute since class file 58.65535
+    private RecordData recordData;
 
     ModuleAttr moduleAttribute = null;
     Environment env;
     protected ConstantPool pool;
 
-
     private static final String DEFAULT_EXTENSION = ".class";
     String fileExtension = DEFAULT_EXTENSION;
     public CDOutputStream cdos;
 
-    /*-------------------------------------------------------- */
     /**
-     * init
-     *
      * Initializes the ClassData.
      *
      * @param me The constant pool reference to this class
@@ -119,10 +114,7 @@ class ClassData extends MemberData {
         cdos = new CDOutputStream();
     }
 
-    /* *********************************************** */
     /**
-     * isInterface
-     *
      * Predicate that describes if this class has an access flag indicating that it is an
      * interface.
      *
@@ -188,7 +180,17 @@ class ClassData extends MemberData {
         }
     }
 
-    /*-------------------------------------------------------- API */
+    // API
+    // Record
+    public RecordData setRecord(int where) {
+        if( recordAttributeExists() ) {
+            env.error(where, "warn.record.repeated");
+        }
+        this.recordData = new RecordData(cls);
+        return this.recordData;
+    }
+
+    // Field
     public ConstantPool.ConstValue_Pair mkNape(ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
         return new ConstantPool.ConstValue_Pair(ConstType.CONSTANT_NAMEANDTYPE, name, sig);
     }
@@ -197,7 +199,24 @@ class ClassData extends MemberData {
         return mkNape(pool.FindCellAsciz(name), pool.FindCellAsciz(sig));
     }
 
-    public void setSourceFileName(String name) {
+    public FieldData addFieldIfAbsent(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
+        ConstantPool.ConstValue_Pair nape = mkNape(name, sig);
+        env.traceln(" [ClassData.addFieldIfAbsent]:  #" + nape.left.arg + ":#" + nape.right.arg);
+        FieldData fd = getField(nape);
+        if( fd == null ) {
+            env.traceln(" [ClassData.addFieldIfAbsent]:  new field.");
+            fd = addField(access,nape);
+        }
+        return fd;
+    }
+
+    private FieldData getField(ConstantPool.ConstValue_Pair nape) {
+        for (FieldData fd : fields) {
+            if( fd.getNameDesc().equals(nape) ) {
+                return fd;
+            }
+        }
+        return null;
     }
 
     public FieldData addField(int access, ConstantPool.ConstValue_Pair nape) {
@@ -216,7 +235,7 @@ class ClassData extends MemberData {
     }
 
     public ConstantPool.ConstCell LocalFieldRef(FieldData field) {
-        return pool.FindCell(ConstType.CONSTANT_FIELD, me, pool.FindCell(field.nape));
+        return pool.FindCell(ConstType.CONSTANT_FIELD, me, pool.FindCell(field.getNameDesc()));
     }
 
     public ConstantPool.ConstCell LocalFieldRef(ConstantPool.ConstValue nape) {
@@ -340,7 +359,6 @@ class ClassData extends MemberData {
 
     }
 
-    /*====================================================== write */
     public void write(CheckedDataOutputStream out) throws IOException {
 
         // Write the header
@@ -383,9 +401,14 @@ class ClassData extends MemberData {
             out.writeShort(0);
         }
 
-        DataVector attrs = new DataVector();
-
         // Write the attributes
+        DataVector attrs = getAttrVector();
+        attrs.write(out);
+    } // end ClassData.write()
+
+    @Override
+    protected DataVector getAttrVector() {
+        DataVector attrs = new DataVector();
         if( moduleAttribute != null ) {
             if (annotAttrVis != null)
                 attrs.add(annotAttrVis);
@@ -394,6 +417,10 @@ class ClassData extends MemberData {
             attrs.add(moduleAttribute);
         } else {
             attrs.add(sourceFileNameAttr);
+            // JEP 359 since class file 58.65535
+            if( recordData != null ) {
+                attrs.add(recordData);
+            }
             if (innerClasses != null)
                 attrs.add(innerClasses);
             if (syntheticAttr != null)
@@ -411,18 +438,18 @@ class ClassData extends MemberData {
             if (bootstrapMethodsAttr != null)
                 attrs.add(bootstrapMethodsAttr);
             // since class version 55.0
-            if(nestHostExists())
+            if(nestHostAttributeExists())
                 attrs.add(nestHostAttr);
-             if(nestMembersExist())
-                 attrs.add(nestMembersAttr);
+            if(nestMembersAttributesExist())
+                attrs.add(nestMembersAttr);
         }
-        attrs.write(out);
-    } // end ClassData.write()
+        return attrs;
+    }
 
     static char fileSeparator; //=System.getProperty("file.separator");
 
     /**
-     * write to the directory passed with -d option
+     * Writes to the directory passed with -d option
      */
     public void write(File destdir) throws IOException {
         File outfile;
@@ -463,17 +490,15 @@ class ClassData extends MemberData {
         cdos.setLimit(bytelimit);
     }
 
-    public boolean nestHostExists() {
+    public boolean nestHostAttributeExists() {
         return nestHostAttr != null;
     }
 
-    public boolean nestMembersExist() {
-        return nestMembersAttr != null;
-    }
+    public boolean nestMembersAttributesExist() { return nestMembersAttr != null;  }
+
+    public boolean recordAttributeExists() { return recordData != null;  }
 
     /**
-     * CDOutputStream
-     *
      * This is a wrapper for DataOutputStream, used for debugging purposes. it allows
      * writing the byte-stream of a class up to a given byte number.
      */
@@ -590,14 +615,6 @@ class ClassData extends MemberData {
             dos.writeUTF(s);
             check("Writing writeUTF: " + s);
         }
-        /*
-         public int writeUTF(String str, DataOutput out) throws IOException{
-         int ret = dos.writeUTF(str, out);
-         check("Writing writeUTF: " + str);
-         return ret;
-         }
-         * */
-
     }
 }// end class ClassData
 

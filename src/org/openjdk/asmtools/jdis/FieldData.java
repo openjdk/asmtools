@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,43 +23,34 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.jasm.Modifiers;
-import static org.openjdk.asmtools.jasm.Tables.*;
+
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static org.openjdk.asmtools.jasm.Tables.AttrTag;
+import static org.openjdk.asmtools.jasm.Tables.CF_Context;
 
 /**
  * Field data for field members in a class of the Java Disassembler
  */
 public class FieldData extends MemberData {
 
-    /*-------------------------------------------------------- */
-    /* FieldData Fields */
-    /**
-     * CP index to the field name
-     */
+    // CP index to the field name
     protected int name_cpx;
 
-    /**
-     * CP index to the field type
-     */
+    // CP index to the field type
     protected int sig_cpx;
 
-    /**
-     * CP index to the field value
-     */
+     // CP index to the field value
     protected int value_cpx = 0;
 
     public static final String initialTab = "";
 
-    /*-------------------------------------------------------- */
     public FieldData(ClassData cls) {
-        init(cls);
+        super(cls);
         memberType = "FieldData";
     }
 
-
-    /*========================================================*/
-    /* Read Methods */
     @Override
     protected boolean handleAttributes(DataInputStream in, AttrTag attrtag, int attrlen) throws IOException {
         // Read the Attributes
@@ -79,12 +70,8 @@ public class FieldData extends MemberData {
     }
 
     /**
-     *
-     * read
-     *
-     * read and resolve the field data called from ClassData. precondition: NumFields has
-     * already been read from the stream.
-     *
+     * Read and resolve the field data called from ClassData.
+     * Precondition: NumFields has already been read from the stream.
      */
     public void read(DataInputStream in) throws IOException {
         // read the Fields CP indexes
@@ -96,17 +83,10 @@ public class FieldData extends MemberData {
 
         // Read the attributes
         readAttributes(in);
-    }  // end read
+    }
 
-    /*========================================================*/
-    /* Print Methods */
     /**
-     *
-     * print
-     *
-     * prints the field data to the current output stream. called from ClassData.
-     * precondition: NumFields has already been printed to the stream.
-     *
+     * Prints the field data to the current output stream. called from ClassData.
      */
     public void print() throws IOException {
         // Print annotations first

@@ -26,12 +26,12 @@ import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 /**
- * Main program of the Java Disassembler :: class -> jasm
+ * Main program of the Java Disassembler :: class to jasm
  */
 public class Main extends Tool {
 

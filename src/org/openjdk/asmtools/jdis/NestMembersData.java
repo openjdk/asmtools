@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,6 +21,8 @@
  * questions.
  */
 package org.openjdk.asmtools.jdis;
+
+import org.openjdk.asmtools.jasm.JasmTokens;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -55,7 +57,7 @@ public class NestMembersData {
         String indexes = "";
         String names = "";
         boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print("NestMembers ");
+        cls.out.print(JasmTokens.Token.NESTMEMBERS.parsekey() + " ");
         for(int i = 0; i< classes.length; i++) {
             if (pr_cpx) {
                 indexes += (indexes.isEmpty() ? "" : ", ") + "#" + classes[i];

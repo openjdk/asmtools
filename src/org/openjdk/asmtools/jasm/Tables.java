@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019ß, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,6 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
@@ -179,7 +178,6 @@ public class Tables {
         ConstantTypes.put(tt.value, tt);
     }
 
-    /*-------------------------------------------------------- */
     /**
      * Attribute descriptor enums
      */
@@ -229,7 +227,7 @@ public class Tables {
         //    u2 components_count;
         //    component_info components[components_count];
         // }
-        ATT_Record                                  (34, "ATT_Recrod", "Record");
+        ATT_Record                                  (34, "ATT_Record", "Record");
 
         private final Integer value;
         private final String printval;
@@ -643,7 +641,6 @@ public class Tables {
         return retval;
     }
 
-    /*-------------------------------------------------------- */
     /**
      * CF_Context enums
      */
@@ -671,17 +668,4 @@ public class Tables {
             return printval;
         }
     }
-
-    private static void registerAnnotElemType(CF_Context ctx) {
-        //       NameToAnnotElemType.put(typ.printval, typ);
-        //        AnnotElemTypes.put(typ.value, typ);
-    }
-    /*
-     public static CF_Context annotElemType(String idValue) {
-     return NameToAnnotElemType.get(idValue);
-     }
-     public static CF_Context annotElemType(int subtag) {
-     return  AnnotElemTypes.get(subtag);
-     }
-    */
 }

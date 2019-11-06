@@ -23,44 +23,37 @@
 package org.openjdk.asmtools.jdis;
 
 
-import org.openjdk.asmtools.jasm.JasmTokens;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
- * The NestHost attribute data
+ * The Signature attribute data
  * <p>
- * since class file 55.0 (JEP 181)
+ * since class file 49.0
  */
-public class NestHostData {
+public class SignatureData {
     ClassData cls;
-    int host_class_index;
+    int signature_index;
     private Options options = Options.OptionObject();
 
-    public NestHostData(ClassData cls) {
+    public SignatureData(ClassData cls) {
         this.cls = cls;
     }
 
-    public NestHostData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
+    public SignatureData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
         if (attribute_length != 2) {
-            throw new ClassFormatError("ATT_NestHost: Invalid attribute length");
+            throw new ClassFormatError("ATT_Signature: Invalid attribute length");
         }
-        host_class_index = in.readUnsignedShort();
+        signature_index = in.readUnsignedShort();
         return this;
     }
 
-    public void print() {
+    public void print(String initialTab) {
         boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(JasmTokens.Token.NESTHOST.parsekey() + " ");
         if (pr_cpx) {
-            cls.out.print("#" + host_class_index + "; //");
-        }
-        if (pr_cpx) {
-            cls.pool.PrintConstant(cls.out, host_class_index);
-            cls.out.println();
+            cls.out.print(initialTab + "#" + signature_index + "\t\t // Signature: " + cls.pool.StringValue(signature_index));
         } else {
-            cls.out.println(cls.pool.StringValue(host_class_index) + ";");
+            cls.out.print(initialTab + cls.pool.StringValue(signature_index));
         }
     }
 }
