@@ -48,7 +48,6 @@ class FieldData extends MemberData {
         return nape;
     }
 
-
     public void SetValue(Argument value_cpx) {
         initValue = new CPXAttr(cls, AttrTag.ATT_ConstantValue.parsekey(),
                 value_cpx);
@@ -56,17 +55,7 @@ class FieldData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        return getDataVector( new ArrayList<>(){{
-            if (initValue != null) {
-                add(initValue);
-            };
-            if (syntheticAttr != null) {
-                add(syntheticAttr);
-            }
-            if (deprecatedAttr != null) {
-                add(deprecatedAttr);
-            }
-        }} );
+        return getDataVector(initValue, syntheticAttr, deprecatedAttr);
     }
 
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {

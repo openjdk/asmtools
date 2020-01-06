@@ -644,7 +644,7 @@ public class Tables {
     /**
      * CF_Context enums
      */
-    static public enum CF_Context {
+    public enum CF_Context {
 
         CTX_CLASS       (0, "class"),
         CTX_FIELD       (1, "field"),
@@ -658,6 +658,15 @@ public class Tables {
         CF_Context(int val, String print) {
             value = val;
             printval = print;
+        }
+
+        boolean isOneOf(CF_Context... items) {
+            for(CF_Context item : items) {
+                if(item.value == value) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public int val() {

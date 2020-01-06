@@ -75,11 +75,14 @@ abstract public class MemberData {
 
     protected abstract DataVector getAttrVector();
 
-    protected final DataVector getDataVector(List<Data> extraAttrs) {
+    protected final DataVector getDataVector(Data... extraAttrs) {
         DataVector attrs = new DataVector();
-        if (extraAttrs != null) {
-            attrs.addAll(extraAttrs);
+        for( Data extra : extraAttrs ) {
+            if (extra != null) {
+                attrs.add(extra);
+            }
         }
+        // common set for [ FieldData, MethodData, RecordData ]
         if (annotAttrVis != null) {
             attrs.add(annotAttrVis);
         }

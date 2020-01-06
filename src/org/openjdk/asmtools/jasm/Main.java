@@ -65,6 +65,10 @@ public class Main extends Tool {
             error( i18n.getString("jasm.error.cannot_read", fname));
     }
 
+    public Main(PrintStream out, String program) {
+        this(new PrintWriter(out), program);
+    }
+
     @Override
     public void usage() {
         println(i18n.getString("jasm.usage"));

@@ -503,7 +503,7 @@ class ClassData {
         }
         // [4.7.20.2]
         int path_length = in.readUnsignedByte();  // type_path { u1 path_length; ...}
-        startArrayCmt(path_length, "type_paths");
+        startArrayCmtB(path_length, "type_paths");
         try {
             for (int i = 0; i < path_length; i++) {
                 // print the type_path elements
@@ -1078,7 +1078,13 @@ class ClassData {
     private void decodeModule(DataInputStream in) throws IOException {
         //u2 module_name_index
         int index = in.readUnsignedShort();
-        printUtf8InfoIndex((Integer)cpool[index], "name_index");
+        entityName = (String) cpool[(Integer) cpool[index]];
+        out_print("#" + index + "; // ");
+        if (printDetails) {
+            out.println(String.format("%-16s","name_index") + " : " + entityName);
+        } else {
+            out.println("name_index");
+        }
 
         // u2 module_flags
         int moduleFlags = in.readUnsignedShort();

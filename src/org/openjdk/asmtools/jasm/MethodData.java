@@ -26,6 +26,7 @@ import org.openjdk.asmtools.jasm.Tables.AttrTag;
 import org.openjdk.asmtools.jasm.ConstantPool.ConstCell;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -206,35 +207,13 @@ class MethodData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        DataVector dv = getDataVector( new ArrayList<>(){{
-            if (exceptions != null) {
-                add(exceptions);
-            }
-            if (syntheticAttr != null) {
-                add(syntheticAttr);
-            }
-            if (deprecatedAttr != null) {
-                add(deprecatedAttr);
-            }
-            if (paramNames != null) {
-                add(paramNames);
-            }
-            if (code != null) {
-                add(code);
-            }
-            if (defaultAnnot != null) {
-                add(defaultAnnot);
-            }
-        }});
-        dv.addAll(
-                new ArrayList<>() {{
-                    if (pannotAttrVis != null) {
-                        add(pannotAttrVis);
-                    }
-                    if (pannotAttrInv != null) {
-                        add(pannotAttrInv);
-                    }
-                }});
+        DataVector dv = getDataVector( exceptions, syntheticAttr, deprecatedAttr, paramNames, code, defaultAnnot);
+        if (pannotAttrVis != null) {
+            dv.add(pannotAttrVis);
+        }
+        if (pannotAttrInv != null) {
+            dv.add(pannotAttrInv);
+        }
         return dv;
     }
 

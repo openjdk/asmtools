@@ -27,6 +27,7 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 
 import java.io.DataInputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
@@ -46,6 +47,10 @@ public class Main extends Tool {
         options = Options.OptionObject();
         DebugFlag = () -> options.contains(Options.PR.DEBUG);
         printCannotReadMsg = (fname) -> error( i18n.getString("jdis.error.cannot_read", fname));
+    }
+
+    public Main(PrintStream out, String program) {
+        this(new PrintWriter(out), new PrintWriter(System.err), program);
     }
 
     @Override

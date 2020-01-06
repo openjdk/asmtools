@@ -66,7 +66,7 @@ public class RecordData extends AttrData {
 
     @Override
     public int attrLength() {
-        int  compsLength = components.stream().mapToInt(c -> c.getLength()).sum();
+        int compsLength = components.stream().mapToInt(c -> c.getLength()).sum();
         return 2 + compsLength;
     }
 
@@ -85,11 +85,7 @@ public class RecordData extends AttrData {
 
         @Override
         protected DataVector getAttrVector() {
-            return getDataVector(new ArrayList<>() {{
-                if (signature != null) {
-                    add(signature);
-                }
-            }});
+            return getDataVector(signature);
         }
 
         public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {

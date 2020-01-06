@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -417,10 +419,10 @@ public class Modifiers {
                 sb.append(Token.ABSTRACT.parsekey() + " ");
             }
         }
-        if ( Set.of(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS, CF_Context.CTX_FIELD).contains(context) && isFinal(mod)) {
+        if (  context.isOneOf(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS, CF_Context.CTX_FIELD) && isFinal(mod)) {
             sb.append(Token.FINAL.parsekey() + " ");
         }
-        if (Set.of(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS).contains(context) && isInterface(mod)) {
+        if (context.isOneOf(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS) && isInterface(mod)) {
             if (isAnnotation(mod)) {
                 sb.append(Token.ANNOTATION_ACCESS.parsekey() + " ");
             }
@@ -438,7 +440,7 @@ public class Modifiers {
         if (isEnum(mod)) {
             sb.append(Token.ENUM.parsekey() + " ");
         }
-        if (Set.of(CF_Context.CTX_METHOD, CF_Context.CTX_FIELD).contains(context) && isMandated(mod)) {
+        if (context.isOneOf(CF_Context.CTX_METHOD, CF_Context.CTX_FIELD) && isMandated(mod)) {
             sb.append(Token.MANDATED.parsekey() + " ");
         }
 

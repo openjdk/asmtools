@@ -26,10 +26,7 @@ import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -47,6 +44,10 @@ public class Main extends Tool {
         printCannotReadMsg = (fname) -> {
             error(i18n.getString("jcoder.error.cannot_read", fname));
         };
+    }
+
+    public Main(PrintStream out, String program) {
+        this(new PrintWriter(out), program);
     }
 
     @Override

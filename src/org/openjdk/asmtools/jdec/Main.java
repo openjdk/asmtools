@@ -28,6 +28,7 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 
 import java.io.DataInputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
@@ -45,6 +46,10 @@ public class Main extends Tool {
         super(out, err, programName);
         printCannotReadMsg = (fname) ->
                 error( i18n.getString("jdec.error.cannot_read", fname));
+    }
+
+    public Main(PrintStream out, String program) {
+        this(new PrintWriter(out), new PrintWriter(System.err), program);
     }
 
     @Override
