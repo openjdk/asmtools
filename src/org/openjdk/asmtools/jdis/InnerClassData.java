@@ -66,7 +66,7 @@ class InnerClassData {
             if (outer_class_info_index != 0) {
                 cls.out.print(" of #" + outer_class_info_index);
             }
-            cls.out.print("; //");
+            cls.out.print("; // ");
         }
         if (inner_name_index != 0) {
             cls.out.print(cls.pool.getName(inner_name_index) + "=");

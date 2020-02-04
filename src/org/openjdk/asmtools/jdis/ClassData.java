@@ -92,6 +92,9 @@ public class ClassData extends MemberData {
     // The NestMembers of this class (since class file: 55.0)
     protected NestMembersData nestMembers;
 
+    // The PermittedSubtypes of this class (JEP 360 (Sealed types): class file 59.65535)
+    protected PermittedSubtypesData permittedSubtypes;
+
     // other parsing fields
     protected PrintWriter out;
     protected String pkgPrefix = "";
@@ -215,6 +218,10 @@ public class ClassData extends MemberData {
             case ATT_Record:
                 record = new RecordData(this).read(in);
                 break;
+            case ATT_PermittedSubtypes:
+                // Read PermittedSubtypes Attribute (JEP 360 (Sealed types): class file 59.65535)
+                permittedSubtypes = new PermittedSubtypesData(this).read(in, attrlen);
+                break;
             default:
                 handled = false;
                 break;
@@ -288,6 +295,7 @@ public class ClassData extends MemberData {
     public void print() throws IOException {
         int k, l;
         String className = "";
+        String sourceName = "";
         if( isModuleUnit() ) {
             // Print the Annotations
             printAnnotations(visibleAnnotations);
@@ -407,20 +415,16 @@ printSugar:
         out.println("{");
 
         if ((options.contains(Options.PR.SRC)) && (source_cpx != 0)) {
-            String source_name = pool.getName(source_cpx);
-            out.println("\t// Compiled from " + source_name);
+            sourceName = String.format(" compiled from %s" +
+                    "" , pool.getName(source_cpx));
             try {
-                source = new TextLines(source_name);
+                source = new TextLines(sourceName);
             } catch (IOException ignored) {}
         }
-        // keep this new line for classes to pass huge test suite.
-        if(!isModuleUnit())
-            out.println();
 
         // Print the constant pool
         if (options.contains(Options.PR.CP)) {
             pool.print(out);
-            out.println();
         }
         // Don't print fields, methods, inner classes and bootstrap methods if it is module-info entity
         if ( !isModuleUnit() ) {
@@ -446,6 +450,10 @@ printSugar:
                 record.print();
             }
 
+            // Print PermittedSubtypes Attribute (JEP 360 (Sealed types): class file 59.65535)
+            if( permittedSubtypes  != null) {
+                permittedSubtypes.print();
+            }
             // Print the NestHost (since class file: 55.0)
             if(nestHost != null) {
                 nestHost.print();
@@ -470,7 +478,11 @@ printSugar:
                 }
                 out.println();
             }
-            out.println("} // end Class " + className);
+
+
+
+
+            out.println("} // end Class " + className + sourceName);
         } else {
             // Print module attributes
             moduleData.print();

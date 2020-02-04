@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -227,7 +227,15 @@ public class Tables {
         //    u2 components_count;
         //    component_info components[components_count];
         // }
-        ATT_Record                                  (34, "ATT_Record", "Record");
+        ATT_Record                                  (34, "ATT_Record", "Record"),
+        // JEP 360 (Sealed types): class file 59.65535
+        // PermittedSubtypes_attribute {
+        //    u2 attribute_name_index;
+        //    u4 attribute_length;
+        //    u2 permitted_subtypes_count;
+        //    u2 classes[permitted_subtypes_count];
+        // }
+        ATT_PermittedSubtypes                       (35, "ATT_PermittedSubtypes", "PermittedSubtypes");
 
         private final Integer value;
         private final String printval;

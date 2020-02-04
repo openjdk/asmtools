@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -262,7 +262,7 @@ class ClassData {
         }
     }
 
-    private void printCP(PrintWriter out) throws IOException {
+    private void printCP(PrintWriter out) {
         int length = CPlen;
         startArrayCmt(length, "Constant Pool");
         out_println("; // first element is empty");
@@ -273,7 +273,7 @@ class ClassData {
                 byte btag = types[i];
                 ConstType tg = tag(btag);
                 int pos = cpe_pos[i];
-                String tagstr = "";
+                String tagstr;
                 String valstr;
                 int v1;
                 long lv;
@@ -359,14 +359,6 @@ class ClassData {
         return " at " + toHex(countedin.getPos());
     }
 
-    private String getStringPosCond() {
-        if (printDetails) {
-            return getStringPos();
-        } else {
-            return "";
-        }
-    }
-
     private String getCommentPosCond() {
         if (printDetails) {
             return " // " + getStringPos();
@@ -384,16 +376,16 @@ class ClassData {
             out_println("// invalid length of " + attrname + " attr: " + len + " (should be " + (expectedIndices * 2) + ") > ");
             printBytes(out, in, len);
         } else {
-            String outputString = "";
+            StringBuilder outputString = new StringBuilder();
             for (int k = 1; k <= expectedIndices; k++) {
-                outputString += ("#" + in.readUnsignedShort() + "; ");
+                outputString.append("#").append(in.readUnsignedShort()).append("; ");
                 if (k % 16 == 0) {
-                    out_println(outputString.replaceAll("\\s+$",""));
-                    outputString = "";
+                    out_println(outputString.toString().replaceAll("\\s+$",""));
+                    outputString = new StringBuilder();
                 }
             }
-            if (!outputString.isEmpty()) {
-                out_println(outputString.replaceAll("\\s+$",""));
+            if (outputString.length() > 0) {
+                out_println(outputString.toString().replaceAll("\\s+$",""));
             }
         }
     }
@@ -740,11 +732,8 @@ class ClassData {
                     // Read the attributes
                     decodeAttrs(in, out);
                     break;
-                case ATT_ConstantValue:
-                    decodeCPXAttr(in, len, AttrName, out);
-                    break;
+
                 case ATT_Exceptions:
-                case ATT_NestMembers:
                     int count = in.readUnsignedShort();
                     startArrayCmt(count, AttrName);
                     try {
@@ -758,7 +747,7 @@ class ClassData {
                     break;
                 case ATT_LineNumberTable:
                     int ll_num = in.readUnsignedShort();
-                    startArrayCmt(ll_num, AttrName);
+                    startArrayCmt(ll_num, "line_number_table");
                     try {
                         for (int i = 0; i < ll_num; i++) {
                             out_println(in.readUnsignedShort() + "  " +
@@ -788,7 +777,7 @@ class ClassData {
                     break;
                 case ATT_InnerClasses:
                     int ic_num = in.readUnsignedShort();
-                    startArrayCmt(ic_num, AttrName);
+                    startArrayCmt(ic_num, "classes");
                     try {
                         for (int i = 0; i < ic_num; i++) {
                             out_println("#" + in.readUnsignedShort() + " #" +
@@ -799,9 +788,6 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_Signature:
-                    decodeCPXAttr(in, len, AttrName, out);
                     break;
                 case ATT_StackMap:
                     int e_num = in.readUnsignedShort();
@@ -886,9 +872,6 @@ class ClassData {
                     break;
                 case ATT_EnclosingMethod:
                     decodeCPXAttrM(in, len, AttrName, out, 2);
-                    break;
-                case ATT_SourceFile:
-                    decodeCPXAttr(in, len, AttrName, out);
                     break;
                 case ATT_AnnotationDefault:
                     decodeElementValue(in, out);
@@ -980,10 +963,6 @@ class ClassData {
                         out_end("}");
                     }
                     break;
-                // JEP 181: class file 55.0
-                case ATT_NestHost:
-                    decodeCPXAttr(in, len, AttrName, out);
-                    break;
                 //  MethodParameters_attribute {
                 //    u2 attribute_name_index;
                 //    u4 attribute_length;
@@ -1026,13 +1005,48 @@ class ClassData {
                         out_end("}");
                     }
                     break;
+                case ATT_ConstantValue:
+                case ATT_Signature:
+                case ATT_SourceFile:
+                    decodeCPXAttr(in, len, AttrName, out);
+                    break;
+                    //  JEP 181 (Nest-based Access Control): class file 55.0
+                    //  NestHost_attribute {
+                    //    u2 attribute_name_index;
+                    //    u4 attribute_length;
+                    //    u2 host_class_index;
+                    //  }
+                case ATT_NestHost:
+                    decodeTypes(in, out, 1);
+                    break;
+                    //  JEP 181 (Nest-based Access Control): class file 55.0
+                    //  NestMembers_attribute {
+                    //    u2 attribute_name_index;
+                    //    u4 attribute_length;
+                    //    u2 number_of_classes;
+                    //    u2 classes[number_of_classes];
+                    //  }
+                case ATT_NestMembers:
+                    //  JEP 360 (Sealed types): class file 59.65535
+                    //  PermittedSubtypes_attribute {
+                    //    u2 attribute_name_index;
+                    //    u4 attribute_length;
+                    //    u2 permitted_subtypes_count;
+                    //    u2 classes[permitted_subtypes_count];
+                    //  }
+                case ATT_PermittedSubtypes:
+                    int nsubtypes = in.readUnsignedShort();
+                    startArrayCmt(nsubtypes, "classes");
+                    try {
+                        decodeTypes(in, out, nsubtypes);
+                    } finally {
+                        out_end("}");
+                    }
+                    break;
                 default:
+                    printBytes(out, in, len);
                     if (AttrName == null) {
-                        printBytes(out, in, len);
                         endingComment = "Attr(#" + name_cpx + ")";
-                    } else {
-                        // some kind of error?
-                        printBytes(out, in, len);
                     }
             }
 
@@ -1168,13 +1182,13 @@ class ClassData {
     }
 
     private void decodeMembers(DataInputStream in, PrintWriter out, String groupName, String elementName) throws IOException {
-        int nfields = in.readUnsignedShort();
-        traceln(groupName + "=" + nfields);
-        startArrayCmt(nfields, groupName);
+        int count = in.readUnsignedShort();
+        traceln(groupName + "=" + count);
+        startArrayCmt(count, groupName);
         try {
-            for (int i = 0; i < nfields; i++) {
+            for (int i = 0; i < count; i++) {
                 decodeInfo(in,out,elementName,true);
-                if (i + 1 < nfields) {
+                if (i + 1 < count) {
                     out_println(";");
                 }
             }
@@ -1205,7 +1219,7 @@ class ClassData {
                     entityType = "class";
                 }
                 if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != JcodTokens.Token.IDENT || JcodTokens.constValue(entityName) != -1)) {
-                    // Jcod can't parse a entityName matching a keyword or a constant value,
+                    // JCod can't parse a entityName matching a keyword or a constant value,
                     // then use the filename instead:
                     out_begin(String.format("file \"%s.class\" {", entityName));
                 } else {
@@ -1235,16 +1249,12 @@ class ClassData {
             traceln(i18n.getString("jdec.trace.access_thisCpx_superCpx", access, this_cpx, super_cpx));
             out.println();
 
-            // Read the interface names
+            // Read the interfaces
             int numinterfaces = in.readUnsignedShort();
             traceln(i18n.getString("jdec.trace.numinterfaces", numinterfaces));
             startArrayCmt(numinterfaces, "Interfaces");
             try {
-                for (int i = 0; i < numinterfaces; i++) {
-                    int intrf_cpx = in.readUnsignedShort();
-                    traceln(i18n.getString("jdec.trace.intrf", i, intrf_cpx));
-                    out_println("#" + intrf_cpx + ";");
-                }
+                decodeTypes(in, out, numinterfaces);
             } finally {
                 out_end("} // Interfaces\n");
             }
@@ -1266,6 +1276,20 @@ class ClassData {
             out_end(format("} // end %s %s", entityType, entityName));
         }
     } // end decodeClass()
+
+    private void decodeTypes(DataInputStream in, PrintWriter out, int count) throws IOException {
+        for (int i = 0; i < count; i++) {
+            int type_cpx = in.readUnsignedShort();
+            traceln(i18n.getString("jdec.trace.type", i, type_cpx));
+            out_print("#" + type_cpx + ";");
+            if (printDetails) {
+                String name = (String) cpool[(int)cpool[type_cpx]];
+                out.println(" // " + name + getStringPos());
+            } else {
+                out.println();
+            }
+        }
+    }
 
     /* ====================================================== */
     boolean DebugFlag = false;

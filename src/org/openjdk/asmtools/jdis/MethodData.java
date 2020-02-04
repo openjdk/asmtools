@@ -336,6 +336,8 @@ public class MethodData extends MemberData {
 
         if (code != null) {
             code.print();
+        } else {
+            out.println();
         }
     }
 

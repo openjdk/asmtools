@@ -26,16 +26,16 @@ import java.util.List;
 
 /**
  * The "classes[]" data of attributes
- * JEP 181 (Nest-based Access Control): class file 55.0
- * NestMembers_attribute {
+ * JEP 360 (Sealed types): class file 59.65535
+ * PermittedSubtypes_attribute {
  * u2 attribute_name_index;
  * u4 attribute_length;
- * u2 number_of_classes;
- * u2 classes[number_of_classes];
+ * u2 permitted_subtypes_count;
+ * u2 classes[permitted_subtypes_count];
  * }
  */
-public class NestMembersAttr extends ClassArrayAttr {
-    public NestMembersAttr(ClassData cdata, List<ConstantPool.ConstCell> classes) {
-        super(Tables.AttrTag.ATT_NestMembers.parsekey(), cdata, classes);
+public class PermittedTypesAttr extends ClassArrayAttr {
+    public PermittedTypesAttr(ClassData cdata, List<ConstantPool.ConstCell> classes) {
+        super(Tables.AttrTag.ATT_PermittedSubtypes.parsekey(), cdata, classes);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -308,10 +308,12 @@ public class JasmTokens {
 
         // Declaration keywords
         BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        NESTHOST            (173, "NESTHOST", "NestHost", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        NESTMEMBERS         (174, "NESTMEMBERS", "NestMembers", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NESTHOST            (173, "NESTHOST",       "NestHost",         EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NESTMEMBERS         (174, "NESTMEMBERS",    "NestMembers",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         //
-        RECORD              (175, "RECORD", "Record",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        RECORD              (175, "RECORD", "Record",                   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        //
+        PERMITTEDSUBTYPES   (176, "PERMITTEDSUBTYPES", "PermittedSubtypes", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
         //Module statements
         REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),

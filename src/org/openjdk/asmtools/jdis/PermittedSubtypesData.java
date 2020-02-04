@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,22 +20,30 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jasm;
+package org.openjdk.asmtools.jdis;
 
-import java.util.List;
+import org.openjdk.asmtools.jasm.JasmTokens;
+
+import java.io.DataInputStream;
+import java.io.IOException;
 
 /**
- * The "classes[]" data of attributes
- * JEP 181 (Nest-based Access Control): class file 55.0
- * NestMembers_attribute {
+ * The NestMembers attribute data
+ * <p>
+ * JEP 360 (Sealed types): class file 59.65535
+ * PermittedSubtypes_attribute {
  * u2 attribute_name_index;
  * u4 attribute_length;
- * u2 number_of_classes;
- * u2 classes[number_of_classes];
+ * u2 permitted_subtypes_count;
+ * u2 classes[permitted_subtypes_count];
  * }
  */
-public class NestMembersAttr extends ClassArrayAttr {
-    public NestMembersAttr(ClassData cdata, List<ConstantPool.ConstCell> classes) {
-        super(Tables.AttrTag.ATT_NestMembers.parsekey(), cdata, classes);
+public class PermittedSubtypesData extends ClassArrayData {
+    public PermittedSubtypesData(ClassData cls) {
+        super(cls, JasmTokens.Token.PERMITTEDSUBTYPES.parsekey());
+    }
+
+    public PermittedSubtypesData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
+        return (PermittedSubtypesData) super.read(in, attribute_length);
     }
 }

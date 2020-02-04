@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -369,7 +369,7 @@ class Parser extends ParseBase {
                 // either a CONSTANT_Methodref_info structure or a CONSTANT_InterfaceMethodref_info structure (§4.4.2)
                 // representing a class's or interface's method for which a method handle is to be created.
                 ConstType ctype = ConstType.CONSTANT_METHOD;
-                if ( this.cd.cfv.major_version() >= 52 && Modifiers.isInterface(this.cd.access) ) {
+                if (this.cd.cfv.major_version() >= 52 && Modifiers.isInterface(this.cd.access)) {
                     ctype = ConstType.CONSTANT_INTERFACEMETHOD;
                 }
                 refCell = pool.FindCell(cpParser.parseConstValue(ctype));
@@ -561,28 +561,67 @@ class Parser extends ParseBase {
         while (true) {
             nextmod = 0;
             switch (scanner.token) {
-                case PUBLIC:       nextmod = ACC_PUBLIC;       break;
-                case PRIVATE:      nextmod = ACC_PRIVATE;      break;
-                case PROTECTED:    nextmod = ACC_PROTECTED;    break;
-                case STATIC:       nextmod = ACC_STATIC;       break;
-                case FINAL:        nextmod = ACC_FINAL;        break;
-                case SYNCHRONIZED: nextmod = ACC_SYNCHRONIZED; break;
-                case SUPER:        nextmod = ACC_SUPER;        break;
-                case VOLATILE:     nextmod = ACC_VOLATILE;     break;
-                case BRIDGE:       nextmod = ACC_BRIDGE;       break;
-                case TRANSIENT:    nextmod = ACC_TRANSIENT;    break;
-                case VARARGS:      nextmod = ACC_VARARGS;      break;
-                case NATIVE:       nextmod = ACC_NATIVE;       break;
-                case INTERFACE:    nextmod = ACC_INTERFACE;    break;
-                case ABSTRACT:     nextmod = ACC_ABSTRACT;     break;
-                case STRICT:       nextmod = ACC_STRICT;       break;
-                case ENUM:         nextmod = ACC_ENUM;         break;
-                case SYNTHETIC:    nextmod = ACC_SYNTHETIC;    break;
+                case PUBLIC:
+                    nextmod = ACC_PUBLIC;
+                    break;
+                case PRIVATE:
+                    nextmod = ACC_PRIVATE;
+                    break;
+                case PROTECTED:
+                    nextmod = ACC_PROTECTED;
+                    break;
+                case STATIC:
+                    nextmod = ACC_STATIC;
+                    break;
+                case FINAL:
+                    nextmod = ACC_FINAL;
+                    break;
+                case SYNCHRONIZED:
+                    nextmod = ACC_SYNCHRONIZED;
+                    break;
+                case SUPER:
+                    nextmod = ACC_SUPER;
+                    break;
+                case VOLATILE:
+                    nextmod = ACC_VOLATILE;
+                    break;
+                case BRIDGE:
+                    nextmod = ACC_BRIDGE;
+                    break;
+                case TRANSIENT:
+                    nextmod = ACC_TRANSIENT;
+                    break;
+                case VARARGS:
+                    nextmod = ACC_VARARGS;
+                    break;
+                case NATIVE:
+                    nextmod = ACC_NATIVE;
+                    break;
+                case INTERFACE:
+                    nextmod = ACC_INTERFACE;
+                    break;
+                case ABSTRACT:
+                    nextmod = ACC_ABSTRACT;
+                    break;
+                case STRICT:
+                    nextmod = ACC_STRICT;
+                    break;
+                case ENUM:
+                    nextmod = ACC_ENUM;
+                    break;
+                case SYNTHETIC:
+                    nextmod = ACC_SYNTHETIC;
+                    break;
                 case ANNOTATION_ACCESS:
-                                   nextmod = ACC_ANNOTATION;    break;
+                    nextmod = ACC_ANNOTATION;
+                    break;
 
-                case DEPRECATED:   nextmod = DEPRECATED_ATTRIBUTE;   break;
-                case MANDATED:     nextmod = ACC_MANDATED;           break;
+                case DEPRECATED:
+                    nextmod = DEPRECATED_ATTRIBUTE;
+                    break;
+                case MANDATED:
+                    nextmod = ACC_MANDATED;
+                    break;
                 default:
                     return nextmod;
             }
@@ -865,20 +904,21 @@ class Parser extends ParseBase {
     }
 
     /**
-     * Parse a NestMembers entry
+     * Parse a list of classes belonging to the [NestMembers | PermittedSubtypes]  entry
      */
-    private void parseNestMembers() throws Scanner.SyntaxError, IOException {
-        ArrayList<ConstCell> nestMembers = new ArrayList<>();
+    private void parseClasses(Consumer<ArrayList<ConstCell>> classesConsumer)
+            throws Scanner.SyntaxError, IOException {
+        ArrayList<ConstCell> classes = new ArrayList<>();
         // Parses in the form:
-        // NESTMEMBERS IDENT(, IDENT)*;
-        debugStr("  [Parser.parseNestMembers]: <<<Begin>>>");
+        // (NESTMEMBERS|PERMITTEDSUBTYPES)? IDENT(, IDENT)*;
+        debugStr("  [Parser.parseClasses]: <<<Begin>>>");
         while (true) {
             String className = prependPackage(parseIdent(), true);
-            nestMembers.add(pool.FindCellClassByName(className));
-            debugScan("  [Parser.parseNestMembers]: NestMembers: class " + className);
+            classes.add(pool.FindCellClassByName(className));
+            debugScan("  [Parser.parseClasses]: class " + className);
             if (scanner.token != Token.COMMA) {
                 scanner.expect(Token.SEMICOLON);
-                cd.addNestMembers(nestMembers);
+                classesConsumer.accept(classes);
                 return;
             }
             scanner.scan();
@@ -886,7 +926,7 @@ class Parser extends ParseBase {
     }
 
     /**
-     * Parse a Record entry
+     * Parse the Record entry
      */
     private void parseRecord() throws Scanner.SyntaxError, IOException {
         // Parses in the form:
@@ -898,7 +938,7 @@ class Parser extends ParseBase {
         // SIGNATURE  = (CPINDEX | STRING)
         debugScan("[Parser.parseRecord]:  Begin ");
         RecordData rd = cd.setRecord(scanner.pos);
-Component:
+        Component:
         while (true) {
             ConstCell nameCell, descCell, signatureCell = null;
             nameCell = parseName();
@@ -913,10 +953,10 @@ Component:
                     case SEMICOLON:
                         return;     // EOR
                     case ANNOTATION:
-                        rd.setAnnotations( annotParser.scanAnnotations());
+                        rd.setAnnotations(annotParser.scanAnnotations());
                         break;
                     default:
-                        if( signatureCell != null ) {
+                        if (signatureCell != null) {
                             env.error(scanner.pos, "warn.signature.repeated");
                         }
                         signatureCell = parseName();
@@ -1627,10 +1667,18 @@ Component:
                         throw new Scanner.SyntaxError();
                     }
                     scanner.scan();
-                    parseNestMembers();
+                    parseClasses(list -> cd.addNestMembers(list));
                     break;
-                case RECORD:
-                    if( cd.recordAttributeExists() ) {
+                case PERMITTEDSUBTYPES:         // JEP 360
+                    if (cd.nestMembersAttributesExist()) {
+                        env.error(scanner.pos, "extra.permittedsubtypes.attribute");
+                        throw new Scanner.SyntaxError();
+                    }
+                    scanner.scan();
+                    parseClasses(list -> cd.addPermittedSubtypes(list));
+                    break;
+                case RECORD:                    // JEP 359
+                    if (cd.recordAttributeExists()) {
                         env.error(scanner.pos, "extra.record.attribute");
                         throw new Scanner.SyntaxError();
                     }

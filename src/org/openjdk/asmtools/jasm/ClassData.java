@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,6 +54,9 @@ class ClassData extends MemberData {
 
     // JEP 359 - Record attribute since class file 58.65535
     private RecordData recordData;
+
+    // JEP 360 - PermittedSubtypes attribute since class file 59.65535
+    private PermittedTypesAttr permittedTypesAttr;
 
     ModuleAttr moduleAttribute = null;
     Environment env;
@@ -296,10 +299,16 @@ class ClassData extends MemberData {
         nestHostAttr = new CPXAttr(this, AttrTag.ATT_NestHost.parsekey(), hostClass);
     }
 
-    public void addNestMembers(List<ConstantPool.ConstCell> nestMemberClasses) {
+    public void addNestMembers(List<ConstantPool.ConstCell> classes) {
         env.traceln("addNestMembers");
-        nestMembersAttr = new NestMembersAttr(this, nestMemberClasses);
+        nestMembersAttr = new NestMembersAttr(this, classes);
     }
+
+    public void addPermittedSubtypes(List<ConstantPool.ConstCell> classes) {
+        env.traceln("addPermittedSubtypes");
+        permittedTypesAttr = new PermittedTypesAttr(this, classes);
+    }
+
 
     public void endClass() {
         sourceFileNameAttr = new CPXAttr(this,
@@ -442,6 +451,9 @@ class ClassData extends MemberData {
                 attrs.add(nestHostAttr);
             if(nestMembersAttributesExist())
                 attrs.add(nestMembersAttr);
+            // since class version 59.65535 (JEP 360)
+            if ( permittedSubtypesAttributesExist() )
+                attrs.add(permittedTypesAttr);
         }
         return attrs;
     }
@@ -495,6 +507,8 @@ class ClassData extends MemberData {
     }
 
     public boolean nestMembersAttributesExist() { return nestMembersAttr != null;  }
+
+    public boolean permittedSubtypesAttributesExist() { return permittedTypesAttr != null;  }
 
     public boolean recordAttributeExists() { return recordData != null;  }
 

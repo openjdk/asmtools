@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,10 +22,12 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
- * The "classes[]" data of attributes
+ * Base class of the "classes[]" data of attributes
+ * <p>
  * JEP 181 (Nest-based Access Control): class file 55.0
  * NestMembers_attribute {
  * u2 attribute_name_index;
@@ -33,9 +35,35 @@ import java.util.List;
  * u2 number_of_classes;
  * u2 classes[number_of_classes];
  * }
+ * <p>
+ * JEP 360 (Sealed types): class file 59.65535
+ * PermittedSubtypes_attribute {
+ * u2 attribute_name_index;
+ * u4 attribute_length;
+ * u2 permitted_subtypes_count;
+ * u2 classes[permitted_subtypes_count];
+ * }
  */
-public class NestMembersAttr extends ClassArrayAttr {
-    public NestMembersAttr(ClassData cdata, List<ConstantPool.ConstCell> classes) {
-        super(Tables.AttrTag.ATT_NestMembers.parsekey(), cdata, classes);
+public class ClassArrayAttr extends AttrData {
+
+    List<ConstantPool.ConstCell> classes;
+
+    public ClassArrayAttr(String attributeName, ClassData cdata, List<ConstantPool.ConstCell> classes) {
+        super(cdata, attributeName);
+        this.classes = classes;
+    }
+
+    @Override
+    public int attrLength() {
+        return 2 + classes.size() * 2;
+    }
+
+    @Override
+    public void write(CheckedDataOutputStream out) throws IOException {
+        super.write(out);
+        out.writeShort(classes.size());
+        for (ConstantPool.ConstCell c : classes) {
+            out.writeShort(c.arg);
+        }
     }
 }

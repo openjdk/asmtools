@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,49 +30,20 @@ import java.io.IOException;
 /**
  * The NestMembers attribute data
  * <p>
- * since class file 55.0 (JEP 181)
+ * JEP 181 (Nest-based Access Control): class file 55.0
+ * NestMembers_attribute {
+ * u2 attribute_name_index;
+ * u4 attribute_length;
+ * u2 number_of_classes;
+ * u2 classes[number_of_classes];
+ * }
  */
-public class NestMembersData {
-    ClassData cls;
-    int[] classes;
-    private Options options = Options.OptionObject();
-
+public class NestMembersData extends ClassArrayData {
     public NestMembersData(ClassData cls) {
-        this.cls = cls;
+        super(cls, JasmTokens.Token.NESTMEMBERS.parsekey());
     }
 
     public NestMembersData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
-        int  number_of_classes = in.readUnsignedShort();
-        if (attribute_length != 2 + number_of_classes * 2 ) {
-            throw new ClassFormatError("ATT_NestMembers: Invalid attribute length");
-        }
-        classes = new int[number_of_classes];
-        for (int i = 0; i < number_of_classes; i++) {
-            classes[i] = in.readUnsignedShort();
-        }
-        return this;
+        return (NestMembersData) super.read(in, attribute_length);
     }
-
-    public void print() {
-        String indexes = "";
-        String names = "";
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(JasmTokens.Token.NESTMEMBERS.parsekey() + " ");
-        for(int i = 0; i< classes.length; i++) {
-            if (pr_cpx) {
-                indexes += (indexes.isEmpty() ? "" : ", ") + "#" + classes[i];
-            }
-            names += (names.isEmpty() ? "" : ", ") + cls.pool.StringValue(classes[i]);
-        }
-        if (pr_cpx) {
-            cls.out.print(indexes + "; //");
-        }
-        cls.out.print(names);
-        if (pr_cpx) {
-            cls.out.println();
-        } else {
-            cls.out.println(";");
-        }
-    }
-
 }
