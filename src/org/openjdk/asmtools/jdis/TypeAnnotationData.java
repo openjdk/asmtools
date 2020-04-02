@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,30 +22,35 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
+import org.openjdk.asmtools.jasm.TypeAnnotationTargetInfoData;
+import org.openjdk.asmtools.jasm.TypeAnnotationTypePathData;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+
+import static org.openjdk.asmtools.jasm.TypeAnnotationTargetInfoData.*;
+import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.*;
 
 /**
  * Type Annotation data is a specific kind of AnnotationData. As well as the normal data
  * items needed to present an annotation, Type annotations require a TargetInfo
  * descriptor. This descriptor is based on a TargetType, and it optionally may contain a
  * location descriptor (when the Type is embedded in a collection).
- *
+ * <p>
  * The TypeAnnotationData class is based on JDis's AnnotationData class, and contains the
  * (jasm) class for representing TargetInfo.
  */
 public class TypeAnnotationData extends AnnotationData {
 
-    private TargetInfo target_info;
-    private ArrayList<TypePathEntry> target_path;
     private static TTVis TT_Visitor = new TTVis();
+    private TypeAnnotationTargetInfoData targetInfo;
+    private TypeAnnotationTypePathData typePath;
 
     public TypeAnnotationData(boolean invisible, ClassData cls) {
         super(invisible, cls);
-        target_info = null;
+        targetInfo = null;
+        typePath  = new TypeAnnotationTypePathData();
         visAnnotToken = "@T+";
         invAnnotToken = "@T-";
         dataName = "TypeAnnotationData";
@@ -53,42 +58,33 @@ public class TypeAnnotationData extends AnnotationData {
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        super.read(in);
 
-        // read everything related to the Type Annotation
-        // target type tag
-// KTL 1/10/13 (changed short-> byte for latest spec rev)
-//        int tt = (char) in.readUnsignedShort(); // cast to introduce signedness
-        int tt = (byte) in.readUnsignedByte(); // cast to introduce signedness
-        Integer ttInt = tt;
-        TargetType ttype;
-        ttype = targetTypeEnum(ttInt);
+        int ttype = in.readUnsignedByte();
+        ETargetType targetType = ETargetType.getTargetType(ttype);
 
-        if (ttype == null) {
+        if (targetType == null) {
             // Throw some kind of error for bad target type index
-            throw new IOException("Bad target type: " + tt + " in TypeAnnotationData");
+            throw new IOException("Bad target type: " + ttype + " in TypeAnnotationData");
         }
 
         // read the target info
         TT_Visitor.init(in);
-        TT_Visitor.visitExcept(ttype);
-        target_info = TT_Visitor.getTargetInfo();
+        TT_Visitor.visitExcept(targetType);
+        targetInfo = TT_Visitor.getTargetInfo();
 
         // read the target path info
-        int len = in.readUnsignedShort();
-        target_path = new ArrayList<>(len);
-        TraceUtils.traceln("    --------- [TypeAnnotationData.read]: Reading Location (length = " + len + ").");
-        TraceUtils.trace("    --------- [TypeAnnotationData.read]: [ ");
+        int len = in.readUnsignedByte();
+        TraceUtils.traceln(4,"[TypeAnnotationData.read]: Reading Location (length = " + len + ").");
+        TraceUtils.trace(4,"[TypeAnnotationData.read]: [ ");
         for (int i = 0; i < len; i++) {
             int pathType = in.readUnsignedByte();
-            String pk = (getPathKind(pathType)).parsekey();
+            String pk = (getPathKind(pathType)).parseKey();
             char pathArgIndex = (char) in.readUnsignedByte();
-            target_path.add(new TypePathEntry(pathType, pathArgIndex));
+            typePath.addTypePathEntry(new TypePathEntry(pathType, pathArgIndex));
             TraceUtils.trace(" " + pk + "(" + pathType + "," + pathArgIndex + "), ");
         }
         TraceUtils.traceln("] ");
-
-//            target_info.setLocation(location);
+        super.read(in);
     }
 
     @Override
@@ -97,50 +93,23 @@ public class TypeAnnotationData extends AnnotationData {
         // print out the (regular) annotation name/value pairs,
         // then print out the target types.
         out.print(" {");
-        super.printBody(out, tab);
-        target_info.print(out, tab);
-        printPath(out, tab);
-        out.print("}");
-    }
-
-    protected void printPath(PrintWriter out, String tab) {
-        // For a type annotation, print out brackets,
-        // print out the (regular) annotation name/value pairs,
-        // then print out the target types.
-        out.print(" {");
-        boolean first = true;
-        for (TypePathEntry tpe : target_path) {
-            if (!first) {
-                out.print(", ");
-            }
-            first = false;
-            out.print(tpe.toString());
-        }
-        target_info.print(out, tab);
-        printPath(out, tab);
-        out.print("}");
-    }
-
-    @Override
-    protected void _toString(StringBuilder sb) {
-        // sub-classes override this
-        sb.append(target_info.toString());
+        super.printBody(out, "");
+        targetInfo.print(out, tab);
+        typePath.print(out, tab);
+        out.print(tab + "}");
     }
 
     /**
      * TTVis
-     *
+     * <p>
      * Target Type visitor, used for constructing the target-info within a type
      * annotation. visitExcept() is the entry point. ti is the constructed target info.
      */
     private static class TTVis extends TypeAnnotationTargetVisitor {
 
-        private TargetInfo ti = null;
+        private TypeAnnotationTargetInfoData targetInfo = null;
         private IOException IOProb = null;
         private DataInputStream in;
-
-        public TTVis() {
-        }
 
         public void init(DataInputStream in) {
             this.in = in;
@@ -166,22 +135,12 @@ public class TypeAnnotationData extends AnnotationData {
             return val;
         }
 
-        public int scanIntVal() {
-            int val = 0;
-            try {
-                val = in.readInt();
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return val;
-        }
-
         //This is the entry point for a visitor that tunnels exceptions
-        public void visitExcept(TargetType tt) throws IOException {
+        public void visitExcept(ETargetType tt) throws IOException {
             IOProb = null;
-            ti = null;
+            targetInfo = null;
 
-            TraceUtils.traceln("                      Target Type: " + tt.parseKey());
+            TraceUtils.traceln(4,"Target Type: " + tt.parseKey());
             visit(tt);
 
             if (IOProb != null) {
@@ -189,8 +148,8 @@ public class TypeAnnotationData extends AnnotationData {
             }
         }
 
-        public TargetInfo getTargetInfo() {
-            return ti;
+        public TypeAnnotationTargetInfoData getTargetInfo() {
+            return targetInfo;
         }
 
         private boolean error() {
@@ -198,28 +157,28 @@ public class TypeAnnotationData extends AnnotationData {
         }
 
         @Override
-        public void visit_type_param_target(TargetType tt) {
-            TraceUtils.trace("                      Type Param Target: ");
+        public void visit_type_param_target(ETargetType tt) {
+            TraceUtils.trace(4,"Type Param Target: ");
             int byteval = scanByteVal(); // param index
             TraceUtils.traceln("{ param_index: " + byteval + "}");
             if (!error()) {
-                ti = new typeparam_target(tt, byteval);
+                targetInfo = new type_parameter_target(tt, byteval);
             }
         }
 
         @Override
-        public void visit_supertype_target(TargetType tt) {
-            TraceUtils.trace("                      SuperType Target: ");
+        public void visit_supertype_target(ETargetType tt) {
+            TraceUtils.trace(4,"SuperType Target: ");
             int shortval = scanShortVal(); // type index
             TraceUtils.traceln("{ type_index: " + shortval + "}");
             if (!error()) {
-                ti = new supertype_target(tt, shortval);
+                targetInfo = new supertype_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_typeparam_bound_target(TargetType tt) {
-            TraceUtils.trace("                      TypeParam Bound Target: ");
+        public void visit_typeparam_bound_target(ETargetType tt) {
+            TraceUtils.trace(4,"TypeParam Bound Target: ");
             int byteval1 = scanByteVal(); // param index
             if (error()) {
                 return;
@@ -229,46 +188,46 @@ public class TypeAnnotationData extends AnnotationData {
                 return;
             }
             TraceUtils.traceln("{ param_index: " + byteval1 + " bound_index: " + byteval2 + "}");
-            ti = new typeparam_bound_target(tt, byteval1, byteval2);
+            targetInfo = new type_parameter_bound_target(tt, byteval1, byteval2);
         }
 
         @Override
-        public void visit_empty_target(TargetType tt) {
-            TraceUtils.traceln("                      Empty Target: ");
+        public void visit_empty_target(ETargetType tt) {
+            TraceUtils.traceln(4,"Empty Target: ");
             if (!error()) {
-                ti = new empty_target(tt);
+                targetInfo = new empty_target(tt);
             }
         }
 
         @Override
-        public void visit_methodformalparam_target(TargetType tt) {
-            TraceUtils.trace("                      MethodFormalParam Target: ");
+        public void visit_methodformalparam_target(ETargetType tt) {
+            TraceUtils.trace(4,"MethodFormalParam Target: ");
             int byteval = scanByteVal(); // param index
             TraceUtils.traceln("{ param_index: " + byteval + "}");
             if (!error()) {
-                ti = new methodformalparam_target(tt, byteval);
+                targetInfo = new formal_parameter_target(tt, byteval);
             }
         }
 
         @Override
-        public void visit_throws_target(TargetType tt) {
-            TraceUtils.trace("                      Throws Target: ");
+        public void visit_throws_target(ETargetType tt) {
+            TraceUtils.trace(4,"Throws Target: ");
             int shortval = scanShortVal(); // exception index
             TraceUtils.traceln("{ exception_index: " + shortval + "}");
             if (!error()) {
-                ti = new throws_target(tt, shortval);
+                targetInfo = new throws_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_localvar_target(TargetType tt) {
-            TraceUtils.traceln("                      LocalVar Target: ");
+        public void visit_localvar_target(ETargetType tt) {
+            TraceUtils.traceln(4,"LocalVar Target: ");
             int tblsize = scanShortVal(); // table length (short)
             if (error()) {
                 return;
             }
             localvar_target locvartab = new localvar_target(tt, tblsize);
-            ti = locvartab;
+            targetInfo = locvartab;
 
             for (int i = 0; i < tblsize; i++) {
                 int shortval1 = scanShortVal(); // startPC
@@ -280,35 +239,35 @@ public class TypeAnnotationData extends AnnotationData {
                     return;
                 }
                 int shortval3 = scanShortVal(); // CPX
-                TraceUtils.trace("                         LocalVar[" + i + "]: ");
+                TraceUtils.trace(4,"LocalVar[" + i + "]: ");
                 TraceUtils.traceln("{ startPC: " + shortval1 + ", length: " + shortval2 + ", CPX: " + shortval3 + "}");
                 locvartab.addEntry(shortval1, shortval2, shortval3);
             }
         }
 
         @Override
-        public void visit_catch_target(TargetType tt) {
-            TraceUtils.trace("                      Catch Target: ");
+        public void visit_catch_target(ETargetType tt) {
+            TraceUtils.trace(4,"Catch Target: ");
             int shortval = scanShortVal(); // catch index
             TraceUtils.traceln("{ catch_index: " + shortval + "}");
             if (!error()) {
-                ti = new catch_target(tt, shortval);
+                targetInfo = new catch_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_offset_target(TargetType tt) {
-            TraceUtils.trace("                      Offset Target: ");
+        public void visit_offset_target(ETargetType tt) {
+            TraceUtils.trace(4,"Offset Target: ");
             int shortval = scanShortVal(); // offset index
             TraceUtils.traceln("{ offset_index: " + shortval + "}");
             if (!error()) {
-                ti = new offset_target(tt, shortval);
+                targetInfo = new offset_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_typearg_target(TargetType tt) {
-            TraceUtils.trace("                      TypeArg Target: ");
+        public void visit_typearg_target(ETargetType tt) {
+            TraceUtils.trace(4,"TypeArg Target: ");
             int shortval = scanShortVal(); // offset
             if (error()) {
                 return;
@@ -318,9 +277,7 @@ public class TypeAnnotationData extends AnnotationData {
                 return;
             }
             TraceUtils.traceln("{ offset: " + shortval + " type_index: " + byteval + "}");
-            ti = new typearg_target(tt, shortval, byteval);
+            targetInfo = new type_argument_target(tt, shortval, byteval);
         }
-
     }
-
 }

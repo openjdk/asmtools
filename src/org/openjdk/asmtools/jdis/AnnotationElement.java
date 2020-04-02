@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.Tables.*;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -29,13 +30,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- *
- * AnnotElem
- *
  * Base class of all AnnotationElement entries
- *
  */
-public class AnnotElem {
+public class AnnotationElement {
 
     /**
      *
@@ -46,8 +43,6 @@ public class AnnotElem {
      */
     public static class AnnotValue {
 
-        /*-------------------------------------------------------- */
-        /* AnnotElem Fields */
         /**
          * tag the descriptor for the constant
          */
@@ -55,7 +50,6 @@ public class AnnotElem {
 
         // internal references
         protected ClassData cls;
-        /*-------------------------------------------------------- */
 
         public AnnotValue(AnnotElemType tagval, ClassData cls) {
             tag = tagval;
@@ -67,7 +61,7 @@ public class AnnotElem {
         }
 
         public void print(PrintWriter out, String tab) {
-            out.print(tag.val() + "\t");
+            out.print(tag.val() + "  ");
         }
 
         @Override
@@ -362,7 +356,7 @@ public class AnnotElem {
     protected ClassData cls;
     /*-------------------------------------------------------- */
 
-    public AnnotElem(ClassData cls) {
+    public AnnotationElement(ClassData cls) {
         this.cls = cls;
     }
 
@@ -376,9 +370,8 @@ public class AnnotElem {
      */
     public void read(DataInputStream in, boolean invisible) throws IOException {
         name_cpx = in.readShort();
-        TraceUtils.traceln("                   AnnotElem: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx));
         value = readValue(in, cls, invisible);
-        TraceUtils.traceln("                        " + value.toString());
+        TraceUtils.traceln(format("                   AnnotElem: name[%d]=%s value=%s", name_cpx, cls.pool.getString(name_cpx), value.toString()));
     }
 
     public String stringVal() {
@@ -387,7 +380,7 @@ public class AnnotElem {
 
     public void print(PrintWriter out, String tab) {
         out.print(stringVal() + " = ");
-        value.print(out, tab);
+        value.print(out, "");
     }
 
     @Override

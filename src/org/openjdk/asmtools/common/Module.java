@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.common;
 
+import org.openjdk.asmtools.jdis.Indenter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,7 +32,7 @@ import static java.lang.String.format;
 /**
  * Internal presentation of a module
  */
-public final class Module {
+public final class Module extends Indenter {
 
   //* A module name and module_flags
   public final Header header;
@@ -66,7 +68,7 @@ public final class Module {
     int l = 0;
     requires.stream()
         .sorted()
-        .forEach(d -> sb.append(format("  requires %s;%s%n",
+        .forEach(d -> sb.append(getIndentString()).append(format("requires %s;%s%n",
             d.toString(),
             d.getModuleVersion() == null ? "" : " // @" + d.getModuleVersion())));
     //
@@ -74,14 +76,14 @@ public final class Module {
     exports.entrySet().stream()
         .filter(e -> e.getValue().isEmpty())
         .sorted(Map.Entry.comparingByKey())
-        .map(e -> format("  exports %s;%n", e.getKey().toString()))
+        .map(e -> format("%sexports %s;%n", getIndentString(), e.getKey().toString()))
         .forEach(sb::append);
     exports.entrySet().stream()
         .filter(e -> !e.getValue().isEmpty())
         .sorted(Map.Entry.comparingByKey())
-        .map(e -> format("  exports %s to%n%s;%n", e.getKey().toString(),
+        .map(e -> format("%sexports %s to%n%s;%n", getIndentString(), e.getKey().toString(),
             e.getValue().stream().sorted()
-                .map(mn -> format("          %s", mn))
+                .map(mn -> format("%s          %s", getIndentString(), mn))
                 .collect(Collectors.joining(",\n"))))
         .forEach(sb::append);
     //
@@ -89,29 +91,29 @@ public final class Module {
     opens.entrySet().stream()
         .filter(e -> e.getValue().isEmpty())
         .sorted(Map.Entry.comparingByKey())
-        .map(e -> format("  opens %s;%n", e.getKey().toString()))
+        .map(e -> format("%sopens %s;%n", getIndentString(), e.getKey().toString()))
         .forEach(sb::append);
     opens.entrySet().stream()
         .filter(e -> !e.getValue().isEmpty())
         .sorted(Map.Entry.comparingByKey())
-        .map(e -> format("  opens %s to%n%s;%n", e.getKey().toString(),
+        .map(e -> format("%sopens %s to%n%s;%n", getIndentString(), e.getKey().toString(),
             e.getValue().stream().sorted()
-                .map(mn -> format("          %s", mn))
+                .map(mn -> format("%s          %s", getIndentString(), mn))
                 .collect(Collectors.joining(",\n"))))
         .forEach(sb::append);
     //
     l = newLine(sb,l);
     uses.stream().sorted()
-        .map(s -> format("  uses %s;%n", s))
+        .map(s -> format("%suses %s;%n", getIndentString(), s))
         .forEach(sb::append);
     //
     l = newLine(sb,l);
     provides.entrySet().stream()
         .filter(e -> !e.getValue().isEmpty())
         .sorted(Map.Entry.comparingByKey())
-        .map(e -> format("  provides %s with%n%s;%n", e.getKey().toString(),
+        .map(e -> format("%sprovides %s with%n%s;%n", getIndentString(), e.getKey().toString(),
             e.getValue().stream().sorted()
-                .map(mn -> format("          %s", mn))
+                .map(mn -> format("%s          %s", getIndentString(), mn))
                 .collect(Collectors.joining(",\n"))))
         .forEach(sb::append);
     //

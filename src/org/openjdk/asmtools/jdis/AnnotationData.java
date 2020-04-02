@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,21 +27,22 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import static java.lang.String.format;
+
 /**
  *
  */
-public class AnnotationData {
+public class  AnnotationData {
     /*-------------------------------------------------------- */
     /* AnnotData Fields */
 
-    private boolean invisible = false;
-    private int type_cpx = 0;  //an index into the constant pool indicating the annotation type for this annotation.
-    private ArrayList<AnnotElem> array = new ArrayList<>();
-
-    private ClassData cls;
     protected String visAnnotToken = "@+";
     protected String invAnnotToken = "@-";
     protected String dataName = "AnnotationData";
+    private boolean invisible = false;
+    private int type_cpx = 0;  //an index into the constant pool indicating the annotation type for this annotation.
+    private ArrayList<AnnotationElement> array = new ArrayList<>();
+    private ClassData cls;
     /*-------------------------------------------------------- */
 
     public AnnotationData(boolean invisible, ClassData cls) {
@@ -51,12 +52,12 @@ public class AnnotationData {
 
     public void read(DataInputStream in) throws IOException {
         type_cpx = in.readShort();
-        TraceUtils.traceln("             " + dataName + ": name[" + type_cpx + "]=" + cls.pool.getString(type_cpx));
         int elemValueLength = in.readShort();
-        TraceUtils.traceln("                 " + dataName + ": " + cls.pool.getString(type_cpx) + "num_elems: " + elemValueLength);
+        TraceUtils.traceln(3, format(" %s: name[%d]=%s", dataName, type_cpx, cls.pool.getString(type_cpx)),
+                format(" %s: %s  num_elems: %d", dataName, cls.pool.getString(type_cpx), elemValueLength));
         for (int evc = 0; evc < elemValueLength; evc++) {
-            AnnotElem elem = new AnnotElem(cls);
-            TraceUtils.traceln("                    " + dataName + ": " + cls.pool.getString(type_cpx) + " reading [" + evc + "]");
+            AnnotationElement elem = new AnnotationElement(cls);
+            TraceUtils.traceln(3, format(" %s: %s reading [%d]", dataName, cls.pool.getString(type_cpx), evc));
             elem.read(in, invisible);
             array.add(elem);
         }
@@ -64,7 +65,7 @@ public class AnnotationData {
 
     public void print(PrintWriter out, String tab) {
         printHeader(out, tab);
-        printBody(out, tab);
+        printBody(out, "");
     }
 
     protected void printHeader(PrintWriter out, String tab) {
@@ -92,16 +93,14 @@ public class AnnotationData {
         // For a standard annotation, print out brackets,
         // and list the name/value pairs.
         out.print(" { ");
-
         int i = 0;
-        for (AnnotElem elem : array) {
+        for (AnnotationElement elem : array) {
             elem.print(out, tab);
-
             if (i++ < array.size() - 1) {
                 out.print(", ");
             }
         }
-        out.print(tab + "}");
+        out.print("  }");
     }
 
     @Override
@@ -126,7 +125,7 @@ public class AnnotationData {
         sb.append(" { ");
 
         int i = 0;
-        for (AnnotElem elem : array) {
+        for (AnnotationElement elem : array) {
             sb.append(elem.toString());
 
             if (i++ < array.size() - 1) {
@@ -143,5 +142,5 @@ public class AnnotationData {
     protected void _toString(StringBuilder sb) {
         // sub-classes override this
     }
-} // end AnnotData
+}
 

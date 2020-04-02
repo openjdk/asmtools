@@ -40,7 +40,7 @@ import java.io.IOException;
  */
 public class PermittedSubtypesData extends ClassArrayData {
     public PermittedSubtypesData(ClassData cls) {
-        super(cls, JasmTokens.Token.PERMITTEDSUBTYPES.parsekey());
+        super(cls, JasmTokens.Token.PERMITTEDSUBTYPES.parseKey());
     }
 
     public PermittedSubtypesData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {

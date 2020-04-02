@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ import java.io.IOException;
  * <p>
  * since class file 55.0 (JEP 181)
  */
-public class NestHostData {
+public class NestHostData extends Indenter{
     ClassData cls;
     int host_class_index;
     private Options options = Options.OptionObject();
@@ -52,7 +52,7 @@ public class NestHostData {
 
     public void print() {
         boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(JasmTokens.Token.NESTHOST.parsekey() + " ");
+        cls.out.print(getIndentString() + JasmTokens.Token.NESTHOST.parseKey() + " ");
         if (pr_cpx) {
             cls.out.print("#" + host_class_index + "; //");
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,11 +26,9 @@ import static org.openjdk.asmtools.jasm.RuntimeConstants.DEPRECATED_ATTRIBUTE;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.SYNTHETIC_ATTRIBUTE;
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
- *
- *
+ * The common base structure for field_info, method_info, and component_info
  */
 abstract public class MemberData {
 
@@ -41,6 +39,7 @@ abstract public class MemberData {
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrVis = null;
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrInv = null;
     protected ClassData cls;
+    protected AttrData signatureAttr;
 
     public MemberData(ClassData cls, int access) {
         this.cls = cls;
@@ -61,16 +60,17 @@ abstract public class MemberData {
         // create the appropriate marker attributes,
         // and clear the PseudoModifiers from the access flags.
         if (Modifiers.isSyntheticPseudoMod(access)) {
-            syntheticAttr = new AttrData(cls,
-                    AttrTag.ATT_Synthetic.parsekey());
-
+            syntheticAttr = new AttrData(cls, AttrTag.ATT_Synthetic.parsekey());
             access &= ~SYNTHETIC_ATTRIBUTE;
         }
         if (Modifiers.isDeprecatedPseudoMod(access)) {
-            deprecatedAttr = new AttrData(cls,
-                    AttrTag.ATT_Deprecated.parsekey());
+            deprecatedAttr = new AttrData(cls, AttrTag.ATT_Deprecated.parsekey());
             access &= ~DEPRECATED_ATTRIBUTE;
         }
+    }
+
+    public void setSignatureAttr(ConstantPool.ConstCell value_cpx) {
+        signatureAttr = new CPXAttr(cls, Tables.AttrTag.ATT_Signature.parsekey(), value_cpx);
     }
 
     protected abstract DataVector getAttrVector();
@@ -98,25 +98,24 @@ abstract public class MemberData {
         return attrs;
     }
 
-    public void addAnnotations(ArrayList<AnnotationData> annttns) {
-        for (AnnotationData annot : annttns) {
-            boolean invisible = annot.invisible;
-            if (annot instanceof TypeAnnotationData) {
+    public void addAnnotations(ArrayList<AnnotationData> list) {
+        for (AnnotationData item : list) {
+            boolean invisible = item.invisible;
+            if (item instanceof TypeAnnotationData) {
                 // Type Annotations
-                TypeAnnotationData tannot = (TypeAnnotationData) annot;
+                TypeAnnotationData ta = (TypeAnnotationData) item;
                 if (invisible) {
                     if (type_annotAttrInv == null) {
                         type_annotAttrInv = new DataVectorAttr(cls,
                                 AttrTag.ATT_RuntimeInvisibleTypeAnnotations.parsekey());
-
                     }
-                    type_annotAttrInv.add(tannot);
+                    type_annotAttrInv.add(ta);
                 } else {
                     if (type_annotAttrVis == null) {
                         type_annotAttrVis = new DataVectorAttr(cls,
                                 AttrTag.ATT_RuntimeVisibleTypeAnnotations.parsekey());
                     }
-                    type_annotAttrVis.add(tannot);
+                    type_annotAttrVis.add(ta);
                 }
             } else {
                 // Regular Annotations
@@ -124,16 +123,14 @@ abstract public class MemberData {
                     if (annotAttrInv == null) {
                         annotAttrInv = new DataVectorAttr(cls,
                                 AttrTag.ATT_RuntimeInvisibleAnnotations.parsekey());
-
                     }
-                    annotAttrInv.add(annot);
+                    annotAttrInv.add(item);
                 } else {
                     if (annotAttrVis == null) {
                         annotAttrVis = new DataVectorAttr(cls,
                                 AttrTag.ATT_RuntimeVisibleAnnotations.parsekey());
-
                     }
-                    annotAttrVis.add(annot);
+                    annotAttrVis.add(item);
                 }
             }
         }

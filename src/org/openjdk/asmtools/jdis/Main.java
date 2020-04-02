@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,7 @@ public class Main extends Tool {
     public static final I18NResourceBundle i18n
             = I18NResourceBundle.getBundleForClass(Main.class);
 
-    public Main(PrintWriter out, PrintWriter err, String programName) {
+    public  Main(PrintWriter out, PrintWriter err, String programName) {
         super(out, err, programName);
         // tool specific initialization
         options = Options.OptionObject();
@@ -66,7 +66,7 @@ public class Main extends Tool {
     /**
      * Run the disassembler
      */
-    public synchronized boolean disasm(String argv[]) {
+    public synchronized boolean  disasm(String argv[]) {
         ArrayList<String> files = new ArrayList<>();
 
         // Parse arguments
@@ -105,27 +105,23 @@ public class Main extends Tool {
             return false;
         }
 
-        for (String inpname : files) {
-            if (inpname == null) {
+        for (String fname : files) {
+            if (fname == null) {
                 continue;
             } // cross out by CompilerChoice.compile
             try {
-                DataInputStream dataInputStream = getDataInputStream(inpname);
-                if( dataInputStream == null )
-                    return false;
                 ClassData cc = new ClassData(out, this);
-                cc.read(dataInputStream);
+                cc.read(fname);
                 cc.print();
-                dataInputStream.close();
                 continue;
             } catch (Error ee) {
                 if (DebugFlag.getAsBoolean())
                     ee.printStackTrace();
-                error(i18n.getString("jdis.error.fatal_error", inpname));
+                error(i18n.getString("jdis.error.fatal_error", fname));
             } catch (Exception ee) {
                 if (DebugFlag.getAsBoolean())
                     ee.printStackTrace();
-                error(i18n.getString("jdis.error.fatal_exception", inpname));
+                error(i18n.getString("jdis.error.fatal_exception", fname));
             }
             return false;
         }

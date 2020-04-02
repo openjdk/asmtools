@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,28 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.jasm.Tables;
+
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static java.lang.String.format;
 
 /**
  *
  */
 public class AttrData {
 
+    int name_cpx;
+    byte data[];
+    ClassData cls;
+    public AttrData(ClassData cls) {
+        this.cls = cls;
+    }
+
     /**
-     *
      * attributeTag
-     *
-     * returns either -1 (not found), or the hashed integer tag key.
-     *
+     * <p>
+     * returns either -1 (not found), or the hashed integer tag tag.
      */
     public static int attributeTag(String tagname) {
         int intgr = Tables.attrtagValue(tagname);
@@ -48,22 +56,10 @@ public class AttrData {
         return intgr;
     }
 
-
-    /*-------------------------------------------------------- */
-    /* AttrData Fields */
-    int name_cpx;
-    byte data[];
-    ClassData cls;
-    /*-------------------------------------------------------- */
-
-    public AttrData(ClassData cls) {
-        this.cls = cls;
-    }
-
     public void read(int name_cpx, int attrlen, DataInputStream in) throws IOException {
         this.name_cpx = name_cpx;
         data = new byte[attrlen];
-        TraceUtils.traceln(" AttrData:#" + name_cpx + " len=" + attrlen);
+        TraceUtils.traceln(format("AttrData:#%d len=%d", name_cpx, attrlen));
         in.readFully(data);
     }
 }

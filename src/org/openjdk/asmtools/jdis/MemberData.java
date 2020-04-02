@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,19 +28,22 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import static java.lang.String.format;
+
 /**
  * Base class for ClassData, MethodData, FieldData and RecordData(JEP 360)
  */
-public class MemberData {
+public abstract class MemberData extends Indenter {
 
-    /**
-     * access flags (modifiers)
-     */
+    // access flags (modifiers)
     protected int access;
 
     // flags
     protected boolean isSynthetic = false;
     protected boolean isDeprecated = false;
+
+    // Signature can be located in ClassFile, field_info, method_info, and component_info
+    protected SignatureData signature;
 
     /**
      * The visible annotations for this class, member( field or method) or record component
@@ -68,12 +71,14 @@ public class MemberData {
     protected ArrayList<AttrData> attrs;
 
     // internal references
-    protected Options options = Options.OptionObject();
+    protected final Options options = Options.OptionObject();
+    protected final  boolean pr_cpx = options.contains(Options.PR.CPX);;
     protected ClassData cls;
     protected PrintWriter out;
     protected String memberType = "";
 
     public MemberData(ClassData cls) {
+        this();
         init(cls);
     }
 
@@ -83,26 +88,85 @@ public class MemberData {
     public void init(ClassData cls) {
         this.out = cls.out;
         this.cls = cls;
-        this.options = cls.options;
     }
+
     protected boolean handleAttributes(DataInputStream in, Tables.AttrTag attrtag, int attrlen) throws IOException {
         // sub-classes override
         return false;
     }
 
+    protected abstract void print() throws IOException;
+
+    final protected int getAnnotationsCount() {
+        return  ((visibleAnnotations == null) ? 0 : visibleAnnotations.size()) +
+                ((invisibleAnnotations == null) ? 0 : invisibleAnnotations.size()) +
+                ((visibleTypeAnnotations == null) ? 0 : visibleTypeAnnotations.size()) +
+                ((invisibleTypeAnnotations == null) ? 0 : invisibleTypeAnnotations.size());
+
+    }
+
+    final protected void printAnnotations(String initialTab) {
+        if( getAnnotationsCount() > 0 ) {
+            if (visibleAnnotations != null) {
+                for (AnnotationData visad : visibleAnnotations) {
+                    // out.print(initialTab);
+                    visad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if (invisibleAnnotations != null) {
+                for (AnnotationData invisad : invisibleAnnotations) {
+                    invisad.print(out, initialTab);
+                    out.println();
+                }
+            }
+
+            if (visibleTypeAnnotations != null) {
+                for (TypeAnnotationData visad : visibleTypeAnnotations) {
+                    visad.print(out, initialTab);
+                    out.println();
+                }
+            }
+            if (invisibleTypeAnnotations != null) {
+                for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
+                    invisad.print(out, initialTab);
+                    out.println();
+                }
+            }
+        }
+    }
+
+    protected void printVar(StringBuilder bodyPrefix, StringBuilder tailPrefix, int name_cpx, int type_cpx) {
+        if( pr_cpx ) {
+            bodyPrefix.append('#').append(name_cpx).append(":#").append(type_cpx);
+            tailPrefix.append(";\t // ").append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(type_cpx));
+
+        } else {
+            bodyPrefix.append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(type_cpx));
+            tailPrefix.append(';');
+        }
+
+        if (signature != null) {
+            signature.print(bodyPrefix.append(':').toString(), tailPrefix.append( pr_cpx ? ":" : "" ).toString());
+        } else {
+            out.print(bodyPrefix);
+            out.print(tailPrefix);
+        }
+        out.println();
+    }
+
     protected void readAttributes(DataInputStream in) throws IOException {
         // Read the Attributes
         int natt = in.readUnsignedShort();
-        TraceUtils.traceln("natt=" + natt);
         attrs = new ArrayList<>(natt);
-        TraceUtils.traceln(memberType + " - Attributes: " + natt);
+        TraceUtils.traceln(format("%s - Attributes[%d]", memberType , natt));
         AttrData attr;
         for (int k = 0; k < natt; k++) {
             int name_cpx = in.readUnsignedShort();
             attr = new AttrData(cls);
             attrs.add(attr);
             String attr_name = cls.pool.getString(name_cpx);
-            TraceUtils.traceln("   " + memberType + ": #" + k + " name[" + name_cpx + "]=" + attr_name);
+            TraceUtils.traceln(format("   #%d name[%d]=\"%s\"", k, name_cpx, attr_name));
             Tables.AttrTag tag = Tables.attrtag(attr_name);
             int attrlen = in.readInt();
             switch (tag) {
@@ -168,5 +232,4 @@ public class MemberData {
             }
         }
     }
-
 }

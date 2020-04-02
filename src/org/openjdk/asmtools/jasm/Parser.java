@@ -20,7 +20,6 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.Module;
@@ -34,6 +33,8 @@ import java.util.function.Consumer;
 
 import static org.openjdk.asmtools.jasm.ConstantPool.*;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.COMMA;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.SEMICOLON;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 
@@ -73,7 +74,7 @@ class Parser extends ParseBase {
 
     CodeAttr curCode;
 
-    private ArrayList clsDataList = new ArrayList<>();
+    private ArrayList<ClassData> clsDataList = new ArrayList<>();
     private String pkg = null;
     private String pkgPrefix = "";
     private ArrayList<AnnotationData> pkgAnnttns = null;
@@ -123,7 +124,7 @@ class Parser extends ParseBase {
      */
 
     private void parseVersionPkg() throws IOException {
-        if (scanner.token == Token.SEMICOLON) {
+        if (scanner.token == SEMICOLON) {
             return;
         }
         parse_ver:
@@ -267,8 +268,8 @@ class Parser extends ParseBase {
                     tag = Tables.tag(sValue);
                     if (itemType != null) { // itemType OK
                         if ((tag != null) // ambiguity: "int," or "int 77,"?
-                                && (scanner.token != Token.SEMICOLON)
-                                && (scanner.token != Token.COMMA)) {
+                                && (scanner.token != SEMICOLON)
+                                && (scanner.token != COMMA)) {
                             itemType = StackMapType.ITEM_Object;
                         }
                         break resolve;
@@ -279,7 +280,7 @@ class Parser extends ParseBase {
             }
             // resolution failed:
             itemType = StackMapType.ITEM_Bogus;
-            env.error("itemtype.expected", "<" + ptoken.printval() + ">");
+            env.error("itemtype.expected", "<" + ptoken.printValue() + ">");
         }
         switch (itemType) {
             case ITEM_Object:  // followed by CP index
@@ -316,6 +317,26 @@ class Parser extends ParseBase {
 
             // In many cases, Identifiers can correctly have the same
             // names as keywords.  We need to allow these.
+            case OPEN:
+            case MODULE:
+            case VARARGS:
+            case REQUIRES:
+            case EXPORTS:
+            case TO:
+            case USES:
+            case PROVIDES:
+            case WITH:
+            case OPENS:
+
+            case ARRAY_TYPEPATH:
+            case INNER_TYPE_TYPEPATH:
+            case WILDCARD_TYPEPATH:
+            case TYPE_ARGUMENT_TYPEPATH:
+            case PERMITTEDSUBTYPES:
+            case INF:
+            case NAN:
+            case COMPONENT:
+
             case SYNTHETIC:
             case DEPRECATED:
             case VERSION:
@@ -323,7 +344,6 @@ class Parser extends ParseBase {
             case STACK:
             case LOCAL:
             case OF:
-            case NAN:
             case INNERCLASS:
             case STRICT:
             case FIELDREF:
@@ -345,12 +365,21 @@ class Parser extends ParseBase {
     ConstCell parseMethodHandle(SubTag subtag) throws Scanner.SyntaxError, IOException {
         ConstCell refCell;
         switch (subtag) {
+            // If the value of the reference_kind item is
+            // 1 (REF_getField), 2 (REF_getStatic), 3 (REF_putField)  or 4 (REF_putStatic),
+            // then the constant_pool entry at that index must be a CONSTANT_Fieldref_info structure (§4.4.2)
+            // representing a field for which a method handle is to be created. jvms-4.4.8-200-C-A
             case REF_GETFIELD:
             case REF_GETSTATIC:
             case REF_PUTFIELD:
             case REF_PUTSTATIC:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_FIELD));
                 break;
+            //  If the value of the reference_kind item is
+            //  5 (REF_invokeVirtual) or 8 (REF_newInvokeSpecial),
+            //  then the constant_pool entry at that index must be a CONSTANT_Methodref_info structure (§4.4.2)
+            //  representing a class's method or constructor (§2.9.1) for which a method handle is to be created.
+            //  jvms-4.4.8-200-C-B
             case REF_INVOKEVIRTUAL:
             case REF_NEWINVOKESPECIAL:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_METHOD));
@@ -368,11 +397,13 @@ class Parser extends ParseBase {
                 // if the class file version number is 52.0 or above, the constant_pool entry at that index must be
                 // either a CONSTANT_Methodref_info structure or a CONSTANT_InterfaceMethodref_info structure (§4.4.2)
                 // representing a class's or interface's method for which a method handle is to be created.
-                ConstType ctype = ConstType.CONSTANT_METHOD;
+                ConstType ctype01 = ConstType.CONSTANT_METHOD;
+                ConstType ctype02 = ConstType.CONSTANT_INTERFACEMETHOD;
                 if (this.cd.cfv.major_version() >= 52 && Modifiers.isInterface(this.cd.access)) {
-                    ctype = ConstType.CONSTANT_INTERFACEMETHOD;
+                    ctype01 = ConstType.CONSTANT_INTERFACEMETHOD;
+                    ctype02 = ConstType.CONSTANT_METHOD;
                 }
-                refCell = pool.FindCell(cpParser.parseConstValue(ctype));
+                refCell = cpParser.parseConstRef(ctype01, ctype02);
                 break;
             case REF_INVOKEINTERFACE:
                 refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_INTERFACEMETHOD));
@@ -420,6 +451,26 @@ class Parser extends ParseBase {
                 return pool.FindCellAsciz(v);
             // Some identifiers might coincide with token names.
             // these should be OK to use as identifier names.
+            case OPEN:
+            case MODULE:
+            case VARARGS:
+            case REQUIRES:
+            case EXPORTS:
+            case TO:
+            case USES:
+            case PROVIDES:
+            case WITH:
+            case OPENS:
+
+            case ARRAY_TYPEPATH:
+            case INNER_TYPE_TYPEPATH:
+            case WILDCARD_TYPEPATH:
+            case TYPE_ARGUMENT_TYPEPATH:
+            case PERMITTEDSUBTYPES:
+            case INF:
+            case NAN:
+            case COMPONENT:
+
             case SYNTHETIC:
             case DEPRECATED:
             case VERSION:
@@ -427,7 +478,6 @@ class Parser extends ParseBase {
             case STACK:
             case LOCAL:
             case OF:
-            case NAN:
             case INNERCLASS:
             case STRICT:
             case FIELDREF:
@@ -441,7 +491,7 @@ class Parser extends ParseBase {
             default:
                 ConstType key = Tables.tag(scanner.token.value());
                 env.traceln("%%%%% Unrecognized token [" + scanner.token + "]: '" + (key == null ? "null" : key.parseKey()) + "'.");
-                env.error(scanner.prevPos, "name.expected", "\"" + scanner.token.parsekey() + "\"");
+                env.error(scanner.prevPos, "name.expected", "\"" + scanner.token.parseKey() + "\"");
                 throw new Scanner.SyntaxError();
         }
     }
@@ -544,8 +594,8 @@ class Parser extends ParseBase {
                 env.error("const.def.expected");
                 throw new Scanner.SyntaxError();
             }
-            if (scanner.token != Token.COMMA) {
-                scanner.expect(Token.SEMICOLON);
+            if (scanner.token != COMMA) {
+                scanner.expect(SEMICOLON);
                 return;
             }
             scanner.scan(); // COMMA
@@ -666,6 +716,13 @@ class Parser extends ParseBase {
                 fld.addAnnotations(memberAnnttns);
             }
 
+            // Parse the optional attribute: signature
+            if (scanner.token == Token.COLON) {
+                scanner.scan();
+                ConstCell signatureCell = parseName();
+                fld.setSignatureAttr(signatureCell);
+            }
+
             // Parse the optional initializer
             if (scanner.token == Token.ASSIGN) {
                 scanner.scan();
@@ -675,8 +732,8 @@ class Parser extends ParseBase {
             // If the next scanner.token is a comma, then there is more
             debugScan("  [Parser.parseField]: Field: " + fld + " ");
 
-            if (scanner.token != Token.COMMA) {
-                scanner.expect(Token.SEMICOLON);
+            if (scanner.token != COMMA) {
+                scanner.expect(SEMICOLON);
                 return;
             }
             scanner.scan();
@@ -799,7 +856,7 @@ class Parser extends ParseBase {
                     exc_table.add(exc);
                     env.traceln("THROWS:" + exc.arg);
                 }
-                if (scanner.token != Token.COMMA) {
+                if (scanner.token != COMMA) {
                     break;
                 }
                 scanner.scan();
@@ -825,7 +882,7 @@ class Parser extends ParseBase {
             annotParser.parseParamAnnots(paramcnt, curMethod);
         }
 
-        if (scanner.token == Token.SEMICOLON) {
+        if (scanner.token == SEMICOLON) {
             if ((max_stack != null) || (max_locals != null)) {
                 env.error("token.expected", "{");
             }
@@ -838,9 +895,13 @@ class Parser extends ParseBase {
                 if (scanner.token == Token.RBRACE) {
                     break;
                 }
-                scanner.expect(Token.SEMICOLON);
+                // code's type annotation(s)
+                if (scanner.token == Token.ANNOTATION) {
+                    curCode.addAnnotations(annotParser.scanAnnotations());
+                    break;
+                }
+                scanner.expect(SEMICOLON);
             }
-
             curCode.endCode();
             scanner.expect(Token.RBRACE);
         }
@@ -869,7 +930,7 @@ class Parser extends ParseBase {
             scanner.scan();
             ArrayList<ConstCell> bsm_args = new ArrayList<>(256);
 
-            while (scanner.token != Token.SEMICOLON) {
+            while (scanner.token != SEMICOLON) {
                 if (scanner.token == Token.CPINDEX) {
                     bsm_args.add(pool.getCell(scanner.intValue));
 
@@ -899,7 +960,7 @@ class Parser extends ParseBase {
         String className = prependPackage(parseIdent(), true);
         ConstCell hostClass = pool.FindCellClassByName(className);
         debugScan("  [Parser.parseNestHost]: NestHost: class " + className);
-        scanner.expect(Token.SEMICOLON);
+        scanner.expect(SEMICOLON);
         cd.addNestHost(hostClass);
     }
 
@@ -916,8 +977,8 @@ class Parser extends ParseBase {
             String className = prependPackage(parseIdent(), true);
             classes.add(pool.FindCellClassByName(className));
             debugScan("  [Parser.parseClasses]: class " + className);
-            if (scanner.token != Token.COMMA) {
-                scanner.expect(Token.SEMICOLON);
+            if (scanner.token != COMMA) {
+                scanner.expect(SEMICOLON);
                 classesConsumer.accept(classes);
                 return;
             }
@@ -930,40 +991,67 @@ class Parser extends ParseBase {
      */
     private void parseRecord() throws Scanner.SyntaxError, IOException {
         // Parses in the form:
-        // RECORD COMPONENT (, COMPONENT)*;
+        // RECORD { (COMPONENT)+ }
         // where
-        // COMPONENT NAME:DESCRIPTOR SIGNATURE? (ANNOTATION)*
+        // COMPONENT Component (ANNOTATION)* NAME:DESCRIPTOR(:SIGNATURE)? (,|;)
         // NAME = (CPINDEX | IDENT)
         // DESCRIPTOR = (CPINDEX | STRING)
         // SIGNATURE  = (CPINDEX | STRING)
-        debugScan("[Parser.parseRecord]:  Begin ");
+        debugScan("[Parser.parseRecord]:  Begin");
+        scanner.expect(Token.LBRACE);
+
+        ArrayList<AnnotationData> componentAnntts = null;
+        boolean grouped = false;
         RecordData rd = cd.setRecord(scanner.pos);
-        Component:
+
         while (true) {
+            if (scanner.token == Token.RBRACE) {
+                if (rd.isEmpty()) {
+                    env.error(scanner.pos, "warn.no.components.in.record.attribute");
+                    cd.rejectRecord();
+                } else if (grouped) {
+                    env.error(scanner.pos, "grouped.component.expected");
+                }
+                scanner.scan();
+                break;
+            }
+
             ConstCell nameCell, descCell, signatureCell = null;
+            if (scanner.token == Token.ANNOTATION) {
+                componentAnntts = annotParser.scanAnnotations();
+            }
+
+            scanner.expect(Token.COMPONENT);
+
             nameCell = parseName();
             scanner.expect(Token.COLON);
             descCell = parseName();
-            rd.addComponent(nameCell, descCell);
-            while (true) {
-                switch (scanner.token) {
-                    case COMMA:
-                        scanner.scan();
-                        continue Component;   // next component
-                    case SEMICOLON:
-                        return;     // EOR
-                    case ANNOTATION:
-                        rd.setAnnotations(annotParser.scanAnnotations());
-                        break;
-                    default:
-                        if (signatureCell != null) {
-                            env.error(scanner.pos, "warn.signature.repeated");
-                        }
-                        signatureCell = parseName();
-                        rd.setComponentSignature(signatureCell);
-                }
+            // Parse the optional attribute: signature
+            if (scanner.token == Token.COLON) {
+                scanner.scan();
+                signatureCell = parseName();
             }
+
+            rd.addComponent(nameCell, descCell, signatureCell, componentAnntts);
+
+            switch (scanner.token) {
+                case COMMA:
+                    grouped = true;
+                    break;
+                case SEMICOLON:
+                    grouped = false;
+                    componentAnntts = null;
+                    break;
+                default:
+                    env.error(scanner.pos, "one.of.two.token.expected",
+                            "<" + SEMICOLON.printValue() + ">",
+                            "<" + COMMA.printValue() + ">");
+                    break;
+            }
+            // next component
+            scanner.scan();
         }  // end while
+        debugScan("[Parser.parseRecord]:  End");
     }
 
     /**
@@ -1046,7 +1134,7 @@ class Parser extends ParseBase {
             }
 
             // See if declaration is terminated
-            if (scanner.token == Token.SEMICOLON) {
+            if (scanner.token == SEMICOLON) {
                 // InnerClass is complete, no OUTERINFO;
                 outerClass = pool.getCell(0);
                 pic_tracecreate(mod, nameCell, innerClass, outerClass);
@@ -1076,7 +1164,7 @@ class Parser extends ParseBase {
                 outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
             }
 
-            if (scanner.token == Token.SEMICOLON) {
+            if (scanner.token == SEMICOLON) {
                 pic_tracecreate(mod, nameCell, innerClass, outerClass);
                 cd.addInnerClass(mod, nameCell, innerClass, outerClass);
             } else {
@@ -1250,7 +1338,7 @@ class Parser extends ParseBase {
                 mod |= ACC_ANNOTATION | ACC_INTERFACE;
                 scanner.scan();
             } else {
-                env.error(scanner.prevPos, "token.expected", Token.ANNOTATION.parsekey() + Token.INTERFACE.parsekey());
+                env.error(scanner.prevPos, "token.expected", Token.ANNOTATION.parseKey() + Token.INTERFACE.parseKey());
                 throw new Scanner.SyntaxError();
             }
         }
@@ -1275,9 +1363,9 @@ class Parser extends ParseBase {
             scanner.scan();
             cd.fileExtension = "." + fileExtension;
         } else if (scanner.token == Token.MODULE) {
-            env.error(scanner.prevPos, "token.expected", Token.OPEN.parsekey());
+            env.error(scanner.prevPos, "token.expected", Token.OPEN.parseKey());
             throw new Scanner.SyntaxError();
-        } else if (scanner.token == Token.SEMICOLON) {
+        } else if (scanner.token == SEMICOLON) {
             // drop the semi-colon following a name
             scanner.scan();
         }
@@ -1287,7 +1375,7 @@ class Parser extends ParseBase {
         if (scanner.token == Token.EXTENDS) {
             scanner.scan();
             sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
-            while (scanner.token == Token.COMMA) {
+            while (scanner.token == COMMA) {
                 scanner.scan();
                 env.error(posa, "multiple.inherit");
                 cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
@@ -1305,7 +1393,7 @@ class Parser extends ParseBase {
                 } else {
                     impl.add(intf);
                 }
-            } while (scanner.token == Token.COMMA);
+            } while (scanner.token == COMMA);
         }
         parseVersion();
         scanner.expect(Token.LBRACE);
@@ -1346,7 +1434,7 @@ class Parser extends ParseBase {
                 name = name + field + scanner.idValue;
                 scanner.scan();
             } else {
-                env.error(scanner.pos, "name.expected", "\"" + scanner.token.parsekey() + "\"");
+                env.error(scanner.pos, "name.expected", "\"" + scanner.token.parseKey() + "\"");
                 throw new Scanner.SyntaxError();
             }
             if (scanner.token == Token.FIELD) {
@@ -1370,7 +1458,7 @@ class Parser extends ParseBase {
                 name = name + field + scanner.idValue;
                 scanner.scanModuleStatement();
             } else {
-                env.error(scanner.pos, "module.name.expected", "\"" + scanner.token.parsekey() + "\"");
+                env.error(scanner.pos, "module.name.expected", "\"" + scanner.token.parseKey() + "\"");
                 throw new Scanner.SyntaxError().Fatal();
             }
             if (scanner.token == Token.FIELD) {
@@ -1407,7 +1495,7 @@ class Parser extends ParseBase {
             scanner.scanModuleStatement();
             // scanner.scan();
         } else {
-            env.error(scanner.pos, "token.expected", Token.MODULE.parsekey());
+            env.error(scanner.pos, "token.expected", Token.MODULE.parseKey());
             throw new Scanner.SyntaxError().Fatal();
         }
         // Parse the module name
@@ -1476,7 +1564,7 @@ class Parser extends ParseBase {
         int flags = 0;
         String mn = "";
         scanner.scanModuleStatement();
-        while (scanner.token != Token.SEMICOLON) {
+        while (scanner.token != SEMICOLON) {
             switch (scanner.token) {
                 case STATIC:
                     if (((flags & (1 << Module.Modifier.ACC_STATIC_PHASE.asInt())) != 0) || !mn.isEmpty()) {
@@ -1548,7 +1636,7 @@ class Parser extends ParseBase {
         String typeName = "";
         HashSet<String> names = new HashSet<>();
         scanner.scan();
-        while (scanner.token != Token.SEMICOLON) {
+        while (scanner.token != SEMICOLON) {
             if (scanner.token == Token.IDENT) {
                 if (typeName.isEmpty()) {
                     typeName = source.get();
@@ -1589,7 +1677,7 @@ class Parser extends ParseBase {
         HashSet<String> names = new HashSet<>();
         boolean comma = false, first = true;
         scanMethod.call();
-        while (scanner.token != Token.SEMICOLON) {
+        while (scanner.token != SEMICOLON) {
             switch (scanner.token) {
                 case COMMA:
                     if (comma || first || onlyOneElement) {
@@ -1788,7 +1876,7 @@ class Parser extends ParseBase {
                 int where = scanner.pos;
                 String id = parseIdent();
                 parseVersionPkg();
-                scanner.expect(Token.SEMICOLON);
+                scanner.expect(SEMICOLON);
 
                 if (pkg == null) {
                     pkg = id;
@@ -1802,7 +1890,7 @@ class Parser extends ParseBase {
             recoverFile();
         }
         // skip bogus semi colons
-        while (scanner.token == Token.SEMICOLON) {
+        while (scanner.token == SEMICOLON) {
             scanner.scan();
         }
 

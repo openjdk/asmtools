@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,59 +22,35 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
- *
+ * A container for the java sources tied to an jasm output when -sl in on
  */
 public class TextLines {
-    /*-------------------------------------------------------- */
-    /* TextLines Fields */
 
-    byte data[];
-    // ends[k] points to the end of k-th line
-    ArrayList<Integer> ends = new ArrayList<>(60);
-    public int length;
-    /*-------------------------------------------------------- */
+    final Path file;
+    List<String> lines;
 
-    public TextLines() {
+    public TextLines(Path directory, String sourceFileName) {
+        file = directory == null ? Paths.get(sourceFileName) : directory.resolve(sourceFileName);
+        try {
+            lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+        } catch (IOException ignore) {}
     }
 
-    public TextLines(String textfilename) throws IOException {
-        read(textfilename);
-    }
-
-    private void read(String textfilename) throws IOException {
-        FileInputStream in = new FileInputStream(textfilename);
-        data = new byte[in.available()];
-        in.read(data);
-        in.close();
-        ends.add(-1);
-        for (int k = 0; k < data.length; k++) {
-            if (data[k] == '\n') {
-                ends.add(k);
+    public String getLine(int index) {
+        if( lines != null ) {
+            if (index < 1 || index >= lines.size()) {
+                return String.format("Line number %d is out of range in \"%s\"", index, file);
             }
+            return lines.get(index - 1);
         }
-        length = ends.size(); // but if text is empty??
-    }
-
-    public String getLine(int linenumber) {
-        int entry = linenumber - 1;
-        int start;
-        int end;
-        ends.add(entry);
-        start = ends.size() + 1;
-searchEnd:
-        for (end = start; end < data.length; end++) {
-            switch (data[end]) {
-                case '\n':
-                case '\r':
-                    break searchEnd;
-            }
-        }
-//System.out.println("start="+start+" end="+end);
-        return new String(data, start, end - start);
+        return String.format("\"%s\" not found", file);
     }
 }

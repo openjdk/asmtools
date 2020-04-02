@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,12 +22,6 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.CF_Context;
@@ -37,8 +31,6 @@ import static org.openjdk.asmtools.jasm.Tables.CF_Context;
  *
  */
 public class Modifiers {
-
-    private static Modifiers ref;
 
     /*
      * Modifier masks
@@ -377,71 +369,71 @@ public class Modifiers {
     private static StringBuffer _accessString(int mod, CF_Context context) {
         StringBuffer sb = new StringBuffer();
         if (context == CF_Context.CTX_CLASS && isModule(mod)) {
-            sb.append(Token.MODULE.parsekey() + " ");
+            sb.append(Token.MODULE.parseKey() + " ");
         }
         if (isPublic(mod)) {
-            sb.append(Token.PUBLIC.parsekey() + " ");
+            sb.append(Token.PUBLIC.parseKey() + " ");
         }
         if (isPrivate(mod)) {
-            sb.append(Token.PRIVATE.parsekey() + " ");
+            sb.append(Token.PRIVATE.parseKey() + " ");
         }
         if (isProtected(mod)) {
-            sb.append(Token.PROTECTED.parsekey() + " ");
+            sb.append(Token.PROTECTED.parseKey() + " ");
         }
         if (isStatic(mod)) {
-            sb.append(Token.STATIC.parsekey() + " ");
+            sb.append(Token.STATIC.parseKey() + " ");
         }
         if (context == CF_Context.CTX_METHOD && isFinal(mod)) {
-            sb.append(Token.FINAL.parsekey() + " ");
+            sb.append(Token.FINAL.parseKey() + " ");
         }
         if (context == CF_Context.CTX_FIELD && isTransient(mod)) {
-            sb.append(Token.TRANSIENT.parsekey() + " ");
+            sb.append(Token.TRANSIENT.parseKey() + " ");
         }
         if (context == CF_Context.CTX_CLASS && isSuper(mod)) {
-            sb.append(Token.SUPER.parsekey() + " ");
+            sb.append(Token.SUPER.parseKey() + " ");
         }
         if (context == CF_Context.CTX_METHOD && isSynchronized(mod)) {
-            sb.append(Token.SYNCHRONIZED.parsekey() + " ");
+            sb.append(Token.SYNCHRONIZED.parseKey() + " ");
         }
         if (context == CF_Context.CTX_METHOD) {
             if (isBridge(mod)) {
-                sb.append(Token.BRIDGE.parsekey() + " ");
+                sb.append(Token.BRIDGE.parseKey() + " ");
             }
             if (isVarArgs(mod)) {
-                sb.append(Token.VARARGS.parsekey() + " ");
+                sb.append(Token.VARARGS.parseKey() + " ");
             }
             if (isNative(mod)) {
-                sb.append(Token.NATIVE.parsekey() + " ");
+                sb.append(Token.NATIVE.parseKey() + " ");
             }
         }
         if (isAbstract(mod)) {
             if ((context != CF_Context.CTX_CLASS) || !isInterface(mod)) {
-                sb.append(Token.ABSTRACT.parsekey() + " ");
+                sb.append(Token.ABSTRACT.parseKey() + " ");
             }
         }
         if (  context.isOneOf(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS, CF_Context.CTX_FIELD) && isFinal(mod)) {
-            sb.append(Token.FINAL.parsekey() + " ");
+            sb.append(Token.FINAL.parseKey() + " ");
         }
         if (context.isOneOf(CF_Context.CTX_CLASS, CF_Context.CTX_INNERCLASS) && isInterface(mod)) {
             if (isAnnotation(mod)) {
-                sb.append(Token.ANNOTATION_ACCESS.parsekey() + " ");
+                sb.append(Token.ANNOTATION_ACCESS.parseKey() + " ");
             }
-            sb.append(Token.INTERFACE.parsekey() + " ");
+            sb.append(Token.INTERFACE.parseKey() + " ");
         }
         if (isStrict(mod)) {
-            sb.append(Token.STRICT.parsekey() + " ");
+            sb.append(Token.STRICT.parseKey() + " ");
         }
         if (isSynthetic(mod)) {
-            sb.append(Token.SYNTHETIC.parsekey() + " ");
+            sb.append(Token.SYNTHETIC.parseKey() + " ");
         }
         if (context == CF_Context.CTX_FIELD && isVolatile(mod)) {
-            sb.append(Token.VOLATILE.parsekey() + " ");
+            sb.append(Token.VOLATILE.parseKey() + " ");
         }
         if (isEnum(mod)) {
-            sb.append(Token.ENUM.parsekey() + " ");
+            sb.append(Token.ENUM.parseKey() + " ");
         }
         if (context.isOneOf(CF_Context.CTX_METHOD, CF_Context.CTX_FIELD) && isMandated(mod)) {
-            sb.append(Token.MANDATED.parsekey() + " ");
+            sb.append(Token.MANDATED.parseKey() + " ");
         }
 
         return sb;

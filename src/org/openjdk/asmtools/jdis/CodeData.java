@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,9 +22,7 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import static org.openjdk.asmtools.jasm.Tables.*;
-import static org.openjdk.asmtools.jasm.OpcodeTables.*;
-import static org.openjdk.asmtools.jdis.Utils.commentString;
+import org.openjdk.asmtools.jasm.Tables;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -32,90 +30,32 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
+import static org.openjdk.asmtools.jasm.OpcodeTables.opcode;
+import static org.openjdk.asmtools.jasm.Tables.*;
+import static org.openjdk.asmtools.jasm.Tables.AttrTag.ATT_RuntimeInvisibleTypeAnnotations;
+import static org.openjdk.asmtools.jasm.Tables.AttrTag.ATT_RuntimeVisibleTypeAnnotations;
+import static org.openjdk.asmtools.jdis.Utils.commentString;
+
 /**
- *
  * Code data for a code attribute in method members in a class of the Java Disassembler
  */
-public class CodeData {
+public class CodeData extends Indenter {
 
-    /*-------------------------------------------------------- */
-    /* Code Data inner classes */
-    class LineNumData {
-
-        short start_pc, line_number;
-
-        public LineNumData() {
-        }
-
-        public LineNumData(DataInputStream in) throws IOException {
-            start_pc = in.readShort();
-            line_number = in.readShort();
-            //traceln("   line:"+start_pc+":="+line_number);
-        }
-    }
-
-    public static class LocVarData {
-
-        short start_pc, length, name_cpx, sig_cpx, slot;
-
-        public LocVarData() {
-        }
-
-        public LocVarData(DataInputStream in) throws IOException {
-            start_pc = in.readShort();
-            length = in.readShort();
-            name_cpx = in.readShort();
-            sig_cpx = in.readShort();
-            slot = in.readShort();
-            // cls.traceln("   var #"+name_cpx+" start:"+start_pc
-            // +" length:"+length+"sig_cpx:"+sig_cpx+" sig_cpx:"+sig_cpx);
-        }
-    }
-
-
-    /*-------------------------------------------------------- */
-    /* CodeData Fields */
     /**
      * Raw byte array for the byte codes
      */
     protected byte[] code;
-
     /**
      * Limit for the stack size
      */
     protected int max_stack;
+
+    /* CodeData Fields */
     /**
      * Limit for the number of local vars
      */
     protected int max_locals;
-
-    /**
-     * (parsed) Trap table, describes exceptions caught
-     */
-    private ArrayList<TrapData> trap_table = new ArrayList<>(0);   // TrapData
-
-    /**
-     * (parsed) Line Number table, describes source lines associated with ByteCode indexes
-     */
-    private ArrayList<LineNumData> lin_num_tb = new ArrayList<>(0);   // LineNumData
-
-    /**
-     * (parsed) Local Variable table, describes variable scopes associated with ByteCode
-     * indexes
-     */
-    private ArrayList<LocVarData> loc_var_tb = new ArrayList<>(0);   // LocVarData
-
-    /**
-     * (parsed) stack map table, describes compiler hints for stack rep, associated with
-     * ByteCode indexes
-     */
-    private ArrayList<StackMapData> stack_map = null;
-
-    /**
-     * (parsed) reversed bytecode index hash, associates labels with ByteCode indexes
-     */
-    private HashMap<Integer, iAtt> iattrs = new HashMap<>();
-
     /**
      * The remaining attributes of this class
      */
@@ -124,14 +64,48 @@ public class CodeData {
     // internal references
     protected ClassData cls;
     protected MethodData meth;
-    private PrintWriter out;
-    /*-------------------------------------------------------- */
+    /**
+     * (parsed) Trap table, describes exceptions caught
+     */
+    private ArrayList<TrapData> trap_table = new ArrayList<>(0);   // TrapData
+    /**
+     * (parsed) Line Number table, describes source lines associated with ByteCode indexes
+     */
+    private ArrayList<LineNumData> lin_num_tb = new ArrayList<>(0);   // LineNumData
+    /**
+     * (parsed) Local Variable table, describes variable scopes associated with ByteCode
+     * indexes
+     */
+    private ArrayList<LocVarData> loc_var_tb = new ArrayList<>(0);   // LocVarData
+    /**
+     * (parsed) stack map table, describes compiler hints for stack rep, associated with
+     * ByteCode indexes
+     */
+    private ArrayList<StackMapData> stack_map = null;
+    /**
+     * The visible type annotations for this method
+     */
+    private ArrayList<TypeAnnotationData> visibleTypeAnnotations;
+    /**
+     * The invisible type annotations for this method
+     */
+    private ArrayList<TypeAnnotationData> invisibleTypeAnnotations;
 
+    /**
+     * (parsed) reversed bytecode index hash, associates labels with ByteCode indexes
+     */
+    private HashMap<Integer, iAtt> iattrs = new HashMap<>();
+    private PrintWriter out;
     public CodeData(MethodData meth) {
         this.meth = meth;
         this.cls = meth.cls;
         this.out = cls.out;
     }
+
+    private static int align(int n) {
+        return (n + 3) & ~3;
+    }
+    /*-------------------------------------------------------- */
 
     private int getbyte(int pc) {
         return code[pc];
@@ -153,10 +127,6 @@ public class CodeData {
         return (getShort(pc) << 16) | (getShort(pc + 2) & 0xFFFF);
     }
 
-    private static int align(int n) {
-        return (n + 3) & ~3;
-    }
-
     protected iAtt get_iAtt(int pc) {
         Integer PC = pc;
         iAtt res = iattrs.get(PC);
@@ -167,14 +137,13 @@ public class CodeData {
         return res;
     }
 
-
     /*========================================================*/
     /* Read Methods */
     private void readLineNumTable(DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
         int numlines = in.readUnsignedShort();
         lin_num_tb = new ArrayList<>(numlines);
-        TraceUtils.traceln("              CodeAttr:  LineNumTable[" + numlines + "] len=" + len);
+        TraceUtils.traceln(3,  "CodeAttr:  LineNumTable[" + numlines + "] len=" + len);
         for (int l = 0; l < numlines; l++) {
             lin_num_tb.add(new LineNumData(in));
         }
@@ -184,7 +153,7 @@ public class CodeData {
         int len = in.readInt(); // attr_length
         int numlines = in.readUnsignedShort();
         loc_var_tb = new ArrayList<>(numlines);
-        TraceUtils.traceln("              CodeAttr:  LocalVariableTable[" + numlines + "] len=" + len);
+        TraceUtils.traceln(3,  "CodeAttr:  LocalVariableTable[" + numlines + "] len=" + len);
         for (int l = 0; l < numlines; l++) {
             loc_var_tb.add(new LocVarData(in));
         }
@@ -192,7 +161,7 @@ public class CodeData {
 
     private void readTrapTable(DataInputStream in) throws IOException {
         int trap_table_len = in.readUnsignedShort();
-        TraceUtils.traceln("         CodeAttr:  TrapTable[" + trap_table_len + "]");
+        TraceUtils.traceln(3,  "CodeAttr:  TrapTable[" + trap_table_len + "]");
         trap_table = new ArrayList<>(trap_table_len);
         for (int l = 0; l < trap_table_len; l++) {
             trap_table.add(new TrapData(in, l));
@@ -202,7 +171,7 @@ public class CodeData {
     private void readStackMap(DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
         int stack_map_len = in.readUnsignedShort();
-        TraceUtils.traceln("              CodeAttr:  Stack_Map: attrlen=" + len + " num=" + stack_map_len);
+        TraceUtils.traceln(3,  "CodeAttr:  Stack_Map: attrlen=" + len + " num=" + stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
         StackMapData.prevFramePC = 0;
         for (int k = 0; k < stack_map_len; k++) {
@@ -213,7 +182,7 @@ public class CodeData {
     private void readStackMapTable(DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
         int stack_map_len = in.readUnsignedShort();
-        TraceUtils.traceln("              CodeAttr:  Stack_Map_Table: attrlen=" + len + " num=" + stack_map_len);
+        TraceUtils.traceln(3,  "CodeAttr:  Stack_Map_Table: attrlen=" + len + " num=" + stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
         StackMapData.prevFramePC = 0;
         for (int k = 0; k < stack_map_len; k++) {
@@ -221,13 +190,33 @@ public class CodeData {
         }
     }
 
+    private void readTypeAnnotations(DataInputStream in, boolean isInvisible) throws IOException  {
+        int attrLength = in.readInt();
+        // Read Type Annotations Attr
+        int count = in.readShort();
+        ArrayList<TypeAnnotationData> tannots = new ArrayList<>(count);
+        TraceUtils.traceln(3,  "CodeAttr:   Runtime" +
+                (isInvisible ? "Inv" : "V") +
+                "isibleTypeAnnotation: attrlen=" +
+                attrLength + " num=" + count);
+        for (int index = 0; index < count; index++) {
+            TraceUtils.traceln("\t\t\t[" + index +"]:");
+            TypeAnnotationData tannot = new TypeAnnotationData(isInvisible, cls);
+            tannot.read(in);
+            tannots.add(tannot);
+        }
+        if (isInvisible) {
+            invisibleTypeAnnotations = tannots;
+        } else {
+            visibleTypeAnnotations = tannots;
+        }
+    }
+
     /**
-     *
      * read
-     *
+     * <p>
      * read and resolve the code attribute data called from MethodData. precondition:
      * NumFields has already been read from the stream.
-     *
      */
     public void read(DataInputStream in, int codeattrlen) throws IOException {
 
@@ -235,7 +224,10 @@ public class CodeData {
         max_stack = in.readUnsignedShort();
         max_locals = in.readUnsignedShort();
         int codelen = in.readInt();
-        TraceUtils.traceln("         CodeAttr:  Codelen=" + codelen + " fulllen=" + codeattrlen + " max_stack=" + max_stack + " max_locals=" + max_locals);
+        TraceUtils.traceln(3,  "CodeAttr:  Codelen=" + codelen +
+                " fulllen=" + codeattrlen +
+                " max_stack=" + max_stack +
+                " max_locals=" + max_locals);
 
         // read the raw code bytes
         code = new byte[codelen];
@@ -246,14 +238,14 @@ public class CodeData {
 
         // Read any attributes of the Code Attribute
         int nattr = in.readUnsignedShort();
-        TraceUtils.traceln("          CodeAttr: add.attr:" + nattr);
+        TraceUtils.traceln(3,  "CodeAttr: add.attr:" + nattr);
         for (int k = 0; k < nattr; k++) {
             int name_cpx = in.readUnsignedShort();
             // verify the Attrs name
             ConstantPool.Constant name_const = cls.pool.getConst(name_cpx);
             if (name_const != null && name_const.tag == ConstantPool.TAG.CONSTANT_UTF8) {
                 String attrname = cls.pool.getString(name_cpx);
-                TraceUtils.traceln("         CodeAttr:  attr: " + attrname);
+                TraceUtils.traceln(3,  "CodeAttr:  attr: " + attrname);
                 // process the attr
                 AttrTag attrtag = attrtag(attrname);
                 switch (attrtag) {
@@ -268,6 +260,10 @@ public class CodeData {
                         break;
                     case ATT_StackMapTable:
                         readStackMapTable(in);
+                        break;
+                    case ATT_RuntimeVisibleTypeAnnotations:
+                    case ATT_RuntimeInvisibleTypeAnnotations:
+                        readTypeAnnotations(in, attrtag == ATT_RuntimeInvisibleTypeAnnotations);
                         break;
                     default:
                         AttrData attr = new AttrData(cls);
@@ -350,7 +346,7 @@ public class CodeData {
     } // end checkForLabelRef
 
     private void loadLabelTable() {
-        for (int pc = 0; pc < code.length;) {
+        for (int pc = 0; pc < code.length; ) {
             pc = pc + checkForLabelRef(pc);
         }
     }
@@ -381,7 +377,6 @@ public class CodeData {
             get_iAtt(entry.handler_pc).add_handler(entry);
         }
     }
-
 
     /*========================================================*/
     /* Print Methods */
@@ -447,7 +442,7 @@ public class CodeData {
             return 1;
         }
         out.print(opcode.parsekey());
-// TraceUtils.traceln("****** [CodeData.printInstr]: got an '" + opcode.parsekey() + "' [" + opc + "] instruction ****** ");
+// TraceUtils.traceln("****** [CodeData.printInstr]: got an '" + opcode.parseKey() + "' [" + opc + "] instruction ****** ");
         switch (opcode) {
             case opc_aload:
             case opc_astore:
@@ -525,7 +520,19 @@ public class CodeData {
                         out.print(" BOGUS TYPE:" + type);
                 }
                 return 2;
-            case opc_anewarray: {
+            case opc_anewarray:
+            case opc_ldc_w:
+            case opc_ldc2_w:
+            case opc_instanceof:
+            case opc_checkcast:
+            case opc_new:
+            case opc_putstatic:
+            case opc_getstatic:
+            case opc_putfield:
+            case opc_getfield:
+            case opc_invokevirtual:
+            case opc_invokespecial:
+            case opc_invokestatic: {
                 int index = getUShort(pc + 1);
                 if (pr_cpx) {
                     out.print("\t#" + index + "; //");
@@ -547,28 +554,8 @@ public class CodeData {
                 PrintConstant(index);
                 return 2;
             }
-            case opc_ldc_w:
-            case opc_ldc2_w:
-            case opc_instanceof:
-            case opc_checkcast:
-            case opc_new:
-            case opc_putstatic:
-            case opc_getstatic:
-            case opc_putfield:
-            case opc_getfield:
-            case opc_invokevirtual:
-            case opc_invokespecial:
-            case opc_invokestatic: {
-                int index = getUShort(pc + 1);
-                if (pr_cpx) {
-                    out.print("\t#" + index + "; //");
-                }
-                PrintConstant(index);
-                return 3;
-            }
             case opc_invokeinterface: {
                 int index = getUShort(pc + 1), nargs = getUbyte(pc + 3);
-//                getUbyte(pc + 4); // reserved byte
                 if (pr_cpx) {
                     out.print("\t#" + index + ",  " + nargs + "; //");
                     PrintConstant(index);
@@ -579,6 +566,7 @@ public class CodeData {
                 return 5;
             }
             case opc_invokedynamic: { // JSR-292
+                cls.pool.setPrintTAG(true);
                 int index = getUShort(pc + 1);
                 // getUbyte(pc + 3); // reserved byte
                 // getUbyte(pc + 4); // reserved byte
@@ -588,6 +576,7 @@ public class CodeData {
                 } else {
                     PrintConstant(index);
                 }
+                cls.pool.setPrintTAG(false);
                 return 5;
             }
             case opc_multianewarray: {
@@ -631,11 +620,9 @@ public class CodeData {
     } // end printInstr
 
     /**
-     *
      * print
-     *
+     * <p>
      * prints the code data to the current output stream. called from MethodData.
-     *
      */
     public void print() throws IOException {
         if (!lin_num_tb.isEmpty()) {
@@ -658,10 +645,10 @@ public class CodeData {
         // Need to print ParamAnnotations here.
         meth.printPAnnotations();
 
-        out.println("{");
+        out.println(getIndentString() + "{");
 
         iAtt iatt = iattrs.get(0);
-        for (int pc = 0; pc < code.length;) {
+        for (int pc = 0; pc < code.length; ) {
             if (iatt != null) {
                 iatt.printBegins(); // equ. print("\t");
             } else {
@@ -693,7 +680,47 @@ public class CodeData {
             iatt.printStackMap();
             out.println();
         }
-        out.println("}");
+        // print TypeAnnotations
+        if (visibleTypeAnnotations != null) {
+            out.println();
+            for (TypeAnnotationData visad : visibleTypeAnnotations) {
+                visad.print(out, getIndentString());
+                out.println();
+            }
+        }
+        if (invisibleTypeAnnotations != null) {
+            for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
+                invisad.print(out, getIndentString());
+                out.println();
+            }
+        }
+        // end of code
+        out.println(getIndentString() + "}");
+    }
+
+
+    public static class LocVarData {
+
+        short start_pc, length, name_cpx, sig_cpx, slot;
+
+        public LocVarData(DataInputStream in) throws IOException {
+            start_pc = in.readShort();
+            length = in.readShort();
+            name_cpx = in.readShort();
+            sig_cpx = in.readShort();
+            slot = in.readShort();
+        }
+    }
+
+    /* Code Data inner classes */
+    class LineNumData {
+
+        short start_pc, line_number;
+
+        public LineNumData(DataInputStream in) throws IOException {
+            start_pc = in.readShort();
+            line_number = in.readShort();
+        }
     }
 
 }

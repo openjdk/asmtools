@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,40 +22,64 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetType;
+import org.openjdk.asmtools.jasm.TypeAnnotationTypes.TypePathEntry;
+
 import java.io.IOException;
-import java.util.ArrayList;
-import org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
 
 /**
- *
+ * JVMS 4.7.20.
+ * type_annotation {
+ *     u1 target_type;
+ *     union {
+ *         type_parameter_target;
+ *         supertype_target;
+ *         type_parameter_bound_target;
+ *         empty_target;
+ *         formal_parameter_target;
+ *         throws_target;
+ *         localvar_target;
+ *         catch_target;
+ *         offset_target;
+ *         type_argument_target;
+ *     } target_info;
+ *     type_path target_path;
+ *     u2        type_index;
+ *     //
+ *     //
+ *     u2        num_element_value_pairs;
+ *     {   u2            element_name_index;
+ *         element_value value;
+ *     } element_value_pairs[num_element_value_pairs];
+ * }
  */
 public class TypeAnnotationData extends AnnotationData {
 
-    protected TargetType targetType;
-    protected TargetInfo targetInfo;
-    protected ArrayList<TypePathEntry> targetPath;
+    protected ETargetType targetType;
+    protected TypeAnnotationTargetInfoData targetInfo;
+    protected TypeAnnotationTypePathData typePath;
 
-
-    /*-------------------------------------------------------- */
-
-    /*-------------------------------------------------------- */
-    /* TypeAnnotationData Methods */
     public TypeAnnotationData(Argument typeCPX, boolean invisible) {
         super(typeCPX, invisible);
+        typePath = new TypeAnnotationTypePathData();
     }
 
     @Override
     public int getLength() {
-        return super.getLength() + 2 + targetInfo.getLength();
+        // lengthOf(annotations[]) + lengthOf(targetType) + lengthOf(targetInfo) + lengthOf(targetInfo)
+        return super.getLength() + 1 + targetInfo.getLength() + typePath.getLength();
     }
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        super.write(out);
-// KTL:  (1/10/13) Spec changed: char -> byte
-//        out.writeShort(targetType.value);
         out.writeByte(targetType.value);
         targetInfo.write(out);
+        typePath.write(out);
+        super.write(out);
+    }
+
+    public void addTypePathEntry(TypePathEntry path) {
+        typePath.addTypePathEntry(path);
     }
 
     @Override
@@ -64,40 +88,11 @@ public class TypeAnnotationData extends AnnotationData {
     }
 
     public String toString(int tabLevel) {
-        StringBuilder sb = new StringBuilder();
-        String tabStr = tabString(tabLevel);
-
-        sb.append(tabStr + "Target Type: ");
-        sb.append(targetType.toString());
-        sb.append('\n');
-
-        sb.append(tabStr + "Target Info: ");
-        sb.append(targetInfo.toString(tabLevel));
-        sb.append('\n');
-
-        sb.append(tabStr + "Target Path: [");
-        boolean first = true;
-        for (TypePathEntry tpe : targetPath) {
-            if (!first) {
-                sb.append(", ");
-            }
-            first = false;
-            sb.append(tpe);
-
-        }
-        sb.append("]");
-        sb.append('\n');
-
+        StringBuilder sb = new StringBuilder(tabString(tabLevel));
+        sb.append(targetType.toString()).
+                append(' ').
+                append(targetInfo.toString(tabLevel)).
+                append(typePath.toString(tabLevel));
         return sb.toString();
     }
-
-    protected static String tabString(int tabLevel) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tabLevel; i++) {
-            sb.append('\t');
-        }
-
-        return sb.toString();
-    }
-
 }

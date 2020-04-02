@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,10 +27,14 @@ import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 
@@ -98,9 +102,9 @@ public class ClassData extends MemberData {
     // other parsing fields
     protected PrintWriter out;
     protected String pkgPrefix = "";
-    private int pkgPrefixLen = 0;
-    private TextLines source = null;
-    private static final String initialTab = ""; //The number of elements in the buffer
+    // source file data
+    private TextLines sourceLines = null;
+    private Path classFile = null;
 
     public ClassData(PrintWriter out, Tool tool) {
         this.out  = out;
@@ -112,11 +116,17 @@ public class ClassData extends MemberData {
     }
 
     public void read(File in) throws IOException {
-        read(new DataInputStream(new FileInputStream(in)));
+        try ( DataInputStream dis = new DataInputStream(new FileInputStream(in))){
+            read(dis);
+        }
+        classFile = in.toPath();
     }
 
     public void read(String in) throws IOException {
-        read(new DataInputStream(new FileInputStream(in)));
+        try ( DataInputStream dis = new DataInputStream(new FileInputStream(in))){
+            read(dis);
+        }
+        classFile = Paths.get(in);
     }
 
     /**
@@ -232,7 +242,7 @@ public class ClassData extends MemberData {
     /**
      * Read and resolve the class data
      */
-    public void read(DataInputStream in) throws IOException {
+    private void read(DataInputStream in) throws IOException {
         // Read the header
         int magic = in.readInt();
         if (magic != JAVA_MAGIC) {
@@ -261,22 +271,20 @@ public class ClassData extends MemberData {
 
         // Read the attributes
         readAttributes(in);
-
-        TraceUtils.traceln("");
-        TraceUtils.traceln("Reading is done-----------------------------------------------------");
-        TraceUtils.traceln("");
+        //
+        TraceUtils.traceln("", "<< Reading is done >>", "");
     }
 
     /**
      * Read and resolve the attribute data
      */
     public String getSrcLine(int lnum) {
-        if (source == null) {
+        if (sourceLines == null) {
             return null;  // impossible call
         }
         String line;
         try {
-            line = source.getLine(lnum);
+            line = sourceLines.getLine(lnum);
         } catch (ArrayIndexOutOfBoundsException e) {
             line = "Line number " + lnum + " is out of bounds";
         }
@@ -286,23 +294,24 @@ public class ClassData extends MemberData {
     private <T extends AnnotationData> void printAnnotations(List<T> annotations) {
         if (annotations != null) {
             for (T ad : annotations) {
-                ad.print(out, initialTab);
+                ad.print(out, "");
                 out.println();
             }
         }
     }
 
+    @Override
     public void print() throws IOException {
         int k, l;
         String className = "";
-        String sourceName = "";
+        String sourceName = null;
         if( isModuleUnit() ) {
             // Print the Annotations
             printAnnotations(visibleAnnotations);
             printAnnotations(invisibleAnnotations);
         } else {
             className = pool.getClassName(this_cpx);
-            pkgPrefixLen = className.lastIndexOf("/") + 1;
+            int pkgPrefixLen = className.lastIndexOf("/") + 1;
             // Write the header
             // package-info compilation unit
             if (className.endsWith("package-info")) {
@@ -415,11 +424,10 @@ printSugar:
         out.println("{");
 
         if ((options.contains(Options.PR.SRC)) && (source_cpx != 0)) {
-            sourceName = String.format(" compiled from %s" +
-                    "" , pool.getName(source_cpx));
-            try {
-                source = new TextLines(sourceName);
-            } catch (IOException ignored) {}
+            sourceName = pool.getString(source_cpx);
+            if (sourceName != null) {
+                sourceLines = new TextLines(classFile.getParent(), sourceName);
+            }
         }
 
         // Print the constant pool
@@ -430,23 +438,13 @@ printSugar:
         if ( !isModuleUnit() ) {
 
             // Print the fields
-            if (fields != null && !fields.isEmpty()) {
-                for (FieldData curf : fields) {
-                    curf.print();
-                }
-            }
+            printMemberDataList(fields);
 
             // Print the methods
-            if (methods != null && !methods.isEmpty()) {
-                for (MethodData curm : methods) {
-                    boolean skipBlankLine = false;
-                    curm.print(skipBlankLine);
-                }
-                out.println();
-            }
+            printMemberDataList(methods);
 
             // Print the Record (since class file 58.65535 JEP 359)
-            if( record != null && !record.isEmpty()) {
+            if( record != null ) {
                 record.print();
             }
 
@@ -478,11 +476,9 @@ printSugar:
                 }
                 out.println();
             }
-
-
-
-
-            out.println("} // end Class " + className + sourceName);
+            out.println(format("} // end Class %s%s",
+                    className,
+                    sourceName != null ? " compiled from \"" + sourceName +"\"" : ""));
         } else {
             // Print module attributes
             moduleData.print();
@@ -505,11 +501,27 @@ printSugar:
         return moduleData != null;
     }
 
+    private void printMemberDataList( List<? extends MemberData> list) throws IOException {
+        if( list != null ) {
+            int count = list.size();
+            if( count > 0 ) {
+                for( int i=0; i < count; i++ ) {
+                    MemberData md = list.get(i);
+                    md.setIndent(Options.BODY_INDENT);
+                    if( i !=0 && md.getAnnotationsCount() > 0 )
+                        out.println();
+                    md.print();
+                }
+                out.println();
+            }
+        }
+    }
+
     private List<IOException> getIssues() {
         return this.pool.pool.stream().
-                filter(c->c!=null).
+                filter(Objects::nonNull).
                 filter(c->c.getIssue() != null).
-                map(c->c.getIssue()).
+                map(ConstantPool.Constant::getIssue).
                 collect(Collectors.toList());
     }
 

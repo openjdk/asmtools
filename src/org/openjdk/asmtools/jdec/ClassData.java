@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.Module;
+import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.jasm.Modifiers;
 import org.openjdk.asmtools.jcoder.JcodTokens;
 import org.openjdk.asmtools.util.I18NResourceBundle;
@@ -36,7 +37,7 @@ import java.io.PrintWriter;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.Tables.AnnotElemType.AE_UNKNOWN;
-import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
+import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.*;
 
 /**
  * Class data of the Java Decoder
@@ -285,30 +286,7 @@ class ClassData {
                 switch (tg) {
                     case CONSTANT_UTF8: {
                         tagstr = "Utf8";
-                        StringBuilder sb = new StringBuilder();
-                        String s = (String) cpool[i];
-                        sb.append('\"');
-                        for (int k = 0; k < s.length(); k++) {
-                            char c = s.charAt(k);
-                            switch (c) {
-                                case '\t':
-                                    sb.append('\\').append('t');
-                                    break;
-                                case '\n':
-                                    sb.append('\\').append('n');
-                                    break;
-                                case '\r':
-                                    sb.append('\\').append('r');
-                                    break;
-                                case '\"':
-                                    sb.append('\\').append('\"');
-                                    break;
-                                default:
-                                    sb.append(c);
-                            }
-                        }
-
-                        valstr = sb.append('\"').toString();
+                        valstr = StringUtils.Utf8ToString((String) cpool[i]);
                     }
                     break;
                     case CONSTANT_FLOAT:
@@ -438,11 +416,13 @@ class ClassData {
      */
     private void decodeTargetTypeAndRefInfo(DataInputStream in) throws IOException {
         int tt = in.readUnsignedByte(); // [4.7.20] annotations[], type_annotation { u1 target_type; ...}
-        TargetType target_type = targetTypeEnum(tt);
-        InfoType info_type = target_type.infoType();
-        out_println(toHex(tt, 1) + ";  //  target_type: " + target_type.parseKey());
-
-        switch (info_type) {
+        ETargetType targetType = ETargetType.getTargetType(tt);
+        if( targetType == null ) {
+            throw new Error("Type annotation: invalid target_type(u1) " + tt);
+        }
+        ETargetInfo targetInfo = targetType.targetInfo();
+        out_println(toHex(tt, 1) + ";  //  target_type: " + targetType.parseKey());
+        switch (targetInfo) {
             case TYPEPARAM:          //[3.3.1] meth_type_param, class_type_param:
                 out_println(toHex(in.readUnsignedByte(), 1) + ";  //  param_index");
                 break;

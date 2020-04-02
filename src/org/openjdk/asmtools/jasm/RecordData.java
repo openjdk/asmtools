@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,26 +33,29 @@ import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
  */
 public class RecordData extends AttrData {
     private List<ComponentData> components = new ArrayList<>();
-    private ComponentData currentComp = null;
 
-    /* Record Data Fields */
     public RecordData(ClassData cls) {
         super(cls, Tables.AttrTag.ATT_Record.parsekey());
     }
 
-    public void addComponent(ConstantPool.ConstCell nameCell, ConstantPool.ConstCell descCell) {
+    public void addComponent(ConstantPool.ConstCell nameCell,
+                             ConstantPool.ConstCell descCell,
+                             ConstantPool.ConstCell signature,
+                             ArrayList<AnnotationData> annotations) {
         // Define a field if absent
         FieldData fd = getClassData().addFieldIfAbsent(ACC_MANDATED & ACC_PRIVATE & ACC_FINAL, nameCell, descCell);
-        currentComp = new ComponentData(fd);
-        components.add(currentComp);
+        ComponentData cd = new ComponentData(fd);
+        if( annotations != null ) {
+            cd.addAnnotations(annotations);
+        }
+        if( signature != null ) {
+            cd.setSignatureAttr(signature);
+        }
+        components.add(cd);
     }
 
-    public void setComponentSignature(ConstantPool.ConstCell signature) {
-        currentComp.setSignature(signature);
-    }
-
-    public void setAnnotations(ArrayList<AnnotationData> annotations) {
-        currentComp.addAnnotations(annotations);
+    public boolean isEmpty() {
+        return components.isEmpty();
     }
 
     @Override
@@ -72,20 +75,15 @@ public class RecordData extends AttrData {
 
     class ComponentData extends MemberData {
         private FieldData field;
-        private AttrData signature;
 
         public ComponentData(FieldData field) {
             super(getClassData());
             this.field = field;
         }
 
-        public void setSignature(ConstantPool.ConstCell value_cpx) {
-            signature = new CPXAttr(cls, Tables.AttrTag.ATT_Signature.parsekey(), value_cpx);
-        }
-
         @Override
         protected DataVector getAttrVector() {
-            return getDataVector(signature);
+            return getDataVector(signatureAttr);
         }
 
         public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {

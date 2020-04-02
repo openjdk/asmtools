@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,9 +41,7 @@ public class Main extends Tool {
 
     public Main(PrintWriter out, String programName) {
         super(out, programName);
-        printCannotReadMsg = (fname) -> {
-            error(i18n.getString("jcoder.error.cannot_read", fname));
-        };
+        printCannotReadMsg = (fname) -> error(i18n.getString("jcoder.error.cannot_read", fname));
     }
 
     public Main(PrintStream out, String program) {
@@ -192,7 +190,7 @@ public class Main extends Tool {
     /**
      * main program
      */
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         Main compiler = new Main(new PrintWriter(System.out), "jcoder");
         System.exit(compiler.compile(argv) ? 0 : 1);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,11 +25,19 @@ package org.openjdk.asmtools.jasm;
 import java.io.IOException;
 
 /**
- *
+ * Base contract for writeable structures
  */
 interface Data {
 
-    public void write(CheckedDataOutputStream out) throws IOException;
+    void write(CheckedDataOutputStream out) throws IOException;
 
-    public int getLength();
+    int getLength();
+
+    default String tabString(int tabLevel) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < tabLevel; i++) {
+            sb.append('\t');
+        }
+        return sb.toString();
+    }
 }

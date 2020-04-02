@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,11 +30,7 @@ import java.io.IOException;
 /**
  *
  */
-class InnerClassData {
-    /*-------------------------------------------------------- */
-    /* InnerClassData Fields */
-
-    private Options options = Options.OptionObject();
+class InnerClassData extends Indenter {
 
     ClassData cls;
     int inner_class_info_index;
@@ -55,8 +51,8 @@ class InnerClassData {
     }  // end read
 
     public void print() throws IOException {
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(Modifiers.accessString(access, CF_Context.CTX_INNERCLASS));
+        boolean pr_cpx = Options.OptionObject().contains(Options.PR.CPX);
+        cls.out.print(getIndentString() + Modifiers.accessString(access, CF_Context.CTX_INNERCLASS));
         cls.out.print("InnerClass ");
         if (pr_cpx) {
             if (inner_name_index != 0) {

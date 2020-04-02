@@ -26,6 +26,7 @@ import static org.openjdk.asmtools.jasm.JasmTokens.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 import static org.openjdk.asmtools.jasm.OpcodeTables.*;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 
 /**
  * ParserInstr
@@ -88,7 +89,7 @@ public class ParserInstr extends ParseBase {
 
         Opcode opcode = OpcodeTables.opcode(mnemocode);
         if (opcode == null) {
-            debugScan(" %%error%%error%%% $$$$$$$$$$$$$$$  mnemocode = '" + mnemocode + "'.   ");
+            debugScan(" Error:  mnemocode = '" + mnemocode + "'.   ");
         }
         OpcodeType optype = opcode.type();
 
@@ -267,7 +268,13 @@ public class ParserInstr extends ParseBase {
                         break;
                     case opc_invokestatic:
                     case opc_invokespecial:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_METHOD, ConstType.CONSTANT_INTERFACEMETHOD);
+                        ConstType ctype01  = ConstType.CONSTANT_METHOD;
+                        ConstType ctype02  = ConstType.CONSTANT_INTERFACEMETHOD;
+                        if(Modifier.isInterface(this.parser.cd.access)) {
+                            ctype01  = ConstType.CONSTANT_INTERFACEMETHOD;
+                            ctype02  = ConstType.CONSTANT_METHOD;
+                        }
+                        arg = cpParser.parseConstRef(ctype01, ctype02);
                         break;
                     case opc_jsr:
                     case opc_goto:

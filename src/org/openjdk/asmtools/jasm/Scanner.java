@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.JasmTokens.*;
 import static org.openjdk.asmtools.jasm.Constants.EOF;
 import static org.openjdk.asmtools.jasm.Constants.OFFSETBITS;
@@ -188,7 +189,7 @@ prefix:
                         env.error(pos, "identifier.expected");
                         break;
                     default:
-                        env.error(pos, "token.expected", "<" + t.printval() + ">");
+                        env.error(pos, "token.expected", "<" + t.printValue() + ">");
                         break;
                 }
 
@@ -948,7 +949,7 @@ scanloop:
         idValue = bufferString();
         stringValue = idValue;
         token = keyword_token_ident(idValue);
-        debugStr("##### SCANNER (scanIdent) ######## token = " + token + " ##### ");
+        debugStr(format("##### SCANNER (scanIdent) ######## token = %s value = \"%s\"\n", token, idValue));
     } // end scanIdentifier
 
 //==============================
@@ -1127,7 +1128,6 @@ loop:
                     // Our one concession to DOS.
                     if ((ch = in.read()) == EOF) {
                         token = Token.EOF;
-//                        t0ken = Token.EOF;
                         break loop;
                     }
                     env.error(pos, "funny.char");

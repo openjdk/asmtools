@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,11 +24,9 @@ package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- *
+ *  field_info
  */
 class FieldData extends MemberData {
 
@@ -55,7 +53,7 @@ class FieldData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        return getDataVector(initValue, syntheticAttr, deprecatedAttr);
+        return getDataVector(initValue, syntheticAttr, deprecatedAttr, signatureAttr);
     }
 
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {

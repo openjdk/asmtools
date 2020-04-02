@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,161 +23,37 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
-import static org.openjdk.asmtools.jasm.RuntimeConstants.SPLIT_VERIFIER_CFV;
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static org.openjdk.asmtools.jasm.RuntimeConstants.SPLIT_VERIFIER_CFV;
+
 class CodeAttr extends AttrData {
 
-    /*-------------------------------------------------------- */
-    /* CodeAttr inner classes */
-    static public class Local extends Argument {
-
-        String name;
-        boolean defd = false, refd = false;
-
-        public Local(String name) {
-            this.name = name;
-        }
-    }
-
-    /**
-     *
-     */
-    static public class Label extends Local {
-
-        public Label(String name) {
-            super(name);
-        }
-    }
-
-    /**
-     *
-     */
-    class LocVarData extends Local implements Data {
-
-        // arg means slot
-
-        short start_pc, length;
-        ConstantPool.ConstCell name_cpx, sig_cpx;
-
-        public LocVarData(String name) {
-            super(name);
-        }
-
-        @Override
-        public int getLength() {
-            return 10;
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            out.writeShort(start_pc);
-            out.writeShort(length);
-            out.writeShort(name_cpx.arg);
-            out.writeShort(sig_cpx.arg);
-            out.writeShort(arg);
-        }
-    }
-
-    /**
-     *
-     */
-    class LineNumData implements Data {
-
-        int start_pc, line_number;
-
-        public LineNumData(int start_pc, int line_number) {
-            this.start_pc = start_pc;
-            this.line_number = line_number;
-        }
-
-        @Override
-        public int getLength() {
-            return 4;
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            out.writeShort(start_pc);
-            out.writeShort(line_number);
-        }
-    }
-
-    /**
-     *
-     */
-    class Trap extends Local {
-
-        int start_pc = Argument.NotSet, end_pc = Argument.NotSet;
-        int pos;
-
-        Trap(int pos, String name) {
-            super(name);
-            this.pos = pos;
-        }
-    }
-
-    /**
-     *
-     */
-    class TrapData implements Data {
-
-        int pos;
-        Trap trap;
-        int handler_pc;
-        Argument catchType;
-
-        public TrapData(int pos, Trap trap, int handler_pc, Argument catchType) {
-            this.pos = pos;
-            this.trap = trap;
-            this.handler_pc = handler_pc;
-            this.catchType = catchType;
-        }
-
-        @Override
-        public int getLength() {
-            return 8; // add the length of number of elements
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            out.writeShort(trap.start_pc);
-            out.writeShort(trap.end_pc);
-            out.writeShort(handler_pc);
-            if (catchType.isSet()) {
-                out.writeShort(catchType.arg);
-            } else {
-                out.writeShort(0);
-            }
-        }
-    }  // end TrapData
-
-
-    /*-------------------------------------------------------- */
-    /* CodeAttr Fields */
-    protected MethodData mtd;
     protected ClassData cls;
+
+    protected MethodData mtd;
     protected Environment env;
     protected Argument max_stack, max_locals;
     protected Instr zeroInstr, lastInstr;
     protected int cur_pc = 0;
-    protected DataVector<TrapData> trap_table
-            = new DataVector<>(0); // TrapData
+    protected DataVector<TrapData> trap_table; // TrapData
     protected DataVectorAttr<LineNumData> lin_num_tb; // LineNumData
     protected int lastln = 0;
     protected DataVectorAttr<LocVarData> loc_var_tb;  // LocVarData
     protected DataVector<DataVectorAttr<? extends Data>> attrs;
-    //   protected iVector                         slots;
     protected ArrayList<Integer> slots;
     protected HashMap<String, LocVarData> locvarsHash;
     protected HashMap<String, Label> labelsHash;
     protected HashMap<String, Trap> trapsHash;
     protected StackMapData curMapEntry = null;
     protected DataVectorAttr<StackMapData> stackMap;
-    /*-------------------------------------------------------- */
+    // type annotations
+    protected DataVectorAttr<TypeAnnotationData> type_annotAttrVis = null;
+    protected DataVectorAttr<TypeAnnotationData> type_annotAttrInv = null;
 
     public CodeAttr(MethodData mtd, int pos, int paramcnt, Argument max_stack, Argument max_locals) {
         super(mtd.cls, AttrTag.ATT_Code.parsekey());
@@ -193,10 +69,8 @@ class CodeAttr extends AttrData {
             lin_num_tb = new DataVectorAttr<>(cls, AttrTag.ATT_LineNumberTable.parsekey());
             attrs.add(lin_num_tb);
         }
-//        slots = new iVector(paramcnt);
         slots = new ArrayList<>(paramcnt);
         for (int k = 0; k < paramcnt; k++) {
-//            slots.setElement(1, k);
             slots.add(k, 1);
         }
     }
@@ -205,6 +79,36 @@ class CodeAttr extends AttrData {
         checkTraps();
         checkLocVars();
         checkLabels();
+        //
+        if (type_annotAttrVis != null) {
+            attrs.add(type_annotAttrVis);
+        }
+        if (type_annotAttrInv != null) {
+            attrs.add(type_annotAttrInv);
+        }
+    }
+
+    public void addAnnotations(ArrayList<AnnotationData> list) {
+        for (AnnotationData item : list) {
+            boolean invisible = item.invisible;
+            if (item instanceof TypeAnnotationData) {
+                // Type Annotations
+                TypeAnnotationData ta = (TypeAnnotationData) item;
+                if (invisible) {
+                    if (type_annotAttrInv == null) {
+                        type_annotAttrInv = new DataVectorAttr(cls,
+                                AttrTag.ATT_RuntimeInvisibleTypeAnnotations.parsekey());
+                    }
+                    type_annotAttrInv.add(ta);
+                } else {
+                    if (type_annotAttrVis == null) {
+                        type_annotAttrVis = new DataVectorAttr(cls,
+                                AttrTag.ATT_RuntimeVisibleTypeAnnotations.parsekey());
+                    }
+                    type_annotAttrVis.add(ta);
+                }
+            }
+        }
     }
 
     /* -------------------------------------- Traps */
@@ -332,11 +236,8 @@ class CodeAttr extends AttrData {
     }
 
     public void LocVarDataDef(int slot) {
-//        slots.setElement(1, slot);
         slots.set(slot, 1);
         if ((max_locals != null) && (max_locals.arg < slots.size())) {
-
-//        if ((max_locals != null) && (max_locals.arg < slots.length)) {
             env.error("warn.illslot", Integer.toString(slot));
         }
     }
@@ -354,16 +255,6 @@ class CodeAttr extends AttrData {
         int k;
         findSlot:
         {
-            /*
-             for (k = 0; k < slots.length; k++) {
-             if (slots.data[k] == 0) {
-             break findSlot;
-             }
-             }
-             k = slots.length;
-             *
-             */
-
             for (k = 0; k < slots.size(); k++) {
                 if (slots.get(k) == 0) {
                     break findSlot;
@@ -391,7 +282,6 @@ class CodeAttr extends AttrData {
     }
 
     public void LocVarDataEnd(int slot) {
-//        slots.data[slot] = 0;
         slots.set(slot, 0);
     }
 
@@ -405,10 +295,8 @@ class CodeAttr extends AttrData {
             return;
         }
         locvar.length = (short) (cur_pc - locvar.start_pc);
-//        slots.data[locvar.arg] = 0;
 
         slots.set(locvar.arg, 0);
-//      locvarsHash.put(name, null); unfortunately, prohibited
         locvarsHash.put(name, new LocVarData(name));
     }
 
@@ -422,9 +310,7 @@ class CodeAttr extends AttrData {
             } // this is false locvar
             // set end of scope, if not set
             if (slots.get(locvar.arg) == 1) {
-//            if (slots.data[locvar.arg] == 1) {
                 locvar.length = (short) (cur_pc - locvar.start_pc);
-//                slots.data[locvar.arg] = 0;
                 slots.set(locvar.arg, 0);
             }
         }
@@ -497,14 +383,12 @@ class CodeAttr extends AttrData {
         return 2 + 2 + 4 // for max_stack, max_locals, and cur_pc
                 + cur_pc //      + 2+trap_table.size()*8
                 + trap_table.getLength() + attrs.getLength();
-
     }
 
     @Override
     public void write(CheckedDataOutputStream out)
             throws IOException, Parser.CompilerError {
         int mxstck = (max_stack != null) ? max_stack.arg : 0;
-//        int mxloc = (max_locals != null) ? max_locals.arg : slots.length;
         int mxloc = (max_locals != null) ? max_locals.arg : slots.size();
         super.write(out);  // attr name, attr len
         out.writeShort(mxstck);
@@ -518,5 +402,128 @@ class CodeAttr extends AttrData {
 
         attrs.write(out);
     }
+
+    /*-------------------------------------------------------- */
+    /* CodeAttr inner classes */
+    static public class Local extends Argument {
+
+        String name;
+        boolean defd = false, refd = false;
+
+        public Local(String name) {
+            this.name = name;
+        }
+    }
+
+    /**
+     *
+     */
+    static public class Label extends Local {
+
+        public Label(String name) {
+            super(name);
+        }
+    }
+
+    /**
+     *
+     */
+    class LocVarData extends Local implements Data {
+
+        // arg means slot
+        short start_pc, length;
+        ConstantPool.ConstCell name_cpx, sig_cpx;
+
+        public LocVarData(String name) {
+            super(name);
+        }
+
+        @Override
+        public int getLength() {
+            return 10;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            out.writeShort(start_pc);
+            out.writeShort(length);
+            out.writeShort(name_cpx.arg);
+            out.writeShort(sig_cpx.arg);
+            out.writeShort(arg);
+        }
+    }
+
+    /**
+     *
+     */
+    class LineNumData implements Data {
+
+        int start_pc, line_number;
+
+        public LineNumData(int start_pc, int line_number) {
+            this.start_pc = start_pc;
+            this.line_number = line_number;
+        }
+
+        @Override
+        public int getLength() {
+            return 4;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            out.writeShort(start_pc);
+            out.writeShort(line_number);
+        }
+    }
+
+    /**
+     *
+     */
+    class Trap extends Local {
+
+        int start_pc = Argument.NotSet, end_pc = Argument.NotSet;
+        int pos;
+
+        Trap(int pos, String name) {
+            super(name);
+            this.pos = pos;
+        }
+    }
+
+    /**
+     *
+     */
+    class TrapData implements Data {
+
+        int pos;
+        Trap trap;
+        int handler_pc;
+        Argument catchType;
+
+        public TrapData(int pos, Trap trap, int handler_pc, Argument catchType) {
+            this.pos = pos;
+            this.trap = trap;
+            this.handler_pc = handler_pc;
+            this.catchType = catchType;
+        }
+
+        @Override
+        public int getLength() {
+            return 8; // add the length of number of elements
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            out.writeShort(trap.start_pc);
+            out.writeShort(trap.end_pc);
+            out.writeShort(handler_pc);
+            if (catchType.isSet()) {
+                out.writeShort(catchType.arg);
+            } else {
+                out.writeShort(0);
+            }
+        }
+    }  // end TrapData
 } // end CodeAttr
 

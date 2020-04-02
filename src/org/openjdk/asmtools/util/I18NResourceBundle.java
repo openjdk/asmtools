@@ -122,7 +122,7 @@ public class I18NResourceBundle extends ResourceBundle {
      * A required internal method for ResourceBundle. Load the actual resource bundle, if
      * it has not yet been loaded, then hand the request off to that bundle. If the
      * resource cannot be found, a message is printed to the console and the result will
-     * be the original key.
+     * be the original tag.
      */
     protected Object handleGetObject(String key) throws MissingResourceException {
         try {

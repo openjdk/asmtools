@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,16 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.jasm.JasmTokens;
 import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.Tables.AttrTag;
 import static org.openjdk.asmtools.jasm.Tables.CF_Context;
+import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
 
 /**
  * Field data for field members in a class of the Java Disassembler
@@ -37,14 +40,10 @@ public class FieldData extends MemberData {
 
     // CP index to the field name
     protected int name_cpx;
-
     // CP index to the field type
-    protected int sig_cpx;
-
-     // CP index to the field value
+    protected int type_cpx;
+    // CP index to the field value
     protected int value_cpx = 0;
-
-    public static final String initialTab = "";
 
     public FieldData(ClassData cls) {
         super(cls);
@@ -56,9 +55,16 @@ public class FieldData extends MemberData {
         // Read the Attributes
         boolean handled = true;
         switch (attrtag) {
+            case ATT_Signature:
+                if( signature != null ) {
+                    traceln("Record attribute:  more than one attribute Signature are in component.attribute_info_attributes[attribute_count]");
+                    traceln("Last one will be used.");
+                }
+                signature = new SignatureData(cls).read(in, attrlen);
+                break;
             case ATT_ConstantValue:
                 if (attrlen != 2) {
-                    throw new ClassFormatError("invalid ConstantValue attr length");
+                    throw new ClassFormatError(format("%s: Invalid attribute length #%d", AttrTag.ATT_ConstantValue.printval(), attrlen));
                 }
                 value_cpx = in.readUnsignedShort();
                 break;
@@ -77,71 +83,44 @@ public class FieldData extends MemberData {
         // read the Fields CP indexes
         access = in.readUnsignedShort();
         name_cpx = in.readUnsignedShort();
-        sig_cpx = in.readUnsignedShort();
-        TraceUtils.traceln("      FieldData: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx)
-                + " sig[" + sig_cpx + "]=" + cls.pool.getString(sig_cpx));
-
+        type_cpx = in.readUnsignedShort();
         // Read the attributes
         readAttributes(in);
+        //
+        TraceUtils.traceln(2,
+                format("FieldData: name[%d]=%s type[%d]=%s%s",
+                        name_cpx, cls.pool.getString(name_cpx),
+                        type_cpx, cls.pool.getString(type_cpx),
+                        signature != null ? signature : ""));
     }
+
 
     /**
      * Prints the field data to the current output stream. called from ClassData.
      */
+    @Override
     public void print() throws IOException {
         // Print annotations first
-        // Print the Annotations
-        if (visibleAnnotations != null) {
-            out.println();
-            for (AnnotationData visad : visibleAnnotations) {
-                visad.print(out, initialTab);
-            }
-        }
-        if (invisibleAnnotations != null) {
-            out.println();
-            for (AnnotationData invisad : invisibleAnnotations) {
-                invisad.print(out, initialTab);
-            }
-        }
+        super.printAnnotations(getIndentString());
 
-        if (visibleTypeAnnotations != null) {
-            out.println();
-            for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                visad.print(out, initialTab);
-                out.println();
-            }
-        }
-        if (invisibleTypeAnnotations != null) {
-            out.println();
-            for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                invisad.print(out, initialTab);
-                out.println();
-            }
-        }
+        StringBuilder bodyPrefix = new StringBuilder(getIndentString()).append(Modifiers.accessString(access, CF_Context.CTX_FIELD));
+        StringBuilder tailPrefix = new StringBuilder();
 
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        out.print(Modifiers.accessString(access, CF_Context.CTX_FIELD));
         if (isSynthetic) {
-            out.print("synthetic ");
+            bodyPrefix.append(JasmTokens.Token.SYNTHETIC.parseKey()).append(' ');
         }
         if (isDeprecated) {
-            out.print("deprecated ");
+            bodyPrefix.append(JasmTokens.Token.DEPRECATED.parseKey()).append(' ');
         }
-        out.print("Field ");
-        if (pr_cpx) {
-            out.print("#" + name_cpx + ":#" + sig_cpx);
-        } else {
-            out.print(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
-        }
+
+        // field
+        bodyPrefix.append(JasmTokens.Token.FIELDREF.parseKey()).append(' ');
+
         if (value_cpx != 0) {
-            out.print("\t= ");
-            cls.pool.PrintConstant(cls.out, value_cpx);
+            tailPrefix.append("\t= ").append(cls.pool.ConstantStrValue(value_cpx));
         }
-        if (pr_cpx) {
-            out.println(";\t // " + cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
-        } else {
-            out.println(";");
-        }
+
+        printVar(bodyPrefix, tailPrefix,name_cpx, type_cpx);
     }
 } // end FieldData
 

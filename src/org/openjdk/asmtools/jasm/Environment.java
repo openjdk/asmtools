@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -320,15 +320,13 @@ public class Environment {
 
         // Report the errors
         for (ErrorMessage msg = errors; msg != null; msg = msg.next) {
-            int ln = lineNumber(msg.where);
             int off = lineOffset(msg.where);
 
             int i, j;
             for (i = off; (i > 0) && (data[i - 1] != '\n') && (data[i - 1] != '\r'); i--);
             for (j = off; (j < data.length) && (data[j] != '\n') && (data[j] != '\r'); j++);
 
-            String prefix = simpleInputFileName + ":" + ln + ":";
-            outputln(prefix + " " + msg.message);
+            outputln( String.format( "%s (%d:%d) %s", getSimpleInputFileName(), lineNumber(msg.where), off - i, msg.message));
             outputln(new String(data, i, j - i));
 
             char strdata[] = new char[(off - i) + 1];
@@ -385,7 +383,7 @@ public class Environment {
             msg = "Error: ";
         }
         msg = msg + errorString(err, arg1, arg2, arg3);
-        traceln("error(" + lineNumber(where) + ":" + lineOffset(where) + "):" + msg);
+        traceln(msg);
         insertError(where, msg);
     }
 

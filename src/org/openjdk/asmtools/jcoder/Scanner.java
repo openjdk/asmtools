@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -100,7 +100,7 @@ public class Scanner {
      * A growable character buffer.
      */
     private int count;
-    private char buffer[] = new char[32];
+    private char[] buffer = new char[32];
 
     /*-------------------------------------------------------- */
     /**
@@ -170,7 +170,7 @@ public class Scanner {
 
     private void putc(int ch) {
         if (count == buffer.length) {
-            char newBuffer[] = new char[buffer.length * 2];
+            char[] newBuffer = new char[buffer.length * 2];
             System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
             buffer = newBuffer;
         }
@@ -178,7 +178,7 @@ public class Scanner {
     }
 
     private String bufferString() {
-        char buf[] = new char[count];
+        char[] buf = new char[count];
         System.arraycopy(buffer, 0, buf, 0, count);
         return new String(buf);
     }
@@ -472,16 +472,6 @@ numberLoop:
                 }
                 return n;
             }
-            // Utf8 "\%pattern\%NonNegativePoint\%(II)";
-            case '%':
-               readCh();
-               return '%';
-            case '@':
-                readCh();
-                return '@';
-            case ':':
-                readCh();
-                return ':';
             case 'r':
                 readCh();
                 return '\r';
@@ -540,11 +530,7 @@ loop:
                 case '\\': {
                     int c = scanEscapeChar();
                     if (c >= 0) {
-                        char ch = (char)c;
-                        if ( ch == '@' || ch == ':' || ch == '\\') {
-                            putc('\\');
-                        }
-                        putc(ch);
+                        putc((char)c);
                     }
                     break;
                 }
@@ -618,16 +604,12 @@ loop:
         for (;;) {
             putc(ch);
             readCh();
-//env.traceln(" read:"+(char)ch);
             if ((ch == '/') || (ch == '.') || (ch == '-')) {
-//env.traceln("  =>compound");
                 compound = true;
-                continue;
             } else if (!Character.isJavaIdentifierPart((char) ch)) {
                 break;
             }
         }
-//env.traceln(" end:"+(char)ch);
         stringValue = bufferString();
         if (compound) {
             token = Token.IDENT;
@@ -646,8 +628,6 @@ loop:
                     token = Token.INTVAL;
                     intSize = 1;
                     longValue = intValue;
-                } else {
-                    //env.traceln(" ^^^^^^^^ Massive Weirdness here: Can't locate IDENT '" + stringValue + "'. ^^^^^^^^^^");
                 }
             }
         }

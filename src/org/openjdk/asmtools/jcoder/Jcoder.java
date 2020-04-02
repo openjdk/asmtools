@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -662,7 +662,7 @@ class Jcoder {
     /**
      * Parse an Jcoder file.
      */
-    ArrayList<ByteBuffer> parseFile() {
+    void parseFile() {
         env.traceln("PARSER");
         context.init();
         try {
@@ -690,7 +690,7 @@ class Jcoder {
 
                         case EOF:
                             // The end
-                            return Classes;
+                            return;
 
                         default:
                             env.traceln("unexpected token=" + scanner.token.toString());
@@ -708,9 +708,7 @@ class Jcoder {
             }
         } catch (IOException e) {
             env.error(scanner.pos, "io.exception", env.getInputFileName());
-            return Classes;
         }
-        return Classes;
     } //end parseFile
 
     /*---------------------------------------------*/

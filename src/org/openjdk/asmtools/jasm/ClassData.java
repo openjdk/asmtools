@@ -193,6 +193,13 @@ class ClassData extends MemberData {
         return this.recordData;
     }
 
+    /**
+     * Rejects a record: removes the record attribute if there are no components
+     */
+    public void rejectRecord() {
+        this.recordData = null;
+    }
+
     // Field
     public ConstantPool.ConstValue_Pair mkNape(ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
         return new ConstantPool.ConstValue_Pair(ConstType.CONSTANT_NAMEANDTYPE, name, sig);
@@ -325,14 +332,14 @@ class ClassData extends MemberData {
             env.traceln("ascicell=" + ascicell);
             ConstantPool.ConstValue_String me_str = (ConstantPool.ConstValue_String) ascicell.ref;
             myClassName = me_str.value;
-            env.traceln("--------------------------------------------");
+            env.traceln("-------------------");
             env.traceln("-- Constant Pool --");
             env.traceln("-------------------");
             pool.printPool();
-            env.traceln("--------------------------------------------");
+            env.traceln("-------------------");
             env.traceln(" ");
             env.traceln(" ");
-            env.traceln("--------------------------------------------");
+            env.traceln("-------------------");
             env.traceln("-- Inner Classes --");
             env.traceln("-------------------");
             printInnerClasses();

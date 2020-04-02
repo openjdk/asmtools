@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.*;
 import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
 
 /**
@@ -37,11 +39,10 @@ import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
  * <p>
  * since class file 58.65535 (JEP 359)
  */
-public class RecordData {
+public class RecordData extends  Indenter {
+
 
     private final ClassData cls;
-    private final boolean pr_cpx = Options.OptionObject().contains(Options.PR.CPX);
-    private String initialTab = " ";
     private List<Component> components;
 
     public RecordData(ClassData cls) {
@@ -62,28 +63,26 @@ public class RecordData {
      * Prints the record data to the current output stream. called from ClassData.
      */
     public void print() throws IOException {
-        int bound = components.size()-1;
-        cls.out.println(JasmTokens.Token.RECORD.parsekey());
-        for(int cn = 0; cn <= bound; cn++) {
-            components.get(cn).print( cn == bound ? ";" : ",");
+        int count = components.size();
+        if (count > 0) {
+            cls.out.println(getIndentString() + RECORD.parseKey() + getIndentString() + LBRACE.parseKey());
+            for (int i = 0; i < count; i++) {
+                Component cn = components.get(i);
+                cn.setIndent(indent() * 2);
+                if (i != 0 && cn.getAnnotationsCount() > 0)
+                    cn.out.println();
+                cn.print();
+            }
+            cls.out.println(getIndentString() + RBRACE.parseKey());
+            cls.out.println();
         }
-        cls.out.println();
     }
-
-    public boolean isEmpty() {
-        return components.isEmpty();
-    }
-
 
     private class Component extends MemberData {
         // CP index to the name
         private int name_cpx;
-        // CP index to the descriptor
-        private int desc_cpx;
-        // Signature can be located in component_info
-        private SignatureData signature;
-        //
-        private int countAttr = 0;
+        // CP index to the type descriptor
+        private int type_cpx;
 
         public Component(ClassData cls) {
             super(cls);
@@ -115,92 +114,33 @@ public class RecordData {
         public Component read(DataInputStream in) throws IOException {
             // read the Component CP indexes
             name_cpx = in.readUnsignedShort();
-            desc_cpx = in.readUnsignedShort();
-            traceln("      RecordComponent: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx)
-                    + " descriptor[" + desc_cpx + "]=" + cls.pool.getString(desc_cpx));
+            type_cpx = in.readUnsignedShort();
+            traceln(2, "RecordComponent: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx)
+                    + " descriptor[" + type_cpx + "]=" + cls.pool.getString(type_cpx));
             // Read the attributes
             readAttributes(in);
-            // Calculate amount of attributes
-            countAttr = (visibleAnnotations == null ? 0 : visibleAnnotations.size()) +
-                    (invisibleAnnotations == null ? 0 : invisibleAnnotations.size()) +
-                    (visibleTypeAnnotations == null ? 0 : visibleTypeAnnotations.size()) +
-                    (invisibleTypeAnnotations == null ? 0 : invisibleTypeAnnotations.size()) +
-                    (signature != null ? 1 : 0);
             return this;
-        }
-
-        public boolean isEmpty() {
-            return countAttr == 0;
-        }
-
-        private void printAnnotations(String endOfComponent) {
-            if( signature != null ) {
-                signature.print(initialTab);
-                countAttr--;
-                if(countAttr != 0)
-                    out.println();
-            }
-            if (visibleAnnotations != null) {
-                for (AnnotationData visad : visibleAnnotations) {
-                    // out.print(initialTab);
-                    visad.print(out, initialTab);
-                    countAttr--;
-                    if(countAttr != 0)
-                        out.println();
-                }
-            }
-            if (invisibleAnnotations != null) {
-                for (AnnotationData invisad : invisibleAnnotations) {
-                    invisad.print(out, initialTab);
-                    countAttr--;
-                    if(countAttr != 0)
-                        out.println();
-                }
-            }
-
-            if (visibleTypeAnnotations != null) {
-                for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                    visad.print(out, initialTab);
-                    countAttr--;
-                    if(countAttr != 0)
-                        out.println();
-                }
-            }
-            if (invisibleTypeAnnotations != null) {
-                for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                    invisad.print(out, initialTab);
-                    countAttr--;
-                    if(countAttr != 0)
-                        out.println();
-                }
-            }
-            out.println(endOfComponent);
         }
 
         /**
          * Prints the component data to the current output stream. called from RecordData.
          */
-        public void print(String endOfComponent) throws IOException {
-
-            out.print(initialTab);
+        public void print() throws IOException {
+            // print component's attributes
+                super.printAnnotations(getIndentString());
+            // print component
+            StringBuilder bodyPrefix = new StringBuilder(getIndentString());
+            StringBuilder tailPrefix = new StringBuilder();
             if (isSynthetic) {
-                out.print("synthetic ");
+                bodyPrefix.append(JasmTokens.Token.SYNTHETIC.parseKey()).append(' ');
             }
             if (isDeprecated) {
-                out.print("deprecated ");
+                bodyPrefix.append(JasmTokens.Token.DEPRECATED.parseKey()).append(' ');
             }
+            // component
+            bodyPrefix.append(JasmTokens.Token.COMPONENT.parseKey()).append(' ');
 
-            if (pr_cpx) {
-                out.print("#" + name_cpx + ":#" + desc_cpx + (isEmpty() ? endOfComponent : ""));
-                out.println("\t // " + cls.pool.getName(name_cpx) + ":" + cls.pool.getName(desc_cpx));
-
-            } else {
-                out.println(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(desc_cpx) + (isEmpty() ? endOfComponent : ""));
-            }
-            // print component's attributes
-            if (!isEmpty()) {
-                printAnnotations(endOfComponent);
-            }
+            printVar(bodyPrefix, tailPrefix,name_cpx, type_cpx);
         }
     }
 }

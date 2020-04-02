@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,9 +32,7 @@ import java.util.ArrayList;
 /**
  *
  */
-public class BootstrapMethodData {
-    /*-------------------------------------------------------- */
-    /* BootstrapMethodData Fields */
+public class BootstrapMethodData extends Indenter {
 
     int bsm_index;
     ArrayList<Integer> bsm_args_indexes;
@@ -43,7 +41,6 @@ public class BootstrapMethodData {
     private Options options = Options.OptionObject();
     private ClassData cls;
     private PrintWriter out;
-    /*-------------------------------------------------------- */
 
     public BootstrapMethodData(ClassData cls) {
         this.cls = cls;
@@ -53,6 +50,7 @@ public class BootstrapMethodData {
 
     /*========================================================*/
     /* Read Methods */
+
     /**
      *
      * read
@@ -75,7 +73,7 @@ public class BootstrapMethodData {
     /*========================================================*/
     /* Print Methods */
     public void print() throws IOException {
-        out.print(JasmTokens.Token.BOOTSTRAPMETHOD.parsekey() + " #" + bsm_index);
+        out.print(getIndentString() + JasmTokens.Token.BOOTSTRAPMETHOD.parseKey() + " #" + bsm_index);
         for (int i = 0; i < bsm_args_indexes.size(); i++) {
             out.print(" #" + bsm_args_indexes.get(i));
         }

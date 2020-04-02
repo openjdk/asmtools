@@ -23,10 +23,7 @@
 package org.openjdk.asmtools.jasm;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Optional;
-
-import static org.openjdk.asmtools.jasm.JasmTokens.Token.ALL_TOKENS;
 
 /**
  *
@@ -81,7 +78,9 @@ public class JasmTokens {
         JASM                (10, "Jasm"),
         MISC                (11, "Misc"),
         JASM_IDENT          (12, "Jasm identifier"),
-        MODULE_NAME         (13, "Module Name");
+        MODULE_NAME         (13, "Module Name"),
+        TYPE_PATH_KIND      (14, "Type path kind")          // Table 4.7.20.2-A Interpretation of type_path_kind values
+        ;
 
         private final Integer value;
         private final String printval;
@@ -95,11 +94,76 @@ public class JasmTokens {
         }
     }
 
-    /*-------------------------------------------------------- */
+    public enum AnnotationType {
+        Visible("@+"),
+        Invisible("@-"),
+        VisibleType("@T+"),
+        InvisibleType("@T-");
+
+        private final String jasmPrefix;
+
+        AnnotationType(String jasmPrefix) {
+            this.jasmPrefix = jasmPrefix;
+        }
+
+        /**
+         * isAnnotationToken
+         *
+         * examines the beginning of a string to see if it starts with an annotation
+         * characters ('@+' = visible annotation, '@-' = invisible).
+         *
+         * @param str String to be analyzed
+         * @return True if the string starts with an annotation char.
+         */
+        static public boolean isAnnotationToken(String str) {
+            return (str.startsWith(AnnotationType.Invisible.jasmPrefix) ||
+                    str.startsWith(AnnotationType.Visible.jasmPrefix));
+        }
+
+        /**
+         * isTypeAnnotationToken
+         *
+         * examines the beginning of a string to see if it starts with type annotation
+         * characters ('@T+' = visible type annotation, '@T-' = invisible).
+         *
+         * @param str String to be analyzed
+         * @return True if the string starts with an annotation char.
+         */
+        static public boolean isTypeAnnotationToken(String str) {
+            return (str.startsWith(AnnotationType.InvisibleType.jasmPrefix) ||
+                    str.startsWith(AnnotationType.VisibleType.jasmPrefix));
+        }
+
+        /**
+         * isAnnotation
+         *
+         * examines the beginning of a string to see if it starts with an annotation character
+         *
+         * @param str String to be analyzed
+         * @return True if the string starts with an annotation char.
+         */
+        static public boolean isAnnotation(String str) {
+            return (str.startsWith("@"));
+        }
+
+        /**
+         * isInvisibleAnnotationToken
+         *
+         * examines the end of an annotation token to determine visibility ('+' = visible
+         * annotation, '-' = invisible).
+         *
+         * @param str String to be analyzed
+         * @return True if the token implies invisible annotation.
+         */
+        static public boolean isInvisibleAnnotationToken(String str) {
+            return (str.endsWith("-"));
+        }
+    }
+
     /**
      * Scanner Tokens (Definitive List)
      */
-    static public enum Token {
+    public enum Token {
         EOF                 (-1, "EOF",         "EOF",  EnumSet.of(TokenType.MISC)),
         COMMA               (0, "COMMA",        ",",    EnumSet.of(TokenType.OPERATOR)),
         ASSIGN              (1, "ASSIGN",       "=",    EnumSet.of(TokenType.OPERATOR)),
@@ -290,9 +354,11 @@ public class JasmTokens {
         CPINDEX             (156, "CPINDEX",    "CPINDEX",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
         CPNAME              (157, "CPNAME",     "CPName",   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
         SIGN                (158, "SIGN",       "SIGN",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME )),
-        BITS                (159, "BITS",       "bits",             EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        BITS                (159, "BITS",       "bits",                 EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+
         INF                 (160, "INF",        "Inf", "Infinity",  EnumSet.of(TokenType.MISC, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        NAN                 (161, "NAN",        "NaN",              EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        NAN                 (161, "NAN",        "NaN",                  EnumSet.of(TokenType.MISC, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+
         INNERCLASS          (162, "INNERCLASS", "InnerClass",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         OF                  (163, "OF",         "of",               EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         SYNTHETIC           (164, "SYNTHETIC",  "synthetic",  EnumSet.of(TokenType.MODIFIER, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
@@ -311,9 +377,10 @@ public class JasmTokens {
         NESTHOST            (173, "NESTHOST",       "NestHost",         EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         NESTMEMBERS         (174, "NESTMEMBERS",    "NestMembers",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         //
-        RECORD              (175, "RECORD", "Record",                   EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        RECORD              (175, "RECORD",    "Record",                EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        COMPONENT           (176, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         //
-        PERMITTEDSUBTYPES   (176, "PERMITTEDSUBTYPES", "PermittedSubtypes", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PERMITTEDSUBTYPES   (177, "PERMITTEDSUBTYPES", "PermittedSubtypes", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
         //Module statements
         REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
@@ -322,7 +389,17 @@ public class JasmTokens {
         USES                (184, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         PROVIDES            (185, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         WITH                (186, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        OPENS               (187, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD);
+        OPENS               (187, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+
+        // Table 4.7.20.2-1 type_path_kind
+        ARRAY_TYPEPATH         (188, TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),    TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),
+                EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        INNER_TYPE_TYPEPATH    (189, TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),    TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),
+                EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        WILDCARD_TYPEPATH      (190, TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),    TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),
+                EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        TYPE_ARGUMENT_TYPEPATH (191, TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),    TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),
+                EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD);
 
         final static EnumSet<Token> ALL_TOKENS = EnumSet.allOf(Token.class);
         // Misc Keywords
@@ -334,36 +411,39 @@ public class JasmTokens {
         final private KeywordType key_type;             // KeywordType.KEYWORD
 
         public static Optional<Token> get(String  parsekey, KeywordType ktype) {
-            return ALL_TOKENS.stream().filter(t->t.key_type == ktype).filter(t->t.parsekey.equals(parsekey)).findFirst();
+            return ALL_TOKENS.stream().
+                    filter(t->t.key_type == ktype).
+                    filter(t->t.parsekey.equals(parsekey) || ( t.alias != null && t.alias.equals(parsekey))).
+                    findFirst();
         }
 
         // By default, if a KeywordType is not specified, it has the value 'TOKEN'
-        Token(Integer val, String print, String op, EnumSet<TokenType> ttype) {
-            this(val, print, op, null, ttype, KeywordType.TOKEN);
+        Token(Integer val, String print, String parsekey, EnumSet<TokenType> ttype) {
+            this(val, print, parsekey, null, ttype, KeywordType.TOKEN);
         }
 
-        Token(Integer val, String print, String op, String als, EnumSet<TokenType> ttype) {
-            this(val, print, op, als, ttype, KeywordType.TOKEN);
+        Token(Integer val, String print, String parsekey, String als, EnumSet<TokenType> ttype) {
+            this(val, print, parsekey, als, ttype, KeywordType.TOKEN);
         }
 
-        Token(Integer val, String print, String op, EnumSet<TokenType> ttype, KeywordType ktype) {
-            this(val, print, op, null, ttype, ktype);
+        Token(Integer val, String print, String parsekey, EnumSet<TokenType> ttype, KeywordType ktype) {
+            this(val, print, parsekey, null, ttype, ktype);
         }
 
-        Token(Integer val, String print, String op, String als, EnumSet<TokenType> ttype, KeywordType ktype) {
+        Token(Integer val, String print, String parsekey, String als, EnumSet<TokenType> ttype, KeywordType ktype) {
             this.value = val;
             this.printval = print;
-            this.parsekey = op;
+            this.parsekey = parsekey;
             this.tokenType = ttype;
             this.key_type = ktype;
             this.alias = als;
         }
 
-        public String printval() {
+        public String printValue() {
             return printval;
         }
 
-        public String parsekey() {
+        public String parseKey() {
             return parsekey;
         }
 
@@ -376,6 +456,13 @@ public class JasmTokens {
         }
 
         public boolean possibleModuleName() {  return tokenType.contains(TokenType.MODULE_NAME)  && !tokenType.contains(TokenType.PUNCTUATION); }
+
+        /**
+         * Checks a token belonging to the table: Table 4.7.20.2-A. Interpretation of type_path_kind values
+         *
+         * @return true if token is ARRAY, INNER_TYPE, WILDCARD or TYPE_ARGUMENT
+         */
+        public boolean possibleTypePathKind() { return tokenType.contains(TokenType.TYPE_PATH_KIND); }
 
         @Override
         public String toString() {

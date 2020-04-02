@@ -40,7 +40,7 @@ import java.io.IOException;
  */
 public class NestMembersData extends ClassArrayData {
     public NestMembersData(ClassData cls) {
-        super(cls, JasmTokens.Token.NESTMEMBERS.parsekey());
+        super(cls, JasmTokens.Token.NESTMEMBERS.parseKey());
     }
 
     public NestMembersData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {

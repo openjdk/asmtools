@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,8 +23,12 @@
 package org.openjdk.asmtools.jdis;
 
 
+import org.openjdk.asmtools.jasm.Tables;
+
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static java.lang.String.format;
 
 /**
  * The Signature attribute data
@@ -42,18 +46,23 @@ public class SignatureData {
 
     public SignatureData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
         if (attribute_length != 2) {
-            throw new ClassFormatError("ATT_Signature: Invalid attribute length");
+            throw new ClassFormatError(format("%s: Invalid attribute length #%d", Tables.AttrTag.ATT_Signature.printval(), attribute_length));
         }
         signature_index = in.readUnsignedShort();
         return this;
     }
 
-    public void print(String initialTab) {
+    public void print(String bodyPrefix, String commentPrefix) {
         boolean pr_cpx = options.contains(Options.PR.CPX);
         if (pr_cpx) {
-            cls.out.print(initialTab + "#" + signature_index + "\t\t // Signature: " + cls.pool.StringValue(signature_index));
+            cls.out.print(format("%s#%d%s%s", bodyPrefix, signature_index, commentPrefix, cls.pool.StringValue(signature_index)));
         } else {
-            cls.out.print(initialTab + cls.pool.StringValue(signature_index));
+            cls.out.print(format("%s%s%s", bodyPrefix, cls.pool.getName(signature_index), commentPrefix));
         }
+    }
+
+    @Override
+    public String toString() {
+        return format("signature[%d]=%s", signature_index, cls.pool.StringValue(signature_index));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,8 +22,17 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.asmutils.HexUtils;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+
 public class TraceUtils {
-    /* ====================================================== */
+
+    public static String prefixString = "\t";
+
     public static void trace(String s) {
         if (!(Options.OptionObject()).debug()) {
             return;
@@ -31,10 +40,60 @@ public class TraceUtils {
         System.out.print(s);
     }
 
+    public static void trace(int prefixLength, String s) {
+        if (!(Options.OptionObject()).debug()) {
+            return;
+        }
+        System.out.print((prefixLength > 0) ? new String(new char[prefixLength]).replace("\0", prefixString) + s : s);
+    }
+
     public static void traceln(String s) {
         if (!(Options.OptionObject()).debug()) {
             return;
         }
         System.out.println(s);
+    }
+
+    public static void traceln(String... lines) {
+        if (!(Options.OptionObject()).debug()) {
+            return;
+        }
+
+        if (lines.length == 0) {
+            System.out.println();
+        } else {
+            for (String s : lines) {
+                System.out.println(s);
+            }
+        }
+    }
+
+    public static void traceln(int prefixLength, String s) {
+        if (!(Options.OptionObject()).debug()) {
+            return;
+        }
+        System.out.println((prefixLength > 0) ? new String(new char[prefixLength]).replace("\0", prefixString) + s : s);
+    }
+
+    public static void traceln(int prefixLength, String... lines) {
+        if (!(Options.OptionObject()).debug()) {
+            return;
+        }
+        if (lines.length == 0) {
+            System.out.println();
+        } else {
+            String prefix = (prefixLength > 0) ? new String(new char[prefixLength]).replace("\0", prefixString) : "";
+            for (String s : lines) {
+                System.out.println(prefix + s);
+            }
+        }
+    }
+
+    public static String mapToHexString(int[] array) {
+        return format("%d %s",
+                array.length,
+                Arrays.stream(array).
+                        mapToObj(val -> HexUtils.toHex(val)).
+                        collect(Collectors.joining(" ")));
     }
 }

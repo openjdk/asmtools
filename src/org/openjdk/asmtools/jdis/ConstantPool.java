@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
+import org.openjdk.asmtools.asmutils.StringUtils;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -31,8 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+import static java.lang.String.format;
 import static org.openjdk.asmtools.jdis.Utils.commentString;
 
 /**
@@ -45,6 +46,16 @@ public class ConstantPool {
 
     private static final Hashtable<Byte, TAG> taghash = new Hashtable<>();
     private static final Hashtable<Byte, SUBTAG> subtaghash = new Hashtable<>();
+
+    private boolean printTAG = false;
+
+    public void setPrintTAG(boolean value) {
+        this.printTAG = value;
+    }
+
+    public String getPrintedTAG(TAG tag) {
+        return (this.printTAG) ? tag.tagname + " " : "" ;
+    }
 
     class Indent {
         private int length, offset, step;
@@ -77,7 +88,7 @@ public class ConstantPool {
      * A Tag descriptor of constants in the constant pool
      *
      */
-    static public enum TAG {
+    public enum TAG {
         CONSTANT_UTF8               ((byte) 1, "Asciz", "CONSTANT_UTF8"),
         CONSTANT_UNICODE            ((byte) 2, "unicorn", "CONSTANT_UNICODE"),
         CONSTANT_INTEGER            ((byte) 3, "int", "CONSTANT_INTEGER"),
@@ -105,7 +116,6 @@ public class ConstantPool {
             value = val;
             tagname = tgname;
             printval = print;
-            //          taghash.put(new Byte(val), this);
         }
 
         public byte value() {
@@ -124,6 +134,7 @@ public class ConstantPool {
         public String toString() {
             return "<" + tagname + "> ";
         }
+
     };
 
 
@@ -276,41 +287,7 @@ public class ConstantPool {
 
         @Override
         public String stringVal() {
-            StringBuilder sb = new StringBuilder();
-            String s = value;
-            sb.append('\"');
-            for (int k = 0; k < s.length(); k++) {
-                char c = s.charAt(k);
-                switch (c) {
-                    case '\t':
-                        sb.append('\\').append('t');
-                        break;
-                    case '\n':
-                        sb.append('\\').append('n');
-                        break;
-                    case '\r':
-                        sb.append('\\').append('r');
-                        break;
-                    case '\b':
-                        sb.append('\\').append('b');
-                        break;
-                    case '\f':
-                        sb.append('\\').append('f');
-                        break;
-                    case '\"':
-                        sb.append('\\').append('\"');
-                        break;
-                    case '\'':
-                        sb.append('\\').append('\'');
-                        break;
-                    case '\\':
-                        sb.append('\\').append('\\');
-                        break;
-                    default:
-                        sb.append(c);
-                }
-            }
-            return sb.append('\"').toString();
+            return StringUtils.Utf8ToString(value);
         }
 
         @Override
@@ -532,6 +509,7 @@ public class ConstantPool {
     class CPX2 extends Constant {
 
         int value1, value2;
+
         CPX2(TAG tagval, int cpx1, int cpx2) {
             super(tagval);
             this.value1 = cpx1;
@@ -546,7 +524,7 @@ public class ConstantPool {
                 case CONSTANT_FIELD:
                 case CONSTANT_METHOD:
                 case CONSTANT_INTERFACEMETHOD:
-                    str = getShortClassName(getClassName(value1), cd.pkgPrefix) + "." + StringValue(value2);
+                    str = getPrintedTAG(tag) + getShortClassName(getClassName(value1), cd.pkgPrefix) + "." + StringValue(value2);
                     break;
                 case CONSTANT_NAMEANDTYPE:
                     str = getName(value1) + ":" + StringValue(value2);
@@ -946,7 +924,7 @@ public class ConstantPool {
      * getShortClassName
      *
      * shortens a class name (if the class is in the given package). works with a CP index
-     * to a ConstantClasss.
+     * to a ConstantClass.
      *
      */
     public String getShortClassName(int cpx, String pkgPrefix) {
@@ -1018,7 +996,7 @@ public class ConstantPool {
      * a tag descriptor in the beginning.
      *
      */
-    String ConstantStrValue(int cpx) {
+    public String ConstantStrValue(int cpx) {
         if (cpx == 0) {
             return "#0";
         }

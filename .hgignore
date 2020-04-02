@@ -1,9 +1,10 @@
-re:data
-re:data/.*
-re:asmtools-6.0-build/.*
-re:.*~$
-re:.*\.log$
-re:.*\.pyc$
-re:.*\.swp$
-re:.*\.DS_Store$
-re:.*\iml$
+syntax: regexp
+data
+data/.*
+asmtools-7.0-build/.*
+.*~$
+.*\.log$
+.*\.pyc$
+.*\.swp$
+.*\.DS_Store$
+.*\.iml$

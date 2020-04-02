@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,7 +26,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * See JVMS3, section 4.8.16.
+ * JVMS 4.7.16.
+ *
+ * annotation {
+ *     u2 type_index;
+ *     u2 num_element_value_pairs;
+ *     {   u2            element_name_index;
+ *         element_value value;
+ *     } element_value_pairs[num_element_value_pairs];
+ * }
  */
 class AnnotationData implements Data {
 

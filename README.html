@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 
-  Copyright (c) 2008, 2017, Oracle and/or its affiliates. All rights reserved.
+  Copyright (c) 2008, 2020, Oracle and/or its affiliates. All rights reserved.
   DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
   This code is free software; you can redistribute it and/or modify it
@@ -31,7 +31,7 @@
     <head>
   <meta http-equiv="content-type"
  content="text/html; charset=ISO-8859-1">
-  <title>README - AsmTools - Version 6.0</title>
+  <title>README - AsmTools - Version 7.0</title>
   <style>
 body, tr {
  font-family: Arial, Helvetica, sans-serif;
@@ -106,7 +106,7 @@ table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
       <h1>Release Notes</h1>
       <h2>AsmTools</h2>
       </h2>
-      <h2>October 2017</h2>
+      <h2>April 2020</h2>
       </center>
       </td>
     </tr>
@@ -143,7 +143,7 @@ development process to test the compliance of a Virtual Machine (VM) to
 its specification.</p>
 <p>
 These
-release notes contain information about the ASM Tools version 6.0.
+release notes contain information about the ASM Tools version 7.0.
 See the (
 <a href="https://wiki.openjdk.java.net/display/CodeTools/Main">CodeTools</a> project) 
 <a href="https://wiki.openjdk.java.net/display/CodeTools/AsmTools">AsmTools</a> OpenJDK project page for more information about AsmTools.
@@ -163,8 +163,22 @@ See the (
       <th class="sun-darkblue" scope="col"><b>Bug ID </b></th>
       <th class="sun-darkblue" scope="col"><b>Description</b></th>
     </tr>
-
-
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902525">CODETOOLS-7902525</a> 
+      </td>
+      <td>
+        Asmtools support: JEP 360 Sealed Types(Preview)
+      </td>
+    </tr>
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902524">CODETOOLS-7902524</a> 
+      </td>
+      <td>
+        Asmtools support: JEP 359 Records(Preview)
+      </td>
+    </tr>
   </tbody>
 </table>
 <p>
@@ -180,9 +194,39 @@ See the (
       <th class="sun-darkblue" scope="col"><b>Bug ID </b></th>
       <th class="sun-darkblue" scope="col"><b>Description</b></th>
     </tr>
-
-    
-  </tbody>
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902618">CODETOOLS-7902618</a> 
+      </td>
+      <td>
+        Asmtools does not support jasm output/input for TypeAnnotations.
+      </td>
+    </tr>
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902643">CODETOOLS-7902643</a> 
+      </td>
+      <td>
+        Asmtools(jasm) does not support signature attributes in field_info, component_info
+      </td>
+    </tr>
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902644">CODETOOLS-7902644</a> 
+      </td>
+      <td>
+        Asmtools (jcoder) fails if an jcod file contains CONSTANT_Utf8_info with non-normative char sequences
+      </td>
+    </tr>
+    <tr>
+      <td>
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902648">CODETOOLS-7902648</a> 
+      </td>
+      <td>
+        jasm has no clues about how to interpret CONSTANT_MethodHandle_info:reference_kind in an invokedynamic instruction
+      </td>
+    </tr>
+ </tbody>
 </table>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <p><a name="system_requirements"></a></p>
@@ -195,7 +239,7 @@ version 1.8 or later, or a Java SE platform 8.0 runtime environment.
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <a name="installation"></a>
 <h2>Installation</h2>
-To install the AsmTools, simply unzip the&nbsp; asmtools-6.0.zip
+To install the AsmTools, simply unzip the&nbsp; asmtools-7.0.zip
 distribution file in the directory of your choice. Optionally, you may
 wish to define an environment variable (ASMTOOLSHOME) to point to this
 location for your convenience.
@@ -204,7 +248,7 @@ location for your convenience.
 <h2>Release Contents</h2>
 <p>
 This section lists the components under the base subdirectory structure
-(<code>asmtools-6.0/</code>)
+(<code>asmtools-7.0/</code>)
 that is created when you unzip the AsmTools distribution archive during
 installation.
 </p>
@@ -285,7 +329,7 @@ The AsmTools open source project was created in order to develop a community tha
 <p><a name="source" id="source"></a></p>
 <h2>Obtaining the Sources</h2>
 <p>
-The sources for <a href="">ASM Tools</a> 6.0 and later is available via the community
+The sources for <a href="">ASM Tools</a> 7.0 and later is available via the community
 <a href="http://www.openjdk.org/">OpenJDK</a> project.  The sources are stored
 and accessed through a Mercurial repository, which the public may access in a
 read-only fashion.  Committing to changes to the sources is accomplished by
@@ -340,7 +384,7 @@ The general steps to do a build from source from the command line:
 <li>Make your current directory <code>&lt;topdir&gt;/build/</code>
 <li>Invoke ant:<br><code>% ant</code>
 <li>Output appears in a directory above (one above &lt;topdir&gt;),
-    such as: <code>../../asmtools-6.0-build/</code>
+    such as: <code>../../asmtools-7.0-build/</code>
 </ol>
 
 <p>
@@ -368,7 +412,7 @@ specify in your IDE for building.
 <hr>
 
 <hr noshade="noshade">
-<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2017, Oracle and/or its affiliates. All rights reserved.
+<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2020, Oracle and/or its affiliates. All rights reserved.
     Use is subject to license terms.The majority of the Assember Tools project is released under the <A
         HREF="http://openjdk.java.net/legal/gplv2+ce.html">GNU
         General Public License Version 2 (GPLv2)</A></p>

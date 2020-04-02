@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,10 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import static org.openjdk.asmtools.jasm.TypeAnnotationUtils.*;
+import org.openjdk.asmtools.jasm.TypeAnnotationTargetInfoData.*;
+
+import static org.openjdk.asmtools.jasm.JasmTokens.AnnotationType.isInvisibleAnnotationToken;
+import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.*;
 import static org.openjdk.asmtools.jasm.JasmTokens.*;
 import static org.openjdk.asmtools.jasm.ConstantPool.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
@@ -50,7 +53,7 @@ public class ParserAnnotation extends ParseBase {
      *
      * Used to store Annotation values
      */
-    class AnnotationElemValue implements Data {
+    static class AnnotationElemValue implements Data {
 
         AnnotationData annotation;
 
@@ -185,21 +188,11 @@ public class ParserAnnotation extends ParseBase {
         }
     }
 
-    /*-------------------------------------------------------- */
-    /* Annotation Parser Fields */
     /**
      * local handles on the scanner, main parser, and the error reporting env
      */
     private static TTVis ttVisitor;
-    /*-------------------------------------------------------- */
 
-    /**
-     * main constructor
-     *
-     * @param scanner
-     * @param parser
-     * @param env
-     */
     protected ParserAnnotation(Scanner scanner, Parser parser, Environment env) {
         super.init(scanner, parser, env);
         ttVisitor = new TTVis();
@@ -249,74 +242,21 @@ public class ParserAnnotation extends ParseBase {
      * @throws IOException
      */
     ArrayList<AnnotationData> scanAnnotations() throws IOException {
-        ArrayList<AnnotationData> annttns = new ArrayList<>();
-
+        ArrayList<AnnotationData> list = new ArrayList<>();
         while (scanner.token == Token.ANNOTATION) {
-            if (isAnnotationToken(scanner.stringValue)) {
-                annttns.add(parseAnnotation());
-            } else if (isTypeAnnotationToken(scanner.stringValue)) {
-                annttns.add(parseTypeAnnotation());
+            if ( JasmTokens.AnnotationType.isAnnotationToken(scanner.stringValue)) {
+                list.add(parseAnnotation());
+            } else if (JasmTokens.AnnotationType.isTypeAnnotationToken(scanner.stringValue)) {
+                list.add(parseTypeAnnotation());
             } else {
                 return null;
             }
         }
-
-        if (annttns.size() > 0) {
-            return annttns;
+        if (list.size() > 0) {
+            return list;
         } else {
             return null;
         }
-    }
-
-    /**
-     * isAnnotation
-     *
-     * examines the beginning of a string to see if it starts with an annotation character
-     *
-     * @param str
-     * @return True if the string starts with an annotation char.
-     */
-    protected boolean isAnnotation(String str) {
-        return (str.startsWith("@"));
-    }
-
-    /**
-     * isAnnotationToken
-     *
-     * examines the beginning of a string to see if it starts with an annotation
-     * characters ('@+' = visible annotation, '@-' = invisible).
-     *
-     * @param str
-     * @return True if the string starts with an annotation char.
-     */
-    protected boolean isAnnotationToken(String str) {
-        return (str.startsWith("@+") || str.startsWith("@-"));
-    }
-
-    /**
-     * isTypeAnnotationToken
-     *
-     * examines the beginning of a string to see if it starts with type annotation
-     * characters ('@T+' = visible type annotation, '@T-' = invisible).
-     *
-     * @param str
-     * @return True if the string starts with an annotation char.
-     */
-    protected boolean isTypeAnnotationToken(String str) {
-        return (str.startsWith("@T+") || str.startsWith("@T-"));
-    }
-
-    /**
-     * isInvisibleAnnotToken
-     *
-     * examines the end of an annotation token to determine visibility ('+' = visible
-     * annotation, '-' = invisible).
-     *
-     * @param str
-     * @return True if the token implies invisible annotation.
-     */
-    protected boolean isInvisibleAnnotToken(String str) {
-        return (str.endsWith("-"));
     }
 
     /**
@@ -412,7 +352,7 @@ public class ParserAnnotation extends ParseBase {
      * @throws IOException
      */
     private AnnotationData parseTypeAnnotation() throws Scanner.SyntaxError, IOException {
-        boolean invisible = isInvisibleAnnotToken(scanner.stringValue);
+        boolean invisible = isInvisibleAnnotationToken(scanner.stringValue);
         scanner.scan();
         debugScan("     [ParserAnnotation.parseTypeAnnotation]: id = " + scanner.stringValue + " ");
         String annoName = "L" + scanner.stringValue + ";";
@@ -425,11 +365,13 @@ public class ParserAnnotation extends ParseBase {
         // Scan the usual annotation data
         _scanAnnotation(anno);
 
-        // scan the Target
+        // scan the Target (u1: target_type, union{...}: target_info)
         _scanTypeTarget(anno);
 
-        // scan the Location
-        _scanTargetPath(anno);
+        if( scanner.token != Token.RBRACE ) {
+            // scan the Location (type_path: target_path)
+            _scanTargetPath(anno);
+        }
 
         scanner.expect(Token.RBRACE);
         return anno;
@@ -445,7 +387,7 @@ public class ParserAnnotation extends ParseBase {
      */
     private AnnotationData parseAnnotation() throws Scanner.SyntaxError, IOException {
         debugScan(" - - - > [ParserAnnotation.parseAnnotation]: Begin ");
-        boolean invisible = isInvisibleAnnotToken(scanner.stringValue);
+        boolean invisible = isInvisibleAnnotationToken(scanner.stringValue);
         scanner.scan();
         String annoName = "L" + scanner.stringValue + ";";
 
@@ -478,7 +420,7 @@ public class ParserAnnotation extends ParseBase {
                 throw new Scanner.SyntaxError();
             }
             String name = ((ConstValue_String) cellref)._toString();
-            debugScan(" - - - > [ParserAnnotation._scanAnnotation]: Annot - Field Name: " + name);
+            debugScan("     [ParserAnnotation._scanAnnotation]: Annot - Field Name: " + name);
             Data data = scanAnnotationData(name);
             annotData.add(new AnnotationData.ElemValuePair(nameCell, data));
 
@@ -505,21 +447,21 @@ public class ParserAnnotation extends ParseBase {
         //Scan the target_type and the target_info
         scanner.expect(Token.IDENT);
         debugScan("     [ParserAnnotation._scanTypeTarget]: TargetType: " + scanner.idValue);
-        TypeAnnotationUtils.TargetType tt = TypeAnnotationUtils.getTargetType(scanner.idValue);
-        if (tt == null) {
+        ETargetType targetType = ETargetType.getTargetType(scanner.idValue);
+        if (targetType == null) {
             env.error(scanner.pos, "incorrect.typeannot.target", scanner.idValue);
             throw new Scanner.SyntaxError();
         }
 
-        debugScan("     [ParserAnnotation._scanTypeTarget]: Got TargetType: " + tt);
+        debugScan("     [ParserAnnotation._scanTypeTarget]: Got TargetType: " + targetType);
 
         if (ttVisitor.scanner == null) {
             ttVisitor.scanner = scanner;
         }
-        ttVisitor.visitExcept(tt);
+        ttVisitor.visitExcept(targetType);
 
         annotData.targetInfo = ttVisitor.getTargetInfo();
-        annotData.targetType = tt;
+        annotData.targetType = targetType;
         debugScan("     [ParserAnnotation._scanTypeTarget]: Got TargetInfo: " + annotData.targetInfo);
 
         scanner.expect(Token.RBRACE);
@@ -531,9 +473,9 @@ public class ParserAnnotation extends ParseBase {
      * Target Type visitor, used for constructing the target-info within a type
      * annotation. visitExcept() is the entry point. ti is the constructed target info.
      */
-    private static class TTVis extends TypeAnnotationUtils.TypeAnnotationTargetVisitor {
+    private static class TTVis extends TypeAnnotationTypes.TypeAnnotationTargetVisitor {
 
-        private TypeAnnotationUtils.TargetInfo ti;
+        private TypeAnnotationTargetInfoData ti;
         private IOException IOProb;
         private Scanner.SyntaxError SyProb;
         private Scanner scanner;
@@ -560,7 +502,7 @@ public class ParserAnnotation extends ParseBase {
         }
 
         //This is the entry point for a visitor that tunnels exceptions
-        public void visitExcept(TypeAnnotationUtils.TargetType tt) throws IOException, Scanner.SyntaxError {
+        public void visitExcept(ETargetType tt) throws IOException, Scanner.SyntaxError {
             IOProb = null;
             SyProb = null;
             ti = null;
@@ -576,13 +518,13 @@ public class ParserAnnotation extends ParseBase {
             }
         }
 
-        public TypeAnnotationUtils.TargetInfo getTargetInfo() {
+        public TypeAnnotationTargetInfoData getTargetInfo() {
             return ti;
         }
 
         // this fn gathers intvals, and tunnels any exceptions thrown by
         // the scanner
-        private int scanIntVal(TypeAnnotationUtils.TargetType tt) {
+        private int scanIntVal(ETargetType tt) {
             int ret = -1;
             if (scanner.token == Token.INTVAL) {
                 ret = scanner.intValue;
@@ -602,7 +544,7 @@ public class ParserAnnotation extends ParseBase {
 
         // this fn gathers intvals, and tunnels any exceptions thrown by
         // the scanner
-        private String scanStringVal(TypeAnnotationUtils.TargetType tt) {
+        private String scanStringVal(ETargetType tt) {
             String ret = "";
             if (scanner.token == Token.STRINGVAL) {
                 ret = scanner.stringValue;
@@ -637,25 +579,25 @@ public class ParserAnnotation extends ParseBase {
         }
 
         @Override
-        public void visit_type_param_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_type_param_target(ETargetType tt) {
             env.traceln("Type Param Target: ");
             int byteval = scanIntVal(tt); // param index
             if (!error()) {
-                ti = new TypeAnnotationUtils.typeparam_target(tt, byteval);
+                ti = new TypeAnnotationTargetInfoData.type_parameter_target(tt, byteval);
             }
         }
 
         @Override
-        public void visit_supertype_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_supertype_target(ETargetType tt) {
             env.traceln("SuperType Target: ");
             int shortval = scanIntVal(tt); // type index
             if (!error()) {
-                ti = new TypeAnnotationUtils.supertype_target(tt, shortval);
+                ti = new TypeAnnotationTargetInfoData.supertype_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_typeparam_bound_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_typeparam_bound_target(ETargetType tt) {
             env.traceln("TypeParam Bound Target: ");
             int byteval1 = scanIntVal(tt); // param index
             if (error()) {
@@ -665,39 +607,39 @@ public class ParserAnnotation extends ParseBase {
             if (error()) {
                 return;
             }
-            ti = new TypeAnnotationUtils.typeparam_bound_target(tt, byteval1, byteval2);
+            ti = new TypeAnnotationTargetInfoData.type_parameter_bound_target(tt, byteval1, byteval2);
         }
 
         @Override
-        public void visit_empty_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_empty_target(ETargetType tt) {
             env.traceln("Empty Target: ");
             if (!error()) {
-                ti = new TypeAnnotationUtils.empty_target(tt);
+                ti = new TypeAnnotationTargetInfoData.empty_target(tt);
             }
         }
 
         @Override
-        public void visit_methodformalparam_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_methodformalparam_target(ETargetType tt) {
             env.traceln("MethodParam Target: ");
             int byteval = scanIntVal(tt); // param index
             if (!error()) {
-                ti = new TypeAnnotationUtils.methodformalparam_target(tt, byteval);
+                ti = new formal_parameter_target(tt, byteval);
             }
         }
 
         @Override
-        public void visit_throws_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_throws_target(ETargetType tt) {
             env.traceln("Throws Target: ");
             int shortval = scanIntVal(tt); // exception index
             if (!error()) {
-                ti = new TypeAnnotationUtils.throws_target(tt, shortval);
+                ti = new throws_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_localvar_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_localvar_target(ETargetType tt) {
             env.traceln("LocalVar Target: ");
-            TypeAnnotationUtils.localvar_target locvartab = new TypeAnnotationUtils.localvar_target(tt, 0);
+            localvar_target locvartab = new localvar_target(tt, 0);
             ti = locvartab;
 
             while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
@@ -725,24 +667,24 @@ public class ParserAnnotation extends ParseBase {
         }
 
         @Override
-        public void visit_catch_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_catch_target(ETargetType tt) {
             env.traceln("Catch Target: ");
             int shortval = scanIntVal(tt); // catch index
 
-            ti = new TypeAnnotationUtils.catch_target(tt, shortval);
+            ti = new catch_target(tt, shortval);
         }
 
         @Override
-        public void visit_offset_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_offset_target(ETargetType tt) {
             env.traceln("Offset Target: ");
             int shortval = scanIntVal(tt); // offset index
             if (!error()) {
-                ti = new TypeAnnotationUtils.offset_target(tt, shortval);
+                ti = new offset_target(tt, shortval);
             }
         }
 
         @Override
-        public void visit_typearg_target(TypeAnnotationUtils.TargetType tt) {
+        public void visit_typearg_target(ETargetType tt) {
             env.traceln("TypeArg Target: ");
             int shortval = scanIntVal(tt); // offset
             if (error()) {
@@ -752,75 +694,77 @@ public class ParserAnnotation extends ParseBase {
             if (error()) {
                 return;
             }
-            ti = new TypeAnnotationUtils.typearg_target(tt, shortval, byteval);
+            ti = new type_argument_target(tt, shortval, byteval);
         }
 
     }
 
     /**
-     * _scanTypeLocation
+     * _scanTargetPath
      *
-     * parses an individual annotation-data.
+     * parses and fills the type_path structure (4.7.20.2)
      *
-     * @return a parsed annotation.
-     * @throws IOException
+     * type_path {
+     *     u1 path_length;
+     *     {   u1 type_path_kind;
+     *         u1 type_argument_index;
+     *     } path[path_length];
+     * }
+     *
+     * @throws Scanner.SyntaxError, IOException
      */
     private void _scanTargetPath(TypeAnnotationData annotData) throws Scanner.SyntaxError, IOException {
-
-        ArrayList<TypePathEntry> targPath = new ArrayList<>();
         // parse the location info
         scanner.expect(Token.LBRACE);
 
         while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
             TypePathEntry tpe = _scanTypePathEntry();
-
-            scanner.scan();
+            annotData.addTypePathEntry(tpe);
             // throw away comma
             if (scanner.token == Token.COMMA) {
                 scanner.scan();
             }
         }
+
         scanner.expect(Token.RBRACE);
-        annotData.targetPath = targPath;
     }
 
     /**
      * _scanTypeLocation
      *
-     * parses an individual annotation-data.
+     * parses a path entry of the type_path.
      *
-     * @return a parsed annotation.
-     * @throws IOException
+     * {   u1 type_path_kind;
+     *     u1 type_argument_index;
+     * }
+     *
+     * @return a parsed type path.
+     * @throws Scanner.SyntaxError, IOException
      */
     private TypePathEntry _scanTypePathEntry() throws Scanner.SyntaxError, IOException {
         TypePathEntry tpe;
 
-        if ((scanner.token != Token.EOF) && (scanner.token == Token.STRINGVAL)) {
-            String pathEntryKey = scanner.stringValue;
-            PathKind pk = pathKind(pathEntryKey);
-            if (pk == null) {
-                // unexpected Type Path
-                env.error(scanner.pos, "incorrect.typeannot.pathentry", scanner.stringValue);
-                throw new Scanner.SyntaxError();
-            }
-            if (pk == PathKind.ITHARG_PARAMETERTYPE) {
-                //
+        if ( (scanner.token != Token.EOF) && scanner.token.possibleTypePathKind() ) {
+            EPathKind pathKind = EPathKind.getPathKind(scanner.stringValue);
+            if (pathKind == EPathKind.TYPE_ARGUMENT) {
+                scanner.scan();
                 // need to scan the index
-                // Take the form:  INNER_TYPE(#)
-                scanner.expect(Token.LPAREN);
+                // Take the form:  TYPE_ARGUMENT{#}
+                scanner.expect(Token.LBRACE);
                 int index = 0;
                 if ((scanner.token != Token.EOF) && (scanner.token == Token.INTVAL)) {
                     index = scanner.intValue;
+                    scanner.scan();
                 } else {
                     // incorrect Arg index
                     env.error(scanner.pos, "incorrect.typeannot.pathentry.argindex", scanner.token);
                     throw new Scanner.SyntaxError();
                 }
-
-                scanner.expect(Token.RPAREN);
-                tpe = new TypePathEntry(pk.key(), (char) index);
+                tpe = new TypePathEntry(pathKind, index);
+                scanner.expect(Token.RBRACE);
             } else {
-                tpe = new TypePathEntry(pk.key(), (char) 0);
+                tpe = new TypePathEntry(pathKind, 0);
+                scanner.scan();
             }
         } else {
             // unexpected Type Path
@@ -1136,7 +1080,6 @@ public class ParserAnnotation extends ParseBase {
                 env.error(scanner.pos, "incorrect.annot.keyword", ident);
                 throw new Scanner.SyntaxError();
         }
-
         return data;
     }
 }
