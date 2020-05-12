@@ -1,0 +1,20 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# Package Files
+*.jar
+*.zip
+*.tar.gz
+*.tar
+
+# virtual machine crash logs
+hs_err_pid*
+
+# Misc: Intellij Idea,Mac OS
+/.idea/
+*.iml
+.DS_Store
+
