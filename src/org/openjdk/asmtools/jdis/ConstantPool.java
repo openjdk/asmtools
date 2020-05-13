@@ -522,8 +522,15 @@ public class ConstantPool {
             String str = "UnknownTag";
             switch (tag) {
                 case CONSTANT_FIELD:
+                    // CODETOOLS-7902660: the tag Field is not necessary while printing static parameters of a bsm
+                    // Example: MethodHandle REF_getField:ClassName.FieldName:"I"
+                    str = getShortClassName(getClassName(value1), cd.pkgPrefix) + "." + StringValue(value2);
+                    break;
                 case CONSTANT_METHOD:
                 case CONSTANT_INTERFACEMETHOD:
+                    // CODETOOLS-7902648: added printing of the tag: Method/Interface to clarify
+                    // interpreting CONSTANT_MethodHandle_info:reference_kind
+                    // Example: invokedynamic	InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ObjectMethods.bootstrap
                     str = getPrintedTAG(tag) + getShortClassName(getClassName(value1), cd.pkgPrefix) + "." + StringValue(value2);
                     break;
                 case CONSTANT_NAMEANDTYPE:
