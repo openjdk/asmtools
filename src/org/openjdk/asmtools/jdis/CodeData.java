@@ -520,9 +520,21 @@ public class CodeData extends Indenter {
                         out.print(" BOGUS TYPE:" + type);
                 }
                 return 2;
-            case opc_anewarray:
             case opc_ldc_w:
-            case opc_ldc2_w:
+            case opc_ldc2_w: {
+                // added printing of the tag: Method/Interface to clarify
+                // interpreting CONSTANT_MethodHandle_info:reference_kind
+                // Example: ldc_w Dynamic REF_invokeStatic:Method CondyIndy.condy_bsm
+                cls.pool.setPrintTAG(true);
+                int index = getUShort(pc + 1);
+                if (pr_cpx) {
+                    out.print("\t#" + index + "; //");
+                }
+                PrintConstant(index);
+                cls.pool.setPrintTAG(false);
+                return 3;
+            }
+            case opc_anewarray:
             case opc_instanceof:
             case opc_checkcast:
             case opc_new:
@@ -547,11 +559,16 @@ public class CodeData extends Indenter {
                 out.print("\t" + getbyte(pc + 1));
                 return 2;
             case opc_ldc: {
+                // added printing of the tag: Method/Interface to clarify
+                // interpreting CONSTANT_MethodHandle_info:reference_kind
+                // Example: ldc Dynamic REF_invokeStatic:Method CondyIndy.condy_bsm
+                cls.pool.setPrintTAG(true);
                 int index = getUbyte(pc + 1);
                 if (pr_cpx) {
                     out.print("\t#" + index + "; //");
                 }
                 PrintConstant(index);
+                cls.pool.setPrintTAG(false);
                 return 2;
             }
             case opc_invokeinterface: {
