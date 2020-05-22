@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -82,11 +82,10 @@ public class Main {
     }
 
     /**
-     * Prints the tools version and calls System.exit(0)
+     * Prints the tools version
      */
     public static void printVersion() {
-        System.err.println(ProductInfo.FULL_VERSION);
-        System.exit(0);
+        System.out.println(ProductInfo.FULL_VERSION);
     }
 
     /**
