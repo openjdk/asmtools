@@ -367,7 +367,7 @@ class Parser extends ParseBase {
         switch (subtag) {
             // If the value of the reference_kind item is
             // 1 (REF_getField), 2 (REF_getStatic), 3 (REF_putField)  or 4 (REF_putStatic),
-            // then the constant_pool entry at that index must be a CONSTANT_Fieldref_info structure (§4.4.2)
+            // then the constant_pool entry at that index must be a CONSTANT_Fieldref_info structure (4.4.2)
             // representing a field for which a method handle is to be created. jvms-4.4.8-200-C-A
             case REF_GETFIELD:
             case REF_GETSTATIC:
@@ -377,8 +377,8 @@ class Parser extends ParseBase {
                 break;
             //  If the value of the reference_kind item is
             //  5 (REF_invokeVirtual) or 8 (REF_newInvokeSpecial),
-            //  then the constant_pool entry at that index must be a CONSTANT_Methodref_info structure (§4.4.2)
-            //  representing a class's method or constructor (§2.9.1) for which a method handle is to be created.
+            //  then the constant_pool entry at that index must be a CONSTANT_Methodref_info structure (4.4.2)
+            //  representing a class's method or constructor (2.9.1) for which a method handle is to be created.
             //  jvms-4.4.8-200-C-B
             case REF_INVOKEVIRTUAL:
             case REF_NEWINVOKESPECIAL:
@@ -395,7 +395,7 @@ class Parser extends ParseBase {
                 // then if the class file version number is less than 52.0, the constant_pool entry at that index must be
                 // a CONSTANT_Methodref_info structure representing a class's method for which a method handle is to be created;
                 // if the class file version number is 52.0 or above, the constant_pool entry at that index must be
-                // either a CONSTANT_Methodref_info structure or a CONSTANT_InterfaceMethodref_info structure (§4.4.2)
+                // either a CONSTANT_Methodref_info structure or a CONSTANT_InterfaceMethodref_info structure (4.4.2)
                 // representing a class's or interface's method for which a method handle is to be created.
                 ConstType ctype01 = ConstType.CONSTANT_METHOD;
                 ConstType ctype02 = ConstType.CONSTANT_INTERFACEMETHOD;
