@@ -256,7 +256,10 @@ Other values for TARGET are:
             srcdir="${build.src.classes.dir}"
             destdir="${build.classes.dir}"
             debug="${javac.debug}"
-            verbose="${javac.verbose}" deprecation="${javac.deprecation}"
+            verbose="${javac.verbose}"
+            deprecation="${javac.deprecation}"
+            encoding="UTF8"
+            includeantruntime="false"
             classpathref="compileClassPath">
         </javac>
         <copy todir="${build.classes.dir}">
@@ -298,6 +301,7 @@ Other values for TARGET are:
                 destdir="${build.javadoc.dir}"
                 author="false"
                 version="false"
+                Encoding="UTF8"
                 additionalparam="-breakiterator -Xdoclint:none"
         >
             <classpath>
