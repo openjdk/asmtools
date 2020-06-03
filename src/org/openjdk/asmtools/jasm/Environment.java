@@ -27,6 +27,7 @@ import static org.openjdk.asmtools.jasm.Constants.OFFSETBITS;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 
 /**
@@ -94,9 +95,7 @@ public class Environment {
 
     public String getSimpleInputFileName() {
         if( simpleInputFileName == null ) {
-            char separatorChar = (inputFileName.matches("^[A-Za-z]+:.*")) ? '/' : File.separatorChar;
-            int index = inputFileName.lastIndexOf(separatorChar);
-            simpleInputFileName = (index < 0) ? inputFileName.substring(0) : inputFileName.substring(index + 1);
+            simpleInputFileName = Paths.get(inputFileName).getFileName().toString();
         }
         return simpleInputFileName;
     }
