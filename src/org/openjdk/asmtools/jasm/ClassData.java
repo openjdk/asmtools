@@ -55,8 +55,8 @@ class ClassData extends MemberData {
     // JEP 359 - Record attribute since class file 58.65535
     private RecordData recordData;
 
-    // JEP 360 - PermittedSubtypes attribute since class file 59.65535
-    private PermittedTypesAttr permittedTypesAttr;
+    // JEP 360 - PermittedSubclasses attribute since class file 59.65535
+    private PermittedSubclassesAttr permittedSubclassesAttr;
 
     ModuleAttr moduleAttribute = null;
     Environment env;
@@ -311,9 +311,9 @@ class ClassData extends MemberData {
         nestMembersAttr = new NestMembersAttr(this, classes);
     }
 
-    public void addPermittedSubtypes(List<ConstantPool.ConstCell> classes) {
-        env.traceln("addPermittedSubtypes");
-        permittedTypesAttr = new PermittedTypesAttr(this, classes);
+    public void addPermittedSubclasses(List<ConstantPool.ConstCell> classes) {
+        env.traceln("addPermittedSubclasses");
+        permittedSubclassesAttr = new PermittedSubclassesAttr(this, classes);
     }
 
 
@@ -459,8 +459,8 @@ class ClassData extends MemberData {
             if(nestMembersAttributesExist())
                 attrs.add(nestMembersAttr);
             // since class version 59.65535 (JEP 360)
-            if ( permittedSubtypesAttributesExist() )
-                attrs.add(permittedTypesAttr);
+            if ( permittedSubclassesAttributesExist() )
+                attrs.add(permittedSubclassesAttr);
         }
         return attrs;
     }
@@ -515,7 +515,7 @@ class ClassData extends MemberData {
 
     public boolean nestMembersAttributesExist() { return nestMembersAttr != null;  }
 
-    public boolean permittedSubtypesAttributesExist() { return permittedTypesAttr != null;  }
+    public boolean permittedSubclassesAttributesExist() { return permittedSubclassesAttr != null;  }
 
     public boolean recordAttributeExists() { return recordData != null;  }
 

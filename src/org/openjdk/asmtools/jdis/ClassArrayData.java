@@ -37,15 +37,15 @@ import java.io.IOException;
  * }
  * <p>
  * JEP 360 (Sealed types): class file 59.65535
- * PermittedSubtypes_attribute {
+ * PermittedSubclasses_attribute {
  * u2 attribute_name_index;
  * u4 attribute_length;
- * u2 permitted_subtypes_count;
- * u2 classes[permitted_subtypes_count];
+ * u2 number_of_classes;
+ * u2 classes[number_of_classes];
  * }
  * </p>
  */
-public class ClassArrayData {
+public class ClassArrayData extends Indenter {
     String name;
     ClassData cls;
     int[] classes;
@@ -72,7 +72,7 @@ public class ClassArrayData {
         String indexes = "";
         String names = "";
         boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(name + " ");
+        cls.out.print(getIndentString() + name + " ");
         for (int i = 0; i < classes.length; i++) {
             if (pr_cpx) {
                 indexes += (indexes.isEmpty() ? "" : ", ") + "#" + classes[i];
