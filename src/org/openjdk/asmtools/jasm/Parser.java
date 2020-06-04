@@ -332,7 +332,7 @@ class Parser extends ParseBase {
             case INNER_TYPE_TYPEPATH:
             case WILDCARD_TYPEPATH:
             case TYPE_ARGUMENT_TYPEPATH:
-            case PERMITTEDSUBTYPES:
+            case PERMITTEDSUBCLASSES:
             case INF:
             case NAN:
             case COMPONENT:
@@ -466,7 +466,7 @@ class Parser extends ParseBase {
             case INNER_TYPE_TYPEPATH:
             case WILDCARD_TYPEPATH:
             case TYPE_ARGUMENT_TYPEPATH:
-            case PERMITTEDSUBTYPES:
+            case PERMITTEDSUBCLASSES:
             case INF:
             case NAN:
             case COMPONENT:
@@ -965,13 +965,13 @@ class Parser extends ParseBase {
     }
 
     /**
-     * Parse a list of classes belonging to the [NestMembers | PermittedSubtypes]  entry
+     * Parse a list of classes belonging to the [NestMembers | PermittedSubclasses]  entry
      */
     private void parseClasses(Consumer<ArrayList<ConstCell>> classesConsumer)
             throws Scanner.SyntaxError, IOException {
         ArrayList<ConstCell> classes = new ArrayList<>();
         // Parses in the form:
-        // (NESTMEMBERS|PERMITTEDSUBTYPES)? IDENT(, IDENT)*;
+        // (NESTMEMBERS|PERMITTEDSUBCLASSES)? IDENT(, IDENT)*;
         debugStr("  [Parser.parseClasses]: <<<Begin>>>");
         while (true) {
             String className = prependPackage(parseIdent(), true);
@@ -1757,13 +1757,13 @@ class Parser extends ParseBase {
                     scanner.scan();
                     parseClasses(list -> cd.addNestMembers(list));
                     break;
-                case PERMITTEDSUBTYPES:         // JEP 360
+                case PERMITTEDSUBCLASSES:         // JEP 360
                     if (cd.nestMembersAttributesExist()) {
-                        env.error(scanner.pos, "extra.permittedsubtypes.attribute");
+                        env.error(scanner.pos, "extra.permittedsubclasses.attribute");
                         throw new Scanner.SyntaxError();
                     }
                     scanner.scan();
-                    parseClasses(list -> cd.addPermittedSubtypes(list));
+                    parseClasses(list -> cd.addPermittedSubclasses(list));
                     break;
                 case RECORD:                    // JEP 359
                     if (cd.recordAttributeExists()) {

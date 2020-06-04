@@ -380,7 +380,7 @@ public class JasmTokens {
         RECORD              (175, "RECORD",    "Record",                EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         COMPONENT           (176, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         //
-        PERMITTEDSUBTYPES   (177, "PERMITTEDSUBTYPES", "PermittedSubtypes", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        PERMITTEDSUBCLASSES (177, "PERMITTEDSUBCLASSES", "PermittedSubclasses", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
 
         //Module statements
         REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),

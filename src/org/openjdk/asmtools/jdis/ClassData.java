@@ -96,8 +96,8 @@ public class ClassData extends MemberData {
     // The NestMembers of this class (since class file: 55.0)
     protected NestMembersData nestMembers;
 
-    // The PermittedSubtypes of this class (JEP 360 (Sealed types): class file 59.65535)
-    protected PermittedSubtypesData permittedSubtypes;
+    // The PermittedSubclasses of this class (JEP 360 (Sealed types): class file 59.65535)
+    protected PermittedSubclassesData permittedSubclassesData;
 
     // other parsing fields
     protected PrintWriter out;
@@ -228,9 +228,9 @@ public class ClassData extends MemberData {
             case ATT_Record:
                 record = new RecordData(this).read(in);
                 break;
-            case ATT_PermittedSubtypes:
-                // Read PermittedSubtypes Attribute (JEP 360 (Sealed types): class file 59.65535)
-                permittedSubtypes = new PermittedSubtypesData(this).read(in, attrlen);
+            case ATT_PermittedSubclasses:
+                // Read PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
+                permittedSubclassesData = new PermittedSubclassesData(this).read(in, attrlen);
                 break;
             default:
                 handled = false;
@@ -448,9 +448,9 @@ printSugar:
                 record.print();
             }
 
-            // Print PermittedSubtypes Attribute (JEP 360 (Sealed types): class file 59.65535)
-            if( permittedSubtypes  != null) {
-                permittedSubtypes.print();
+            // Print PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
+            if( permittedSubclassesData != null) {
+                permittedSubclassesData.print();
             }
             // Print the NestHost (since class file: 55.0)
             if(nestHost != null) {
