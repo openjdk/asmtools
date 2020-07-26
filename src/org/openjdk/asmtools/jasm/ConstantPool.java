@@ -482,6 +482,10 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         public void write(CheckedDataOutputStream out) throws IOException {
             out.writeShort(arg);
         }
+        
+        public int getRank() {
+            return this.rank;
+        }
 
         public void setRank(int rank) {
             this.rank = rank;
