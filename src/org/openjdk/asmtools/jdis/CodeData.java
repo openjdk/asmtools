@@ -173,7 +173,7 @@ public class CodeData extends Indenter {
         int stack_map_len = in.readUnsignedShort();
         TraceUtils.traceln(3,  "CodeAttr:  Stack_Map: attrlen=" + len + " num=" + stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
+        StackMapData.prevFramePC = -1;
         for (int k = 0; k < stack_map_len; k++) {
             stack_map.add(new StackMapData(this, in));
         }
@@ -184,7 +184,7 @@ public class CodeData extends Indenter {
         int stack_map_len = in.readUnsignedShort();
         TraceUtils.traceln(3,  "CodeAttr:  Stack_Map_Table: attrlen=" + len + " num=" + stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
+        StackMapData.prevFramePC = -1;
         for (int k = 0; k < stack_map_len; k++) {
             stack_map.add(new StackMapData(this, in, true));
         }
