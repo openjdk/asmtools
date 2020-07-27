@@ -35,7 +35,7 @@ import java.io.IOException;
  * represents one entry of StackMap attribute
  */
 class StackMapData {
-    static int prevFramePC = 0;
+    static int prevFramePC = -1;
     boolean isStackMapTable = false;
     StackMapFrameType stackFrameType = null;
     int start_pc;
@@ -108,7 +108,7 @@ class StackMapData {
 
         }
         stackFrameType = frame_type;
-        start_pc = prevFramePC == 0 ? offset : prevFramePC + offset + 1;
+        start_pc = prevFramePC == -1 ? offset : prevFramePC + offset + 1;
         prevFramePC = start_pc;
     }
 
