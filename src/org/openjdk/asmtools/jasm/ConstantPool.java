@@ -486,7 +486,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         public int getRank() {
             return this.rank;
         }
-        
+
         public void setRank(int rank) {
             this.rank = rank;
         }
