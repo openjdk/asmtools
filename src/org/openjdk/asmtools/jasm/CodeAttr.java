@@ -345,8 +345,9 @@ class CodeAttr extends AttrData {
                 break;
             default:
                 if (arg instanceof ConstantPool.ConstCell) {
-                    if (((ConstantPool.ConstCell) arg).getRank() != 0)
+                    if (((ConstantPool.ConstCell) arg).getRank() != 0) {
                         ((ConstantPool.ConstCell) arg).setRank(1);
+                    }
                 }
         }
         if (env.debugInfoFlag) {
