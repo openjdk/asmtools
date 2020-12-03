@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,9 +26,9 @@ import org.openjdk.asmtools.jasm.Tables.ConstType;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 /**
  * ConstantPool
@@ -38,6 +38,16 @@ import java.util.Iterator;
  */
 public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
 
+
+    static public enum ReferenceRank {
+        LDC(0),  // 0 - highest - ref from ldc
+        ANY(1),  // 1 - any ref
+        NO(2);   // 2 - no ref
+        final int rank;
+        ReferenceRank(int rank) {
+            this.rank = rank;
+        }
+    }
 
     /*-------------------------------------------------------- */
     /* ConstantPool Inner Classes */
@@ -50,7 +60,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
 
         protected ConstType tag;
         protected boolean isSet = false;
-        private boolean vizited = false;
+        private boolean visited = false;
 
         public ConstValue(ConstType tag) {
             this.tag = tag;
@@ -69,12 +79,12 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
          */
         @Override
         public int hashCode() {
-            if (vizited) {
+            if (visited) {
                 throw new Parser.CompilerError("CV hash:" + this);
             }
-            vizited = true;
+            visited = true;
             int res = _hashCode() + tag.value() * 1023;
-            vizited = false;
+            visited = false;
             return res;
         }
 
@@ -254,8 +264,6 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             return value.toString();
         }
 
-//        @Override
-//        public Object value() { return value; }
         @Override
         public boolean equals(Object obj) {
             if ((obj == null) || !(obj instanceof ConstValue_Long)) {
@@ -458,7 +466,8 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     static public class ConstCell extends Argument implements Data {
 
         ConstValue ref;
-        int rank = 2; // 0 - highest - ref from ldc, 1 - any ref, 2 - no ref
+        // 0 - highest - ref from ldc, 1 - any ref, 2 - no ref
+        ReferenceRank rank = ReferenceRank.NO;
 
         ConstCell(int arg, ConstValue ref) {
             this.arg = arg;
@@ -483,8 +492,11 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             out.writeShort(arg);
         }
 
-        public void setRank(int rank) {
-            this.rank = rank;
+        public void setRank(ReferenceRank rank) {
+            // don't change a short ref to long due to limitation of ldc - max 256 indexes allowed
+            if( this.rank != ReferenceRank.LDC) {
+                this.rank = rank;
+            }
         }
 
         @Override
@@ -589,67 +601,54 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
             return null;
         }
 
-        ;
         public R visitInteger(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitFloat(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitDouble(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitLong(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitMethodtype(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitString(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitClass(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitMethod(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitField(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitInterfacemethod(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitNameandtype(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitMethodhandle(ConstType tag) {
             return null;
         }
 
-        ;
         public R visitDynamic(ConstType tag) {
             return null;
         }
@@ -657,21 +656,17 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         public R visitInvokedynamic(ConstType tag) {
             return null;
         }
-        ;
 
         public R visitModule(ConstType tag) {
             return null;
         }
-        ;
 
         public R visitPackage(ConstType tag) {
             return null;
         }
-        ;
 
         public void visitDefault(ConstType tag) {
         }
-        ;
     }
 
     /**
@@ -1170,15 +1165,12 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
 
     protected void NumberizePool() {
         env.traceln("NumberizePool");
-        Enumeration e;
-        for (int rank = 0; rank < 3; rank++) {
-            for (ConstCell cell : cpoolHashByValue.values()) {
-                if (cell.rank != rank) {
-                    continue;
-                }
-                if (cell.isSet()) {
-                    continue;
-                }
+
+        for (ReferenceRank rank : ReferenceRank.values()) {
+            for (ConstCell cell : cpoolHashByValue.values().stream().
+                     filter(v-> !v.isSet() && rank.equals(v.rank)).
+                     collect(Collectors.toList())) {
+
                 ConstValue value = cell.ref;
                 if (value == null) {
                     throw new Parser.CompilerError(env.errorStr("comperr.constcell.nullvalhash"));
@@ -1268,9 +1260,5 @@ find:
             value.write(out);
             i += value.size();
         }
-    }
-
-    public static void setEnableDebug(boolean newState) {
-        debugCP = newState;
     }
 }
