@@ -341,11 +341,11 @@ class CodeAttr extends AttrData {
                 len = ((SwitchTable) arg2).calcLookupSwitch(cur_pc);
                 break;
             case opc_ldc:
-                ((ConstantPool.ConstCell) arg).setRank(0);
+                ((ConstantPool.ConstCell) arg).setRank(ConstantPool.ReferenceRank.LDC);
                 break;
             default:
                 if (arg instanceof ConstantPool.ConstCell) {
-                    ((ConstantPool.ConstCell) arg).setRank(1);
+                    ((ConstantPool.ConstCell) arg).setRank(ConstantPool.ReferenceRank.ANY);
                 }
         }
         if (env.debugInfoFlag) {
