@@ -113,6 +113,7 @@ public class Main extends Tool {
                 ClassData cc = new ClassData(out, this);
                 cc.read(fname);
                 cc.print();
+                out.flush();
                 continue;
             } catch (Error ee) {
                 if (DebugFlag.getAsBoolean())
