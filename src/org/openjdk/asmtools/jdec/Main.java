@@ -108,6 +108,7 @@ public class Main extends Tool {
                 ClassData cc = new ClassData(dataInputStream, printFlags, out);
                 cc.DebugFlag = DebugFlag.getAsBoolean();
                 cc.decodeClass(inpname);
+                out.flush();
                 continue;
             } catch (Error ee) {
                 if (DebugFlag.getAsBoolean())
