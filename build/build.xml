@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
 This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,7 @@ or visit www.oracle.com if you need additional information or have any
 questions.
 -->
 
-
-<project name="asmtools" default="build" basedir=".">
+<project name="asmtools" default="build" basedir="." xmlns:if="ant:if">
 
     <!--****************************************************************-->
     <!--Property & FileSet Definitions					                -->
@@ -40,6 +39,8 @@ questions.
     <property name="proj.build.product.version" value="${PRODUCT_VERSION}"/>
     <property name="proj.build.product.name.prefix" value="${PRODUCT_NAME}"/>
     <property name="proj.build.product.name" value="${proj.build.product.name.prefix}"/>
+
+    <property environment="env"/>
 
     <!-- workspace dirs -->
     <property name="ws.top.dir" location=".."/>
@@ -77,7 +78,6 @@ questions.
     <!-- Release area -->
     <property name="releaseArea.dir" location="${buildprod.dir}/release"/>
     <property name="release.tmp.dir" location="${buildprod.tmp.dir}/release"/>
-
 
     <property name="release.bin.dir" location="${releaseArea.dir}/bin"/>
     <property name="release.lib.dir" location="${releaseArea.dir}/lib"/>
@@ -117,7 +117,6 @@ Other values for TARGET are:
         </echo>
     </target>
 
-
     <!--************************************************************************-->
     <!-- Clean Targets                                                          -->
     <!--************************************************************************-->
@@ -132,8 +131,7 @@ Other values for TARGET are:
     <!--========================================================================-->
 
     <!-- Make build area dir and temp dir -->
-    <target name="prepare" depends="preparebuildarea,preparereleasearea" description="Prepares the build generation areas." />
-
+    <target name="prepare" depends="prepare-build-area,prepare-release-area" description="Prepares the build generation areas." />
 
     <target name="prepareGenArea">
 	    <!--set up compile class path-->
@@ -151,10 +149,8 @@ Other values for TARGET are:
 	    <mkdir dir="${buildprod.image.dir}"/>
     </target>
 
-
-
     <!-- Make build area dir and temp dir					-->
-    <target name="preparebuildarea" depends="prepareGenArea" >
+    <target name="prepare-build-area" depends="prepareGenArea" >
 	    <!--make temp dirs-->
         <mkdir dir="${buildArea.dir}"/>
         <mkdir dir="${build.tmp.dir}"/>
@@ -167,13 +163,12 @@ Other values for TARGET are:
         <copy todir="${build.src.dir}">
             <fileset dir="${ws.src.classes.dir}/" includes="**/*" />
         </copy>
-
         <copy file="${ws.top.dir}/LICENSE" todir="${buildArea.dir}"/>
         <copy file="${ws.top.dir}/README.html" todir="${buildArea.dir}"/>
     </target>
 
     <!-- Make build area dir and temp dir					-->
-    <target name="preparereleasearea" depends="prepareGenArea" >
+    <target name="prepare-release-area" depends="prepareGenArea" >
 	    <!--make temp dirs-->
 	    <mkdir dir="${releaseArea.dir}"/>
 	    <mkdir dir="${release.tmp.dir}"/>
@@ -220,15 +215,39 @@ Other values for TARGET are:
 
     <target name="build"  depends="release" description="Build the asmtools product." />
 
-    <target name="release" depends="devbuild, examples, releaseproduct"/>
+    <target name="release" depends="devbuild, examples, release-product"/>
 
-    <target name="devbuild"  depends="prepare, replace-tokens, jar, javadoc"/>
+    <target name="devbuild"  depends="prepare, replace-tokens, jar, javadoc, -create-release-file"/>
 
     <target name="clean-build"  depends="clean, build" description="Clean then build the asmtools product." />
 
     <!--========================================================================-->
     <!-- Binaries / Libraries                                                   -->
     <!--========================================================================-->
+    <!-- generate release file -->
+    <target name="-check-build-result" description="checks the jar existence">
+        <available property="jar.ok" file="${build.lib.dir}/${PRODUCT_JAR_NAME}"/>
+    </target>
+
+    <target name="-create-release-file" depends="-check-build-result" if="jar.ok">
+        <available file="git" filepath="${env.PATH}" property="git.present"/>
+        <exec executable="git" failonerror="false" failifexecutionfails="false" outputproperty="git.revision"
+              if:set="git.present">
+            <arg line="log -1 --format=%H"/>
+        </exec>
+        <condition property="git.revision" value="N/A">
+            <not>
+                <isset property="git.revision"/>
+            </not>
+        </condition>
+        <echo file="${buildArea.dir}/release">
+SOURCE="git:${git.revision}"
+VERSION="${PRODUCT_VERSION}_${PRODUCT_BUILDNUMBER}"
+VERSION_DATE="${build.date}"
+MILESTONE="${PRODUCT_MILESTONE}"
+        </echo>
+        <copy file="${buildArea.dir}/release" todir="${releaseArea.dir}" failonerror="false"/>
+    </target>
 
     <!-- Jar file                            -->
 
@@ -246,7 +265,6 @@ Other values for TARGET are:
             </manifest>
         </jar>
     </target>
-
 
     <target name="compileClasses" depends="prepare">
         <mkdir dir="${build.classes.dir}"/>
@@ -270,11 +288,10 @@ Other values for TARGET are:
     <target name="examples" description="Prepare examples">
     </target>
 
-
     <!--========================================================================-->
     <!-- Release                                                                -->
     <!--========================================================================-->
-    <target name="releaseproduct" depends="preparereleasearea,preparerelease" description="Bundle the asmtools product.">
+    <target name="release-product" depends="prepare-release-area,prepare-release" description="Bundle the asmtools product.">
 	    <property name="bundle.name" value="${proj.build.product.name}-${proj.build.product.version}.zip"/>
 	    <basename property="bundle.prefix" file="${proj.build.product.name}-${proj.build.product.version}" suffix=".zip"/>
 
@@ -285,7 +302,7 @@ Other values for TARGET are:
 	    <move file="${release.tmp.dir}/${bundle.name}" todir="${buildprod.image.dir}"/>
     </target>
 
-    <target name="preparerelease" description="Build and Bundle the product.">
+    <target name="prepare-release" description="Build and Bundle the product.">
         <mkdir dir="${releaseArea.dir}" />
         <mkdir dir="${release.lib.dir}" />
         <copy todir="${release.lib.dir}">
@@ -312,7 +329,6 @@ Other values for TARGET are:
             </bottom>
         </javadoc>
     </target>
-
 
 </project>
 
