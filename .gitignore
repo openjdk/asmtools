@@ -15,6 +15,10 @@ hs_err_pid*
 
 # Misc: Intellij Idea,Mac OS
 /.idea/
+/maven/.idea/
 *.iml
 .DS_Store
 
+maven/target
+maven/src
+maven/pom.xml
