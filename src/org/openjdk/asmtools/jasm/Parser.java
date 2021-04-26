@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,8 +33,7 @@ import java.util.function.Consumer;
 
 import static org.openjdk.asmtools.jasm.ConstantPool.*;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
-import static org.openjdk.asmtools.jasm.JasmTokens.Token.COMMA;
-import static org.openjdk.asmtools.jasm.JasmTokens.Token.SEMICOLON;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.*;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
 
@@ -364,6 +363,7 @@ class Parser extends ParseBase {
      */
     ConstCell parseMethodHandle(SubTag subtag) throws Scanner.SyntaxError, IOException {
         ConstCell refCell;
+        final int pos = parser.env.pos;
         switch (subtag) {
             // If the value of the reference_kind item is
             // 1 (REF_getField), 2 (REF_getStatic), 3 (REF_putField)  or 4 (REF_putStatic),
@@ -382,7 +382,10 @@ class Parser extends ParseBase {
             //  jvms-4.4.8-200-C-B
             case REF_INVOKEVIRTUAL:
             case REF_NEWINVOKESPECIAL:
-                refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_METHOD));
+                cpParser.setExitImmediately(true);
+                refCell = cpParser.parseConstRef(ConstType.CONSTANT_METHOD, ConstType.CONSTANT_INTERFACEMETHOD);
+                cpParser.setExitImmediately(false);
+                checkReferenceIndex(pos, ConstType.CONSTANT_METHOD, null);
                 break;
             case REF_INVOKESTATIC:
             case REF_INVOKESPECIAL:
@@ -403,16 +406,47 @@ class Parser extends ParseBase {
                     ctype01 = ConstType.CONSTANT_INTERFACEMETHOD;
                     ctype02 = ConstType.CONSTANT_METHOD;
                 }
+                cpParser.setExitImmediately(true);
                 refCell = cpParser.parseConstRef(ctype01, ctype02);
+                cpParser.setExitImmediately(false);
+                checkReferenceIndex(pos, ctype01, ctype02);
                 break;
+
             case REF_INVOKEINTERFACE:
-                refCell = pool.FindCell(cpParser.parseConstValue(ConstType.CONSTANT_INTERFACEMETHOD));
+                cpParser.setExitImmediately(true);
+                refCell = cpParser.parseConstRef(ConstType.CONSTANT_INTERFACEMETHOD, ConstType.CONSTANT_METHOD);
+                cpParser.setExitImmediately(false);
+                checkReferenceIndex(pos, ConstType.CONSTANT_INTERFACEMETHOD, null);
                 break;
             default:
                 // should not reach
                 throw new Scanner.SyntaxError();
         }
         return refCell;
+    }
+
+    /**
+     * Check the pair reference_kind:reference_index where reference_kind is any from:
+     * REF_invokeVirtual, REF_newInvokeSpecial, REF_invokeStatic, REF_invokeSpecial, REF_invokeInterface
+     * and reference_index is one of [Empty], Method or InterfaceMethod
+     * There are possible entries:
+     * ldc Dynamic REF_newInvokeSpecial:InterfaceMethod  LdcConDyTwice."<init>":
+     * ldc Dynamic REF_invokeInterface:LdcConDyTwice."<init>":
+     * ldc Dynamic REF_newInvokeSpecial:Method LdcConDyTwice."<init>":
+     * ....
+     * @param position   the position in a source file
+     * @param defaultTag expected reference_index tag (Method or InterfaceMethod)
+     * @param defaultTag 2nd expected reference_index tag (Method or InterfaceMethod)
+     */
+    private void checkReferenceIndex(int position, ConstType defaultTag, ConstType default2Tag) {
+        if (scanner.token != COLON) {
+            if (default2Tag != null) {
+                env.error(position, "wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
+            } else {
+                env.error(position, "wrong.tag", defaultTag.parseKey());
+            }
+            throw new Scanner.SyntaxError().Fatal();
+        }
     }
 
     /**
@@ -1301,8 +1335,7 @@ class Parser extends ParseBase {
                     // begin of something outside a class, panic more
                     endClass();
                     scanner.debugStr("    [Parser.recoverField]: pos: [" + scanner.pos + "]: ");
-                    throw new Scanner.SyntaxError();
-
+                    throw new Scanner.SyntaxError().Fatal();
                 default:
                     // don't know what to do, skip
                     scanner.scan();
@@ -1848,7 +1881,7 @@ class Parser extends ParseBase {
     }
 
     final ClassData[] getClassesData() {
-        return ((ClassData[]) clsDataList.toArray(new ClassData[0]));
+        return clsDataList.toArray(new ClassData[0]);
     }
 
     /**
