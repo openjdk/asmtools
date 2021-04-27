@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,11 @@ import static org.openjdk.asmtools.jasm.Tables.*;
 public class ParserCP extends ParseBase {
 
     /**
+     * Stop parsing a source file immediately and interpret any issue as an error
+     */
+    private boolean exitImmediately = false;
+
+    /**
      * local handles on the scanner, main parser, and the error reporting env
      */
     /**
@@ -60,6 +65,21 @@ public class ParserCP extends ParseBase {
     protected ParserCP(Scanner scanner, Parser parser, Environment env) {
         super.init(scanner, parser, env);
         pConstVstr = new ParserCPVisitor();
+    }
+
+    /**
+     * In particular cases it's necessary to interpret a warning issue as an error and
+     * stop parsing a source file immediately
+     * cpParser.setExitImmediately(true);
+     * çparseConstRef(...);
+     * cpParser.setExitImmediately(false);
+     */
+    public void setExitImmediately(boolean exitImmediately) {
+        this.exitImmediately = exitImmediately;
+    }
+
+    public boolean isExitImmediately() {
+        return exitImmediately;
     }
 
     /**
@@ -576,8 +596,16 @@ d2l:            {
         if (defaultTag != null) {
             if (tag != defaultTag) {
                 if (default2Tag == null) {
+                    if( exitImmediately ) {
+                        env.error("wrong.tag", defaultTag.parseKey());
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
                     env.error("warn.wrong.tag", defaultTag.parseKey());
                 } else if (tag != default2Tag) {
+                    if( exitImmediately ) {
+                        env.error("wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
+                        throw new Scanner.SyntaxError().Fatal();
+                    }
                     env.error("warn.wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
                 }
             }
@@ -629,8 +657,7 @@ d2l:            {
             scanner.scan();
             return parser.pool.getCell(cpx);
         } else {
-            ConstantPool.ConstValue ref = null;
-            ref = parseTagConstValue(defaultTag, default2Tag, ignoreKeywords);
+            ConstantPool.ConstValue ref = parseTagConstValue(defaultTag, default2Tag, ignoreKeywords);
             return parser.pool.FindCell(ref);
         }
     } // end parseConstRef

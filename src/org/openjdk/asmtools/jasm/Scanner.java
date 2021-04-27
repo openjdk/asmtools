@@ -183,7 +183,7 @@ prefix:
     protected final void check(Token t) throws SyntaxError, IOException {
         if (token != t) {
             if ((t != Token.IDENT) || !checkTokenIdent()) {
-                env.traceln("expect:" + t + " instead of " + token);
+                env.traceln("expect: " + t + " instead of " + token);
                 switch (t) {
                     case IDENT:
                         env.error(pos, "identifier.expected");
