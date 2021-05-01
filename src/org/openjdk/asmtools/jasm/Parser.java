@@ -433,13 +433,18 @@ class Parser extends ParseBase {
      * ldc Dynamic REF_newInvokeSpecial:InterfaceMethod  LdcConDyTwice."<init>":
      * ldc Dynamic REF_invokeInterface:LdcConDyTwice."<init>":
      * ldc Dynamic REF_newInvokeSpecial:Method LdcConDyTwice."<init>":
+     * ldc MethodHandle REF_newInvokeSpecial:InterfaceMethod  LdcConDyTwice."<init>":
+     * ldc MethodHandle REF_invokeInterface:LdcConDyTwice."<init>":
+     * ldc MethodHandle REF_newInvokeSpecial:Method LdcConDyTwice."<init>":
+     * invokedynamic MethodHandle REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+     * invokedynamic MethodHandle REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants
      * ....
      * @param position   the position in a source file
      * @param defaultTag expected reference_index tag (Method or InterfaceMethod)
      * @param defaultTag 2nd expected reference_index tag (Method or InterfaceMethod)
      */
     private void checkReferenceIndex(int position, ConstType defaultTag, ConstType default2Tag) {
-        if (scanner.token != COLON) {
+        if ( ! scanner.token.in(COLON, SEMICOLON) ) {
             if (default2Tag != null) {
                 env.error(position, "wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
             } else {

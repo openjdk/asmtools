@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Optional;
 
@@ -415,6 +416,16 @@ public class JasmTokens {
                     filter(t->t.key_type == ktype).
                     filter(t->t.parsekey.equals(parsekey) || ( t.alias != null && t.alias.equals(parsekey))).
                     findFirst();
+        }
+
+        /**
+         * Checks that this enum element is in an enum list
+         *
+         * @param tokens the list of enum elements for checking
+         * @return true if a tokens list contains this enum element
+         */
+        public boolean in(Token... tokens) {
+            return (tokens == null) ? false : Arrays.asList(tokens).contains(this);
         }
 
         // By default, if a KeywordType is not specified, it has the value 'TOKEN'
