@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openjdk</groupId>
+    <groupId>org.openjdk.[PRODUCT_NAME]</groupId>
 <!-- substituted from build/productinfo.properties -->
-    <artifactId>[PRODUCT_NAME]</artifactId>
+    <artifactId>[PRODUCT_NAME]-core</artifactId>
     <version>[PRODUCT_VERSION].b[PRODUCT_BUILDNUMBER]-[PRODUCT_MILESTONE]</version>
 <!--eg:      7.0.b10-ea-->
     <packaging>jar</packaging>
