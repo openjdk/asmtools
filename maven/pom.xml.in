@@ -24,7 +24,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-
     <build>
         <!-- Although the symlinks are correct, and working, source plugin is unable to resolve them, thus pointing it to the original sources-->
         <sourceDirectory>../src</sourceDirectory>
@@ -81,7 +80,38 @@
                         </goals>
                     </execution>
                 </executions>
-           </plugin>
+            </plugin>
+            <plugin>
+                <!--to release, obtain credentials to org.openjdk via https://central.sonatype.org/publish/publish-guide/#create-a-ticket-with-sonatype and working and valid gpg keys
+                    once (both) active, and you have working verified artifacts, you can execute:
+                         mvn clean verify gpg:sign install:install deploy:deploy -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2/ 
+                    to upload to maven staging. With deploy to central (preferably via gui) follow https://central.sonatype.org/publish/publish-guide/ guide
+                    note, that org.openjdk is indeed on https://oss.sonatype.org/ not on https://s01.oss.sonatype.org
+                    Dont forget to have:
+                         <servers>
+                           <server>
+                             <id>ossrh</id>
+                             <username>...</username>
+                             <password>...</password>
+                           </server>
+                         </servers>
+                   in your ~/.m2/settings.xml
+                   See https://issues.sonatype.org/browse/OSSRH-69690 for exmaple
+                   The manual release process is in place, as we do not wont release plugin and simialr to use tags, or even make tags in https://git@github.com/openjdk/asmtools.git (at leaset for now)
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
