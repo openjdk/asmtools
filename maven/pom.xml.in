@@ -13,6 +13,44 @@
 
     <name>[PRODUCT_NAME]</name>
     <description>Maven wrapper around [PRODUCT_NAME] - [PRODUCT_NAME_LONG] project</description>
+    <url>https://github.com/openjdk/asmtools</url>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License v2.0</name>
+            <url>https://github.com/openjdk/asmtools/blob/master/LICENSE</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <!-- this list not intended to be complete, see contributors at project pages-->
+        <developer>
+            <id>lkuskov</id>
+            <name>Leonid Kuskov</name>
+            <email>leonid.kuskov@oracle.com</email>
+            <organization>Oracle</organization>
+            <organizationUrl>http://www.oracle.com</organizationUrl>
+        </developer>
+        <developer>
+            <id>maccimo</id>
+            <name>Maxim Degtyarev</name>
+            <email>maccimo@github.com</email>
+        </developer>
+        <developer>
+            <id>edvbld</id>
+            <name>Erik Duveblad</name>
+            <email>erikd.duveblad@oracle.com</email>
+            <organization>Oracle</organization>
+            <organizationUrl>http://www.oracle.com</organizationUrl>
+        </developer>
+        <developer>
+            <id>judovana</id>
+            <name>Jiri Vanek</name>
+            <email>jvanek@redhat.com</email>
+            <organization>Redhat</organization>
+            <organizationUrl>http://www.redhat.com</organizationUrl>
+        </developer>
+    </developers>
 
     <scm>
         <url>https://github.com/openjdk/asmtools</url>
@@ -20,9 +58,10 @@
         <developerConnection>scm:git:https://git@github.com/openjdk/asmtools.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
-  <properties>
+
+    <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    </properties>
 
     <build>
         <!-- Although the symlinks are correct, and working, source plugin is unable to resolve them, thus pointing it to the original sources-->
