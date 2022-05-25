@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.Tables.AttrTag;
 import static org.openjdk.asmtools.jasm.Tables.CF_Context;
+import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
 
 /**
  * Method data for method members in a class of the Java Disassembler
@@ -92,6 +93,13 @@ public class MethodData extends MemberData {
                 break;
             case ATT_Exceptions:
                 readExceptions(in);
+                break;
+            case ATT_Signature:
+                if( signature != null ) {
+                    traceln("Method attribute:  more than one attribute Signature are in method_info.attribute_info_attributes[attribute_count]");
+                    traceln("Last one will be used.");
+                }
+                signature = new SignatureData(cls).read(in, attrlen);
                 break;
             case ATT_MethodParameters:
                 readMethodParameters(in);
@@ -272,15 +280,30 @@ public class MethodData extends MemberData {
         }
         out.print(Token.METHODREF.parseKey() + " ");
 
+        StringBuilder bodyPrefix = new StringBuilder();
+        StringBuilder tailPrefix = new StringBuilder();
+
         if (pr_cpx) {
             // print the CPX method descriptor
-            out.print("#" + name_cpx + ":#" + sig_cpx +
-                    ((code == null && exc_table == null && defaultAnnotation == null) ? ";" : "") +
-                    "\t // " + cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx));
+            bodyPrefix.append('#').append(name_cpx).append(":#").append(sig_cpx);
+            if (code == null && exc_table == null && defaultAnnotation == null) {
+                tailPrefix.append(';');
+            }
+            tailPrefix.append("\t // ").append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(sig_cpx));
         } else {
-            out.print(cls.pool.getName(name_cpx) + ":" + cls.pool.getName(sig_cpx) +
-                    ((code == null && exc_table == null && defaultAnnotation == null) ? ";" : ""));
+            bodyPrefix.append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(sig_cpx));
+            if (code == null && exc_table == null && defaultAnnotation == null) {
+                tailPrefix.append(';');
+            }
         }
+
+        if (signature != null) {
+            signature.print(bodyPrefix.append(':').toString(), tailPrefix.append(pr_cpx ? ":" : "").toString());
+        } else {
+            out.print(bodyPrefix.toString());
+            out.print(tailPrefix.toString());
+        }
+
         // followed by default annotation
         if (defaultAnnotation != null) {
             out.print(" default { ");

@@ -739,6 +739,14 @@ class Parser extends ParseBase {
      * Parse a field.
      */
     private void parseField(int mod) throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // FIELD (, FIELD)*;
+        // where
+        // FIELD = NAME:DESCRIPTOR(:SIGNATURE)? CONST_VALUE?
+        // NAME = (CPINDEX | IDENT)
+        // DESCRIPTOR = (CPINDEX | STRING)
+        // SIGNATURE  = (CPINDEX | STRING)
+        // CONST_VALUE = ASSIGN CONSTREF
         debugStr("  [Parser.parseField]: <<<Begin>>>");
         // check access modifiers:
         Modifiers.checkFieldModifiers(cd, mod, scanner.pos);
@@ -881,6 +889,14 @@ class Parser extends ParseBase {
         if (paramcnt > 255) {
             env.error(scanner.pos, "warn.msig.more255", Integer.toString(paramcnt));
         }
+
+        ConstCell signatureCell = null;
+        // Parse the optional attribute: signature
+        if (scanner.token == Token.COLON) {
+            scanner.scan();
+            signatureCell = parseName();
+        }
+
         // Parse throws clause
         ArrayList<ConstCell> exc_table = null;
         if (scanner.token == Token.THROWS) {
@@ -907,6 +923,10 @@ class Parser extends ParseBase {
         }
 
         MethodData curMethod = cd.StartMethod(mod, nameCell, typeCell, exc_table);
+        if (signatureCell != null) {
+            curMethod.setSignatureAttr(signatureCell);
+        }
+
         Argument max_stack = null, max_locals = null;
 
         if (scanner.token == Token.STACK) {
@@ -987,6 +1007,21 @@ class Parser extends ParseBase {
             env.error(scanner.pos, "invalid.bootstrapmethod");
             throw new Scanner.SyntaxError();
         }
+    }
+
+    /**
+     * Parse the class Signature entry.
+     */
+    private void parseClassSignature() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // SIGNATURE;
+        // where
+        // SIGNATURE = (CPINDEX | STRING)
+        debugStr("  [Parser.parseClassSignature]: <<<Begin>>>");
+        ConstCell signatureCell = parseName();
+        debugStr("  [Parser.parseClassSignature]: Signature: " + signatureCell);
+        scanner.expect(SEMICOLON);
+        cd.setSignatureAttr(signatureCell);
     }
 
     /**
@@ -1772,6 +1807,14 @@ class Parser extends ParseBase {
                 case BOOTSTRAPMETHOD:
                     scanner.scan();
                     parseCPXBootstrapMethod();
+                    break;
+                case SIGNATURE:
+                    if (cd.signatureAttr != null) {
+                        env.error(scanner.pos, "extra.signature.attribute");
+                        throw new Scanner.SyntaxError();
+                    }
+                    scanner.scan();
+                    parseClassSignature();
                     break;
                 case NESTHOST:
                     if (cd.nestHostAttributeExists()) {

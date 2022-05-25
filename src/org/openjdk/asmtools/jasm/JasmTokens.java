@@ -377,6 +377,7 @@ public class JasmTokens {
         BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         NESTHOST            (173, "NESTHOST",       "NestHost",         EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         NESTMEMBERS         (174, "NESTMEMBERS",    "NestMembers",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
+        SIGNATURE           (188, "SIGNATURE",       "Signature",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         //
         RECORD              (175, "RECORD",    "Record",                EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         COMPONENT           (176, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
