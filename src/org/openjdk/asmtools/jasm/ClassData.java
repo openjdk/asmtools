@@ -443,6 +443,8 @@ class ClassData extends MemberData {
                 attrs.add(syntheticAttr);
             if (deprecatedAttr != null)
                 attrs.add(deprecatedAttr);
+            if (signatureAttr != null)
+                attrs.add(signatureAttr);
             if (annotAttrVis != null)
                 attrs.add(annotAttrVis);
             if (annotAttrInv != null)

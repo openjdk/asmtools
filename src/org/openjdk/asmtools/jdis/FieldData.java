@@ -57,7 +57,7 @@ public class FieldData extends MemberData {
         switch (attrtag) {
             case ATT_Signature:
                 if( signature != null ) {
-                    traceln("Record attribute:  more than one attribute Signature are in component.attribute_info_attributes[attribute_count]");
+                    traceln("Field attribute:  more than one attribute Signature are in field_info.attribute_info_attributes[attribute_count]");
                     traceln("Last one will be used.");
                 }
                 signature = new SignatureData(cls).read(in, attrlen);

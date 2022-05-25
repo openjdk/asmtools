@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.common.Tool;
+import org.openjdk.asmtools.jasm.JasmTokens;
 import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.*;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
 import static org.openjdk.asmtools.jasm.Tables.*;
+import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
 
 /**
  * Central class data for of the Java Disassembler
@@ -182,6 +184,13 @@ public class ClassData extends MemberData {
         // Read the Attributes
         boolean handled = true;
         switch (attrtag) {
+            case ATT_Signature:
+                if( signature != null ) {
+                    traceln("Class attribute:  more than one attribute Signature are in ClassFile.attribute_info_attributes[attribute_count]");
+                    traceln("Last one will be used.");
+                }
+                signature = new SignatureData(cls).read(in, attrlen);
+                break;
             case ATT_SourceFile:
                 // Read SourceFile Attr
                 if (attrlen != 2) {
@@ -436,6 +445,12 @@ printSugar:
         }
         // Don't print fields, methods, inner classes and bootstrap methods if it is module-info entity
         if ( !isModuleUnit() ) {
+
+            if (signature != null) {
+                signature.print(getIndentString() + JasmTokens.Token.SIGNATURE.parseKey() + " ", pr_cpx ? ";\t // " : ";");
+                out.println();
+                out.println();
+            }
 
             // Print the fields
             printMemberDataList(fields);

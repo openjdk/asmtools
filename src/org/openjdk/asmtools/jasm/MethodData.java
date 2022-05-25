@@ -207,7 +207,7 @@ class MethodData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        DataVector dv = getDataVector( exceptions, syntheticAttr, deprecatedAttr, paramNames, code, defaultAnnot);
+        DataVector dv = getDataVector(exceptions, syntheticAttr, deprecatedAttr, signatureAttr, paramNames, code, defaultAnnot);
         if (pannotAttrVis != null) {
             dv.add(pannotAttrVis);
         }
