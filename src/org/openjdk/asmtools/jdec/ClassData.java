@@ -230,7 +230,7 @@ class ClassData {
                 default -> {
                     CPlen = i;
                     printCP();
-                    out_println(toHex(btag, 1) + "; // invalid constant verificationType: " + (int) btag + " for element " + i);
+                    out_println(toHex(btag, 1) + "; // invalid constant type: " + (int) btag + " for element " + i);
                     throw new ClassFormatError();
                 }
             }
@@ -255,7 +255,7 @@ class ClassData {
                 if (tg != null) {
                     tagstr = tg.parseKey();
                 } else {
-                    throw new Error("Can't get a tg representing the verificationType of Constant in the Constant Pool at: " + i);
+                    throw new Error("Can't get a tg representing the type of Constant in the Constant Pool at: " + i);
                 }
                 switch (tg) {
                     case CONSTANT_UTF8 -> {
@@ -279,7 +279,7 @@ class ClassData {
                             CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE,
                             CONSTANT_METHODHANDLE, CONSTANT_METHODTYPE,
                             CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> valstr = (String) cpool[i];
-                    default -> throw new Error("invalid constant verificationType: " + (int) btag);
+                    default -> throw new Error("invalid constant type: " + (int) btag);
                 }
                 out_print(tagstr + " " + valstr + "; // #" + i);
                 if (environment.printDetailsFlag) {
@@ -483,7 +483,7 @@ class ClassData {
                     }
                 }
                 case AE_UNKNOWN -> {
-                    String msg = "invalid element_value" + (isPrintableChar(tg) ? " tag verificationType : " + tg : "");
+                    String msg = "invalid element_value" + (isPrintableChar(tg) ? " tag type : " + tg : "??");
                     out_println(toHex(tg, 1) + "; // " + msg);
                     throw new ClassFormatError(msg);
                 }
@@ -518,7 +518,7 @@ class ClassData {
             for (int i = 0; i < count; i++) {
                 out_begin("{  //  element value pair");
                 try {
-                    decodeCPXAttr(in, 2, "name of the annotation verificationType element");
+                    decodeCPXAttr(in, 2, "name of the annotation type element");
                     decodeElementValue(in, out);
                 } finally {
                     out_end("}  //  element value pair");
@@ -1191,7 +1191,7 @@ class ClassData {
     private void decodeTypes(DataInputStream in, int count) throws IOException {
         for (int i = 0; i < count; i++) {
             int type_cpx = in.readUnsignedShort();
-            environment.traceln("jdec.trace.verificationType", i, type_cpx);
+            environment.traceln("jdec.trace.type", i, type_cpx);
             String s = "#" + type_cpx + ";";
             if (environment.printDetailsFlag) {
                 String name = (String) cpool[(int) cpool[type_cpx]];

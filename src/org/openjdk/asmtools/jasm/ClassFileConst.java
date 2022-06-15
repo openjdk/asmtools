@@ -103,9 +103,9 @@ public final class ClassFileConst {
         return SubTags.get(subtag);
     }
 
-    private static void registerBasicType(BasicType verificationType) {
-        NameToBasicType.put(verificationType.printValue, verificationType);
-        BasicTypes.put(verificationType.value, verificationType);
+    private static void registerBasicType(BasicType basicType) {
+        NameToBasicType.put(basicType.printValue, basicType);
+        BasicTypes.put(basicType.value, basicType);
     }
 
     public static BasicType getBasicType(String idValue) {
@@ -125,17 +125,17 @@ public final class ClassFileConst {
         return retval;
     }
 
-    private static void registerAnnotationElementType(AnnotationElementType verificationType) {
-        // NameToAnnotationElementType.put(verificationType.printValue, verificationType);
-        AnnotationElementTypes.put(verificationType.value.charAt(0), verificationType);
+    private static void registerAnnotationElementType(AnnotationElementType annotationElementType) {
+        // NameToAnnotationElementType.put(annotationElementType.printValue, annotationElementType);
+        AnnotationElementTypes.put(annotationElementType.value.charAt(0), annotationElementType);
     }
 
     public static AnnotationElementType getAnnotationElementType(char subTag) {
-        AnnotationElementType verificationType = AnnotationElementTypes.get(subTag);
-        if (verificationType == null) {
-            verificationType = AnnotationElementType.AE_UNKNOWN;
+        AnnotationElementType elementType = AnnotationElementTypes.get(subTag);
+        if (elementType == null) {
+            elementType = AnnotationElementType.AE_UNKNOWN;
         }
-        return verificationType;
+        return elementType;
     }
 
     /**
@@ -186,8 +186,8 @@ public final class ClassFileConst {
         }
 
         public boolean oneOf(ConstType... constTypes) {
-            for (ConstType verificationType : constTypes) {
-                if (this.value == verificationType.value) {
+            for (ConstType constType : constTypes) {
+                if (this.value == constType.value) {
                     return true;
                 }
             }
@@ -195,7 +195,7 @@ public final class ClassFileConst {
         }
 
         /**
-         * The tag item uses a single ASCII character to indicate the verificationType of the value of the element-value pair.
+         * The tag item uses a single ASCII character to indicate the type of the value of the element-value pair.
          * This determines which item of the value union is in use. Table 4.7.16.1-A shows the valid characters
          * for the tag item.
          *
@@ -266,7 +266,7 @@ public final class ClassFileConst {
         }
 
         /**
-         * The tag item uses a single ASCII character to indicate the verificationType of the value of the element-value pair.
+         * The tag item uses a single ASCII character to indicate the type of the value of the element-value pair.
          * This determines which item of the value union is in use. Table 4.7.16.1-A shows the valid characters
          * for the tag item.
          *

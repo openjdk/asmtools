@@ -38,7 +38,7 @@ public class FieldData extends MemberData<ClassData> {
 
     // CP index to the field name
     protected int name_cpx;
-    // CP index to the field verificationType
+    // CP index to the field type
     protected int type_cpx;
     // CP index to the field value
     protected int value_cpx = 0;
@@ -86,7 +86,7 @@ public class FieldData extends MemberData<ClassData> {
         // Read the attributes
         readAttributes(in);
         //
-        environment.traceln("FieldData: name[%d]=%s verificationType[%d]=%s%s",
+        environment.traceln("FieldData: name[%d]=%s type[%d]=%s%s",
                 name_cpx, data.pool.getString(name_cpx, index -> "#" + index + "?"),
                 type_cpx, data.pool.getString(type_cpx, index -> "#" + index + "?"),
                 signature != null ? signature : "");

@@ -73,7 +73,7 @@ class CodeAttr extends AttrData {
     protected HashMap<String, RangePC> trapsHash;
     protected StackMapData curMapEntry = null;
     protected DataVectorAttr<StackMapData> stackMap;
-    // verificationType annotations
+    // type annotations
     protected DataVectorAttr<TypeAnnotationData> visTypeAnnotations = null;
     protected DataVectorAttr<TypeAnnotationData> inVisTypeAnnotations = null;
 
@@ -161,10 +161,10 @@ class CodeAttr extends AttrData {
         rangePC.end_pc = curPC;
     }
 
-    void trapHandler(int pos, String name, Indexer verificationType) {
+    void trapHandler(int pos, String name, Indexer type) {
         RangePC rangePC = trapDecl(pos, name);
         rangePC.isReferred = true;
-        ExceptionData exceptionData = new ExceptionData(pos, rangePC, curPC, verificationType);
+        ExceptionData exceptionData = new ExceptionData(pos, rangePC, curPC, type);
         exceptionTable.addElement(exceptionData);
     }
 
@@ -242,13 +242,13 @@ class CodeAttr extends AttrData {
      * @param position       scanners' position to navigate where a syntax error happened if any
      * @param index          a valid index into the local variable array of the current frame
      * @param nameCell       valid unqualified name denoting a local variable
-     * @param descriptorCell a field descriptor which encodes the verificationType of a local variable in the source program
+     * @param descriptorCell a field descriptor which encodes a type of local variable in the source program
      */
     public void LocVarDataDef(int position, int index, ConstCell<?> nameCell, ConstCell<?> descriptorCell) {
         LocVarData locVarData = new LocVarData((short) index, (short) curPC, nameCell, descriptorCell);
         FieldType fieldType = locVarData.getFieldType();
         // check slot availability
-        //If the given local variable is of verificationType double or long, it occupies both index and index + 1
+        //If the given local variable is of type double or long, it occupies both index and index + 1
         for (int i = 0; i < fieldType.getSlotsCount(); i++) {
             if (!max_locals.inRange(index + i)) {
                 environment.error(position, "err.locvar.wrong.index", index + i, max_locals.value() - 1);
@@ -268,7 +268,7 @@ class CodeAttr extends AttrData {
     }
 
     /**
-     * Marks the end of Local Variable presented in the form endvar index: locVarSlots[slot] = VACANT
+     * Marks the end of Local Variable presented in the form endVar index: locVarSlots[slot] = VACANT
      * and sets the Length of the Local Var
      *
      * @param position the position of the scanner
@@ -286,7 +286,7 @@ class CodeAttr extends AttrData {
         }
         locVarData.setLength(curPC);
         // Check slot availability and clean up appropriate locVarSlots[slot{,slot+1}]
-        // If the given local variable is of verificationType double or long, it occupies both index and index + 1
+        // If the given local variable is of type double or long, it occupies both index and index + 1
         for (int i = 0; i < locVarData.getSlotsCount(); i++) {
             if (i > 0 && !max_locals.inRange(slot + i)) {
                 environment.error(position, "err.locvar.wrong.index", slot + i, max_locals.value() - 1);

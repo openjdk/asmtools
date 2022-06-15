@@ -75,11 +75,11 @@ public class CodeData extends MemberData<MethodData> {
      */
     private ArrayList<StackMapData> stack_map = null;
     /**
-     * The visible verificationType annotations for this method
+     * The visible type annotations for this method
      */
     private ArrayList<TypeAnnotationData<MethodData>> visibleTypeAnnotations;
     /**
-     * The invisible verificationType annotations for this method
+     * The invisible type annotations for this method
      */
     private ArrayList<TypeAnnotationData<MethodData>> invisibleTypeAnnotations;
 
@@ -434,13 +434,13 @@ public class CodeData extends MemberData<MethodData> {
             }
             case opc_newarray -> {
                 int tp = getUByte(pc + 1);
-                BasicType verificationType = getBasicType(tp);
-                if (verificationType == null) {
+                BasicType basicType = getBasicType(tp);
+                if (basicType == null) {
                     print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
                             println("BOGUS TYPE: " + toHex(tp, 8) + ";");
                 } else {
                     print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
-                            println(verificationType.printValue() + ";");
+                            println(basicType.printValue() + ";");
                 }
                 return 2;
             }

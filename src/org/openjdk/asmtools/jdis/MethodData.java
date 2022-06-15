@@ -45,7 +45,7 @@ public class MethodData extends MemberData<ClassData> {
     //ConstantPool index to the method name
     protected int name_cpx;
 
-    //ConstantPool index to the method verificationType
+    //ConstantPool index to the method type
     protected int sig_cpx;
 
     // labelPrefix

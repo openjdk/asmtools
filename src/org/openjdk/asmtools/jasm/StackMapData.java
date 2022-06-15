@@ -70,7 +70,7 @@ public class StackMapData implements DataWriter {
         this.stackFrameType = stackFrameType;
         this.frameTypeTag = StackMap.getFrameTypeTag(stackFrameType);
         if (!StackMap.isValidFrameType(this.frameTypeTag)) {
-            environment.error(scannerPosition, "err.invalid.stack.frame.verificationType", stackFrameType);
+            environment.error(scannerPosition, "err.invalid.stack.frame.type", stackFrameType);
         }
         return this;
     }

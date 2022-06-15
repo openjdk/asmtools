@@ -184,7 +184,7 @@ public final class ModuleContent extends Indenter {
         }
     }
 
-    //* A provided verificationType of the current module.
+    //* A provided type of the current module.
     public final static class Provided extends TargetType {
         public Provided(int cpIndex, String typeName) {
             super(CONSTANT_CLASS, cpIndex, typeName);

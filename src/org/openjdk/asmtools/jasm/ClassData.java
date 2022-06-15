@@ -376,7 +376,7 @@ class ClassData extends MemberData<JasmEnvironment> {
 
     /**
      * Scans all attribute values which only have cap Index != 0 when they are found
-     * sets value and verificationType from Constant Pool by cpIndex
+     * sets value and type from Constant Pool by cpIndex
      *
      * @param annotationList annotation attributes
      */

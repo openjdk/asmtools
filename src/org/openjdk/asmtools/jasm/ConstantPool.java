@@ -524,7 +524,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     /**
-     * CONSTANT_UTF8(1) is used to represent constant objects of the verificationType String
+     * CONSTANT_UTF8(1) is used to represent constant objects of the type: String
      */
     static public class ConstValue_UTF8 extends ConstValue<String> {
 
@@ -655,7 +655,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     /**
-     * The CONSTANT_Class(7) structure represents constant objects of the verificationType String
+     * The CONSTANT_Class(7) structure represents constant objects of the type String
      */
     static public class ConstValue_Class extends ConstValue_Cell<ConstValue_UTF8> {
         public ConstValue_Class(ConstCell<ConstValue_UTF8> value) {
@@ -673,7 +673,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     /**
-     * The CONSTANT_Package(20) structure represents a method verificationType
+     * The CONSTANT_Package(20) structure represents a method type
      */
     static public class ConstValue_Package extends ConstValue_Cell<ConstValue_UTF8> {
         public ConstValue_Package(ConstCell<ConstValue_UTF8> value) {
@@ -691,7 +691,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     /**
-     * The CONSTANT_MethodType(16) structure represents a method verificationType
+     * The CONSTANT_MethodType(16) structure represents a method type
      */
     static public class ConstValue_MethodType extends ConstValue_Cell<ConstValue_UTF8> {
         public ConstValue_MethodType(ConstCell<ConstValue_UTF8> value) {
@@ -767,7 +767,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
 
     /**
      * The CONSTANT_NameAndType(12) structure is used to represent a field or method, without indicating which class or
-     * interface verificationType it belongs to
+     * interface type it belongs to
      */
     static public class ConstValue_NameAndType extends ConstValue_Pair<ConstValue_UTF8, ConstValue_UTF8> {
         public ConstValue_NameAndType(ConstCell<ConstValue_UTF8> name, ConstCell<ConstValue_UTF8> descriptor) {
@@ -918,7 +918,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     /**
      * The CONSTANT_Dynamic (17) structure is used to represent a dynamically-computed constant, an arbitrary value
      * that is produced by invocation of a bootstrap method in the course of an ldc instruction, among others.
-     * The auxiliary verificationType specified by the structure constrains the verificationType of the dynamically-computed constant.
+     * The auxiliary type specified by the structure constrains the type of the dynamically-computed constant.
      */
     static public class ConstValue_Dynamic extends ConstValue_BootstrapMethod {
         public ConstValue_Dynamic(BootstrapMethodData bsmData, ConstCell napeCell) {
@@ -931,7 +931,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     /**
      * The CONSTANT_InvokeDynamic_info(18) structure is used to represent a dynamically-computed call site, an instance of
      * java.lang.invoke.CallSite that is produced by invocation of a bootstrap method in the course of an invokedynamic instruction.
-     * The auxiliary verificationType specified by the structure constrains the method verificationType of the dynamically-computed call site.
+     * The auxiliary type specified by the structure constrains the method type of the dynamically-computed call site.
      */
     static public class ConstValue_InvokeDynamic extends ConstValue_BootstrapMethod {
         public ConstValue_InvokeDynamic(BootstrapMethodData bsmData, ConstCell napeCell) {

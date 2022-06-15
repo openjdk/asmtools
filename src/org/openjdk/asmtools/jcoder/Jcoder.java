@@ -55,7 +55,7 @@ class Jcoder {
     /* Jcoder inner classes */
 
     /*-------------------------------------------------------- */
-    /* ContextTag (marker) - describes the verificationType of token */
+    /* ContextTag (marker) - describes the type of token */
     /*    this is rather cosmetic, no function currently. */
     private enum ContextTag {
         NULL                ( ""),

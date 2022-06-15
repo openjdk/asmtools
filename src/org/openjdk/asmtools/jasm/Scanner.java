@@ -691,8 +691,8 @@ public class Scanner extends ParseBase {
             // Check to see if the annotation marker is at
             // the front of the identifier.
             if (firstIteration && firstChar == '@') {
-                // May be a verificationType annotation
-                if (ch == 'T') {  // verificationType annotation
+                // Maybe a type annotation
+                if (ch == 'T') {  // type annotation
                     putCh(ch);
                     ch = environment.read();
                 }

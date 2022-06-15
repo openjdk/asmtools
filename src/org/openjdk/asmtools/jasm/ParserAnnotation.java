@@ -208,7 +208,7 @@ public class ParserAnnotation extends ParseBase {
         String annoName = "L" + scanner.stringValue + ";";
         TypeAnnotationData anno = new TypeAnnotationData(parser.pool.findUTF8Cell(annoName), invisible);
         scanner.scan();
-        scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]:new verificationType annotation: " + annoName + " ");
+        scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]:new Type annotation: " + annoName + " ");
 
         scanner.expect(Token.LBRACE);
 
@@ -361,7 +361,7 @@ public class ParserAnnotation extends ParseBase {
      * u1 type_argument_index;
      * }
      *
-     * @return a parsed verificationType path.
+     * @return a parsed type path.
      * @throws SyntaxError if a scanner error occurs
      */
     private TypePathEntry _scanTypePathEntry() throws SyntaxError {
@@ -598,12 +598,12 @@ public class ParserAnnotation extends ParseBase {
     private DataWriter getElementValueByCPIndex(int cpIndex) {
         DataWriter dataWriter;
         ConstCell cell = parser.pool.getCell(cpIndex);
-        ConstType verificationType = cell.getType();
-        if (verificationType.oneOf(CONSTANT_UNKNOWN,
+        ConstType type = cell.getType();
+        if (type.oneOf(CONSTANT_UNKNOWN,
                 CONSTANT_INTEGER, CONSTANT_FLOAT,
                 CONSTANT_LONG, CONSTANT_DOUBLE,
                 CONSTANT_UTF8)) {
-            dataWriter = new ConstElemValue(verificationType.getAnnotationElementTypeValue(), cell);
+            dataWriter = new ConstElemValue(type.getAnnotationElementTypeValue(), cell);
         } else {
             dataWriter = new ClassElemValue(parser.pool.getCell(cpIndex));
         }
@@ -623,8 +623,8 @@ public class ParserAnnotation extends ParseBase {
     private DataWriter scanAnnotationIdent(String ident, String name) throws SyntaxError {
         // Handle JASM annotation Keyword Identifiers
         DataWriter dataWriter;
-        BasicType verificationType = getBasicType(ident);
-        switch (verificationType) {
+        BasicType type = getBasicType(ident);
+        switch (type) {
             case T_BOOLEAN:
                 // consume the keyword, get the value
                 scanner.scan();
@@ -899,18 +899,18 @@ public class ParserAnnotation extends ParseBase {
      */
     static class EnumElemValue implements ConstantPoolDataVisitor {
 
-        ConstCell verificationType;
+        ConstCell type;
         ConstCell value;
 
-        EnumElemValue(ConstCell verificationType, ConstCell value) {
-            this.verificationType = verificationType;
+        EnumElemValue(ConstCell type, ConstCell value) {
+            this.type = type;
             this.value = value;
         }
 
         @Override
         public void write(CheckedDataOutputStream out) throws IOException {
             out.writeByte(AE_ENUM.tag());
-            verificationType.write(out);
+            type.write(out);
             value.write(out);
         }
 
@@ -921,14 +921,14 @@ public class ParserAnnotation extends ParseBase {
 
         @Override
         public <T extends DataWriter> T visit(ConstantPool pool) {
-            this.verificationType = visitConstCell(this.verificationType, pool);
+            this.type = visitConstCell(this.type, pool);
             this.value = visitConstCell(this.value, pool);
             return (T) this;
         }
     }
 
     /**
-     * Target Type visitor, used for constructing the target-info within a verificationType
+     * Target Type visitor, used for constructing the target-info within a type
      * annotation. visitExcept() is the entry point. ti is the constructed target info.
      */
     private static class TargetTypeVisitor extends TypeAnnotationTypes.TypeAnnotationTargetVisitor {
@@ -1021,7 +1021,7 @@ public class ParserAnnotation extends ParseBase {
         @Override
         public void visit_supertype_target(ETargetType targetType) {
             environment.traceln("SuperType Target: ");
-            int shortval = scanIntVal(targetType); // verificationType index
+            int shortval = scanIntVal(targetType); // type index
             if (!errorFound()) {
                 targetInfoData = new TypeAnnotationTargetInfoData.supertype_target(targetType, shortval);
             }
@@ -1121,7 +1121,7 @@ public class ParserAnnotation extends ParseBase {
             if (errorFound()) {
                 return;
             }
-            int byteval = scanIntVal(targetType); // verificationType index
+            int byteval = scanIntVal(targetType); // type index
             if (errorFound()) {
                 return;
             }

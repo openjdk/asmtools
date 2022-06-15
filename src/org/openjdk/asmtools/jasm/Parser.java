@@ -153,7 +153,7 @@ class Parser extends ParseBase {
      * <p>
      * index - a valid index into the local variable array of the current frame.
      * name -  valid unqualified name denoting a local variable
-     * descriptor - a field descriptor which encodes the verificationType of a local variable in the source program
+     * descriptor - a field descriptor which encodes the type of a local variable in the source program
      */
     void parseLocVarDef() throws SyntaxError {
         int index = Indexer.NotSet;
@@ -178,7 +178,7 @@ class Parser extends ParseBase {
         // 1. scan (#)descriptor(_index)
         int descriptorPosition = scanner.pos;
         descriptorCell = parseName();
-        // check field verificationType of the local var
+        // check field type of the local var
         FieldType fieldType = FieldType.getFieldType(((String) descriptorCell.ref.value).charAt(0));
         if (fieldType == null) {
             environment.error(descriptorPosition, "err.locvar.unknown.field.descriptor", index, descriptorCell.ref.value.toString());
@@ -877,7 +877,7 @@ class Parser extends ParseBase {
                 if (scanner.token == Token.RBRACE) {
                     break;
                 }
-                // code's verificationType annotation(s)
+                // code's type annotation(s)
                 if (scanner.token == Token.ANNOTATION) {
                     curCodeAttr.addAnnotations(annotParser.scanAnnotations());
                     break;
@@ -1423,7 +1423,7 @@ class Parser extends ParseBase {
     } // end parseClass
 
     /**
-     * Parses a package or verificationType name in a module statement(s)
+     * Parses a package or type name in a module statement(s)
      *
      * @return Pair  Either Package/Type name or CP Index for this Package/Type name.
      */

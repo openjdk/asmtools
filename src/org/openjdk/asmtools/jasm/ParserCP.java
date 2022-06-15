@@ -143,16 +143,16 @@ public class ParserCP extends ParseBase {
         if (tag == null) {
             // and, if the expected tag is null
             if (defaultTag == null) {
-                // return some other verificationType of constant as the tag
+                // return some other type of constant as the tag
                 tag = scanConstPrimVal();
             } else {
-                // otherwise, make the scanned-tag the same constant-verificationType
+                // otherwise, make the scanned-tag the same constant-type
                 // as the expected tag.
                 tag = defaultTag;
             }
         } else {
-            // If the scanned tag is some constant verificationType
-            // and the scanned verificationType does not equal the expected verificationType
+            // If the scanned tag is some constant type
+            // and the scanned type does not equal the expected type
             checkWrongTag(tag, defaultTag, default2Tag);
             scanner.scan();
         }
@@ -187,7 +187,7 @@ public class ParserCP extends ParseBase {
      * ParserCPVisitor
      * <p>
      * This inner class overrides a constant pool visitor to provide specific parsing
-     * instructions (per method) for each verificationType of Constant.
+     * instructions (per method) for each type of Constant.
      * <p>
      * Note: since the generic visitor throws no exceptions, this derived class tunnels
      * the exceptions, rethrown in the visitExcept method.
@@ -526,11 +526,11 @@ public class ParserCP extends ParseBase {
                     NameCell = firstName;
                 }
                 if (scanner.token == Token.COLON) {
-                    // name and verificationType separately
+                    // name and type separately
                     scanner.scan();
                     NapeCell = parser.pool.findCell(ConstType.CONSTANT_NAMEANDTYPE, NameCell, parser.parseName());
                 } else {
-                    // name and verificationType as single name
+                    // name and type as single name
                     NapeCell = NameCell;
                 }
                 switch (tag) {
