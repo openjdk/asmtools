@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,37 +22,42 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.asmutils.Pair;
+
 /**
- *
+ * Wrapper for Pair class for keeping Name information that is the Constant Pool Index and Corresponding Name.
+ * Usually only one field is set if Option.CPX "CP index along with arguments" is used then cpIndex is set
+ * otherwise a name. Or manually changed jasm file has both Constant Pool entries and names
  */
-class Argument {
+public class NameInfo extends Pair<Integer, String> {
 
-    static final int NotSet = -1;
-    int arg;
-
-    Argument() {
-        arg = NotSet;
+    public NameInfo(Integer cpIndex, String name) {
+        super(cpIndex, name);
     }
 
-    Argument(int arg) {
-        this.arg = arg;
+    public NameInfo() {
+        super(0, "");
     }
 
-    public int hashCode() {
-        return arg;
+    public String name() {
+        return super.second;
     }
 
-    /**
-     * Compares this object to the specified object.
-     *
-     * @param obj the object to compare with
-     * @return true if the objects are the same; false otherwise.
-     */
-    public boolean equals(Object obj) {
-        throw new Parser.CompilerError("ConstCell.equals");
+    public NameInfo setName(String name) {
+        super.second = name;
+        return this;
     }
 
-    boolean isSet() {
-        return arg != NotSet;
+    public int cpIndex() {
+        return super.first;
+    }
+
+    public NameInfo setCpIndex(int index) {
+        super.first = index;
+        return this;
+    }
+
+    public boolean isEmpty() {
+        return (first == 0 && (second == null || second.isEmpty()));
     }
 }

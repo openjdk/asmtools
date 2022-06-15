@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
 
 /**
@@ -29,11 +31,11 @@ import java.io.IOException;
  */
 class CPXAttr extends AttrData {
 
-    Argument cell;
+    ConstCell<?> cell;
 
-    public CPXAttr(ClassData cls, String attrName, Argument cell) {
-        super(cls, attrName);
-        this.cell = cell;
+    public CPXAttr(ConstantPool pool, EAttribute attribute, ConstCell<?> cell) {
+        super(pool, attribute);
+        this.cell = classifyConstCell(cell);
     }
 
     public int attrLength() {
@@ -42,7 +44,7 @@ class CPXAttr extends AttrData {
 
     public void write(CheckedDataOutputStream out) throws IOException {
         super.write(out);  // attr name, attr len
-        out.writeShort(cell.arg);
+        out.writeShort(cell.cpIndex);
     }
 } // end class CPXAttr
 

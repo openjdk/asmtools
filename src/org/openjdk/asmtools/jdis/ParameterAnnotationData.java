@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,87 +24,49 @@ package org.openjdk.asmtools.jdis;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- *
+ *  4.7.18. The RuntimeVisibleParameterAnnotations Attribute
+ *  4.7.19. The RuntimeInvisibleParameterAnnotations Attribute
  */
-public class ParameterAnnotationData {
-    /*-------------------------------------------------------- */
-    /* AnnotData Fields */
+public class ParameterAnnotationData<T extends MemberData>  extends MemberData{
 
-    private boolean invisible = false;
-    private static final String initialTab = "";
-    private ArrayList<ArrayList<AnnotationData>> array = null;
+    private final boolean invisible;
+    private ArrayList<ArrayList<AnnotationData<T>>> array = null;
 
-    private ClassData cls;
-    /*-------------------------------------------------------- */
-
-    public ParameterAnnotationData(ClassData cls, boolean invisible) {
-        this.cls = cls;
+    public ParameterAnnotationData(T data, boolean invisible) {
+        super(data);
         this.invisible = invisible;
     }
 
     public int numParams() {
-        if (array == null) {
-            return 0;
-        }
-
-        return array.size();
+        return (array == null) ? 0 : array.size();
     }
 
-    public ArrayList<AnnotationData> get(int i) {
+    public ArrayList<AnnotationData<T>> get(int i) {
         return array.get(i);
     }
 
     public void read(DataInputStream in) throws IOException {
         int numParams = in.readByte();
-        TraceUtils.traceln("             ParameterAnnotationData[" + numParams + "]");
+        environment.traceln("ParameterAnnotationData[%d]:", numParams);
         array = new ArrayList<>(numParams);
         for (int paramNum = 0; paramNum < numParams; paramNum++) {
-
-            int numAnnots = in.readShort();
-            TraceUtils.traceln("             Param#[" + paramNum + "]: numAnnots=" + numAnnots);
-
-            if (numAnnots > 0) {
+            int numAnnotations = in.readShort();
+            environment.traceln(" Param#[%d]: numAnnotations= %d", paramNum, numAnnotations);
+            if (numAnnotations > 0) {
                 // read annotation
-                ArrayList<AnnotationData> p_annots = new ArrayList<>(numAnnots);
-                for (int annotIndex = 0; annotIndex < numAnnots; annotIndex++) {
-                    AnnotationData annot = new AnnotationData(invisible, cls);
-                    annot.read(in);
-                    p_annots.add(annot);
+                ArrayList<AnnotationData<T>> paramAnnotationList = new ArrayList<>(numAnnotations);
+                for (int annotIndex = 0; annotIndex < numAnnotations; annotIndex++) {
+                    AnnotationData annotationData = new AnnotationData(data, invisible);
+                    annotationData.read(in);
+                    paramAnnotationList.add(annotationData);
                 }
-                array.add(paramNum, p_annots);
+                array.add(paramNum, paramAnnotationList);
             } else {
                 array.add(paramNum, null);
             }
         }
     }
-
-    // Don't need to do this --
-    // we need to print annotations (both vis and invisible) per each param number
-    public void print(PrintWriter out, String tab) {
-        if (array != null && array.size() > 0) {
-            out.println();
-            int paramNum = 0;
-            for (ArrayList<AnnotationData> p_annot : array) {
-                if (p_annot != null && p_annot.size() > 0) {
-                    out.print("\t" + paramNum + ": ");
-                    boolean firstTime = true;
-                    for (AnnotationData annot : p_annot) {
-                        if (!firstTime) {
-                            out.print("\t   ");
-                        }
-                        annot.print(out, initialTab);
-                        firstTime = false;
-                    }
-                }
-
-                paramNum += 1;
-                out.println();
-            }
-        }
-    }
-
 }

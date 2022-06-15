@@ -23,7 +23,7 @@
 package org.openjdk.asmtools.jcdec;
 
 import static org.openjdk.asmtools.jcoder.JcodTokens.*;
-import org.openjdk.asmtools.jdis.uEscWriter;
+import org.openjdk.asmtools.common.uEscWriter;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 import java.io.DataInputStream;
@@ -264,7 +264,7 @@ public class Main {
                     break;
 
                 default:
-                    throw new Error("invalid constant type: " + (int) tag);
+                    throw new Error("invalid constant verificationType: " + (int) tag);
             }
         }
         ;
@@ -643,14 +643,14 @@ public class Main {
                         out.println(" // external field");
                     }
                 }
-                int type = in.readUnsignedShort();
-                if ((type & 0x8000) == 0) {
-                    out_println(type + "; // reference type");
+                int verificationType = in.readUnsignedShort();
+                if ((verificationType & 0x8000) == 0) {
+                    out_println(verificationType + "; // reference verificationType");
                 } else {
                     out_print("0x");
-                    printByteHex(out, type >> 8);
-                    printByteHex(out, type);
-                    out.println("; // primitive type");
+                    printByteHex(out, verificationType >> 8);
+                    printByteHex(out, verificationType);
+                    out.println("; // primitive verificationType");
                 }
                 out_end("};");
             }
@@ -672,7 +672,7 @@ public class Main {
                 printByteHex(out, flags);
                 out.println("; // flags");
                 out_println(m_offset + "; // method offset");
-                out_println(t_offset + "; // type offset");
+                out_println(t_offset + "; // verificationType offset");
                 out_println(bytecode_count + "; // bytecode count");
                 out_println(in.readUnsignedShort() + "; // exception handler count");
                 out_println(in.readUnsignedShort() + "; // exception handler index");
@@ -685,22 +685,22 @@ public class Main {
         int cp_count = in.readUnsignedShort();
         out_begin(startArray(cp_count) + " { // constant pool types");
         for (int i = 0; i < cp_count; i++) {
-            int type = in.readUnsignedShort();
-            if (type == 0xFFFF) {
+            int verificationType = in.readUnsignedShort();
+            if (verificationType == 0xFFFF) {
                 out_println("0xFFFF;");
             } else {
-                out_println(type + "; ");
+                out_println(verificationType + "; ");
             }
         }
         out_end("}; // constant pool types");
 
-        out_begin("{ // type descriptors");
+        out_begin("{ // verificationType descriptors");
         for (int i = 0; in.available() > 0; i++) {
             int nibble_count = in.readUnsignedByte();
             out_print(nibble_count + "b; ");
             printBytes(in, (nibble_count + 1) / 2);
         }
-        out_end("}; // type descriptors");
+        out_end("}; // verificationType descriptors");
         endComponent(in);
     }
 
@@ -771,7 +771,7 @@ public class Main {
         int array_init_count = in.readUnsignedShort();
         out_begin(startArray(array_init_count) + " { // array_init_info");
         for (int i = 0; i < array_init_count; i++) {
-            out_println(in.readUnsignedByte() + "b // type ");
+            out_println(in.readUnsignedByte() + "b // verificationType ");
             int count = in.readUnsignedShort();
             out_begin("Bytes" + startArray(count) + "s { // values");
             printBytes(in, count);

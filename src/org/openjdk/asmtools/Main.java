@@ -31,8 +31,7 @@ import org.openjdk.asmtools.util.ProductInfo;
  */
 public class Main {
 
-    public static final I18NResourceBundle i18n
-            = I18NResourceBundle.getBundleForClass(Main.class);
+    public static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
 
     /**
      * Parses the first argument and deligates execution to an appropriate tool

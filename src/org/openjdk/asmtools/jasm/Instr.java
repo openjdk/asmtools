@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,38 +23,69 @@
 package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
+import java.util.Optional;
 
-import static org.openjdk.asmtools.jasm.OpcodeTables.*;
+import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
+import static org.openjdk.asmtools.jasm.OpcodeTables.OpcodeType;
 
-/**
- *
- */
+//
 class Instr {
 
+    // environment is needed to fix CP references and show error(s)/message(s)
+    private final JasmEnvironment environment;
+    private final ConstantPool pool;
+    private int pos;
+    //
     Instr next = null;
     int pc;
-    int pos;
     Opcode opc;
-    Argument arg;
+    Indexer arg;
     Object arg2; // second or unusual argument
 
-    public Instr(int pc, int pos, Opcode opc, Argument arg, Object arg2) {
+    public Instr(ConstantPool pool, JasmEnvironment environment) {
+        this.environment = environment;
+        this.pool = pool;
+    }
+
+    public Instr set(int pc, int pos, Opcode opc, Indexer arg, Object arg2) {
         this.pc = pc;
         this.pos = pos;
         this.opc = opc;
         this.arg = arg;
         this.arg2 = arg2;
+        return this;
     }
 
-    public Instr() {
+    private Indexer fixReference(Indexer arg) {
+        if( arg != null && arg instanceof ConstCell<?>) {
+            ConstCell<?> cell = (ConstCell<?>) arg;
+            if( cell.ref == null || arg.cpIndex == 0) { // Corner case cell[0] has value but its reference is wrong
+                // For negative testing: when instruction refers to a wrong Constant Pool cell
+                // asm just shows a warning.
+                environment.warning(pos - String.valueOf(arg.cpIndex).length()-1,
+                        "warn.instr.wrong.arg", opc.parseKey(), arg.cpIndex);
+                return arg;
+            }
+            if( !arg.isSet()) {
+                Optional<ConstCell<?>> optionalCell = pool.getItemizedCell((ConstCell<?>) arg);
+                if (optionalCell.isPresent()) {
+                    arg = optionalCell.get();
+                } else {
+                    environment.throwErrorException(pos - String.valueOf(arg.cpIndex).length()-1,
+                            "err.instr.wrong.arg", opc.parseKey(), arg.cpIndex);
+                }
+            }
+        }
+        return arg;
     }
 
-    public void write(CheckedDataOutputStream out, Environment env) throws IOException {
+    public void write(CheckedDataOutputStream out) throws IOException {
         OpcodeType type = opc.type();
+        arg = fixReference(arg);
         switch (type) {
             case NORMAL: {
                 if (opc == Opcode.opc_bytecode) {
-                    out.writeByte(arg.arg);
+                    out.writeByte(arg.cpIndex);
                     return;
                 }
                 out.writeByte(opc.value());
@@ -72,11 +103,11 @@ class Instr {
                         return;
                 }
 
-                int iarg;
+                int iarg = 0;
                 try {
-                    iarg = arg.arg;
+                    iarg = arg.cpIndex;
                 } catch (NullPointerException e) {
-                    throw new Parser.CompilerError(env.errorStr("comperr.instr.nullarg", opc.parsekey()));
+                    environment.throwErrorException("err.instr.null.arg", opc.parseKey());
                 }
 //env.traceln("instr:"+opcNamesTab[opc]+" len="+opcLen+" arg:"+iarg);
                 switch (opc) {
@@ -103,18 +134,17 @@ class Instr {
                         iarg = iarg - pc;
                         break;
                     case opc_iinc:
-                        iarg = (iarg << 8) | (((Argument) arg2).arg & 0xFF);
+                        iarg = (iarg << 8) | (((Indexer) arg2).cpIndex & 0xFF);
                         break;
                     case opc_invokeinterface:
-                        iarg = ((iarg << 8) | (((Argument) arg2).arg & 0xFF)) << 8;
+                        iarg = ((iarg << 8) | (((Indexer) arg2).cpIndex & 0xFF)) << 8;
                         break;
                     case opc_invokedynamic: // JSR-292
                         iarg = (iarg << 16);
                         break;
                     case opc_ldc:
                         if ((iarg & 0xFFFFFF00) != 0) {
-                            throw new Parser.CompilerError(
-                                    env.errorStr("comperr.instr.arglong", opc.parsekey(), iarg));
+                            environment.throwErrorException("err.instr.arg.long", opc.parseKey(), iarg);
                         }
                         break;
                 }
@@ -129,23 +159,22 @@ class Instr {
                         return;
                     case 4: // opc_multianewarray only
                         out.writeShort(iarg);
-                        iarg = ((Argument) arg2).arg;
+                        iarg = ((Indexer) arg2).cpIndex;
                         out.writeByte(iarg);
                         return;
                     case 5:
                         out.writeInt(iarg);
                         return;
                     default:
-                        throw new Parser.CompilerError(
-                                env.errorStr("comperr.instr.opclen", opc.parsekey()));
+                        environment.throwErrorException("err.instr.opc.len", opc.parseKey(), opcLen);
                 }
             }
             case WIDE:
                 out.writeByte(Opcode.opc_wide.value());
                 out.writeByte(opc.value() & 0xFF);
-                out.writeShort(arg.arg);
+                out.writeShort(arg.cpIndex);
                 if (opc == Opcode.opc_iinc_w) {
-                    out.writeShort(((Argument) arg2).arg);
+                    out.writeShort(((Indexer) arg2).cpIndex);
                 }
                 return;
             case PRIVELEGED:
@@ -154,8 +183,7 @@ class Instr {
                 out.writeByte(opc.value() & 0xFF);
                 return;
             default:
-                throw new Parser.CompilerError(
-                        env.errorStr("comperr.instr.opclen", opc.parsekey()));
+                environment.throwErrorException("err.instr.opc.unknown", opc.parseKey());
         } // end writeSpecCode
 
     }

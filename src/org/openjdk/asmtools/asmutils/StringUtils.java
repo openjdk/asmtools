@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,12 +22,21 @@
  */
 package org.openjdk.asmtools.asmutils;
 
+import java.awt.event.KeyEvent;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+
 /**
  * Utility class to share common tools/methods.
  */
 public class StringUtils {
     /**
      * Converts CONSTANT_Utf8_info string to a printable string for jdis/jdes.
+     *
      * @param utf8 UTF8 string taken from within ConstantPool of a class file
      * @return output string for jcod/jasm
      */
@@ -66,4 +75,39 @@ public class StringUtils {
         }
         return sb.append('\"').toString();
     }
+
+    public static String mapToHexString(int[] array) {
+        return format("{%s}",
+                Arrays.stream(array).mapToObj(HexUtils::toHex).collect(Collectors.joining(", ")));
+    }
+
+    public static String repeat(String str, int count) {
+        return count <= 0 ? "" : new String(new char[count]).replace("\0", str);
+    }
+
+    public static boolean isPrintableChar(char c) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+        return (!Character.isISOControl(c)) &&
+                c != KeyEvent.CHAR_UNDEFINED &&
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS;
+    }
+
+    public static BiFunction<String, List<String>, Boolean> endWith = (str, list) -> {
+        for(String suffix : list) {
+            if( str.endsWith(suffix) ) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    public static BiFunction<String, List<String>, Boolean> contains = (str, list) -> {
+        for(String substr : list) {
+            if( str.contains(substr) ) {
+                return true;
+            }
+        }
+        return false;
+    };
 }

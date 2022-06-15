@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,22 +22,41 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.io.IOException;
+public enum FieldType {
+    Array('[', "reference", 1),
+    Boolean('Z', "boolean", 1),
+    Byte('B', "byte", 1),
+    Char('C', "char", 1),
+    Double('D', "double", 2),
+    Float('F', "float", 1),
+    Int('I', "int", 1),
+    LReference('L', "reference", 1),
+    Long('J', "long", 2),
+    QReference('Q', "reference", 1),
+    Short('S', "short", 1);
 
-/**
- * Base contract for writeable structures
- */
-interface Data {
+    private final char term;
+    private final String type;
+    private final int slotsCount;
 
-    void write(CheckedDataOutputStream out) throws IOException;
+    FieldType(char term, String type, int slotsCount) {
+        this.term = term;
+        this.type = type;
+        this.slotsCount = slotsCount;
+    }
 
-    int getLength();
 
-    default String tabString(int tabLevel) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tabLevel; i++) {
-            sb.append('\t');
+
+    public static FieldType getFieldType(char term) {
+        for (FieldType ft : FieldType.values()) {
+            if ( ft.term == term ) {
+                return ft;
+            }
         }
-        return sb.toString();
+        return null;
+    }
+
+    public int getSlotsCount() {
+        return slotsCount;
     }
 }

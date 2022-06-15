@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,38 +22,49 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 /**
- *
+ * Container for attributes having inline tables:
+ * InnerClasses, BootstrapMethods, LineNumberTable, Runtime(In)Visible(Type|Parameter)Annotations,
+ * LocalVariableTable, StackMapTable
  */
-// public class DataVectorAttr extends AttrData implements Constants {
-// }
-class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
+class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<T> {
 
     private ArrayList<T> elements;
-    private boolean byteIndex;
+    private boolean     byteIndex;
 
-    private DataVectorAttr(ClassData cls, String name, boolean byteIndex, ArrayList<T> initialData) {
-        super(cls, name);
+    /**
+     *
+     * @param pool Constant pool
+     * @param eAttribute the attribute name @see org.openjdk.asmtools.common.content.EAttribute
+     * @param byteIndex indicates 1 or two bytes is used to keep number of table elements:
+     *                  u2 StackMapTable_attribute.number_of_entries
+     *                  u1 RuntimeVisibleParameterAnnotations_attribute.num_parameters
+     * @param initialData initial elements of table
+     */
+    private DataVectorAttr(ConstantPool pool, EAttribute eAttribute, boolean byteIndex, ArrayList<T> initialData) {
+        super(pool, eAttribute);
         this.elements = initialData;
         this.byteIndex = byteIndex;
     }
 
-    DataVectorAttr(ClassData cls, String name, ArrayList<T> initialData) {
-        this(cls, name, false, initialData);
+    DataVectorAttr(ConstantPool pool, EAttribute attribute, ArrayList<T> initialData) {
+        this(pool, attribute, false, initialData);
     }
 
-    DataVectorAttr(ClassData cls, String name) {
-        this(cls, name, false, new ArrayList<>());
+    DataVectorAttr(ConstantPool pool, EAttribute attribute) {
+        this(pool, attribute, false, new ArrayList<>());
 
     }
 
-    DataVectorAttr(ClassData cls, String name, boolean byteIndex) {
-        this(cls, name, byteIndex, new ArrayList<>());
-
+    DataVectorAttr(ConstantPool pool, EAttribute attribute, boolean byteIndex) {
+        this(pool, attribute, byteIndex, new ArrayList<>());
     }
 
     public T get(int index) {
@@ -68,8 +79,11 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
         elements.set(i, element);
     }
 
-    public int size() {
-        return elements.size();
+    public int size() { return elements.size(); }
+
+    public void replaceAll(Collection<T> collection) {
+        elements.clear();
+        elements.addAll(collection);
     }
 
     @Override
@@ -79,26 +93,16 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
 
     @Override
     public int attrLength() {
-        int length = 0;
-        // calculate overall size here rather than in add()
-        // because it may not be available at the time of invoking of add()
-        for (T elem : elements) {
-            length += elem.getLength();
-        }
-
+        // calculate overall size
+        int length = elements.stream().mapToInt(e->e.getLength()).sum();
         // add the length of number of elements
-        if (byteIndex) {
-            length += 1;
-        } else {
-            length += 2;
-        }
-
+        length += (byteIndex) ? 1 : 2;
         return length;
     }
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        super.write(out);  // attr name, attr len
+        super.write(out);  // attr name, attr length
         if (byteIndex) {
             out.writeByte(elements.size());
         } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,10 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.common.Module;
+import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.asmutils.Triplet;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.jdis.ModuleContent;
 
 import java.io.IOException;
 import java.util.*;
@@ -30,48 +33,52 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.openjdk.asmtools.common.structure.EModifier.ACC_OPEN;
+
 /**
  * The module attribute
  */
 class ModuleAttr extends AttrData {
   // shared data
-  private Module.Builder builder;
-  private final ClassData clsData;
-  private final Function<String, ConstantPool.ConstCell> findCellAsciz;
-  private final Function<String, ConstantPool.ConstCell> findCellClassByName;
-  private final Function<String, ConstantPool.ConstCell> findCellModuleByName;
-  private final Function<String, ConstantPool.ConstCell> findCellPackageByName;
+  private ModuleContent.Builder builder;
+  private final Function<String, ConstCell> findUTF8Cell;
+  private final Function<ModuleContent.TargetType, ConstCell> findClassCell;
+  private final Function<ModuleContent.TargetType, ConstCell> findModuleCell;
+  private final Function<ModuleContent.TargetType, ConstCell> findPackageCell;
 
   // entries to populate tables of the module attribute
-  BiConsumer<String, Integer> requires       = (mn, f) -> this.builder.require(mn, f);
-  BiConsumer<String, Set<String>> exports    = (pn, ms) -> this.builder.exports(new Module.Exported(pn), ms);
-  BiConsumer<String, Set<String>> opens      = (pn, ms) -> this.builder.opens(new Module.Opened(pn), ms);
-  BiConsumer<String, Set<String>> provides   = (tn, ts) -> this.builder.provides(new Module.Provided(tn), ts);
-  Consumer<Set<String>>           uses       = (ts) -> this.builder.uses(ts);
+  Consumer<ModuleContent.Dependence> requires = (d) ->
+          this.builder.require(d);
+  BiConsumer<? extends ModuleContent.TargetType, Set<ModuleContent.TargetType>> exports  = (e, ms) ->
+          this.builder.exports(new ModuleContent.Exported((ModuleContent.FlaggedTargetType) e), ms);
+  BiConsumer<? extends ModuleContent.TargetType, Set<ModuleContent.TargetType>> opens    = (o, ms) ->
+          this.builder.opens(new ModuleContent.Opened((ModuleContent.FlaggedTargetType)o), ms);
+  BiConsumer<? extends ModuleContent.TargetType, Set<ModuleContent.TargetType>>
+          provides = (p, cs) -> this.builder.provides(new ModuleContent.Provided(p), cs);
+  Consumer<ModuleContent.TargetType> uses = (u) ->
+          this.builder.uses(new ModuleContent.Uses(u));
 
-  ModuleAttr(ClassData cdata) {
-    super(cdata, Tables.AttrTag.ATT_Module.parsekey());
-    builder = new Module.Builder();
-    clsData = cdata;
-    findCellAsciz = (name) -> clsData.pool.FindCellAsciz(name);
-    findCellClassByName = (name) -> clsData.pool.FindCellClassByName(name);
-    findCellModuleByName = (name) -> clsData.pool.FindCellModuleByName(name);
-    findCellPackageByName = (name) -> clsData.pool.FindCellPackageByName(name);
+  ModuleAttr(ClassData classData) {
+    super(classData.pool, EAttribute.ATT_Module);
+    builder = new ModuleContent.Builder();
+    findUTF8Cell     = targetType -> pool.findUTF8Cell(targetType);
+    findClassCell    = targetType -> pool.findClassCell(targetType);
+    findModuleCell   = targetType -> pool.findModuleCell(targetType);
+    findPackageCell  = targetType -> pool.findPackageCell(targetType);
   }
 
-  void openModule() {
-    builder.setModuleFlags(Module.Modifier.ACC_OPEN);
-  }
-  void setModuleName(String value) { builder.setModuleName(value);}
+    void openModule() { builder.setModuleFlags(ACC_OPEN.getFlag()); }
+    void setModuleName(String value) { builder.setModuleName(value);}
+    void setModuleNameCpIndex(int cpIndex) { builder.setCpIndex(cpIndex);}
 
   ModuleAttr build() {
-    Module module = builder.build();
-    Content.instance.header = new HeaderStruct(module.header, findCellModuleByName, findCellAsciz);
-    Content.instance.requiresStruct = new SetStruct<>(module.requires, findCellModuleByName, findCellAsciz);
-    Content.instance.exportsMapStruct = new MapStruct<>(module.exports, findCellPackageByName, findCellModuleByName );
-    Content.instance.opensMapStruct = new MapStruct<>(module.opens,findCellPackageByName, findCellModuleByName );
-    Content.instance.usesStruct = new SetStruct<>(module.uses, findCellClassByName, null);
-    Content.instance.providesMapStruct = new MapStruct<>(module.provides, findCellClassByName, findCellClassByName);
+    ModuleContent moduleContent = builder.build();
+    Content.instance.header = new HeaderStruct(moduleContent.header, findModuleCell, findUTF8Cell);
+    Content.instance.requiresStruct = new SetStruct<>(moduleContent.requires, findModuleCell, findUTF8Cell);
+    Content.instance.exportsMapStruct = new MapStruct<>(moduleContent.exports, findPackageCell, findModuleCell );
+    Content.instance.opensMapStruct = new MapStruct<>(moduleContent.opens,findPackageCell, findModuleCell );
+    Content.instance.usesStruct = new SetStruct<>(moduleContent.uses, findClassCell, null);
+    Content.instance.providesMapStruct = new MapStruct<>(moduleContent.provides, findClassCell, findClassCell);
     return this;
   }
 
@@ -86,7 +93,7 @@ class ModuleAttr extends AttrData {
     Content.instance.write(out);
   }
 
-  private enum Content implements Data {
+  private enum Content implements DataWriter {
     instance {
       @Override
       public int getLength() {
@@ -111,11 +118,11 @@ class ModuleAttr extends AttrData {
     };
 
     HeaderStruct header ;
-    SetStruct<Module.Dependence>  requiresStruct;
-    MapStruct<Module.Exported>    exportsMapStruct;
-    MapStruct<Module.Opened>      opensMapStruct;
-    SetStruct<Module.Uses>        usesStruct;
-    MapStruct<Module.Provided>    providesMapStruct;
+    SetStruct<ModuleContent.Dependence>  requiresStruct;
+    MapStruct<ModuleContent.Exported>    exportsMapStruct;
+    MapStruct<ModuleContent.Opened>      opensMapStruct;
+    SetStruct<ModuleContent.Uses>        usesStruct;
+    MapStruct<ModuleContent.Provided>    providesMapStruct;
   }
 
   /**
@@ -132,26 +139,26 @@ class ModuleAttr extends AttrData {
    * u2 provides_with_index[provides_with_count];
    * } provides[provides_count];
    */
-  private class MapStruct<T extends Module.TargetType> implements Data {
-    final List<Triplet<ConstantPool.ConstCell, Integer, List<ConstantPool.ConstCell>>> exportsOpensList = new ArrayList<>();
-    final List<Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>>> providesList = new ArrayList<>();
+  private static class MapStruct<T extends ModuleContent.TargetType> implements DataWriter {
+    final List<Triplet<ConstCell, Integer, List<ConstCell>>> exportsOpensList = new ArrayList<>();
+    final List<Pair<ConstCell, List<ConstCell>>> providesList = new ArrayList<>();
 
-    MapStruct(Map<T, Set<String>> source,
-              Function<String,ConstantPool.ConstCell> nameFinder,
-              Function<String,ConstantPool.ConstCell> targetFinder) {
+    MapStruct(Map<T, Set<ModuleContent.TargetType>> source,
+              Function<ModuleContent.TargetType, ConstCell> nameFinder,
+              Function<ModuleContent.TargetType, ConstCell> targetFinder) {
       Objects.requireNonNull(source);
       source.entrySet().stream()
           .sorted(Map.Entry.comparingByKey())
           .forEach(e -> {
-                ArrayList<ConstantPool.ConstCell> to = new ArrayList<>();
+                ArrayList<ConstCell> to = new ArrayList<>();
                 e.getValue().forEach(mn -> to.add(targetFinder.apply(mn)));
                 if (e.getKey().isFlagged()) {
                   exportsOpensList.add(new Triplet<>
-                      ( nameFinder.apply(e.getKey().getTypeName()),
-                        ((Module.FlaggedTargetType) e.getKey()).getFlags(),
+                      ( nameFinder.apply(e.getKey()),
+                        ((ModuleContent.FlaggedTargetType) e.getKey()).getFlags(),
                         to));
                 } else {
-                  providesList.add(new Pair<>(nameFinder.apply(e.getKey().getTypeName()),
+                  providesList.add(new Pair<>(nameFinder.apply(e.getKey()),
                       to));
                 }
               }
@@ -162,20 +169,20 @@ class ModuleAttr extends AttrData {
     public void write(CheckedDataOutputStream out) throws IOException {
       if (providesList.isEmpty()) {
         out.writeShort(exportsOpensList.size());          // u2 {exports|opens}_count;
-        for (Triplet<ConstantPool.ConstCell, Integer, List<ConstantPool.ConstCell>> triplet : exportsOpensList) {
-          out.writeShort(triplet.first.arg);              // {  u2 {exports|opens}_index;
+        for (Triplet<ConstCell, Integer, List<ConstCell>> triplet : exportsOpensList) {
+          out.writeShort(triplet.first.cpIndex);              // {  u2 {exports|opens}_index;
           out.writeShort(triplet.second);                 //    u2 {exports|opens}_flags;
           out.writeShort(triplet.third.size());           //    u2 {exports|opens}_to_count;
-          for (ConstantPool.ConstCell to : triplet.third)
-            out.writeShort(to.arg);                       // u2 {exports|opens}_to_index[{exports|opens}_to_count]; }
+          for (ConstCell to : triplet.third)
+            out.writeShort(to.cpIndex);                       // u2 {exports|opens}_to_index[{exports|opens}_to_count]; }
         }
       } else {
         out.writeShort(providesList.size());              // u2 provides_count;
-        for (Pair<ConstantPool.ConstCell, List<ConstantPool.ConstCell>> pair : providesList) {
-          out.writeShort(pair.first.arg);                 // {  u2 provides_index;
+        for (Pair<ConstCell, List<ConstCell>> pair : providesList) {
+          out.writeShort(pair.first.cpIndex);                 // {  u2 provides_index;
           out.writeShort(pair.second.size());             //    u2 provides_with_count;
-          for (ConstantPool.ConstCell to : pair.second)
-            out.writeShort(to.arg);                       // u2 provides_with_index[provides_with_count]; }
+          for (ConstCell to : pair.second)
+            out.writeShort(to.cpIndex);                       // u2 provides_with_index[provides_with_count]; }
         }
       }
     }
@@ -196,24 +203,24 @@ class ModuleAttr extends AttrData {
     }
   }
 
-  private class HeaderStruct implements Data {
-    final ConstantPool.ConstCell index;
+  private static class HeaderStruct implements DataWriter {
+    final ConstCell index;
     final int flags;
-    final ConstantPool.ConstCell versionIndex;
+    final ConstCell versionIndex;
 
-    HeaderStruct(Module.Header source,
-                 Function<String,ConstantPool.ConstCell> nameFinder,
-                 Function<String,ConstantPool.ConstCell> versionFinder) {
-      index = nameFinder.apply(source.getModuleName());
+    HeaderStruct(ModuleContent.Header source,
+                 Function<ModuleContent.TargetType, ConstCell> nameFinder,
+                 Function<String, ConstCell> versionFinder) {
+      index = nameFinder.apply(source);
       versionIndex = (source.getModuleVersion() == null ) ? null : versionFinder.apply(source.getModuleVersion());
       flags = source.getModuleFlags();
     }
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-      out.writeShort(index.arg);                                    // u2 module_name_index;
-      out.writeShort(flags);                                        // u2 module_flags;
-      out.writeShort(versionIndex == null ? 0 : versionIndex.arg);  // u2 module_version_index;
+      out.writeShort(index.cpIndex);                                    // u2 module_name_index;
+      out.writeShort(flags);                                            // u2 module_flags;
+      out.writeShort(versionIndex == null ? 0 : versionIndex.cpIndex);  // u2 module_version_index;
     }
 
     @Override
@@ -233,24 +240,24 @@ class ModuleAttr extends AttrData {
    *    u2 requires_version_index;
    * } requires[requires_count];
    */
-  private class SetStruct<T extends Module.TargetType> implements Data {
-    final List<ConstantPool.ConstCell> usesList = new ArrayList<>();
-    final List<Triplet<ConstantPool.ConstCell, Integer, ConstantPool.ConstCell>> requiresList = new ArrayList<>();
+  private static class SetStruct<T extends ModuleContent.TargetType> implements DataWriter {
+    final List<ConstCell> usesList = new ArrayList<>();
+    final List<Triplet<ConstCell, Integer, ConstCell>> requiresList = new ArrayList<>();
 
     SetStruct(Set<T> source,
-              Function<String,ConstantPool.ConstCell> nameFinder,
-              Function<String,ConstantPool.ConstCell> versionFinder) {
+              Function<ModuleContent.TargetType, ConstCell> nameFinder,
+              Function<String, ConstCell> versionFinder) {
       Objects.requireNonNull(source);
       source.forEach(e -> {
         if (e.isFlagged()) {
           requiresList.add(new Triplet<>(
-              nameFinder.apply(e.getTypeName()),
-              ((Module.FlaggedTargetType) e).getFlags(),
-              (((Module.VersionedFlaggedTargetType) e).getVersion() == null) ?
+              nameFinder.apply(e),
+              ((ModuleContent.FlaggedTargetType) e).getFlags(),
+              (((ModuleContent.VersionedFlaggedTargetType) e).getVersion() == null) ?
                   null :
-                  versionFinder.apply(((Module.VersionedFlaggedTargetType) e).getVersion())));
+                  versionFinder.apply(((ModuleContent.VersionedFlaggedTargetType) e).getVersion())));
         } else {
-          usesList.add(nameFinder.apply((e.getTypeName())));
+          usesList.add(nameFinder.apply(e));
         }
       });
     }
@@ -259,15 +266,15 @@ class ModuleAttr extends AttrData {
     public void write(CheckedDataOutputStream out) throws IOException {
       if (usesList.isEmpty()) {
         out.writeShort(requiresList.size());                  // u2 requires_count;
-        for (Triplet<ConstantPool.ConstCell, Integer, ConstantPool.ConstCell> r : requiresList) {
-          out.writeShort(r.first.arg);                        // u2 requires_index;
+        for (Triplet<ConstCell, Integer, ConstCell> r : requiresList) {
+          out.writeShort(r.first.cpIndex);                        // u2 requires_index;
           out.writeShort(r.second);                           // u2 requires_flags;
-          out.writeShort(r.third == null ? 0 : r.third.arg);  // u2 requires_version_index;
+          out.writeShort(r.third == null ? 0 : r.third.cpIndex);  // u2 requires_version_index;
         }
       } else {
         out.writeShort(usesList.size());                      // u2 uses_count;
-        for (ConstantPool.ConstCell u : usesList)
-          out.writeShort(u.arg);                              // u2 uses_index[uses_count];
+        for (ConstCell u : usesList)
+          out.writeShort(u.cpIndex);                              // u2 uses_index[uses_count];
       }
     }
 
@@ -280,24 +287,4 @@ class ModuleAttr extends AttrData {
           2 + 2 * usesList.size();
     }
   }
-
-  // Helper classes
-  private class Pair<F, S> {
-    final F first;
-    final S second;
-
-    Pair(F first, S second) {
-      this.first = first;
-      this.second = second;
-    }
-  }
-
-  public class Triplet<F, S, T>  extends Pair<F,S> {
-    private final T third;
-    Triplet(F first, S second, T third) {
-      super(first,second);
-      this.third = third;
-    }
-  }
-
 }

@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.util.List;
 
 /**
@@ -35,7 +37,7 @@ import java.util.List;
  * }
  */
 public class PermittedSubclassesAttr extends ClassArrayAttr {
-    public PermittedSubclassesAttr(ClassData cdata, List<ConstantPool.ConstCell> classes) {
-        super(Tables.AttrTag.ATT_PermittedSubclasses.parsekey(), cdata, classes);
+    public PermittedSubclassesAttr(ConstantPool pool, List<ConstCell> classes) {
+        super(pool, EAttribute.ATT_PermittedSubclasses, classes);
     }
 }

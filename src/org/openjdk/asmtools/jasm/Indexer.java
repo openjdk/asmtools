@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,10 +20,37 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jcoder;
+package org.openjdk.asmtools.jasm;
 
 /**
- * Syntax errors, should always be caught inside the parser for error recovery.
+ * Indexer a position starting from 0 of a constant cell in the Constant Pool.
+ * Also, the class is used to hold uninitialized (isSet == false) and initialized (isSet == true) indexes,counters:
+ * max_stack, max_locals, Trap.start_pc, Trap.end_pc
  */
-class SyntaxError extends Error {
+public class Indexer {
+
+    public static final int NotSet = -1;
+    protected int cpIndex;
+
+    Indexer() {
+        cpIndex = NotSet;
+    }
+
+    Indexer(int cpIndex) {
+        this.cpIndex = cpIndex;
+    }
+
+    public int hashCode() { return isSet() ? cpIndex : 0; }
+
+    boolean isSet() {  return cpIndex != NotSet; }
+
+    boolean inRange(int index){
+        return index >=0 && index < cpIndex;
+    }
+
+    // Alias for max_stack, max_locals
+    public int value() {
+        return cpIndex;
+    }
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,176 +22,144 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.util.I18NResourceBundle;
-import org.openjdk.asmtools.util.ProductInfo;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.PatternSyntaxException;
+
+import static org.openjdk.asmtools.common.Environment.FAILED;
+import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
- *
- *
+ * Jcoder is an assembler that accepts a text file based on the JCod Specification,
+ * and produces a .class file for use with a Java Virtual Machine.
+ * <p>
+ * Main entry point of the JCoder assembler :: jcod to class
  */
-public class Main extends Tool {
+public class Main extends JcoderTool {
 
-    public static final I18NResourceBundle i18n
-            = I18NResourceBundle.getBundleForClass(Main.class);
+    private final ArrayList<String> fileList = new ArrayList<>(1);
+    HashMap<String, String> macros = new HashMap<>(1);
+    private File destDir;
+    // tool options
+    private boolean noWriteFlag = false;        // Do not write generated class files
+    private boolean ignoreFlag = false;         // Ignore non-fatal error(s) that suppress writing class files
 
-    public Main(PrintWriter out, String programName) {
-        super(out, programName);
-        printCannotReadMsg = (fname) -> error(i18n.getString("jcoder.error.cannot_read", fname));
+    public Main(String[] argv) {
+        super();
+        parseArgs(argv);
     }
 
-    public Main(PrintStream out, String program) {
-        this(new PrintWriter(out), program);
+    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String[] argv) {
+        super(errorLogger, outputLogger);
+        parseArgs(argv);
+    }
+
+    // jcoder entry point
+    public static void main(String[] argv) {
+        Main compiler = new Main(argv);
+        System.exit(compiler.compile());
     }
 
     @Override
     public void usage() {
-        println(i18n.getString("jcoder.usage"));
-        println(i18n.getString("jcoder.opt.nowrite"));
-        println(i18n.getString("jcoder.opt.ignore"));
-        println(i18n.getString("jcoder.opt.d"));
-        println(i18n.getString("jcoder.opt.version"));
+        environment.flush(false);
+        environment.info("info.usage");
+        environment.info("info.opt.nowrite");
+        environment.info("info.opt.ignore");
+        environment.info("info.opt.d");
+        environment.info("info.opt.v");
+        environment.info("info.opt.g");
+        environment.info("info.opt.version");
     }
 
-    /**
-     * Run the compiler
-     */
-    public synchronized boolean compile(String argv[]) {
-        File destDir = null;
-        boolean traceFlag = false;
-        DebugFlag = () -> false;
-        long tm = System.currentTimeMillis();
-        ArrayList<String> v = new ArrayList<>();
-        boolean nowrite = false;
-        boolean ignore  = false;
-        int nwarnings = 0;
-        HashMap<String, String> macros = new HashMap<>();
+    // Run jcoder compiler when args already parsed
+    public synchronized int compile() {
         macros.put("VERSION", "3;45");
-
-        // Parse arguments
-        for (int i = 0; i < argv.length; i++) {
-            String arg = argv[i];
-            if (!arg.startsWith("-")) {
-                v.add(arg);
-            } else if (arg.startsWith("-D")) {
-                int argLength = arg.length();
-                if (argLength == 2) {
-                    error(i18n.getString("jcoder.error.D_needs_macro"));
-                    return false;
-                }
-                int index = arg.indexOf('=');
-                if (index == -1) {
-                    error(i18n.getString("jcoder.error.D_needs_macro"));
-                    return false;
-                }
-                String macroId = arg.substring(2, index);
-                index++;
-                if (argLength == index) {
-                    error(i18n.getString("jcoder.error.D_needs_macro"));
-                    return false;
-                }
-                String macro;
-                if (arg.charAt(index) == '"') {
-                    index++;
-                    if (argLength == index || arg.charAt(argLength - 1) != '"') {
-                        error(i18n.getString("jcoder.error.no_closing_quota"));
-                        return false;
-                    }
-                    macro = arg.substring(index, argLength - 1);
-                } else {
-                    macro = arg.substring(index, argLength);
-                }
-                macros.put(macroId, macro);
-            } else if (arg.equals("-vv")) {
-                DebugFlag = () -> true;
-                traceFlag = true;
-            } else if (arg.equals("-v")) {
-                traceFlag = true;
-            } else if (arg.equals("-nowrite")) {
-                nowrite = true;
-            } else if (arg.equals("-ignore")) {
-                ignore = true;
-            } else if (arg.equals("-d")) {
-                if ((i + 1) == argv.length) {
-                    error(i18n.getString("jcoder.error.d_requires_argument"));
-                    usage();
-                    return false;
-                }
-                destDir = new File(argv[++i]);
-                if (!destDir.exists()) {
-                    error(i18n.getString("jcoder.error.does_not_exist", destDir));
-                    return false;
-                }
-            } else if (arg.equals("-version")) {
-                println(ProductInfo.FULL_VERSION);
-            } else {
-                error(i18n.getString("jcoder.error.invalid_option", arg));
-                usage();
-                return false;
-            }
-        }
-        if (v.isEmpty()) {
-            usage();
-            return false;
-        }
         // compile all input files
+        int rc = OK;
         try {
-            for (String inpname : v) {
-                SourceFile env;
-                Jcoder p;
-
-                DataInputStream dataInputStream = getDataInputStream(inpname);
-                if( dataInputStream == null ) {
-                    nerrors++;
+            for (String inputFileName : fileList) {
+                environment.setInputFile(inputFileName);
+                Jcoder parser = new Jcoder(environment, macros);
+                parser.parseFile();
+                if (noWriteFlag || (environment.getErrorCount() > 0 && !ignoreFlag)) {
                     continue;
                 }
-                env = new SourceFile(this, dataInputStream, inpname, out);
-                env.traceFlag = traceFlag;
-                env.debugInfoFlag = DebugFlag.getAsBoolean();
-                p = new Jcoder(env, macros);
-                p.parseFile();
-                env.traceln("END PARSER");
-                env.closeInp();
-
-                nerrors += env.nerrors;
-                nwarnings += env.nwarnings;
-                if (nowrite || (nerrors > 0 & !ignore)) {
-                    continue;
-                }
-                try {
-                    env.traceln("WRITE");
-                    p.write(destDir);
-                } catch (FileNotFoundException ex) {
-                    error(i18n.getString("jcoder.error.cannot_write", ex.getMessage()));
-                }
+                parser.write(destDir);
+                if (environment.hasMessages()) rc += environment.flush(true);
             }
-        } catch (Error ee) {
-            ee.printStackTrace();
-            error(i18n.getString("jcoder.error.fatal_error"));
-        } catch (Exception ee) {
-            ee.printStackTrace();
-            error(i18n.getString("jcoder.error.fatal_exception"));
+        } catch (IOException | URISyntaxException | Error exception) {
+            environment.printException(exception);
+        } catch (Throwable exception) {
+            // all untrapped exception/errors that escaped CompilerLogger
+            environment.printException(exception);
+            environment.error(exception);
         }
-
-        boolean errs = nerrors > 0;
-        boolean warns = nwarnings > 0;
-        if (!errs && !warns) {
-            return true;
-        }
-        println(errs ? (nerrors > 1 ? (nerrors + " errors") : "1 error")
-                : "" + ((errs && warns) ? ", " : "") + (warns ? (nwarnings > 1 ? (nwarnings + " warnings") : "1 warning") : ""));
-        return !errs;
+        if (environment.hasMessages()) rc += environment.flush(true);
+        return rc;
     }
 
-    /**
-     * main program
-     */
-    public static void main(String[] argv) {
-        Main compiler = new Main(new PrintWriter(System.out), "jcoder");
-        System.exit(compiler.compile(argv) ? 0 : 1);
+    @Override
+    protected void parseArgs(String[] argv) {
+        try {
+            // Parse arguments
+            for (int i = 0; i < argv.length; i++) {
+                String arg = argv[i];
+                switch (arg) {
+                    // public options
+                    case "-v" -> setVerboseFlag(true);
+                    case "-t" -> {
+                        setVerboseFlag(true);
+                        setTraceFlag(true);
+                    }
+                    case "-d" -> destDir = setDestDir(++i, argv);
+                    case "-m" -> {
+                        if ((i + 1) >= argv.length) {
+                            environment.error("err.m_requires_macro");
+                            usage();
+                            throw new IllegalArgumentException();
+                        }
+                        try {
+                            String[] macroPair = argv[++i].split("[.:]+", 2);
+                            if (macroPair.length == 2) {
+                                macros.put(macroPair[0], macroPair[1]);
+                            } else {
+                                throw new NumberFormatException();
+                            }
+                        } catch (PatternSyntaxException | NumberFormatException exception) {
+                            environment.error("err.invalid_macro");
+                            usage();
+                            throw new IllegalArgumentException();
+                        }
+                    }
+                    case "-nowrite" -> noWriteFlag = true;
+                    case "-ignore" -> ignoreFlag = true;
+                    case "-version" -> environment.println(FULL_VERSION);
+                    default -> {
+                        if (arg.startsWith("-")) {
+                            environment.error("err.invalid_option", arg);
+                            usage();
+                            throw new IllegalArgumentException();
+                        } else {
+                            fileList.add(argv[i]);
+                        }
+                    }
+                }
+            }
+            if (fileList.size() == 0) {
+                usage();
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalArgumentException iae) {
+            if (environment.hasMessages()) {
+                environment.flush(false);
+            }
+            System.exit(FAILED);
+        }
     }
 }

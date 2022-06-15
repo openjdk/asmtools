@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,855 +22,145 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.jasm.Tables.ConstType;
+import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.asmutils.Range;
+import org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
 
 /**
- * ConstantPool
- *
  * ConstantPool is the class responsible for maintaining constants for a given class file.
- *
  */
-public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
-
-
-    static public enum ReferenceRank {
-        LDC(0),  // 0 - highest - ref from ldc
-        ANY(1),  // 1 - any ref
-        NO(2);   // 2 - no ref
-        final int rank;
-        ReferenceRank(int rank) {
-            this.rank = rank;
-        }
-    }
-
-    /*-------------------------------------------------------- */
-    /* ConstantPool Inner Classes */
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue {
-
-        protected ConstType tag;
-        protected boolean isSet = false;
-        private boolean visited = false;
-
-        public ConstValue(ConstType tag) {
-            this.tag = tag;
-        }
-
-        public int size() {
-            return 1;
-        }
-
-        public boolean hasValue() {
-            return isSet;
-        }
-
-        /**
-         * Compute the hash-code, based on the value of the native (_hashCode()) hashcode.
-         */
-        @Override
-        public int hashCode() {
-            if (visited) {
-                throw new Parser.CompilerError("CV hash:" + this);
-            }
-            visited = true;
-            int res = _hashCode() + tag.value() * 1023;
-            visited = false;
-            return res;
-        }
-
-        // sub-classes override this.
-        // this is the default for getting a hash code.
-        protected int _hashCode() {
-            return 37;
-        }
-
-        /**
-         * Compares this object to the specified object.
-         *
-         * Sub-classes must override this
-         *
-         * @param obj the object to compare with
-         * @return true if the objects are the same; false otherwise.
-         */
-        @Override
-        public boolean equals(Object obj) {
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            String tagstr = tag.printval();
-            String retval = "";
-            if (tagstr == null) {
-                return "BOGUS_TAG:" + tag;
-            }
-
-            String valueStr = _toString();
-            if (valueStr != null) {
-                retval = "<" + tagstr + " " + valueStr + ">";
-            } else {
-                retval = "<" + tagstr + ">";
-            }
-            return retval;
-        }
-
-        protected String _toString() {
-            return "";
-        }
-
-        public void write(CheckedDataOutputStream out) throws IOException {
-            out.writeByte(tag.value());
-        }
-    } // end ConstValue
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_Zero extends ConstValue {
-
-        public ConstValue_Zero() {
-            super(ConstType.CONSTANT_ZERO);
-            isSet = false;
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            throw new Parser.CompilerError("Trying to write Constant 0.");
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_String extends ConstValue {
-
-        String value;
-
-        public ConstValue_String(String value) {
-            super(ConstType.CONSTANT_UTF8);
-            this.value = value;
-            isSet = (value != null);
-        }
-
-        @Override
-        protected String _toString() {
-            return value;
-        }
-
-        @Override
-        protected int _hashCode() {
-            return value.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(obj instanceof ConstValue_String)) {
-                return false;
-            }
-            ConstValue_String dobj = (ConstValue_String) obj;
-            if (tag != dobj.tag) {
-                return false;
-            }
-            return value.equals(dobj.value);
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            out.writeUTF(value);
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_Integer extends ConstValue {
-
-        Integer value;
-
-        public ConstValue_Integer(ConstType tag, Integer value) {
-            super(tag);
-            this.value = value;
-            isSet = (value != null);
-        }
-
-        @Override
-        protected String _toString() {
-            return value.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(obj instanceof ConstValue_Integer)) {
-                return false;
-            }
-            ConstValue_Integer dobj = (ConstValue_Integer) obj;
-            if (tag != dobj.tag) {
-                return false;
-            }
-            return value.equals(dobj.value);
-        }
-
-        @Override
-        protected int _hashCode() {
-            return value.hashCode();
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            out.writeInt(value.intValue());
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_Long extends ConstValue {
-
-        Long value;
-
-        public ConstValue_Long(ConstType tag, Long value) {
-            super(tag);
-            this.value = value;
-            isSet = (value != null);
-        }
-
-        @Override
-        public int size() {
-            return 2;
-        }
-
-        @Override
-        protected String _toString() {
-            return value.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(obj instanceof ConstValue_Long)) {
-                return false;
-            }
-            ConstValue_Long dobj = (ConstValue_Long) obj;
-            if (tag != dobj.tag) {
-                return false;
-            }
-            return value.equals(dobj.value);
-        }
-
-        @Override
-        protected int _hashCode() {
-            return value.hashCode();
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            out.writeLong(value.longValue());
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_Cell extends ConstValue {
-
-        ConstCell cell;
-
-        public ConstValue_Cell(ConstType tag, ConstCell cell) {
-            super(tag);
-            this.cell = cell;
-            isSet = (cell != null);
-        }
-
-        @Override
-        protected String _toString() {
-            return cell.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(obj instanceof ConstValue_Cell)) {
-                return false;
-            }
-            ConstValue_Cell dobj = (ConstValue_Cell) obj;
-            if (tag != dobj.tag) {
-                return false;
-            }
-            return cell.equals(dobj.cell);
-        }
-
-        @Override
-        protected int _hashCode() {
-            return cell.hashCode();
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            cell.write(out);
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_Pair extends ConstValue {
-
-        ConstCell left, right;
-
-        public ConstValue_Pair(ConstType tag, ConstCell left, ConstCell right) {
-            super(tag);
-            this.left = left;
-            this.right = right;
-            isSet = (left != null && right != null);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(obj instanceof ConstValue_Pair)) {
-                return false;
-            }
-            ConstValue_Pair dobj = (ConstValue_Pair) obj;
-            if (tag != dobj.tag) {
-                return false;
-            }
-            if (dobj.left != null)
-                if (!dobj.left.equals(left))
-                    return false;
-            if (dobj.right != null)
-                if (!dobj.right.equals(right))
-                    return false;
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + "{" + left + "," + right + "}";
-        }
-
-        @Override
-        protected int _hashCode() {
-            return left.hashCode() * right.hashCode();
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            if (tag == ConstType.CONSTANT_METHODHANDLE) {
-                out.writeByte(left.arg); // write subtag value
-            } else {
-                out.writeShort(left.arg);
-            }
-            out.writeShort(right.arg);
-        }
-    }
-
-    static public class ConstValue_IndyOrCondyPair extends ConstValue {
-        BootstrapMethodData bsmData;
-        ConstantPool.ConstCell napeCell;
-
-        protected ConstValue_IndyOrCondyPair(ConstType tag, BootstrapMethodData bsmdata, ConstCell napeCell) {
-            super(tag);
-            assert (tag == ConstType.CONSTANT_DYNAMIC && ConstValue_CondyPair.class.isAssignableFrom(getClass())) ||
-                   tag == ConstType.CONSTANT_INVOKEDYNAMIC && ConstValue_IndyPair.class.isAssignableFrom(getClass());
-
-            this.bsmData = bsmdata;
-            this.napeCell = napeCell;
-            isSet = (bsmdata != null && napeCell != null);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ((obj == null) || !(getClass().isInstance(obj))) {
-                return false;
-            }
-
-            ConstValue_IndyOrCondyPair iobj = (ConstValue_IndyOrCondyPair) obj;
-            return (iobj.bsmData == bsmData) && (iobj.napeCell == napeCell);
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + "{" + bsmData + "," + napeCell + "}";
-        }
-
-        @Override
-        protected int _hashCode() {
-            if (bsmData.isPlaceholder()) {
-                return napeCell.hashCode();
-            }
-            return bsmData.hashCode() * napeCell.hashCode();
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            super.write(out);
-            out.writeShort(bsmData.arg);
-            out.writeShort(napeCell.arg);
-        }
-    }
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_CondyPair extends ConstValue_IndyOrCondyPair {
-
-        public ConstValue_CondyPair(BootstrapMethodData bsmdata, ConstCell napeCell) {
-            super(ConstType.CONSTANT_DYNAMIC, bsmdata, napeCell);
-        }
-    }
-
-    /**
-     * ConstValue
-     *
-     * A (typed) tagged value in the constant pool.
-     */
-    static public class ConstValue_IndyPair extends ConstValue_IndyOrCondyPair {
-
-        public ConstValue_IndyPair(BootstrapMethodData bsmdata, ConstCell napeCell) {
-            super(ConstType.CONSTANT_INVOKEDYNAMIC, bsmdata, napeCell);
-        }
-    }
-
-    /*-------------------------------------------------------- */
-    /* ConstantPool Inner Classes */
-    /**
-     * ConstantCell
-     *
-     * ConstantCell is a type of data that can be in a constant pool.
-     */
-    static public class ConstCell extends Argument implements Data {
-
-        ConstValue ref;
-        // 0 - highest - ref from ldc, 1 - any ref, 2 - no ref
-        ReferenceRank rank = ReferenceRank.NO;
-
-        ConstCell(int arg, ConstValue ref) {
-            this.arg = arg;
-            this.ref = ref;
-        }
-
-        ConstCell(ConstValue ref) {
-            this(NotSet, ref);
-        }
-
-        ConstCell(int arg) {
-            this(arg, null);
-        }
-
-        @Override
-        public int getLength() {
-            return 2;
-        }
-
-        @Override
-        public void write(CheckedDataOutputStream out) throws IOException {
-            out.writeShort(arg);
-        }
-
-        public void setRank(ReferenceRank rank) {
-            // don't change a short ref to long due to limitation of ldc - max 256 indexes allowed
-            if( this.rank != ReferenceRank.LDC) {
-                this.rank = rank;
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            if (arg == NotSet) {
-                if (ref != null) {
-                    return ref.hashCode();
-                } else {
-                    throw new Parser.CompilerError("Can't generate Hash Code, Null ConstCell Reference.");
-                }
-            }
-            return arg;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            ConstCell cc = (ConstCell)obj;
-            if( cc.ref == null ) {
-                return this.ref == null && cc.rank == this.rank;
-            }
-            return cc.ref.equals(this.ref) && cc.rank == this.rank;
-        }
-
-        public boolean isUnset() {
-            return (arg == NotSet) && (ref == null);
-        }
-
-        @Override
-        public String toString() {
-            return "#" + arg + "=" + ref;
-        }
-    }
-
-    /**
-     * CPVisitor
-     *
-     * CPVisitor base class defining a visitor for decoding constants.
-     */
-    public static class CPTagVisitor<R> implements Constants {
-
-        public CPTagVisitor() {
-        }
-
-        public final R visit(ConstType tag) {
-            R retVal = null;
-            switch (tag) {
-                case CONSTANT_UTF8:
-                    retVal = visitUTF8(tag);
-                    break;
-                case CONSTANT_INTEGER:
-                    retVal = visitInteger(tag);
-                    break;
-                case CONSTANT_FLOAT:
-                    retVal = visitFloat(tag);
-                    break;
-                case CONSTANT_DOUBLE:
-                    retVal = visitDouble(tag);
-                    break;
-                case CONSTANT_LONG:
-                    retVal = visitLong(tag);
-                    break;
-                case CONSTANT_METHODTYPE:
-                    retVal = visitMethodtype(tag);
-                    break;
-                case CONSTANT_STRING:
-                    retVal = visitString(tag);
-                    break;
-                case CONSTANT_CLASS:
-                    retVal = visitClass(tag);
-                    break;
-                case CONSTANT_METHOD:
-                    retVal = visitMethod(tag);
-                    break;
-                case CONSTANT_FIELD:
-                    retVal = visitField(tag);
-                    break;
-                case CONSTANT_INTERFACEMETHOD:
-                    retVal = visitInterfacemethod(tag);
-                    break;
-                case CONSTANT_NAMEANDTYPE:
-                    retVal = visitNameandtype(tag);
-                    break;
-                case CONSTANT_METHODHANDLE:
-                    retVal = visitMethodhandle(tag);
-                    break;
-                case CONSTANT_DYNAMIC:
-                    retVal = visitDynamic(tag);
-                    break;
-                case CONSTANT_INVOKEDYNAMIC:
-                    retVal = visitInvokedynamic(tag);
-                    break;
-                default:
-                    visitDefault(tag);
-            }
-            return retVal;
-        }
-
-        public R visitUTF8(ConstType tag) {
-            return null;
-        }
-
-        public R visitInteger(ConstType tag) {
-            return null;
-        }
-
-        public R visitFloat(ConstType tag) {
-            return null;
-        }
-
-        public R visitDouble(ConstType tag) {
-            return null;
-        }
-
-        public R visitLong(ConstType tag) {
-            return null;
-        }
-
-        public R visitMethodtype(ConstType tag) {
-            return null;
-        }
-
-        public R visitString(ConstType tag) {
-            return null;
-        }
-
-        public R visitClass(ConstType tag) {
-            return null;
-        }
-
-        public R visitMethod(ConstType tag) {
-            return null;
-        }
-
-        public R visitField(ConstType tag) {
-            return null;
-        }
-
-        public R visitInterfacemethod(ConstType tag) {
-            return null;
-        }
-
-        public R visitNameandtype(ConstType tag) {
-            return null;
-        }
-
-        public R visitMethodhandle(ConstType tag) {
-            return null;
-        }
-
-        public R visitDynamic(ConstType tag) {
-            return null;
-        }
-
-        public R visitInvokedynamic(ConstType tag) {
-            return null;
-        }
-
-        public R visitModule(ConstType tag) {
-            return null;
-        }
-
-        public R visitPackage(ConstType tag) {
-            return null;
-        }
-
-        public void visitDefault(ConstType tag) {
-        }
-    }
-
-    /**
-    * CPVisitor
-    *
-    * CPVisitor base class defining a visitor for decoding constants.
-    */
-   public static class CPVisitor<R> implements Constants {
-
-        public CPVisitor() {
-        }
-
-        public final R visit(ConstValue val) {
-            R retVal = null;
-            ConstType tag = val.tag;
-            switch (tag) {
-                case CONSTANT_UTF8:
-                    retVal = visitUTF8((ConstValue_String) val);
-                    break;
-                case CONSTANT_INTEGER:
-                    retVal = visitInteger((ConstValue_Integer) val);
-                    break;
-                case CONSTANT_FLOAT:
-                    retVal = visitFloat((ConstValue_Integer) val);
-                    break;
-                case CONSTANT_DOUBLE:
-                    retVal = visitDouble((ConstValue_Long) val);
-                    break;
-                case CONSTANT_LONG:
-                    retVal = visitLong((ConstValue_Long) val);
-                    break;
-                case CONSTANT_METHODTYPE:
-                    retVal = visitMethodtype((ConstValue_Cell) val);
-                    break;
-                case CONSTANT_STRING:
-                    retVal = visitString((ConstValue_Cell) val);
-                    break;
-                case CONSTANT_CLASS:
-                    retVal = visitClass((ConstValue_Cell) val);
-                    break;
-                case CONSTANT_METHOD:
-                    retVal = visitMethod((ConstValue_Pair) val);
-                    break;
-                case CONSTANT_FIELD:
-                    retVal = visitField((ConstValue_Pair) val);
-                    break;
-                case CONSTANT_INTERFACEMETHOD:
-                    retVal = visitInterfacemethod((ConstValue_Pair) val);
-                    break;
-                case CONSTANT_NAMEANDTYPE:
-                    retVal = visitNameandtype((ConstValue_Pair) val);
-                    break;
-                case CONSTANT_METHODHANDLE:
-                    retVal = visitMethodhandle((ConstValue_Pair) val);
-                    break;
-                case CONSTANT_DYNAMIC:
-                    retVal = visitDynamic((ConstValue_CondyPair) val);
-                    break;
-                case CONSTANT_INVOKEDYNAMIC:
-                    retVal = visitInvokedynamic((ConstValue_IndyPair) val);
-                    break;
-                case CONSTANT_MODULE:
-                    retVal = visitModule((ConstValue_Cell) val);
-                    break;
-                case CONSTANT_PACKAGE:
-                    retVal = visitPackage((ConstValue_Cell) val);
-                    break;
-                default:
-                    visitDefault(tag);
-            }
-            return retVal;
-        }
-
-        public R visitUTF8(ConstValue_String p) {
-            return null;
-        }
-
-        ;
-        public R visitInteger(ConstValue_Integer p) {
-            return null;
-        }
-
-        ;
-        public R visitFloat(ConstValue_Integer p) {
-            return null;
-        }
-
-        ;
-        public R visitDouble(ConstValue_Long p) {
-            return null;
-        }
-
-        ;
-        public R visitLong(ConstValue_Long p) {
-            return null;
-        }
-
-        ;
-        public R visitMethodtype(ConstValue_Cell p) {
-            return null;
-        }
-
-        ;
-        public R visitString(ConstValue_Cell p) {
-            return null;
-        }
-
-        ;
-        public R visitClass(ConstValue_Cell p) {
-            return null;
-        }
-
-        ;
-        public R visitMethod(ConstValue_Pair p) {
-            return null;
-        }
-
-        ;
-        public R visitField(ConstValue_Pair p) {
-            return null;
-        }
-
-        ;
-        public R visitInterfacemethod(ConstValue_Pair p) {
-            return null;
-        }
-
-        ;
-        public R visitNameandtype(ConstValue_Pair p) {
-            return null;
-        }
-
-        ;
-        public R visitMethodhandle(ConstValue_Pair p) {
-            return null;
-        }
-
-        ;
-        public R visitDynamic(ConstValue_CondyPair p) { return null;}
-
-        ;
-        public R visitInvokedynamic(ConstValue_IndyPair p) { return null;}
-
-        ;
-        public R visitModule(ConstValue_Cell p) { return null; }
-
-        ;
-        public R visitPackage(ConstValue_Cell p) { return null; }
-        ;
-
-        public void visitDefault(ConstType tag) {}
-        ;
-
-    }
-
-
-
-  /*-------------------------------------------------------- */
-  /* Constant Pool Fields */
-
-    private ArrayList<ConstCell> pool = new ArrayList<>(20);
-
-    private final ConstValue ConstValue0
-            = new ConstValue_String("");
-//    private final ConstValue ConstValue0 =
-//            new ConstValue(CONSTANT_UTF8, "");
-    private final ConstCell nullConst
-            = new ConstCell(null);
-    private final ConstCell constant_0
-            = new ConstCell(new ConstValue_Zero());
-//    private final ConstCell constant_0 =
-//            new ConstCell(new ConstValue(CONSTANT_ZERO, null));
-
+public class ConstantPool implements Iterable<ConstCell<?>> {
+
+    private final ConstValue_UTF8 emptyConstValue = new ConstValue_UTF8("");
+    private final ConstCell<?> nullConst = new ConstCell(null);
+    private final ConstCell<?> zeroConst = new ConstCell(new ConstValue_Zero());
     // For hashing by value
-    Hashtable<ConstValue, ConstCell> cpoolHashByValue
-            = new Hashtable<>(40);
+    private final ArrayList<ConstCell<?>> pool = new ArrayList<>(40);
+    public JasmEnvironment environment;
+    Hashtable<ConstValue<?>, ConstCell<?>> ConstantPoolHashByValue = new Hashtable<>(40);
 
-    public Environment env;
-
-    private static boolean debugCP = false;
-
-    /*-------------------------------------------------------- */
-    /**
-     * main constructor
-     *
-     * @param env The error reporting environment
-     */
-    public ConstantPool(Environment env) {
-        this.env = env;
-        pool.add(constant_0);
-
-    }
-
-    public void debugStr(String s) {
-        if (debugCP) {
-            env.traceln(s);
+    private final CPVisitor indexFixerConstantPool = new CPVisitor() {
+        @Override
+        public void visitConstValueCell(ConstValue_Cell constValue) {
+            handleClassIndex(constValue);
         }
+
+        @Override
+        public void visitConstValueRefCell(ConstValue_Pair constValue) {
+            handleMemberIndex(constValue);
+        }
+
+        @Override
+        public void visitMethodHandle(ConstValue_MethodHandle constValue) {
+            handleIndexCell((ConstCell) constValue.value);
+        }
+    }, referenceFixerConstantPool = new CPVisitor() {
+        @Override
+        public void visitConstValueCell(ConstValue_Cell constValue) {
+            handleClassRef(constValue);
+        }
+
+        @Override
+        public void visitConstValueRefCell(ConstValue_Pair constValue) {
+            handleMemberRef(constValue);
+        }
+
+        @Override
+        public void visitMethodHandle(ConstValue_MethodHandle constValue) {
+            handleRefCell((ConstCell) constValue.value);
+        }
+    };
+
+    /**
+     * Main constructor
+     *
+     * @param environment The error reporting environment
+     */
+    public ConstantPool(JasmEnvironment environment) {
+        this.environment = environment;
+        pool.add(zeroConst);
     }
 
     @Override
-    public Iterator<ConstCell> iterator() {
+    public Iterator<ConstCell<?>> iterator() {
         return pool.iterator();
     }
 
+    protected void handleClassRef(ConstValue_Cell cell) {
+        ConstCell refCell = (ConstCell) cell.value;
+        if (handleRefCell(refCell)) {
+            environment.traceln("FIXED ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
+        }
+    }
+
+    protected void handleMemberRef(ConstValue_Pair cv) {
+        Pair<ConstCell, ConstCell> pair = (Pair<ConstCell, ConstCell>) cv.value;
+        if (handleRefCell(pair.first)) {
+            environment.traceln("FIXED Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
+        }
+        if (handleRefCell(pair.second)) {
+            environment.traceln("FIXED Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
+        }
+    }
+
+    /**
+     * Updates  reference cell if there is cpIndex but a cell is not attached.
+     *
+     * @param refCell a constant cell
+     * @return true if the cell is fixed
+     */
+    private boolean handleRefCell(ConstCell refCell) {
+        if (refCell.ref == null) {
+            ConstCell refVal = getConstPollCellByIndex(refCell.cpIndex);
+            if (refVal != null) {
+                checkAndFixCPRef(refVal);
+                refCell.ref = refVal.ref;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void handleClassIndex(ConstValue_Cell cell) {
+        ConstCell refCell = (ConstCell) cell.value;
+        if (handleIndexCell(refCell)) {
+            environment.traceln("FIXED Index of ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
+        }
+    }
+
+    protected void handleMemberIndex(ConstValue_Pair cv) {
+        Pair<ConstCell, ConstCell> pair = (Pair<ConstCell, ConstCell>) cv.value;
+        if (handleIndexCell(pair.first)) {
+            environment.traceln("FIXED Index of Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
+        }
+        if (handleIndexCell(pair.second)) {
+            environment.traceln("FIXED Index of Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
+        }
+    }
+
+    /**
+     * Updates  reference cell if there is an attached cell but cpIndex is missing.
+     *
+     * @param refCell a constant cell
+     * @return true if the cell is fixed
+     */
+    private boolean handleIndexCell(ConstCell refCell) {
+        if (refCell.ref != null && !refCell.isSet()) {
+            Optional<ConstCell<?>> cell = getItemizedCell(refCell);
+            if (cell.isPresent()) {
+                refCell.cpIndex = cell.get().cpIndex;
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*
      * Fix Refs in constant pool.
@@ -880,40 +170,43 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
      * this scenario, we need two passes - the first pass to scan the entries
      * (which creates constant references with indexes, but no reference values);
      * and the second pass, which links references to existing constants.
-     *
      */
     public void fixRefsInPool() {
         // used to fix CP refs when a constant pool is constructed by refs alone.
-        env.traceln("Fixing CP for explicit Constant Entries.");
-        int i = 0;
+        environment.traceln("Fixing CP for explicit Constant Entries.");
         // simply iterate through the pool.
+        environment.traceln("fixRefsInPool %d items", pool.size());
         for (ConstCell item : pool) {
-            i += 1;
-            // first item is always null
-            if (item == null) {
-                continue;
-            }
-
-            checkAndFixCPRef(i, item);
+            checkAndFixCPRef(item);
         }
     }
 
-    protected void CheckGlobals() {
-        env.traceln("Checking Globals");
-        //
+    /*
+     * Fix Indexes in constant pool.
+     */
+    public void fixIndexesInPool() {
+        // used to fix CP Indexes when a constant pool is constructed by values alone.
+        environment.traceln("Fixing CP for explicit Constant Entries.");
+        // simply iterate through the pool.
+        environment.traceln("fixIndexesInPool %d items", pool.size());
+        for (ConstCell item : pool) {
+            checkAndFixCPIndexes(item);
+        }
+    }
+
+    protected void checkGlobals() {
+        environment.traceln("Checking Globals");
         // This fn will put empty UTF8 string entries on any unset
         // CP entries - before the last CP entry.
-        //
         for (int cpx = 1; cpx < pool.size(); cpx++) {
             ConstCell cell = pool.get(cpx);
             if (cell == nullConst) { // gap
-                cell = new ConstCell(cpx, ConstValue0);
+                cell = new ConstCell(cpx, emptyConstValue);
                 pool.set(cpx, cell);
             }
-            ConstValue cval = cell.ref;
-            if ((cval == null) || !cval.hasValue()) {
+            if (!cell.isSet()) {
                 String name = Integer.toString(cpx);
-                env.error("const.undecl", name);
+                environment.error("err.const.undecl", name);
             }
         }
     }
@@ -921,171 +214,25 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     /*
      *  Helper function for "fixRefsInPool"
      *
-     *  Does recursive checking of references,
-     * using a locally-defined visitor.
+     *  Does recursive checking of references, using a locally-defined visitor.
      */
-    private void checkAndFixCPRef(int i, ConstCell item) {
+    private void checkAndFixCPRef(ConstCell item) {
         ConstValue cv = item.ref;
         if (cv != null) {
-            fixCPVstr.visit(cv);
+            referenceFixerConstantPool.visit(cv);
         }
     }
 
-    private CPVisitor<Void> fixCPVstr = new CPVisitor<Void>() {
-        @Override
-        public Void visitUTF8(ConstValue_String p) {
-            return null;
+    /*
+     *  Helper function for "fixIndexesInPool"
+     *  Does recursive checking of indexes, using a locally-defined visitor.
+     */
+    private void checkAndFixCPIndexes(ConstCell item) {
+        ConstValue cv = item.ref;
+        if (cv != null) {
+            indexFixerConstantPool.visit(cv);
         }
-
-        ;
-        @Override
-        public Void visitInteger(ConstValue_Integer p) {
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitFloat(ConstValue_Integer p) {
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitDouble(ConstValue_Long p) {
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitLong(ConstValue_Long p) {
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitMethodtype(ConstValue_Cell p) {
-            handleClassRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitString(ConstValue_Cell p) {
-            handleClassRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitClass(ConstValue_Cell p) {
-            handleClassRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitMethod(ConstValue_Pair p) {
-            handleMemberRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitField(ConstValue_Pair p) {
-            handleMemberRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitInterfacemethod(ConstValue_Pair p) {
-            handleMemberRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitNameandtype(ConstValue_Pair p) {
-            handleMemberRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitMethodhandle(ConstValue_Pair p) {
-            handleMemberRef(p);
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitDynamic(ConstValue_CondyPair p) {
-            return null;
-        }
-
-        ;
-        @Override
-        public Void visitInvokedynamic(ConstValue_IndyPair p) {
-            return null;
-        }
-        ;
-
-        @Override
-        public Void visitModule(ConstValue_Cell p) {
-            handleClassRef(p);
-            return null;
-        }
-        ;
-
-        @Override
-        public Void visitPackage(ConstValue_Cell p) {
-            handleClassRef(p);
-            return null;
-        }
-        ;
-
-
-        public void handleClassRef(ConstValue_Cell cv) {
-            ConstCell clref = cv.cell;
-            if (clref.ref == null) {
-                ConstCell refval = cpool_get(clref.arg);
-                if (refval != null) {
-                    checkAndFixCPRef(clref.arg, refval);
-                    clref.ref = refval.ref;
-                } else {
-                    clref.ref = null;
-                }
-                // env.traceln("FIXED ConstPool[" + i + "](" + cv.TagString(cv.tag) + ") = " + cv.value);
-            }
-        }
-
-        public void handleMemberRef(ConstValue_Pair cv) {
-            // env.traceln("ConstPool[" + i + "](" + cv.TagString(cv.tag) + ") = " + cv.value);
-            ConstCell clref = cv.left;
-            ConstCell typref = cv.right;
-            if (clref.ref == null) {
-                ConstCell refval = cpool_get(clref.arg);
-                if (refval != null) {
-                    checkAndFixCPRef(clref.arg, refval);
-                    clref.ref = refval.ref;
-                } else {
-                    clref.ref = null;
-                }
-                // env.traceln("FIXED ConstPool[" + i + "](" + cv.TagString(cv.tag) + ") = " + cv.value);
-            }
-            if (typref.ref == null) {
-                ConstCell refval = cpool_get(typref.arg);
-                if (refval != null) {
-                    checkAndFixCPRef(typref.arg, refval);
-                    typref.ref = refval.ref;
-                } else {
-                    typref.ref = null;
-                }
-                // env.traceln("FIXED ConstPool[" + i + "](" + cv.TagString(cv.tag) + ") = " + cv.value);
-            }
-        }
-
-    };
+    }
 
     /*
      * Help debug Constant Pools
@@ -1093,25 +240,29 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     public void printPool() {
         int i = 0;
         for (ConstCell item : pool) {
-            env.traceln("^^^^^^^^^^^^^  const #" + i + ": " + item);
-            i += 1;
+            environment.traceln("^^^^^^^^^^^^^  const #" + i + ": " + item);
+            i++;
         }
     }
 
-    private ConstCell cpool_get(int cpx) {
-        if (cpx >= pool.size()) {
+    public Range<Integer> getBounds() {
+        return new Range<>(1, pool.size() - 1);
+    }
+
+    public ConstCell getConstPollCellByIndex(int cpIndex) {
+        if (cpIndex >= pool.size()) {
             return null;
         }
-        return pool.get(cpx);
+        return pool.get(cpIndex);
     }
 
     private void cpool_set(int cpx, ConstCell cell, int sz) {
-        debugStr("cpool_set1: " + cpx + " " + cell);
-        debugStr("param_size: " + sz);
-        debugStr("pool_size: " + pool.size());
-        cell.arg = cpx;
+        environment.traceln("cpool_set1: " + cpx + " " + cell);
+        environment.traceln("param_size: " + sz);
+        environment.traceln("pool_size : " + pool.size());
+        cell.cpIndex = cpx;
         if (cpx + sz >= pool.size()) {
-            debugStr("calling ensureCapacity( " + (cpx + sz + 1) + ")");
+            environment.traceln("calling ensureCapacity( " + (cpx + sz + 1) + " )");
             int low = pool.size();
             int high = cpx + sz;
             for (int i = 0; i < high - low; i++) {
@@ -1120,9 +271,9 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
         }
         pool.set(cpx, cell);
         if (sz == 2) {
-            pool.set(cpx + 1, new ConstCell(cpx + 1, ConstValue0));
+            pool.set(cpx + 1, new ConstCell(cpx + 1, emptyConstValue));
         }
-        debugStr(" cpool_set2: " + cpx + " " + cell);
+        environment.traceln("cpool_set2: " + cpx + " " + cell);
     }
 
     protected ConstCell uncheckedGetCell(int cpx) { // by index
@@ -1130,7 +281,7 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     }
 
     public ConstCell getCell(int cpx) { // by index
-        ConstCell cell = cpool_get(cpx);
+        ConstCell cell = getConstPollCellByIndex(cpx);
         if (cell != null) {
             return cell;
         }
@@ -1141,124 +292,650 @@ public class ConstantPool implements Iterable<ConstantPool.ConstCell> {
     public void setCell(int cpx, ConstCell cell) {
         ConstValue value = cell.ref;
         if (value == null) {
-            throw new Parser.CompilerError(env.errorStr("comperr.constcell.nullvalset"));
+            environment.throwErrorException("err.constcell.null.val", cpx);
         }
         int sz = value.size();
 
         if (cpx == 0) {
             // It is correct to warn about redeclaring constant zero,
             // since this value is never written out to a class file.
-            env.error("warn.const0.redecl");
+            environment.warning("warn.const0.redecl");
         } else {
-            if ((cpool_get(cpx) != null) || ((sz == 2) && (cpool_get(cpx + 1) != null))) {
+            if ((getConstPollCellByIndex(cpx) != null) || ((sz == 2) && (getConstPollCellByIndex(cpx + 1) != null))) {
                 String name = "#" + cpx;
-                env.error("const.redecl", name);
+                environment.error("err.const.redecl", name);
                 return;
             }
-            if (cell.isSet() && (cell.arg != cpx)) {
-                env.traceln("setCell: new ConstCell");
+            if (cell.isSet() && (cell.cpIndex != cpx)) {
+                environment.traceln("setCell: new ConstCell");
                 cell = new ConstCell(value);
             }
         }
         cpool_set(cpx, cell, sz);
     }
 
-    protected void NumberizePool() {
-        env.traceln("NumberizePool");
+    public Optional<ConstCell<?>> getItemizedCell(ConstCell<?> cell) {
+        final ConstValue value = cell.ref;
+        if (value == null) {
+            if(   getBounds().in(cell.cpIndex) ) {
+                return Optional.ofNullable(getConstPollCellByIndex(cell.cpIndex));
+            } else if (cell.isSet()) {
+                environment.throwErrorException("err.constcell.null.val", cell.cpIndex);
+            } else {
+                environment.throwErrorException("err.constcell.is.undef");
+            }
+        }
+        return ConstantPoolHashByValue.values().stream().
+                filter(v -> v.isSet() &&
+                        v.getType() == value.tag &&
+                        v.ref.equalsByValue(value)).
+                findAny();
+    }
 
+    private ConstCell<?> itemizeCell(ConstCell<?> cell) {
+        Optional<ConstCell<?>> optionalCell = getItemizedCell(cell);
+        if (optionalCell.isPresent()) {
+            ConstCell<?> cpCell = optionalCell.get();
+            if (cpCell.rank != cell.rank) {
+                cpCell.setRank(cell.rank);
+            }
+            return cpCell;
+        } else {
+            final int cellSize = cell.ref.size();
+            final int cpIndex = findVacantSlot(cellSize);
+            cpool_set(cpIndex, cell, cellSize);
+            return uncheckedGetCell(cpIndex);
+        }
+    }
+
+    protected void itemizePool() {
+        environment.traceln("itemizePool");
         for (ReferenceRank rank : ReferenceRank.values()) {
-            for (ConstCell cell : cpoolHashByValue.values().stream().
-                     filter(v-> !v.isSet() && rank.equals(v.rank)).
-                     collect(Collectors.toList())) {
-
-                ConstValue value = cell.ref;
-                if (value == null) {
-                    throw new Parser.CompilerError(env.errorStr("comperr.constcell.nullvalhash"));
-                }
-                int sz = value.size(), cpx;
-find:
-                for (cpx = 1; cpx < pool.size(); cpx++) {
-                    if ((pool.get(cpx) == nullConst) && ((sz == 1) || (pool.get(cpx + 1) == nullConst))) {
-                        break find;
-                    }
-                }
-                cpool_set(cpx, cell, sz);
+            for (ConstCell cell : ConstantPoolHashByValue.values().stream().filter(v -> !v.isSet() && rank.equals(v.rank)).toList()) {
+                // find already set ConstCell having cpIndex.isSet && value == value of ConstCell where cpIndex is not set.
+                // they should be equal by value i.e. cpIndex should not be taken into account
+                itemizeCell(cell);
             }
         }
-
-        ConstCell firstCell = cpool_get(0);
-        firstCell.arg = 0;
+        ConstCell firstCell = getConstPollCellByIndex(0);
+        firstCell.cpIndex = 0;
     }
 
-    public ConstCell FindCell(ConstValue ref) {
+    protected ConstCell<?> specifyCell(ConstCell<?> cell) {
+        environment.traceln("itemizeCell");
+        return cell.isSet() ? cell : itemizeCell(cell);
+    }
+
+    private int findVacantSlot(int cellSize) {
+        int index = 1;
+        for (; index < pool.size(); index++) {
+            if (pool.get(index) == nullConst && ((cellSize == 1) || pool.get(index + 1) == nullConst)) {
+                break;
+            }
+        }
+        return index;
+    }
+
+    public <T extends ConstValue> ConstCell<T> findCell(final T ref) {
         if (ref == null) {
-            throw new Parser.CompilerError(env.errorStr("comperr.constcell.nullval"));
+            environment.throwErrorException("err.constcell.is.null");
         }
-        ConstCell pconst = null;
-        try {
-            pconst = cpoolHashByValue.get(ref);
-        } catch (Parser.CompilerError e) {
-            throw new Parser.CompilerError(env.errorStr("comperr.constcell.nullvalhash"));
-        }
-        // If we fund a cached ConstValue
-        if (pconst != null) {
-            ConstValue value = pconst.ref;
+        ConstCell cell = ConstantPoolHashByValue.get(ref);
+        if (cell != null) {
+            // If we found a cached ConstValue
+            ConstValue value = cell.ref;
             if (!value.equals(ref)) {
-                throw new Parser.CompilerError(env.errorStr("comperr.val.noteq"));
+                environment.throwErrorException("err.values.not.eq", ref.toString(), value.toString());
             }
-            return pconst;
+            environment.traceln(format("ConstantPoolHashByValue.got ('%s') for '%s'", cell, ref));
+        } else {
+            // If we didn't find a cached ConstValue add it to the cache
+            cell = new ConstCell(ref);
+            ConstantPoolHashByValue.put(ref, cell);
+            environment.traceln("ConstantPoolHashByValue.put ('%s','%s')", ref, cell);
         }
-        // If we didn't find a cached ConstValue
-        //      Add it to the cache
-        pconst = new ConstCell(ref);
-        cpoolHashByValue.put(ref, pconst);
-        return pconst;
+        return cell;
     }
 
-    public ConstCell FindCell(ConstType tag, String value) {
-        return FindCell(new ConstValue_String(value));
+    public ConstCell findIntegerCell(Integer value) {
+        return findCell(new ConstValue_Integer(CONSTANT_INTEGER, value));
     }
 
-    public ConstCell FindCell(ConstType tag, Integer value) {
-        return FindCell(new ConstValue_Integer(tag, value));
+    public ConstCell findFloatCell(Integer value) {
+        return findCell(new ConstValue_Float(value));
     }
 
-    public ConstCell FindCell(ConstType tag, Long value) {
-        return FindCell(new ConstValue_Long(tag, value));
+    public ConstCell findLongCell(Long value) {
+        return findCell(new ConstValue_Long(value));
     }
 
-    public ConstCell FindCell(ConstType tag, ConstCell value) {
-        return FindCell(new ConstValue_Cell(tag, value));
+    public ConstCell findDoubleCell(Long value) {
+        return findCell(new ConstValue_Long(value));
     }
 
-    public ConstCell FindCell(ConstType tag, ConstCell left, ConstCell right) {
-        return FindCell(new ConstValue_Pair(tag, left, right));
+    public ConstCell findUTF8Cell(String value) {
+        return findCell(new ConstValue_UTF8(value));
     }
 
-    public ConstCell FindCellAsciz(String str) {
-        return FindCell(ConstType.CONSTANT_UTF8, str);
+    public ConstCell lookupUTF8Cell(Function<String, Boolean> rule) {
+        return ConstantPoolHashByValue.entrySet().stream().
+                filter(entry -> entry.getKey().tag == CONSTANT_UTF8 && rule.apply((String) (entry.getKey().value))).
+                findAny().map(entry -> entry.getValue()).
+                orElse(null);
     }
 
-    public ConstCell FindCellClassByName(String name) { return FindCell(ConstType.CONSTANT_CLASS, FindCellAsciz(name)); }
+    public ConstCell findClassCell(NameInfo nameInfo) {
+        return findCell(CONSTANT_CLASS, nameInfo);
+    }
 
-    public ConstCell FindCellModuleByName(String name) { return FindCell(ConstType.CONSTANT_MODULE, FindCellAsciz(name)); }
+    public ConstCell findClassCell(String name) {
+        return findCell(CONSTANT_CLASS, findUTF8Cell(name));
+    }
 
-    public ConstCell FindCellPackageByName(String name) { return FindCell(ConstType.CONSTANT_PACKAGE, FindCellAsciz(name)); }
+    public ConstCell findModuleCell(NameInfo nameInfo) {
+        return findCell(CONSTANT_MODULE, nameInfo);
+    }
+
+    public ConstCell findModuleCell(String name) {
+        return findCell(CONSTANT_MODULE, findUTF8Cell(name));
+    }
+
+    public ConstCell findPackageCell(String name) {
+        return findCell(CONSTANT_PACKAGE, findUTF8Cell(name));
+    }
+
+    public ConstCell findPackageCell(NameInfo nameInfo) {
+        return findCell(CONSTANT_PACKAGE, nameInfo);
+    }
+
+    public ConstCell findStringCell(String value) {
+        return findCell(CONSTANT_STRING, findUTF8Cell(value));
+    }
+
+    public ConstCell findCell(ConstType tag, ConstCell value) {
+        return findCell(new ConstValue_Cell(tag, value));
+    }
+
+    public ConstCell findCell(ConstType tag, ConstCell left, ConstCell right) {
+        return findCell(new ConstValue_Pair(tag, left, right));
+    }
+
+    public ConstCell findCell(ConstType tag, NameInfo nameInfo) {
+        if (nameInfo.isEmpty()) {
+            // throw exception if empty nameInfo
+            environment.throwErrorException("err.constcell.empty.nameInfo", "ConstantPool::FindCell");
+        } else if (nameInfo.cpIndex() > 0) {
+            // find and check that cpIndex refers to the cell with tag
+            ConstCell cell = getConstPollCellByIndex(nameInfo.cpIndex());
+            if (cell != null && cell.ref.tag == tag) {
+                return cell;
+            }
+            environment.throwErrorException("err.cpindex.notfound", nameInfo.cpIndex());
+        }
+        return findCell(tag, findUTF8Cell(nameInfo.name()));
+    }
 
     public void write(CheckedDataOutputStream out) throws IOException {
         // Write the constant pool
         int length = pool.size();
         out.writeShort(length);
         int i;
-        env.traceln("wr.pool:size=" + length);
-        for (i = 1; i < length;) {
+        environment.traceln("wr.pool:size=" + length);
+        for (i = 1; i < length; ) {
             ConstCell cell = pool.get(i);
             ConstValue value = cell.ref;
-            if (cell.arg != i) {
-                throw new Parser.CompilerError(env.errorStr("comperr.constcell.invarg", Integer.toString(i), cell.arg));
+            if (cell.cpIndex != i) {
+                environment.throwErrorException("err.constcell.invarg", Integer.toString(i), cell.cpIndex);
             }
             value.write(out);
             i += value.size();
+        }
+    }
+
+    public enum ReferenceRank {
+        LDC(0),  // 0 - highest - ref from ldc
+        ANY(1),  // 1 - any ref
+        NO(2);   // 2 - no ref
+        final int priority;
+
+        ReferenceRank(int priority) {
+            this.priority = priority;
+        }
+    }
+
+    /**
+     * CONSTANT_ZERO: Zero Constant Value presents Constant 0.
+     */
+    static public class ConstValue_Zero extends ConstValue<Void> {
+
+        public ConstValue_Zero() {
+            super(CONSTANT_ZERO, (Void) null);
+        }
+
+        @Override
+        public boolean isSet() {
+            return true;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            throw new RuntimeException("Trying to write Constant 0.");
+        }
+    }
+
+    /**
+     * CONSTANT_UTF8(1) is used to represent constant objects of the verificationType String
+     */
+    static public class ConstValue_UTF8 extends ConstValue<String> {
+
+        public ConstValue_UTF8(String value) {
+            super(CONSTANT_UTF8, value);
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeUTF(value);
+        }
+    }
+
+    /**
+     * CONSTANT_Integer(3) structure represents 4-byte numeric (int) constants
+     */
+    static public class ConstValue_Integer extends ConstValue<Integer> {
+
+        public ConstValue_Integer(ClassFileConst.ConstType tag, Integer value) {
+            super(tag, value);
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeInt(value);
+        }
+    }
+
+    /**
+     * CONSTANT_Float(4) structure represents 4-byte numeric (float) constants
+     */
+    static public class ConstValue_Float extends ConstValue<Integer> {
+
+        public ConstValue_Float(Integer value) {
+            super(CONSTANT_FLOAT, value);
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeInt(value);
+        }
+    }
+
+    /**
+     * The CONSTANT_Long_info(5) represents 8-byte numeric (long) constants
+     */
+    static public class ConstValue_Long extends ConstValue<Long> {
+
+        public ConstValue_Long(Long value) {
+            super(CONSTANT_LONG, value);
+        }
+
+        @Override
+        public int size() {
+            return 2;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeLong(value);
+        }
+    }
+
+    /**
+     * The CONSTANT_Double(6) represents 8-byte numeric (double) constants
+     */
+    static public class ConstValue_Double extends ConstValue<Long> {
+        public ConstValue_Double(Long value) {
+            super(CONSTANT_DOUBLE, value);
+        }
+
+        @Override
+        public int size() {
+            return 2;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeLong(value);
+        }
+    }
+
+    /**
+     * CONSTANT_Cell represents CONSTANT_Class(7),   CONSTANT_String(8),   CONSTANT_MethodType(16),
+     * CONSTANT_Module(19), CONSTANT_Package(20) constants
+     */
+    static public class ConstValue_Cell<T extends ConstValue<?>> extends ConstValue<ConstCell<T>> {
+
+        public ConstValue_Cell(ConstType tag, ConstCell<T> constCell) {
+            super(tag, constCell);
+        }
+
+        @Override
+        public String toString() {
+            return format("[%s %s]", super.tag.toString(), value.toString());
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            value.write(out);
+        }
+
+        @Override
+        public boolean isSet() {
+            return super.isSet() && value.isSet() && value.ref.isSet();
+        }
+
+        @Override
+        public int hashCode() {
+            int result = value != null ? value.hashCode() : 0;
+            result = 31 * result + tag.hashCode();
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_Cell)) return false;
+            ConstValue_Cell<?> that = (ConstValue_Cell<?>) obj;
+            return (Objects.equals(this.value, that.value) && this.tag == that.tag);
+        }
+    }
+
+    /**
+     * The CONSTANT_Class(7) structure represents constant objects of the verificationType String
+     */
+    static public class ConstValue_Class extends ConstValue_Cell<ConstValue_UTF8> {
+        public ConstValue_Class(ConstCell<ConstValue_UTF8> value) {
+            super(CONSTANT_CLASS, value);
+        }
+    }
+
+    /**
+     * The CONSTANT_Module(19) structure represents a module
+     */
+    static public class ConstValue_Module extends ConstValue_Cell<ConstValue_UTF8> {
+        public ConstValue_Module(ConstCell<ConstValue_UTF8> value) {
+            super(CONSTANT_MODULE, value);
+        }
+    }
+
+    /**
+     * The CONSTANT_Package(20) structure represents a method verificationType
+     */
+    static public class ConstValue_Package extends ConstValue_Cell<ConstValue_UTF8> {
+        public ConstValue_Package(ConstCell<ConstValue_UTF8> value) {
+            super(CONSTANT_PACKAGE, value);
+        }
+    }
+
+    /**
+     * The CONSTANT_String(8) structure represents a class or an interface
+     */
+    static public class ConstValue_String extends ConstValue_Cell<ConstValue_UTF8> {
+        public ConstValue_String(ConstCell<ConstValue_UTF8> value) {
+            super(CONSTANT_STRING, value);
+        }
+    }
+
+    /**
+     * The CONSTANT_MethodType(16) structure represents a method verificationType
+     */
+    static public class ConstValue_MethodType extends ConstValue_Cell<ConstValue_UTF8> {
+        public ConstValue_MethodType(ConstCell<ConstValue_UTF8> value) {
+            super(CONSTANT_METHODTYPE, value);
+        }
+    }
+
+    /**
+     * ConstValue_Pair represents CONSTANT_NameAndType(12), CONSTANT_Fieldref(9), CONSTANT_Methodref(10), and
+     * CONSTANT_InterfaceMethodref(11) structures
+     */
+    static public class ConstValue_Pair<L extends ConstValue, R extends ConstValue> extends ConstValue<Pair<ConstCell<L>, ConstCell<R>>> {
+
+        public ConstValue_Pair(ConstType tag, Pair<ConstCell<L>, ConstCell<R>> pair) {
+            super(tag, pair);
+        }
+
+        public ConstValue_Pair(ConstType tag, ConstCell<L> left, ConstCell<R> right) {
+            this(tag, new Pair(left, right));
+        }
+
+        @Override
+        public boolean isSet() {
+            return super.isSet() &&
+                    value.first.isSet() &
+                            value.second.isSet();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_Pair)) return false;
+            ConstValue_Pair<?, ?> that = (ConstValue_Pair<?, ?>) obj;
+            if (this.tag == that.tag) {
+                if ((this.value.first).equals(that.value.first) &&
+                        (this.value.second).equals(that.value.second)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean equalsByValue(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_Pair)) return false;
+            ConstValue_Pair<?, ?> that = (ConstValue_Pair<?, ?>) obj;
+            if (this.tag == that.tag) {
+                if ((this.value.first).equalsByValue(that.value.first) &&
+                        (this.value.second).equalsByValue(that.value.second)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return format("%s[%s,%s]", super.tag.toString(), value.first.toString(), value.second.toString());
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            if (tag == CONSTANT_METHODHANDLE) {
+                out.writeByte(value.first.cpIndex); // write subtag value
+            } else {
+                out.writeShort(value.first.cpIndex);
+            }
+            out.writeShort(value.second.cpIndex);
+        }
+    }
+
+    /**
+     * The CONSTANT_NameAndType(12) structure is used to represent a field or method, without indicating which class or
+     * interface verificationType it belongs to
+     */
+    static public class ConstValue_NameAndType extends ConstValue_Pair<ConstValue_UTF8, ConstValue_UTF8> {
+        public ConstValue_NameAndType(ConstCell<ConstValue_UTF8> name, ConstCell<ConstValue_UTF8> descriptor) {
+            super(CONSTANT_NAMEANDTYPE, name, descriptor);
+        }
+    }
+
+    /**
+     * The CONSTANT_Methodref(10) structure is used to represent a method
+     */
+    static public class ConstValue_MethodRef extends ConstValue_Pair<ConstValue_Class, ConstValue_NameAndType> {
+        public ConstValue_MethodRef(ConstCell<ConstValue_Class> classCell, ConstCell<ConstValue_NameAndType> nameAndType) {
+            super(CONSTANT_METHODREF, classCell, nameAndType);
+        }
+    }
+
+    /**
+     * The CONSTANT_InterfaceMethodref(11) structure is used to represent an interface method
+     */
+    static public class ConstValue_InterfaceMethodRef extends ConstValue_Pair<ConstValue_Class, ConstValue_NameAndType> {
+        public ConstValue_InterfaceMethodRef(ConstCell<ConstValue_Class> interfaceCell, ConstCell<ConstValue_NameAndType> nameAndType) {
+            super(CONSTANT_INTERFACEMETHODREF, interfaceCell, nameAndType);
+        }
+    }
+
+    /**
+     * The CONSTANT_Fieldref(9) structure is used to represent a field
+     */
+    static public class ConstValue_FieldRef extends ConstValue_Pair<ConstValue_Class, ConstValue_NameAndType> {
+        public ConstValue_FieldRef(ConstCell<ConstValue_Class> classCell, ConstCell<ConstValue_NameAndType> nameAndType) {
+            super(CONSTANT_FIELDREF, classCell, nameAndType);
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj);
+        }
+
+        @Override
+        public boolean equalsByValue(Object obj) {
+            return super.equalsByValue(obj);
+        }
+    }
+
+    /**
+     * The CONSTANT_MethodHandle(15) structure is used to represent a method handle
+     * T : ConstValue_MethodRef, ConstValue_InterfaceMethodRef or ConstValue_FieldRef
+     */
+    static public class ConstValue_MethodHandle<P extends ConstValue_Pair<ConstValue_Class, ConstValue_NameAndType>>
+            extends ConstValue<ConstCell<P>> {
+
+        final ClassFileConst.SubTag kind;
+
+        public ConstValue_MethodHandle(ClassFileConst.SubTag kind, ConstCell<P> value) {
+            super(CONSTANT_METHODHANDLE, value);
+            this.kind = kind;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeByte(kind.value());
+            value.write(out);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_MethodHandle)) return false;
+            if (!super.equals(obj)) return false;
+            ConstValue_MethodHandle<?> that = (ConstValue_MethodHandle<?>) obj;
+            return kind == that.kind;
+        }
+
+        @Override
+        public boolean equalsByValue(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_MethodHandle)) return false;
+            if (!super.equalsByValue(obj)) return false;
+            ConstValue_MethodHandle<?> that = (ConstValue_MethodHandle<?>) obj;
+            return kind == that.kind;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + kind.hashCode();
+            return result;
+        }
+    }
+
+    static public class ConstValue_BootstrapMethod extends ConstValue<ConstCell> {
+        BootstrapMethodData bsmData;
+
+        public ConstValue_BootstrapMethod(ConstType tag, BootstrapMethodData bsmdata, ConstCell value) {
+            super(tag, value);
+            this.bsmData = bsmdata;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_BootstrapMethod)) return false;
+            if (!super.equals(obj)) return false;
+            ConstValue_BootstrapMethod that = (ConstValue_BootstrapMethod) obj;
+            return bsmData.equals(that.bsmData);
+        }
+
+        @Override
+        public boolean equalsByValue(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof ConstValue_BootstrapMethod)) return false;
+            if (!super.equalsByValue(obj)) return false;
+            ConstValue_BootstrapMethod that = (ConstValue_BootstrapMethod) obj;
+            return bsmData.equalsByValue(that.bsmData);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + bsmData.hashCode();
+            return result;
+        }
+
+        @Override
+        public boolean isSet() {
+            return super.isSet() && bsmData != null;
+        }
+
+        @Override
+        public String toString() {
+            return super.toString() + "{" + bsmData + "," + value + "}";
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            super.write(out);
+            out.writeShort(bsmData.cpIndex);
+            out.writeShort(value.cpIndex);
+        }
+    }
+
+    /**
+     * The CONSTANT_Dynamic (17) structure is used to represent a dynamically-computed constant, an arbitrary value
+     * that is produced by invocation of a bootstrap method in the course of an ldc instruction, among others.
+     * The auxiliary verificationType specified by the structure constrains the verificationType of the dynamically-computed constant.
+     */
+    static public class ConstValue_Dynamic extends ConstValue_BootstrapMethod {
+        public ConstValue_Dynamic(BootstrapMethodData bsmData, ConstCell napeCell) {
+            super(CONSTANT_DYNAMIC, bsmData, napeCell);
+            assert (tag == CONSTANT_DYNAMIC && ConstValue_Dynamic.class.isAssignableFrom(getClass())) ||
+                    tag == CONSTANT_INVOKEDYNAMIC && ConstValue_InvokeDynamic.class.isAssignableFrom(getClass());
+        }
+    }
+
+    /**
+     * The CONSTANT_InvokeDynamic_info(18) structure is used to represent a dynamically-computed call site, an instance of
+     * java.lang.invoke.CallSite that is produced by invocation of a bootstrap method in the course of an invokedynamic instruction.
+     * The auxiliary verificationType specified by the structure constrains the method verificationType of the dynamically-computed call site.
+     */
+    static public class ConstValue_InvokeDynamic extends ConstValue_BootstrapMethod {
+        public ConstValue_InvokeDynamic(BootstrapMethodData bsmData, ConstCell napeCell) {
+            super(CONSTANT_INVOKEDYNAMIC, bsmData, napeCell);
         }
     }
 }

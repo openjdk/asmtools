@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,15 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jdis;
+package org.openjdk.asmtools.common;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 
-/**
- *
- */
 public class uEscWriter extends Writer {
     /*-------------------------------------------------------- */
     /* uEscWriter Fields */

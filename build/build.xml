@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2014, 2021, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2014, 2022, Oracle and/or its affiliates. All rights reserved.
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
 This code is free software; you can redistribute it and/or modify it
@@ -29,12 +29,9 @@ questions.
     <!--****************************************************************-->
     <!--Property & FileSet Definitions					                -->
     <!--****************************************************************-->
-    <concat destfile="asmtools.properties" >
-        <fileset file="build.properties" />
-        <fileset file="productinfo.properties" />
-    </concat>
-    <property file="asmtools.properties"/>
-    <delete file="asmtools.properties"/>
+    <!-- this order of property files -->
+    <property file="productinfo.properties" />
+    <property file="build.properties"/>
 
     <property name="proj.build.product.version" value="${PRODUCT_VERSION}"/>
     <property name="proj.build.product.name.prefix" value="${PRODUCT_NAME}"/>
@@ -122,7 +119,6 @@ Other values for TARGET are:
     <!--************************************************************************-->
 
     <target name="clean" description="Remove all generated files.">
-        <delete dir="${build.temp.dir}" />
         <delete dir="${build.base.dir}" />
     </target>
 
@@ -136,12 +132,8 @@ Other values for TARGET are:
     <target name="prepareGenArea">
 	    <!--set up compile class path-->
 	    <path id="compileClassPath">
-		<pathelement location="${buildArea.dir}/classes"/>
-		<pathelement path="${proj.build.jdk.home}/lib/tools.jar"/>
+		    <pathelement location="${buildArea.dir}/classes"/>
 	    </path>
-
-	    <!--get location of java compiler-->
-	    <property name="proj.build.javac" value="${proj.build.jdk.home}/bin/javac"/>
 
 	    <!--make temp dirs-->
 	    <mkdir dir="${buildprod.dir}"/>
@@ -179,12 +171,16 @@ Other values for TARGET are:
             <copy file="${ws.top.dir}/README.html" todir="${releaseArea.dir}"/>
     </target>
 
-    <target name="checkJDK" description="Check jdk.home setting">
-        <available file="${jdk.home}/bin/javac" property="jdk.javac.present" />
-        <fail unless="jdk.javac.present" message="${jdk.home}/bin/javac is not found, Check 'jdk.home' property setting in 'build/build.properties' file." />
-
-        <available file="${test.jdk.home}/bin/javac" property="test.jdk.javac.present" />
-        <fail unless="test.jdk.javac.present" message="${test.jdk.home}/bin/javac is not found, Check 'test.jdk.home' property setting in 'build/build.properties' file."/>
+    <target name="-check-java-version?">
+        <echo></echo>
+        <condition property="check-java-version.passed">
+            <matches pattern="1[789]+.*" string="${ant.java.version}"/>
+        </condition>
+        <fail unless="check-java-version.passed">
+.${line.separator}${line.separator}
+Current java version is ${ant.java.version}
+The build should be started by java 17 or above
+        </fail>
     </target>
 
     <target name="stamp" description="Set up build time properties.">
@@ -213,7 +209,7 @@ Other values for TARGET are:
     <!-- Build Sub Targets                                                      -->
     <!--========================================================================-->
 
-    <target name="build"  depends="release" description="Build the asmtools product." />
+    <target name="build"  depends="-check-java-version?, release" description="Build the asmtools product." />
 
     <target name="release" depends="devbuild, examples, release-product"/>
 
@@ -269,8 +265,8 @@ MILESTONE="${PRODUCT_MILESTONE}"
     <target name="compileClasses" depends="prepare">
         <mkdir dir="${build.classes.dir}"/>
         <javac fork="true"
-            target="1.8"
-            source="1.8"
+            target="${javac.target.version}"
+            source="${javac.source.version}"
             srcdir="${build.src.classes.dir}"
             destdir="${build.classes.dir}"
             debug="${javac.debug}"
@@ -319,11 +315,8 @@ MILESTONE="${PRODUCT_MILESTONE}"
                 author="false"
                 version="false"
                 Encoding="UTF8"
-                additionalparam="-breakiterator -Xdoclint:none"
-        >
-            <classpath>
-                <path path="${javac.classpath}"/>
-            </classpath>
+                source="${javac.source.version}"
+                additionalparam="-breakiterator -Xdoclint:none -quiet">
             <bottom><![CDATA[
            ]]>
             </bottom>

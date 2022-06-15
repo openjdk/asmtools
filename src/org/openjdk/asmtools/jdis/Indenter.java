@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,80 +22,294 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Formatter;
+import java.util.function.Supplier;
+
+import static org.openjdk.asmtools.jdis.Options.PR.*;
+
 public class Indenter {
 
-    private int indentLength;
+    public static final int INDENT_STEP = 2;
+    public static final int INDENT_OFFSET = 2;
+    public static final String INDENT_STRING =  " ";
 
-    public Indenter(int indentLength) {
-        this.indentLength = indentLength;
+    // Global formatting strings
+    public static final String ARGUMENT_DELIMITER = "^";
+    public static final String LINE_SPLITTER = "Ф";
+
+    // Global numbers
+    public static final int PROGRAM_COUNTER_PLACEHOLDER_LENGTH = 7;
+    public static final int INSTR_PREFIX_LENGTH = 7;
+    public static final int STACKMAP_TYPE_PLACEHOLDER_LENGTH = 17;
+    public static final int OPERAND_PLACEHOLDER_LENGTH = 17;
+    public static final int COMMENT_PADDING = 16;
+    public static final int COMMENT_OFFSET = 0;     // Initial offset that will be dynamically updated
+
+    // internal references
+    protected final boolean printCPIndex = Options.contains(CPX);
+    protected final boolean printLabelAsIdentifiers = Options.contains(LABS);
+    protected final boolean printConstantPool = Options.contains(CP);
+    protected final boolean printProgramCounter = Options.contains(PC);
+    protected final boolean printSourceLines = Options.contains(SRC);
+    protected final boolean printLocalVars = Options.contains(VAR);
+    protected final boolean printLineTable = Options.contains(LNT);
+    protected final boolean printHEX = Options.contains(HEX);
+    //
+    protected PrintWriter toolOutput;
+    //
+    private int commentOffset = COMMENT_OFFSET;
+    private int length, offset, step;
+    private String fillString;
+
+    public void print() throws IOException {
+        throw new RuntimeException("not yet implemented");
     }
 
-    public Indenter() {
-        this.indentLength = Options.BODY_INDENT;
-    }
-    /**
-     * Returns current indentation length.
-     *
-     * @return current indentation length.
-     */
-    public int indent() {
-        return indentLength;
+    public Indenter(PrintWriter toolOutput) {
+        this();
+        this.toolOutput = toolOutput;
     }
 
-    /**
-     * Increases indentation length.
-     *
-     * @param indentLength new indent length
-     *
-     * @throws IllegalArgumentException if indentLength is negative.
-     */
-    public Indenter setIndent(int indentLength) {
-        if (indentLength < 0) {
-            throw new IllegalArgumentException("indent length can't be negative");
-        }
-        this.indentLength = indentLength;
+    protected Indenter() {
+        this.length = 0;
+        this.step = INDENT_STEP;
+        this.offset = INDENT_OFFSET;
+        this.fillString = INDENT_STRING;
+    }
+
+    public Indenter printIndentLn(String s) {
+        toolOutput.println(Indent(s));
         return this;
     }
 
-    /**
-     * Increases indentation length.
-     *
-     * @param increase length to increase by.
-     *
-     * @throws IllegalArgumentException if increase is negative.
-     */
-    public Indenter increaseIndent(int increase) {
-        if (increase < 0) {
-            throw new IllegalArgumentException("indent length can't be negative");
-        }
-        setIndent(indent() + increase);
+    public Indenter printIndentLn() {
+        toolOutput.println();
         return this;
     }
 
-    /**
-     * Decreases indentation length.
-     *
-     * @param decrease length to decrease by
-     *
-     * @throws IllegalArgumentException if decrease is negative, or if decrease is greater than
-     *                                  {@link #indent() current indentation length}.
-     */
-    public Indenter decreaseIndent(int decrease) {
-        if (decrease < 0) {
-            throw new IllegalArgumentException("decrease can't be negative");
-        }
-        setIndent(indent() - decrease);
+    public int getIndentStep() {
+        return this.step;
+    }
+
+    public Indenter printIndentLn(String format, Object... args) {
+        toolOutput.println(Indent(new Formatter().format(format, args).toString()));
         return this;
+    }
+
+    public Indenter printIndent(String format, Object... args) {
+        toolOutput.print(Indent(new Formatter().format(format, args).toString()));
+        return this;
+    }
+
+    public Indenter printIndent(String s) {
+        toolOutput.print(Indent(s));
+        return this;
+    }
+
+    public Indenter printIndent() {
+        toolOutput.print(getIndentString());
+        return this;
+    }
+
+    public Indenter printPadRight(String s, int totalWidth) {
+        toolOutput.print(PadRight(s, totalWidth));
+        return this;
+    }
+
+    public Indenter printPadLeft(String s, int totalWidth) {
+        toolOutput.print(PadLeft(s, totalWidth));
+        return this;
+    }
+
+    public Indenter printIndentPadRight(String str, int totalWidth) {
+        toolOutput.print(IndentPadRight(str, totalWidth));
+        return this;
+    }
+
+    public Indenter print(String s) {
+        toolOutput.print(s);
+        return this;
+    }
+
+    public Indenter print(String format, Object... args) {
+        toolOutput.print(new Formatter().format(format, args));
+        return this;
+    }
+
+    public Indenter println(String s) {
+        toolOutput.println(s);
+        return this;
+    }
+
+    public Indenter println() {
+        toolOutput.println();
+        return this;
+    }
+
+    public Indenter println(Supplier<Boolean> isPrint) {
+        if(isPrint.get()) {
+            toolOutput.println();
+        }
+        return this;
+    }
+
+
+    public Indenter println(String format, Object... args) {
+        toolOutput.println(new Formatter().format(format, args));
+        return this;
+    }
+
+    public Indenter incIndent() {
+        length += step;
+        return this;
+    }
+
+    public Indenter decIndent() {
+        length -= step;
+        if (length < 0) {
+            length = 0;
+        }
+        return this;
+    }
+
+    public Indenter setTheSame(Indenter that) {
+        this.length = that.length;
+        this.offset = that.offset;
+        this.step = that.step;
+        this.fillString = that.fillString;
+        return this;
+    }
+
+    public Indenter resetIndent() {
+        return initIndent(INDENT_OFFSET);
+    }
+
+    public Indenter initIndent(int initialOffset) {
+        this.length = 0;
+        this.step = INDENT_STEP;
+        this.offset = initialOffset;
+        this.fillString = INDENT_STRING;
+        return this;
+    }
+
+    public int getIndentSize() {
+        return this.offset + this.length;
+    }
+
+    public String nCopies(int n) {
+        // create a string made up of n copies of string fillString
+        return String.join("", Collections.nCopies(n, this.fillString));
     }
 
     /**
      * Creates indent string based on current indent size.
      */
     public String getIndentString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < indent(); i++) {
-            sb.append(' ');
+        return this.nCopies(this.getIndentSize());
+    }
+
+    /**
+     * Formats input string by adding indent string and padding spaces from the left.
+     * "[indent][PaddingSpaces][string]"
+     * -----totalWidth-------
+     */
+    public String IndentPadLeft(String str, int totalWidth) {
+        return this.getIndentString() + PadLeft(str, totalWidth);
+    }
+
+    /**
+     * Formats input string by adding indent string and padding spaces from the left.
+     * "[indent][string][PaddingSpaces]"
+     * -----totalWidth-------
+     */
+    public String IndentPadRight(String str, int totalWidth) {
+        return this.getIndentString() + PadRight(str, totalWidth);
+    }
+
+    /**
+     * Formats input string by adding indent string and padding spaces from the left.
+     * "[PaddingSpaces][string]"
+     * -----totalWidth-------
+     */
+    public String PadLeft(String str, int totalWidth) {
+        if (totalWidth > 0) {
+            int count = totalWidth - str.length();
+            if (count > 0) {
+                str = nCopies(count) + str;
+            }
         }
-        return sb.toString();
+        return str;
+    }
+
+    public String PadRight(String str, int totalWidth) {
+        if (totalWidth > 0) {
+            int count = totalWidth - str.length();
+            if (count > 0) {
+                str = str + nCopies(count);
+            }
+        }
+        return str;
+    }
+
+    public String padRight(String value, int width, char pad) {
+        if (value.length() >= width)
+            return value;
+        char[] buf = new char[width];
+        Arrays.fill(buf, value.length(), width, pad);
+        value.getChars(0, value.length(), buf, 0);
+        return new String(buf);
+    }
+
+    public String padLeft(String value, int width, char pad) {
+        if (value.length() >= width)
+            return value;
+        char[] buf = new char[width];
+        int padLen = width - value.length();
+        Arrays.fill(buf, 0, padLen, pad);
+        value.getChars(0, value.length(), buf, padLen);
+        return new String(buf);
+    }
+
+    public String Indent(String str) {
+        return this.getIndentString() + str;
+    }
+
+    public String enlargedIndent(String str, int shift) {
+        this.offset += shift;
+        str = Indent(str);
+        this.offset -= shift;
+        return str;
+    }
+
+    public String enlargedIndent(int shift) {
+        return enlargedIndent("", shift);
+    }
+
+    /**
+     * @return the common offset of comments for printing methods
+     */
+    public int getCommentOffset() {
+        return commentOffset;
+    }
+
+    public Indenter setCommentOffset(int commentOffset) {
+        this.commentOffset = commentOffset;
+        return this;
+    }
+
+    /**
+     * @return the common offset of the indent
+     */
+    public int getOffset() {
+        return offset;
+    }
+
+    public Indenter setOffset(int offset) {
+        this.offset = offset;
+        return this;
     }
 }

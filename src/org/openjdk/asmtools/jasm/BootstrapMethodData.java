@@ -24,17 +24,15 @@ package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
-/**
- *
- */
-class BootstrapMethodData extends Argument implements Data {
+class BootstrapMethodData extends Indexer implements DataWriter {
 
-    ConstantPool.ConstCell bootstrapMethodHandle;
-    ArrayList<ConstantPool.ConstCell> arguments;
     public int placeholder_index = -1;
+    ConstCell bootstrapMethodHandle;
+    ArrayList<ConstCell<?>> arguments;
 
-    public BootstrapMethodData(ConstantPool.ConstCell bsmHandle, ArrayList<ConstantPool.ConstCell> arguments) {
+    public BootstrapMethodData(ConstCell bsmHandle, ArrayList<ConstCell<?>> arguments) {
         super();
         this.bootstrapMethodHandle = bsmHandle;
         this.arguments = arguments;
@@ -56,11 +54,46 @@ class BootstrapMethodData extends Argument implements Data {
     }
 
     public void write(CheckedDataOutputStream out) throws IOException {
-        out.writeShort(bootstrapMethodHandle.arg);
+        out.writeShort(bootstrapMethodHandle.cpIndex);
         out.writeShort(arguments.size());
 
-        for (ConstantPool.ConstCell argument : arguments) {
-            out.writeShort(argument.arg);
+        for (ConstCell argument : arguments) {
+            out.writeShort(argument.cpIndex);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BootstrapMethodData)) return false;
+        BootstrapMethodData that = (BootstrapMethodData) o;
+        if (!Objects.equals(bootstrapMethodHandle, that.bootstrapMethodHandle))
+            return false;
+        return Objects.equals(arguments, that.arguments);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 31 * (bootstrapMethodHandle != null ? bootstrapMethodHandle.hashCode() : 0);
+        result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
+        return result;
+    }
+
+    public boolean equalsByValue(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BootstrapMethodData)) return false;
+        BootstrapMethodData that = (BootstrapMethodData) o;
+        if (!Objects.equals(bootstrapMethodHandle, that.bootstrapMethodHandle))
+            return false;
+        if (arguments == that.arguments) return true;
+        if (arguments != null && (arguments.size() == that.arguments.size())) {
+            for (int i = 0; i < arguments.size(); i++) {
+                if (!arguments.get(i).equalsByValue(that.arguments.get(i))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

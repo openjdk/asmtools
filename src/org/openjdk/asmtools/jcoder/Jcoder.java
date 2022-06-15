@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jcoder;
 
+import org.openjdk.asmtools.common.SyntaxError;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,22 +38,24 @@ import static org.openjdk.asmtools.jcoder.JcodTokens.Token;
  */
 class Jcoder {
 
+    protected JcoderEnvironment environment;
+    protected Scanner scanner;
+
+
     /*-------------------------------------------------------- */
     /* Jcoder Fields */
-    private ArrayList<ByteBuffer> Classes = new ArrayList<>();
+    private final ArrayList<ByteBuffer> Classes = new ArrayList<>();
     private ByteBuffer buf;
     private DataOutputStream bufstream;
     private int depth = 0;
     private String tabStr = "";
-    private Context context = null;
-    protected SourceFile env;
-    protected Scanner scanner;
+    private final Context context;
 
     /*-------------------------------------------------------- */
     /* Jcoder inner classes */
 
     /*-------------------------------------------------------- */
-    /* ContextTag (marker) - describes the type of token */
+    /* ContextTag (marker) - describes the verificationType of token */
     /*    this is rather cosmetic, no function currently. */
     private enum ContextTag {
         NULL                ( ""),
@@ -78,7 +82,7 @@ class Jcoder {
 
     /*-------------------------------------------------------- */
     /* ContextVal (marker) - Specific value on a context stack */
-    private class ContextVal {
+    private static class ContextVal {
 
         public ContextTag tag;
         int compCount;
@@ -100,7 +104,7 @@ class Jcoder {
 
     /*-------------------------------------------------------- */
     /* Context - Context stack */
-    public class Context {
+    public static class Context {
 
         Stack<ContextVal> stack;
 
@@ -197,7 +201,6 @@ class Jcoder {
                         retval += "[" + currentCtx.owner.compCount + "]";
                     }
             }
-
             return retval;
         }
     }
@@ -208,9 +211,9 @@ class Jcoder {
     /**
      * Create a parser
      */
-    Jcoder(SourceFile sf, HashMap<String, String> macros) throws IOException {
-        scanner = new Scanner(sf, macros);
-        env = sf;
+    Jcoder(JcoderEnvironment environment, HashMap<String, String> macros) throws IOException {
+        scanner = new Scanner(environment, macros);
+        this.environment = environment;
         context = new Context();
 
     }
@@ -221,14 +224,11 @@ class Jcoder {
      */
     private void expect(Token t) throws SyntaxError, IOException {
         if (scanner.token != t) {
-            env.traceln("expect:" + t + " instead of " + scanner.token);
-            switch (t) {
-                case IDENT:
-                    env.error(scanner.pos, "identifier.expected");
-                    break;
-                default:
-                    env.error(scanner.pos, "token.expected", t.toString());
-                    break;
+            environment.traceln("expect:" + t + " instead of " + scanner.token);
+            if (t == Token.IDENT) {
+                environment.error(scanner.pos, "identifier.expected");
+            } else {
+                environment.error(scanner.pos, "token.expected", t.toString());
             }
             throw new SyntaxError();
         }
@@ -238,32 +238,24 @@ class Jcoder {
     private void recoverField() throws SyntaxError, IOException {
         while (true) {
             switch (scanner.token) {
-                case LBRACE:
+                case LBRACE -> {
                     scanner.match(Token.LBRACE, Token.RBRACE);
                     scanner.scan();
-                    break;
-
-                case LPAREN:
+                }
+                case LPAREN -> {
                     scanner.match(Token.LPAREN, Token.RPAREN);
                     scanner.scan();
-                    break;
-
-                case LSQBRACKET:
+                }
+                case LSQBRACKET -> {
                     scanner.match(Token.LSQBRACKET, Token.RSQBRACKET);
                     scanner.scan();
-                    break;
-
-                case RBRACE:
-                case EOF:
-                case INTERFACE:
-                case CLASS:
-                    // begin of something outside a class, panic more
-                    throw new SyntaxError();
-
-                default:
-                    // don't know what to do, skip
-                    scanner.scan();
-                    break;
+                }
+                case RBRACE, EOF, INTERFACE, CLASS ->
+                        // begin of something outside a class, panic more
+                        throw new SyntaxError();
+                default ->
+                        // don't know what to do, skip
+                        scanner.scan();
             }
         }
     }
@@ -284,20 +276,19 @@ class Jcoder {
         expect(Token.RSQBRACKET);
         int numSize;
         switch (scanner.token) {
-            case BYTEINDEX:
+            case BYTEINDEX -> {
                 scanner.scan();
                 numSize = 1;
-                break;
-            case SHORTINDEX:
+            }
+            case SHORTINDEX -> {
                 scanner.scan();
                 numSize = 2;
-                break;
-            case ZEROINDEX:
+            }
+            case ZEROINDEX -> {
                 scanner.scan();
                 numSize = 0;
-                break;
-            default:
-                numSize = 2;
+            }
+            default -> numSize = 2;
         }
 
         // skip array size
@@ -307,14 +298,14 @@ class Jcoder {
 
         int num_present = parseStruct();
         if (num_expected == -1) {
-            env.trace(" buf.writeAt(" + length0 + ", " + num_present + ", " + numSize + ");  ");
+            environment.trace(" buf.writeAt(" + length0 + ", " + num_present + ", " + numSize + ");  ");
             // skip array size
             if (numSize > 0) {
                 buf.writeAt(length0, num_present, numSize);
             }
         } else if ( num_expected != num_present) {
             if (context.isConstantPool() && num_expected == num_present +1) return;
-            env.error(pos0, "warn.array.wronglength", num_expected, num_present);
+            environment.warning(pos0, "warn.array.wronglength", num_expected, num_present);
         }
     }
 
@@ -335,20 +326,19 @@ class Jcoder {
         expect(Token.RSQBRACKET);
         int lenSize;
         switch (scanner.token) {
-            case BYTEINDEX:
+            case BYTEINDEX -> {
                 scanner.scan();
                 lenSize = 1;
-                break;
-            case SHORTINDEX:
+            }
+            case SHORTINDEX -> {
                 scanner.scan();
                 lenSize = 2;
-                break;
-            case ZEROINDEX:
+            }
+            case ZEROINDEX -> {
                 scanner.scan();
                 lenSize = 0;
-                break;
-            default:
-                lenSize = 4;
+            }
+            default -> lenSize = 4;
         }
 
         // skip array size
@@ -359,13 +349,13 @@ class Jcoder {
         parseStruct();
         int len_present = buf.length - length1;
         if (len_expected == -1) {
-            env.trace(" buf.writeAt(" + length0 + ", " + len_present + ", " + lenSize + ");  ");
+            environment.trace(" buf.writeAt(" + length0 + ", " + len_present + ", " + lenSize + ");  ");
             // skip array size
             if (lenSize > 0) {
                 buf.writeAt(length0, len_present, lenSize);
             }
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.array.wronglength", len_expected, len_present);
+            environment.warning(pos0, "warn.array.wronglength", len_expected, len_present);
         }
     }
 
@@ -388,7 +378,7 @@ class Jcoder {
              }
              cpx=Val.intValue();
              */        } else {
-            env.error(scanner.pos, "attrname.expected");
+            environment.error(scanner.pos, "err.attrname.expected");
             throw new SyntaxError();
         }
         buf.append(cpx, 2);
@@ -408,7 +398,7 @@ class Jcoder {
         if (len_expected == -1) {
             buf.writeAt(length0, len_present, 4);
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.attr.wronglength", len_expected, len_present);
+            environment.warning(pos0, "warn.attr.wronglength", len_expected, len_present);
         }
     } // end parseAttr
 
@@ -437,7 +427,7 @@ class Jcoder {
         if (len_expected == -1) {
             buf.writeAt(length0, len_present, 2);
         } else if (len_expected != len_present) {
-            env.error(pos0, "warn.attr.wronglength", len_expected, len_present);
+            environment.warning(pos0, "warn.attr.wronglength", len_expected, len_present);
         }
     } // end parseComp
 
@@ -450,13 +440,9 @@ class Jcoder {
             depth -= 1;
             context.exit();
         }
-        StringBuilder bldr = new StringBuilder();
         int tabAmt = 4;
         int len = depth * tabAmt;
-        for (int i = 0; i < len; i++) {
-            bldr.append(" ");
-        }
-        tabStr = bldr.toString();
+        tabStr = " ".repeat(Math.max(0, len));
     }
 
     /**
@@ -464,8 +450,8 @@ class Jcoder {
      */
     private int parseStruct() throws IOException {
         adjustDepth(true);
-        env.traceln(" ");
-        env.traceln(tabStr + "MapStruct { <" + context + "> ");
+        environment.traceln(" ");
+        environment.traceln(tabStr + "MapStruct { <" + context + "> ");
         expect(Token.LBRACE);
         int num = 0;
         int addElem = 0;
@@ -482,11 +468,11 @@ class Jcoder {
                         break;
                     case CLASS:
                         scanner.addConstDebug(ConstType.CONSTANT_CLASS);
-                        env.trace("class ");
+                        environment.trace("class ");
                         scanner.longValue = ConstType.CONSTANT_CLASS.value();
                         scanner.intSize = 1;
                     case INTVAL:
-                        env.trace("int [" + scanner.longValue + "] ");
+                        environment.trace("int [" + scanner.longValue + "] ");
                         buf.append(scanner.longValue, scanner.intSize);
                         scanner.scan();
                         addElem = 1;
@@ -494,13 +480,13 @@ class Jcoder {
                     case STRINGVAL:
                         scanner.scan();
                         scanner.addConstDebug(ConstType.CONSTANT_UTF8);
-                        env.trace("UTF8 [\"" + scanner.stringValue + "\"] ");
+                        environment.trace("UTF8 [\"" + scanner.stringValue + "\"] ");
                         bufstream.writeUTF(scanner.stringValue);
                         addElem = 1;
                         break;
                     case LONGSTRINGVAL:
                         scanner.scan();
-                        env.traceln("LongString [\"" + Arrays.toString(scanner.longStringValue.data) + "\"] ");
+                        environment.traceln("LongString [\"" + Arrays.toString(scanner.longStringValue.data) + "\"] ");
                         buf.write(scanner.longStringValue.data, 0, scanner.longStringValue.length);
                         addElem = 1;
                         break;
@@ -513,30 +499,30 @@ class Jcoder {
                         addElem = 1;
                         break;
                     case BYTES:
-                        env.trace("bytes ");
+                        environment.trace("bytes ");
                         parseByteArray();
                         addElem = 1;
                         break;
                     case ATTR:
-                        env.trace("attr ");
+                        environment.trace("attr ");
                         parseAttr();
                         addElem = 1;
                         break;
                     case COMP:
-                        env.trace("comp ");
+                        environment.trace("comp ");
                         parseComp();
                         addElem = 1;
                         break;
                     case RBRACE:
                         scanner.scan();
-                        env.traceln(" ");
-                        env.traceln(tabStr + "} // MapStruct  <" + context + "> [");
+                        environment.traceln(" ");
+                        environment.traceln(tabStr + "} // MapStruct  <" + context + "> [");
                         adjustDepth(false);
                         return num + addElem;
                     default:
-                        env.traceln("unexp token=" + scanner.token);
-                        env.traceln("   scanner.stringval = \"" + scanner.stringValue + "\"");
-                        env.error(scanner.pos, "element.expected");
+                        environment.traceln("unexp token=" + scanner.token);
+                        environment.traceln("   scanner.stringval = \"" + scanner.stringValue + "\"");
+                        environment.error(scanner.pos, "err.element.expected");
                         throw new SyntaxError();
                 }
             } catch (SyntaxError e) {
@@ -593,10 +579,10 @@ class Jcoder {
         bufstream = new DataOutputStream(buf);
         buf.myname = "module-info.class";
         scanner.scan();
-        env.traceln("starting " + buf.myname);
+        environment.traceln("starting " + buf.myname);
         // Parse the clause
         parseClause();
-        env.traceln("ending " + buf.myname);
+        environment.traceln("ending " + buf.myname);
     }
 
     /**
@@ -626,45 +612,38 @@ class Jcoder {
                 }
                 break;
             default:
-                env.error(scanner.prevPos, "name.expected");
+                environment.error(scanner.prevPos, "name.expected");
                 throw new SyntaxError();
         }
         scanner.scan();
-        env.traceln("starting class " + buf.myname);
+        environment.traceln("starting class " + buf.myname);
         // Parse the clause
         parseClause();
-        env.traceln("ending class " + buf.myname);
+        environment.traceln("ending class " + buf.myname);
+
 
     } // end parseClass
 
     private void parseClause() throws IOException {
         switch (scanner.token) {
-            case LBRACE:
-                parseStruct();
-                break;
-            case LSQBRACKET:
-                parseArray();
-                break;
-            case BYTES:
-                parseByteArray();
-                break;
-            case ATTR:
-                parseAttr();
-                break;
-            case COMP:
-                parseComp();
-                break;
-            default:
-                env.error(scanner.pos, "struct.expected");
+            case LBRACE -> parseStruct();
+            case LSQBRACKET -> parseArray();
+            case BYTES -> parseByteArray();
+            case ATTR -> parseAttr();
+            case COMP -> parseComp();
+            default -> environment.error(scanner.pos, "err.struct.expected");
         }
     }
 
-    /**
-     * Parse an Jcoder file.
-     */
+    // Parse an Jcoder file.
     void parseFile() {
-        env.traceln("PARSER");
+        environment.traceln("PARSER");
         context.init();
+        if( scanner.token == Token.EOF ) {
+            environment.error("err.file.empty", environment.getSimpleInputFileName());
+            environment.close();
+            return;
+        }
         try {
             while (scanner.token != Token.EOF) {
                 try {
@@ -680,34 +659,32 @@ class Jcoder {
                                 parseClass(t);
                             }
                             // End of the class,interface or module
-                            env.flushErrors();
                             Classes.add(buf);
                             break;
                         case SEMICOLON:
                             // Bogus semi colon
                             scanner.scan();
                             break;
-
                         case EOF:
                             // The end
                             return;
-
                         default:
-                            env.traceln("unexpected token=" + scanner.token.toString());
-                            env.error(scanner.pos, "toplevel.expected");
+                            environment.traceln("unexpected token=" + scanner.token);
+                            environment.error(scanner.pos, "toplevel.expected");
                             throw new SyntaxError();
                     }
                 } catch (SyntaxError e) {
                     String msg = e.getMessage();
-                    env.traceln("SyntaxError " + (msg == null ? "" : msg));
-                    if( env.debugInfoFlag ) {
-                        e.printStackTrace();
-                    }
+                    environment.traceln("SyntaxError " + (msg == null ? "" : msg));
+                    environment.printException(e);
                     recoverFile();
                 }
             }
         } catch (IOException e) {
-            env.error(scanner.pos, "io.exception", env.getInputFileName());
+            environment.error(scanner.pos, "err.io.exception", environment.getSimpleInputFileName());
+        } finally {
+            environment.close();
+
         }
     } //end parseFile
 
@@ -717,33 +694,33 @@ class Jcoder {
     /**
      * write to the directory passed with -d option
      */
-    public void write(ByteBuffer cls, File destdir) throws IOException {
+    public void write(ByteBuffer cls, File destDir) throws IOException {
         String myname = cls.myname;
         if (myname == null) {
-            env.error("cannot.write", null);
+            environment.error("cannot.write");
             return;
         }
 
-        env.traceln("writing " + myname);
+        environment.traceln("writing " + myname);
         File outfile;
-        if (destdir == null) {
+        if (destDir == null) {
             int startofname = myname.lastIndexOf('/');
             if (startofname != -1) {
                 myname = myname.substring(startofname + 1);
             }
             outfile = new File(myname);
         } else {
-            env.traceln("writing -d " + destdir.getPath());
+            environment.traceln("writing -d " + destDir.getPath());
             if (fileSeparator == 0) {
                 fileSeparator = System.getProperty("file.separator").charAt(0);
             }
             if (fileSeparator != '/') {
                 myname = myname.replace('/', fileSeparator);
             }
-            outfile = new File(destdir, myname);
+            outfile = new File(destDir, myname);
             File outdir = new File(outfile.getParent());
             if (!outdir.exists() && !outdir.mkdirs()) {
-                env.error("cannot.write", outdir.getPath());
+                environment.error("cannot.write", outdir.getPath());
                 return;
             }
         }

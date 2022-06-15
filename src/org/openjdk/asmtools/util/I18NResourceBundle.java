@@ -85,15 +85,12 @@ public class I18NResourceBundle extends ResourceBundle {
      */
     public String getString(String key, Object... args) {
         try {
-            return MessageFormat.format(getString(key), args);
-        } catch (MissingResourceException e) {
-            System.err.println("WARNING: missing resource: " + key + " for " + name);
-            StringBuffer sb = new StringBuffer(key);
-            for (int i = 0; i < args.length; i++) {
-                sb.append('\n');
-                sb.append(args.toString());
-            }
-            return sb.toString();
+            String resourceString = getString(key);
+            return MessageFormat.format(resourceString, args);
+        } catch (MissingResourceException mre) {
+            return null;
+        } catch(IllegalArgumentException  iae) {
+            return iae.getMessage();
         }
     }
 
@@ -131,7 +128,7 @@ public class I18NResourceBundle extends ResourceBundle {
             }
             return delegate.getObject(key);
         } catch (MissingResourceException e) {
-            System.err.println("WARNING: missing resource: " + key + " for " + name);
+            System.err.println("WARNING: missing resource: \"" + key + " for \"" + name);
             return key;
         }
     }

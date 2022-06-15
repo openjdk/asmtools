@@ -22,33 +22,34 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.jasm.Tables.AttrTag;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
+
 import java.io.IOException;
 
 /**
  *  field_info
  */
-class FieldData extends MemberData {
+class FieldData extends MemberData<JasmEnvironment> {
 
     /* FieldData Fields */
-    private ConstantPool.ConstValue_Pair nape;
+    private ConstantPool.ConstValue_FieldRef fieldRef;
     private AttrData initValue;
 
-    public FieldData(ClassData cls, int acc, ConstantPool.ConstValue_Pair nape) {
-        super(cls, acc);
-        this.nape = nape;
-        if (Modifiers.hasPseudoMod(acc)) {
+    public FieldData(ClassData classData, int access, ConstantPool.ConstValue_FieldRef fieldRef) {
+        super(classData.pool, classData.getEnvironment(), access);
+        this.fieldRef = fieldRef;
+        if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
     }
 
-    public ConstantPool.ConstValue_Pair getNameDesc() {
-        return nape;
+    public ConstantPool.ConstValue_FieldRef getNameDesc() {
+        return fieldRef;
     }
 
-    public void SetValue(Argument value_cpx) {
-        initValue = new CPXAttr(cls, AttrTag.ATT_ConstantValue.parsekey(),
-                value_cpx);
+    public void SetValue(ConstCell<?>  cell) {
+        initValue = new CPXAttr(pool, EAttribute.ATT_ConstantValue, cell);
     }
 
     @Override
@@ -58,8 +59,8 @@ class FieldData extends MemberData {
 
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
         out.writeShort(access);
-        out.writeShort(nape.left.arg);
-        out.writeShort(nape.right.arg);
+        out.writeShort(fieldRef.value.first.cpIndex);
+        out.writeShort(fieldRef.value.second.cpIndex);
         DataVector attrs = getAttrVector();
         attrs.write(out);
     }

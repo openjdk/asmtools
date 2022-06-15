@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,99 +22,99 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.CFVersion;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
+
 import java.io.*;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
-import static org.openjdk.asmtools.jasm.Tables.*;
+import static org.openjdk.asmtools.common.structure.ClassFileContext.INNER_CLASS;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
+import static org.openjdk.asmtools.jasm.ClassFileConst.JAVA_MAGIC;
 
 /**
  * ClassData
- *
+ * <p>
  * This is the main data structure for representing parsed class data. This structure
  * renders directly to a class file.
- *
  */
-class ClassData extends MemberData {
+class ClassData extends MemberData<JasmEnvironment> {
 
+    private static final String DEFAULT_EXTENSION = ".class";
     /* ClassData Fields */
+    private final JasmEnvironment environment;
+    public CDOutputStream cdos;
+    String fileExtension = DEFAULT_EXTENSION;
+    MethodData curMethod;
     CFVersion cfv;
-    ConstantPool.ConstCell me, father;
+    ConstCell this_class, super_class;
     String myClassName;
     AttrData sourceFileNameAttr;
-    ArrayList<Argument> interfaces;
+    ArrayList<Indexer> interfaces;
     ArrayList<FieldData> fields = new ArrayList<>();
     ArrayList<MethodData> methods = new ArrayList<>();
     DataVectorAttr<InnerClassData> innerClasses = null;
     DataVectorAttr<BootstrapMethodData> bootstrapMethodsAttr = null;
-
     // JEP 181 - NestHost, NestMembers attributes since class version 55.0
     CPXAttr nestHostAttr;
     NestMembersAttr nestMembersAttr;
-
+    // JEP 261: Module System since class file 53.0
+    ModuleAttr moduleAttribute = null;
     // JEP 359 - Record attribute since class file 58.65535
     private RecordData recordData;
-
     // JEP 360 - PermittedSubclasses attribute since class file 59.65535
     private PermittedSubclassesAttr permittedSubclassesAttr;
+    // Valhalla
+    private PreloadAttr preloadAttr;
 
-    ModuleAttr moduleAttribute = null;
-    Environment env;
-    protected ConstantPool pool;
-
-    private static final String DEFAULT_EXTENSION = ".class";
-    String fileExtension = DEFAULT_EXTENSION;
-    public CDOutputStream cdos;
+    /**
+     * @param environment The error reporting environment.
+     * @param cfv         Class file version
+     */
+    public ClassData(JasmEnvironment environment, CFVersion cfv) {
+        super(new ConstantPool(environment), environment);  // for a class, these get initialized in the super - later.
+        this.environment = environment;
+        this.cdos = new CDOutputStream();
+        this.cfv = cfv;
+    }
 
     /**
      * Initializes the ClassData.
      *
-     * @param me The constant pool reference to this class
-     * @param father The constant pool reference to the super class
-     * @param interfaces A list of interfaces that this class implements
+     * @param this_class  The constant pool reference to this class
+     * @param super_class The constant pool reference to the super class
+     * @param interfaces  A list of interfaces that this class implements
      */
-    public final void init(int access, ConstantPool.ConstCell me, ConstantPool.ConstCell father, ArrayList<Argument> interfaces) {
+    public final void init(int access, ConstCell this_class, ConstCell super_class, ArrayList<Indexer> interfaces) {
         this.access = access;
-
         // normalize the modifiers to access flags
-        if (Modifiers.hasPseudoMod(access)) {
+        if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
-
-        this.me = me;
-        if (father == null) {
-            father = pool.FindCellClassByName("java/lang/Object");
-        }
-        this.father = father;
+        this.this_class = this_class;
+        this.super_class = super_class;
         this.interfaces = interfaces;
         // Set default class file version if it is not set.
-        cfv.initClassDefaults();
+        this.cfv.initClassDefaultVersion();
+    }
+
+    public final void initAsPackageInfo(int access, String className) {
+        this.access = access;
+        // this_class: class "package_name/package-info"
+        this.myClassName = className;
+        this.cfv.initClassDefaultVersion();
     }
 
     public final void initAsModule() {
-        this.access = RuntimeConstants.ACC_MODULE;
-        // this_class" module-info
-        this.me = pool.FindCellClassByName("module-info");
+        this.access = EModifier.ACC_MODULE.getFlag();
+        // If the ACC_MODULE flag is set in the access_flags item
         // super_class: zero
-        this.father = new ConstantPool.ConstCell(0);
-        cfv.initModuleDefaults();
-    }
-
-    /**
-     * canonical default constructor
-     *
-     * @param env The error reporting environment.
-     * @param cfv The class file version that this class file supports.
-     */
-    public ClassData(Environment env, CFVersion cfv) {
-        super(null, 0);  // for a class, these get inited in the super - later.
-        cls = this;
-
-        this.env = env;
-        this.cfv = cfv;
-
-        pool = new ConstantPool(env);
-        cdos = new CDOutputStream();
+        this.super_class = new ConstCell(0);
+        this.cfv.initModuleDefaultVersion();
     }
 
     /**
@@ -124,7 +124,25 @@ class ClassData extends MemberData {
      * @return True if the classes access flag indicates it is an interface.
      */
     public final boolean isInterface() {
-        return Modifiers.isInterface(access);
+        return EModifier.isInterface(access);
+    }
+
+    /**
+     * Predicate that describes if this class has a primitive flag indicating that it is the primitive class.
+     *
+     * @return True if the classes access flag indicates it is the primitive class.
+     */
+    public final boolean isPrimitive() {
+        return EModifier.isPrimitive(access);
+    }
+
+    /**
+     * Predicate that describes if this class has an abstract flag indicating that it is the abstract class.
+     *
+     * @return True if the classes access flag indicates it is the abstract class.
+     */
+    public final boolean isAbstract() {
+        return EModifier.isAbstract(access);
     }
 
     /*
@@ -138,17 +156,17 @@ class ClassData extends MemberData {
             return;
         }
 
-        env.traceln("relinkBootstrapMethods");
+        environment.traceln("relinkBootstrapMethods");
 
-        for (ConstantPool.ConstCell cell : pool) {
-            ConstantPool.ConstValue ref = null;
+        for (ConstCell cell : pool) {
+            ConstValue ref = null;
             if (cell != null) {
                 ref = cell.ref;
             }
             if (ref != null
                     && (ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC || ref.tag == ConstType.CONSTANT_DYNAMIC)) {
                 // Find only the Constant
-                ConstantPool.ConstValue_IndyOrCondyPair refval = (ConstantPool.ConstValue_IndyOrCondyPair) ref;
+                ConstantPool.ConstValue_BootstrapMethod refval = (ConstantPool.ConstValue_BootstrapMethod) ref;
                 BootstrapMethodData bsmdata = refval.bsmData;
                 // only care about BSM Data that were placeholders
                 if (bsmdata != null && bsmdata.isPlaceholder()) {
@@ -157,14 +175,12 @@ class ClassData extends MemberData {
                     if (bsmindex < 0 || bsmindex > bootstrapMethodsAttr.size()) {
                         // bad BSM index --
                         // give a warning, but place the index in the arg anyway
-                        env.traceln("Warning: (ClassData.relinkBootstrapMethods()): Bad bootstrapMethods index: " + bsmindex);
+                        environment.traceln("Warning: (ClassData.relinkBootstrapMethods()): Bad bootstrapMethods index: " + bsmindex);
                         // env.error("const.bsmindex", bsmindex);
-                        bsmdata.arg = bsmindex;
+                        bsmdata.cpIndex = bsmindex;
                     } else {
-
-                        BootstrapMethodData realbsmdata = bootstrapMethodsAttr.get(bsmindex);
                         // make the IndyPairs BSM Data point to the one from the attribute
-                        refval.bsmData = realbsmdata;
+                        refval.bsmData = bootstrapMethodsAttr.get(bsmindex);
                     }
                 }
             }
@@ -172,24 +188,30 @@ class ClassData extends MemberData {
     }
 
     protected void numberBootstrapMethods() {
-        env.traceln("Numbering Bootstrap Methods");
+        environment.traceln("Numbering Bootstrap Methods");
         if (bootstrapMethodsAttr == null) {
             return;
         }
-
+        // remove duplicates if found
+        // Fix 7902888: Excess entries in BootstrapMethods with the same bsm, bsmKind, bsmArgs
+        HashSet<BootstrapMethodData> bsmHashSet = new HashSet<>();
+        //
         int index = 0;
         for (BootstrapMethodData data : bootstrapMethodsAttr) {
-            data.arg = index++;
+            if( bsmHashSet.add(data) ) {
+                data.cpIndex = index++;
+            }
         }
+        bootstrapMethodsAttr.replaceAll(bsmHashSet);
     }
 
     // API
     // Record
     public RecordData setRecord(int where) {
-        if( recordAttributeExists() ) {
-            env.error(where, "warn.record.repeated");
+        if (recordAttributeExists()) {
+            environment.warning(where, "warn.record.repeated");
         }
-        this.recordData = new RecordData(cls);
+        this.recordData = new RecordData(this);
         return this.recordData;
     }
 
@@ -201,70 +223,48 @@ class ClassData extends MemberData {
     }
 
     // Field
-    public ConstantPool.ConstValue_Pair mkNape(ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
-        return new ConstantPool.ConstValue_Pair(ConstType.CONSTANT_NAMEANDTYPE, name, sig);
+    public ConstantPool.ConstValue_FieldRef makeFieldRef(ConstCell name, ConstCell descriptor) {
+        return new ConstantPool.ConstValue_FieldRef(name, descriptor);
     }
 
-    public ConstantPool.ConstValue_Pair mkNape(String name, String sig) {
-        return mkNape(pool.FindCellAsciz(name), pool.FindCellAsciz(sig));
-    }
-
-    public FieldData addFieldIfAbsent(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
-        ConstantPool.ConstValue_Pair nape = mkNape(name, sig);
-        env.traceln(" [ClassData.addFieldIfAbsent]:  #" + nape.left.arg + ":#" + nape.right.arg);
-        FieldData fd = getField(nape);
-        if( fd == null ) {
-            env.traceln(" [ClassData.addFieldIfAbsent]:  new field.");
-            fd = addField(access,nape);
+    public FieldData addFieldIfAbsent(int access, ConstCell name, ConstCell descriptor) {
+        ConstantPool.ConstValue_FieldRef fieldRef = makeFieldRef(name, descriptor);
+        environment.traceln(" [ClassData.addFieldIfAbsent]:  #" +
+                fieldRef.value.first.cpIndex + ":#" +
+                fieldRef.value.second.cpIndex);
+        FieldData fd = getField(fieldRef);
+        if (fd == null) {
+            environment.traceln(" [ClassData.addFieldIfAbsent]:  new field.");
+            fd = addField(access, fieldRef);
         }
         return fd;
     }
 
-    private FieldData getField(ConstantPool.ConstValue_Pair nape) {
+    private FieldData getField(ConstantPool.ConstValue_FieldRef nameAndType) {
         for (FieldData fd : fields) {
-            if( fd.getNameDesc().equals(nape) ) {
+            if (fd.getNameDesc().equals(nameAndType)) {
                 return fd;
             }
         }
         return null;
     }
 
-    public FieldData addField(int access, ConstantPool.ConstValue_Pair nape) {
-        env.traceln(" [ClassData.addField]:  #" + nape.left.arg + ":#" + nape.right.arg);
-        FieldData res = new FieldData(this, access, nape);
+    public FieldData addField(int access, ConstantPool.ConstValue_FieldRef fieldRef) {
+        environment.traceln(" [ClassData.addField]:  #" +
+                fieldRef.value.first.cpIndex + ":#" +
+                fieldRef.value.second.cpIndex);
+        FieldData res = new FieldData(this, access, fieldRef);
         fields.add(res);
         return res;
     }
 
-    public FieldData addField(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
-        return addField(access, mkNape(name, sig));
+    public FieldData addField(int access, ConstCell name, ConstCell sig) {
+        return addField(access, makeFieldRef(name, sig));
     }
 
-    public FieldData addField(int access, String name, String type) {
-        return addField(access, pool.FindCellAsciz(name), pool.FindCellAsciz(type));
-    }
-
-    public ConstantPool.ConstCell LocalFieldRef(FieldData field) {
-        return pool.FindCell(ConstType.CONSTANT_FIELD, me, pool.FindCell(field.getNameDesc()));
-    }
-
-    public ConstantPool.ConstCell LocalFieldRef(ConstantPool.ConstValue nape) {
-        return pool.FindCell(ConstType.CONSTANT_FIELD, me, pool.FindCell(nape));
-    }
-
-    public ConstantPool.ConstCell LocalFieldRef(ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
-        return LocalFieldRef(mkNape(name, sig));
-    }
-
-    public ConstantPool.ConstCell LocalFieldRef(String name, String sig) {
-        return LocalFieldRef(pool.FindCellAsciz(name), pool.FindCellAsciz(sig));
-    }
-
-    MethodData curMethod;
-
-    public MethodData StartMethod(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell sig, ArrayList exc_table) {
+    public MethodData StartMethod(int access, ConstCell name, ConstCell sig, ArrayList exc_table) {
         EndMethod();
-        env.traceln(" [ClassData.StartMethod]:  #" + name.arg + ":#" + sig.arg);
+        environment.traceln(" [ClassData.StartMethod]:  #" + name.cpIndex + ":#" + sig.cpIndex);
         curMethod = new MethodData(this, access, name, sig, exc_table);
         methods.add(curMethod);
         return curMethod;
@@ -274,109 +274,137 @@ class ClassData extends MemberData {
         curMethod = null;
     }
 
-    public ConstantPool.ConstCell LocalMethodRef(ConstantPool.ConstValue nape) {
-        return pool.FindCell(ConstType.CONSTANT_METHOD, me, pool.FindCell(nape));
+    public ConstCell LocalMethodRef(ConstValue nape) {
+        return pool.findCell(ConstType.CONSTANT_METHODREF, this_class, pool.findCell(nape));
     }
 
-    public ConstantPool.ConstCell LocalMethodRef(ConstantPool.ConstCell name, ConstantPool.ConstCell sig) {
-        return LocalMethodRef(mkNape(name, sig));
+    public ConstCell LocalMethodRef(ConstCell name, ConstCell sig) {
+        return LocalMethodRef(makeFieldRef(name, sig));
     }
 
-    void addLocVarData(int opc, Argument arg) {
+    void addLocVarData(int opc, Indexer arg) {
     }
 
-    public void addInnerClass(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell innerClass, ConstantPool.ConstCell outerClass) {
-        env.traceln("addInnerClass (with indexes: Name (" + name.toString() + "), Inner (" + innerClass.toString() + "), Outer (" + outerClass.toString() + ").");
+    public void addInnerClass(int access, ConstCell name, ConstCell innerClass, ConstCell outerClass) {
+        environment.traceln("addInnerClass (with indexes: Name (" + name.toString() + "), Inner (" + innerClass.toString() + "), Outer (" + outerClass.toString() + ").");
         if (innerClasses == null) {
-            innerClasses = new DataVectorAttr<>(this, AttrTag.ATT_InnerClasses.parsekey());
+            innerClasses = new DataVectorAttr<>(pool, EAttribute.ATT_InnerClasses);
         }
         innerClasses.add(new InnerClassData(access, name, innerClass, outerClass));
     }
 
     public void addBootstrapMethod(BootstrapMethodData bsmData) {
-        env.traceln("addBootstrapMethod");
+        environment.traceln("addBootstrapMethod");
         if (bootstrapMethodsAttr == null) {
-            bootstrapMethodsAttr = new DataVectorAttr<>(this, AttrTag.ATT_BootstrapMethods.parsekey());
+            bootstrapMethodsAttr = new DataVectorAttr<>(pool, EAttribute.ATT_BootstrapMethods);
         }
         bootstrapMethodsAttr.add(bsmData);
     }
 
-    public void addNestHost(ConstantPool.ConstCell hostClass) {
-        env.traceln("addNestHost");
-        nestHostAttr = new CPXAttr(this, AttrTag.ATT_NestHost.parsekey(), hostClass);
+    public void addNestHost(ConstCell hostClass) {
+        environment.traceln("addNestHost");
+        nestHostAttr = new CPXAttr(pool, EAttribute.ATT_NestHost, hostClass);
     }
 
-    public void addNestMembers(List<ConstantPool.ConstCell> classes) {
-        env.traceln("addNestMembers");
-        nestMembersAttr = new NestMembersAttr(this, classes);
+    public void addNestMembers(List<ConstCell> classes) {
+        environment.traceln("addNestMembers");
+        nestMembersAttr = new NestMembersAttr(pool, classes);
     }
 
-    public void addPermittedSubclasses(List<ConstantPool.ConstCell> classes) {
-        env.traceln("addPermittedSubclasses");
-        permittedSubclassesAttr = new PermittedSubclassesAttr(this, classes);
+    public void addPermittedSubclasses(List<ConstCell> classes) {
+        environment.traceln("addPermittedSubclasses");
+        permittedSubclassesAttr = new PermittedSubclassesAttr(pool, classes);
     }
 
+    public void addPreloads(List<ConstCell> classes) {
+        environment.traceln("addPreloads");
+        preloadAttr = new PreloadAttr(pool, classes);
+    }
 
     public void endClass() {
-        sourceFileNameAttr = new CPXAttr(this,
-                AttrTag.ATT_SourceFile.parsekey(),
-                pool.FindCellAsciz(env.getSimpleInputFileName()));
-        pool.NumberizePool();
-        pool.CheckGlobals();
+        if (super_class == null) {
+            super_class = pool.findClassCell("java/lang/Object");
+        }
+        pool.itemizePool();
+        super_class = pool.specifyCell(super_class);
+        this_class  = pool.specifyCell(this_class);
+        pool.checkGlobals();
         numberBootstrapMethods();
+        pool.fixIndexesInPool();
+        itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);
         try {
-            me = pool.uncheckedGetCell(me.arg);
-            env.traceln("me=" + me);
-            ConstantPool.ConstValue_Cell me_value = (ConstantPool.ConstValue_Cell) me.ref;
-            ConstantPool.ConstCell ascicell = me_value.cell;
-            env.traceln("ascicell=" + ascicell);
-            ConstantPool.ConstValue_String me_str = (ConstantPool.ConstValue_String) ascicell.ref;
-            myClassName = me_str.value;
-            env.traceln("-------------------");
-            env.traceln("-- Constant Pool --");
-            env.traceln("-------------------");
+            ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) this_class.ref;
+            ConstantPool.ConstValue_UTF8 this_class_name = this_class_value.value.ref;
+            myClassName = this_class_name.value;
+            environment.traceln("this_class  = " + this_class);
+            environment.traceln("super_class = " + super_class);
+            environment.traceln("-- Constant Pool ---");
+            environment.traceln("--------------------");
             pool.printPool();
-            env.traceln("-------------------");
-            env.traceln(" ");
-            env.traceln(" ");
-            env.traceln("-------------------");
-            env.traceln("-- Inner Classes --");
-            env.traceln("-------------------");
+            environment.traceln("--------------------");
+            environment.traceln("-- Inner Classes ---");
+            environment.traceln("--------------------");
             printInnerClasses();
-
+            environment.traceln("--------------------");
         } catch (Throwable e) {
-            env.traceln("check name:" + e);
-            env.error("no.classname");
+            environment.traceln("check name:" + e);
+            environment.error("err.no.classname");
             e.printStackTrace();
         }
     }
 
+    public void endPackageInfo() {
+        this.this_class = pool.findClassCell(this.myClassName);
+        // super_class: class "java/lang/Object"
+        this.super_class = pool.findClassCell("java/lang/Object");
+        pool.itemizePool();
+        super_class = pool.specifyCell(super_class);
+        this_class  = pool.specifyCell(this_class);
+        pool.checkGlobals();
+    }
+
     public void endModule(ModuleAttr moduleAttr) {
         moduleAttribute = moduleAttr.build();
-        pool.NumberizePool();
-        pool.CheckGlobals();
-        myClassName = "module-info";
+        this.myClassName = "module-info";
+        this.this_class = pool.findClassCell(this.myClassName);
+        pool.itemizePool();
+        this_class  = pool.specifyCell(this_class);
+        pool.checkGlobals();
+        // a module is annotated
+        itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);
+    }
+
+    /**
+     * Scans all attribute values which only have cap Index != 0 when they are found
+     * sets value and verificationType from Constant Pool by cpIndex
+     *
+     * @param annotationList annotation attributes
+     */
+    private void itemizeAnnotationAttributes(DataVectorAttr<AnnotationData>... annotationList) {
+        for (DataVectorAttr<AnnotationData> annotations : annotationList) {
+            if (annotations != null) {
+                for (AnnotationData annotationData : annotations) {
+                    annotationData.visit(pool);
+                }
+            }
+        }
     }
 
     private void printInnerClasses() {
         if (innerClasses != null) {
             int i = 1;
             for (InnerClassData entry : innerClasses) {
-                env.trace(" InnerClass[" + i + "]: (" + Modifiers.toString(entry.access, CF_Context.CTX_INNERCLASS) + "]), ");
-                env.trace("Name:  " + entry.name.toString() + " ");
-                env.trace("IC_info:  " + entry.innerClass.toString() + " ");
-                env.trace("OC_info:  " + entry.outerClass.toString() + " ");
-                env.traceln(" ");
-                i += 1;
+                environment.trace(" InnerClass[" + i++ + "]: (" + EModifier.asNames(entry.access, INNER_CLASS) + "), ");
+                environment.trace("Name:  " + entry.name.toString() + " ");
+                environment.trace("InnerClass_info:  " + entry.innerClass.toString() + " ");
+                environment.traceln("OuterClass_info:  " + entry.outerClass.toString() + " ");
             }
         } else {
-            env.traceln("<< NO INNER CLASSES >>");
+            environment.traceln("<< NO INNER CLASSES >>");
         }
-
     }
 
     public void write(CheckedDataOutputStream out) throws IOException {
-
         // Write the header
         out.writeInt(JAVA_MAGIC);
         out.writeShort(cfv.minor_version());
@@ -384,14 +412,14 @@ class ClassData extends MemberData {
 
         pool.write(out);
         out.writeShort(access); // & MM_CLASS; // Q
-        out.writeShort(me.arg);
-        out.writeShort(father.arg);
+        out.writeShort(this_class.cpIndex);
+        out.writeShort(super_class.cpIndex);
 
         // Write the interface names
         if (interfaces != null) {
             out.writeShort(interfaces.size());
-            for (Argument intf : interfaces) {
-                out.writeShort(intf.arg);
+            for (Indexer intf : interfaces) {
+                out.writeShort(intf.cpIndex);
             }
         } else {
             out.writeShort(0);
@@ -424,83 +452,62 @@ class ClassData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        DataVector attrs = new DataVector();
-        if( moduleAttribute != null ) {
-            if (annotAttrVis != null)
-                attrs.add(annotAttrVis);
-            if (annotAttrInv != null)
-                attrs.add(annotAttrInv);
-            attrs.add(moduleAttribute);
+        if (moduleAttribute != null) {
+            return populateAttributesList(annotAttrVis, annotAttrInv, moduleAttribute);
         } else {
-            attrs.add(sourceFileNameAttr);
-            // JEP 359 since class file 58.65535
-            if( recordData != null ) {
-                attrs.add(recordData);
-            }
-            if (innerClasses != null)
-                attrs.add(innerClasses);
-            if (syntheticAttr != null)
-                attrs.add(syntheticAttr);
-            if (deprecatedAttr != null)
-                attrs.add(deprecatedAttr);
-            if (annotAttrVis != null)
-                attrs.add(annotAttrVis);
-            if (annotAttrInv != null)
-                attrs.add(annotAttrInv);
-            if (type_annotAttrVis != null)
-                attrs.add(type_annotAttrVis);
-            if (type_annotAttrInv != null)
-                attrs.add(type_annotAttrInv);
-            if (bootstrapMethodsAttr != null)
-                attrs.add(bootstrapMethodsAttr);
-            // since class version 55.0
-            if(nestHostAttributeExists())
-                attrs.add(nestHostAttr);
-            if(nestMembersAttributesExist())
-                attrs.add(nestMembersAttr);
-            // since class version 59.65535 (JEP 360)
-            if ( permittedSubclassesAttributesExist() )
-                attrs.add(permittedSubclassesAttr);
+            return populateAttributesList(sourceFileNameAttr,
+                    recordData,                                     // JEP 359 since class file 58.65535
+                    innerClasses, syntheticAttr, deprecatedAttr,
+                    annotAttrVis, annotAttrInv,
+                    type_annotAttrVis, type_annotAttrInv,
+                    bootstrapMethodsAttr,
+                    nestHostAttr, nestMembersAttr,                  // since class version 55.0
+                    permittedSubclassesAttr,                        // since class version 59.65535 (JEP 360)
+                    preloadAttr                                     // Valhalla
+            );
         }
-        return attrs;
     }
 
-    static char fileSeparator; //=System.getProperty("file.separator");
+    private <T extends DataWriter> DataVector populateAttributesList(T... attributes) {
+        DataVector attrVector = new DataVector();
+        for (T attribute : attributes) {
+            if (attribute != null) {
+                attrVector.add(attribute);
+            }
+        }
+        return attrVector;
+    }
 
     /**
      * Writes to the directory passed with -d option
      */
-    public void write(File destdir) throws IOException {
+    public void write(File destDir) throws IOException {
+        final String fileSeparator = FileSystems.getDefault().getSeparator();
         File outfile;
-        if (destdir == null) {
-            int startofname = myClassName.lastIndexOf("/");
-            if (startofname != -1) {
-                myClassName = myClassName.substring(startofname + 1);
+        if (destDir == null) {
+            int startOfName = myClassName.lastIndexOf(fileSeparator);
+            if (startOfName != -1) {
+                myClassName = myClassName.substring(startOfName + 1);
             }
             outfile = new File(myClassName + fileExtension);
         } else {
-            env.traceln("writing -d " + destdir.getPath());
-            if (fileSeparator == 0) {
-                fileSeparator = System.getProperty("file.separator").charAt(0);
+            environment.traceln("writing -d " + destDir.getPath());
+            if (!fileSeparator.equals("/")) {
+                myClassName = myClassName.replace("/", fileSeparator);
             }
-            if (fileSeparator != '/') {
-                myClassName = myClassName.replace('/', fileSeparator);
-            }
-            outfile = new File(destdir, myClassName + fileExtension);
-            File outdir = new File(outfile.getParent());
-            if (!outdir.exists() && !outdir.mkdirs()) {
-                env.error("cannot.write", outdir.getPath());
+            outfile = new File(destDir, myClassName + fileExtension);
+            File outDir = new File(outfile.getParent());
+            if (!outDir.exists() && !outDir.mkdirs()) {
+                environment.error("err.cannot.write", outDir.getPath());
                 return;
             }
         }
-
-        DataOutputStream dos = new DataOutputStream(
-                new BufferedOutputStream(new FileOutputStream(outfile)));
-        cdos.setDataOutputStream(dos);
-        try {
+        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outfile)))) {
+            cdos.setDataOutputStream(dos);
             write(cdos);
-        } finally {
-            dos.close();
+        } catch (Exception ex) {
+            environment.error("err.cannot.write", ex.getMessage());
+            throw ex;
         }
     }  // end write()
 
@@ -513,11 +520,17 @@ class ClassData extends MemberData {
         return nestHostAttr != null;
     }
 
-    public boolean nestMembersAttributesExist() { return nestMembersAttr != null;  }
+    public boolean nestMembersAttributesExist() {
+        return nestMembersAttr != null;
+    }
 
-    public boolean permittedSubclassesAttributesExist() { return permittedSubclassesAttr != null;  }
+    public boolean recordAttributeExists() {
+        return recordData != null;
+    }
 
-    public boolean recordAttributeExists() { return recordData != null;  }
+    public boolean preloadAttributeExists() {
+        return preloadAttr != null;
+    }
 
     /**
      * This is a wrapper for DataOutputStream, used for debugging purposes. it allows
@@ -525,9 +538,9 @@ class ClassData extends MemberData {
      */
     static private class CDOutputStream implements CheckedDataOutputStream {
 
-        private int bytelimit;
-        private DataOutputStream dos;
         public boolean enabled = false;
+        private int byteLimit;
+        private DataOutputStream dos;
 
         public CDOutputStream() {
             dos = null;
@@ -545,8 +558,8 @@ class ClassData extends MemberData {
             this.dos = dos;
         }
 
-        public void setLimit(int lim) {
-            bytelimit = lim;
+        public void setLimit(int limit) {
+            byteLimit = limit;
         }
 
         public void enable() {
@@ -554,7 +567,7 @@ class ClassData extends MemberData {
         }
 
         private synchronized void check(String loc) throws IOException {
-            if (enabled && dos.size() >= bytelimit) {
+            if (enabled && dos.size() >= byteLimit) {
                 throw new IOException(loc);
             }
         }
@@ -638,4 +651,3 @@ class ClassData extends MemberData {
         }
     }
 }// end class ClassData
-
