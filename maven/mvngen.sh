@@ -19,9 +19,15 @@ readonly SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
 readonly PROJECT_DIR="$( readlink -f "$SCRIPT_DIR/.." )"
 
 PRODUCT_INFO="$PROJECT_DIR/build/productinfo.properties"
+BUILD_INFO="$PROJECT_DIR/build/build.properties"
 
 function readProperty() {
-  cat "$PRODUCT_INFO" | grep "$1\s\+=" | sed "s/.*=\s\+//"
+  if [ "x${2}" = "x" ] ; then
+    local file="$PRODUCT_INFO"
+  else
+    local file="${2}"
+  fi
+  cat "$file" | grep "$1\s*=" | sed "s/.*=\s*//"
 }
 
 PRODUCT_NAME=$(readProperty "PRODUCT_NAME")
@@ -29,9 +35,13 @@ PRODUCT_VERSION=$(readProperty "PRODUCT_VERSION")
 PRODUCT_MILESTONE=$(readProperty "PRODUCT_MILESTONE")
 PRODUCT_BUILDNUMBER=$(readProperty "PRODUCT_BUILDNUMBER")
 PRODUCT_NAME_LONG=$(readProperty "PRODUCT_NAME_LONG")
+TARGET=$(readProperty "javac.target.version" "$BUILD_INFO")
+SOURCE=$(readProperty "javac.source.version" "$BUILD_INFO")
 
 echo "Generating $SCRIPT_DIR/pom.xml for $PRODUCT_NAME $PRODUCT_VERSION $PRODUCT_MILESTONE $PRODUCT_BUILDNUMBER ($PRODUCT_NAME_LONG)"
 cat "$SCRIPT_DIR/pom.xml.in" | \
+sed "s/\[TARGET\]/$TARGET/g" | \
+sed "s/\[SOURCE\]/$SOURCE/g" | \
 sed "s/\[PRODUCT_NAME\]/$PRODUCT_NAME/g" | \
 sed "s/\[PRODUCT_VERSION\]/$PRODUCT_VERSION/g" | \
 sed "s/\[PRODUCT_MILESTONE\]/$PRODUCT_MILESTONE/g" | \
