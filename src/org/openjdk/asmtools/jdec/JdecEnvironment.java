@@ -28,6 +28,8 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.PrintWriter;
 
+import static java.lang.String.format;
+
 public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     protected boolean printDetailsFlag;
@@ -56,17 +58,22 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     @Override
     public void println(String format, Object... args) {
-        super.println(format, args);
+        getToolOutput().println(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     @Override
     public void println() {
-        super.println();
+        getToolOutput().println();
     }
 
     @Override
     public void print(String format, Object... args) {
-        super.print(format, args);
+        getToolOutput().print(( args == null || args.length == 0) ? format : format(format, args));
+    }
+
+    @Override
+    public void print(char ch) {
+        getToolOutput().print(ch);
     }
 
 
