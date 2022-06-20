@@ -51,6 +51,7 @@ echo "Done"
 
 echo "Creating symlinks to symulate maven structure"
 FILES_LINKS="src/main/java/org=../../../../src/org/
+src/test/java/org=../../../../test/org/
 src/main/resources/org/openjdk/asmtools/i18n.properties=../../../../../../../src/org/openjdk/asmtools/i18n.properties
 src/main/resources/org/openjdk/asmtools/jasm/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jasm/i18n.properties
 src/main/resources/org/openjdk/asmtools/jcdec/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jcdec/i18n.properties
