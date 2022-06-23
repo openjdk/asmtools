@@ -153,7 +153,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
                 }
             }
         }
-        if (printTotals && ( nWarnings !=0 || nErrors != 0)) {
+        if (printTotals && (nWarnings != 0 || nErrors != 0)) {
             if (nWarnings != 0)
                 getOutLog().print(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : ""));
             if (nErrors != 0)
@@ -168,10 +168,10 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     private void printAffectedSourceLine(PrintWriter output, Pair<Integer, Integer> filePosition) {
         String line = fileContent.get(filePosition.first - 1);
         long countOfExtraSpaces = line.chars().filter(ch -> ch == '\t').count();
-        long linePosition =  (filePosition.second + countOfExtraSpaces*TAB_REPLACEMENT.length()) - countOfExtraSpaces;
+        long linePosition = (filePosition.second + countOfExtraSpaces * TAB_REPLACEMENT.length()) - countOfExtraSpaces;
         line = line.replace("\t", TAB_REPLACEMENT);
         output.println(line);
-        output.println(repeat(" ",  (int)linePosition) + "^");
+        output.println(repeat(" ", (int) linePosition) + "^");
     }
 
     /**

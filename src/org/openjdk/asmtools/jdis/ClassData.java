@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
@@ -184,10 +185,19 @@ public class ClassData extends MemberData<ClassData> {
         // Read the Attributes
         boolean handled = true;
         switch (attributeTag) {
+            case ATT_Signature -> {
+                if (signature != null) {
+                    environment.warning("warn.one.attribute.required", "Signature", "ClassFile");
+                }
+                signature = new SignatureData(this).read(in, attributeLength);
+            }
             case ATT_SourceFile -> {
                 // Read SourceFile Attr
                 if (attributeLength != 2) {
-                    throw new FormatError("err.invalid.attribute.length", "ATT_SourceFile", attributeLength);
+                    throw new FormatError("err.invalid.attribute.length", "SourceFile_attribute", attributeLength);
+                }
+                if (source_cpx != 0) {
+                    environment.warning("warn.one.attribute.required", "SourceFile", "ClassFile");
                 }
                 source_cpx = in.readUnsignedShort();
             }
@@ -195,7 +205,7 @@ public class ClassData extends MemberData<ClassData> {
                 // Read InnerClasses Attr
                 int num1 = in.readUnsignedShort();
                 if (2 + num1 * 8 != attributeLength) {
-                    throw new FormatError("err.invalid.attribute.length", "ATT_InnerClasses", attributeLength);
+                    throw new FormatError("err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
                 }
                 innerClasses = new ArrayList<>(num1);
                 for (int j = 0; j < num1; j++) {
@@ -394,28 +404,24 @@ public class ClassData extends MemberData<ClassData> {
             // Skip printing "super modifier"
             access &= ~ACC_SUPER.getFlag();
 
+            String name = pool.inRange(this_cpx) ? pool.getShortClassName(this_cpx, this.packageName) :  "?? invalid index";
+            Pair<String, String> signInfo = ( signature != null) ?
+                    signature.getPrintInfo((i)->pool.inRange(i)) :
+                    new Pair<>("", "");
             // An interface is distinguished by the ACC_INTERFACE flag being set.
             if (EModifier.isInterface(access)) {       // interface compilation unit
                 print(EModifier.asKeywords(access & ~ACC_ABSTRACT.getFlag(), CLASS));
-                if (this_cpx < pool.size() && this_cpx > 0) {
-                    print(printCPIndex ?
-                            format("interface #%d /* %s */", this_cpx, pool.getShortClassName(this_cpx, this.packageName)) :
-                            format("interface %s", pool.getShortClassName(this_cpx, this.packageName))
-                    );
-                } else {
-                    print(printCPIndex ? format("interface #%d /* ?? invalid index */", this_cpx) : "interface ??");
-                }
+                print(printCPIndex ?
+                        format("interface #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second) :
+                        format("interface %s", name, signInfo.second)
+                );
             } else {                                    // class compilation unit
                 // add synthetic, deprecated if necessary
                 print(EModifier.asKeywords(access, CLASS) + getPseudoFlagsAsString());
-                if (this_cpx < pool.size() && this_cpx > 0) {
-                    print(printCPIndex ?
-                            format("class #%d /* %s */", this_cpx, pool.getShortClassName(this_cpx, this.packageName)) :
-                            format("class %s", pool.getShortClassName(this_cpx, this.packageName))
-                    );
-                } else {
-                    print(printCPIndex ? format("class #%d /* ?? invalid index */", this_cpx) : "class ??");
-                }
+                print(printCPIndex ?
+                        format("class #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second) :
+                        format("class %s%s", name, signInfo.second)
+                );
                 // if base class is not j.l.Object prints the "extends" statement
                 if (this_cpx < pool.size() && this_cpx > 0) {
                     if (!pool.getClassName(super_cpx).equals("java/lang/Object")) {
@@ -538,7 +544,7 @@ public class ClassData extends MemberData<ClassData> {
                 }
             }
             println(format("} // end Class %s%s",
-                    className,
+                    name,
                     sourceName != null ? " compiled from \"" + sourceName + "\"" : ""));
         }
         List<IOException> issues = pool.getIssues();

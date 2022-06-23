@@ -362,38 +362,39 @@ public class JasmTokens {
         VERSION             (167, "VERSION",    "version",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT,  TokenType.CLASS_NAME), KeywordType.KEYWORD),
         MODULE              (168, "MODULE",     "module",      EnumSet.of(TokenType.DECLARATION, TokenType.CLASS_NAME), KeywordType.KEYWORD),
         ANNOTATION          (169, "ANNOTATION", "@",           EnumSet.of(TokenType.MISC)),
-        PARAM_NAME          (173, "PARAM_NAME", "#",           EnumSet.of(TokenType.MISC)),
+        PARAM_NAME          (170, "PARAM_NAME", "#",           EnumSet.of(TokenType.MISC)),
 
-        VARARGS             (170, "VARARGS",    "varargs",  EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
-        BRIDGE              (171, "BRIDGE",     "bridge",   EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        VARARGS             (171, "VARARGS",    "varargs",  EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        BRIDGE              (172, "BRIDGE",     "bridge",   EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
 
         // Declaration keywords
-        BOOTSTRAPMETHOD     (172, "BOOTSTRAPMETHOD", "BootstrapMethod", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
-        NESTHOST            (173, "NESTHOST",       "NestHost",         EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
-        NESTMEMBERS         (174, "NESTMEMBERS",    "NestMembers",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        BOOTSTRAPMETHOD     (173, "BOOTSTRAPMETHOD", "BootstrapMethod", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        NESTHOST            (174, "NESTHOST",       "NestHost",         EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        SIGNATURE           (175, "SIGNATURE",      "Signature",        EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        NESTMEMBERS         (176, "NESTMEMBERS",    "NestMembers",      EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
         //
-        RECORD              (175, "RECORD",    "Record",                EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
-        COMPONENT           (176, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        RECORD              (177, "RECORD",    "Record",                EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        COMPONENT           (178, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
         //
-        PERMITTEDSUBCLASSES (177, "PERMITTEDSUBCLASSES", "PermittedSubclasses", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        PERMITTEDSUBCLASSES (179, "PERMITTEDSUBCLASSES", "PermittedSubclasses", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
 
         //Module statements
         REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        EXPORTS             (182, "EXPORTS",  "exports",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        TO                  (183, "TO",       "to",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        USES                (184, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        PROVIDES            (185, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        WITH                (186, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        OPENS               (187, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        EXPORTS             (181, "EXPORTS",  "exports",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        TO                  (182, "TO",       "to",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        USES                (183, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        PROVIDES            (184, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        WITH                (185, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        OPENS               (186, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
 
         // Table 4.7.20.2-1 type_path_kind
-        ARRAY_TYPEPATH      (188, TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),  TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),
+        ARRAY_TYPEPATH      (190, TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),  TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        INNER_TYPE_TYPEPATH    (189, TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),    TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),
+        INNER_TYPE_TYPEPATH    (191, TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),    TypeAnnotationTypes.EPathKind.INNER_TYPE.parseKey(),
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        WILDCARD_TYPEPATH      (190, TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),    TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),
+        WILDCARD_TYPEPATH      (192, TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),    TypeAnnotationTypes.EPathKind.WILDCARD.parseKey(),
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        TYPE_ARGUMENT_TYPEPATH (191, TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),    TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),
+        TYPE_ARGUMENT_TYPEPATH (193, TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),    TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         // Valhalla
         VALUE                   (200, "VALUE",     "value",     EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME, TokenType.JASM_IDENT), KeywordType.KEYWORD),

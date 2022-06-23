@@ -98,7 +98,7 @@ public class RecordData extends  MemberData<ClassData> {
             boolean handled = true;
             if (attributeTag == EAttribute.ATT_Signature) {
                 if (signature != null) {
-                    environment.warning("warn.one.attribute.required", "descriptor_index in components.record_component_info");
+                    environment.warning("warn.one.attribute.required", "Signature", "record_component_info");
                 }
                 signature = new SignatureData(data).read(in, attributeLength);
             } else {

@@ -99,7 +99,7 @@ class Parser extends ParseBase {
         this.cpParser = new ParserCP(this);
         this.annotParser = new ParserAnnotation(this);
         this.instrParser = new ParserInstr(this, cpParser);
-        this.currentCFV =  copyOf(cfVersion);
+        this.currentCFV = copyOf(cfVersion);
     }
 
     void setDebugFlags(boolean debugScanner, boolean debugMembers,
@@ -314,7 +314,8 @@ class Parser extends ParseBase {
             // 1 (REF_getField), 2 (REF_getStatic), 3 (REF_putField)  or 4 (REF_putStatic),
             // then the constant_pool entry at that index must be a CONSTANT_Fieldref_info structure (4.4.2)
             // representing a field for which a method handle is to be created. jvms-4.4.8-200-C-A
-            case REF_GETFIELD, REF_GETSTATIC, REF_PUTFIELD, REF_PUTSTATIC -> refCell = pool.findCell(cpParser.parseConstValue(ConstType.CONSTANT_FIELDREF));
+            case REF_GETFIELD, REF_GETSTATIC, REF_PUTFIELD, REF_PUTSTATIC ->
+                    refCell = pool.findCell(cpParser.parseConstValue(ConstType.CONSTANT_FIELDREF));
 
             //  If the value of the reference_kind item is
             //  5 (REF_invokeVirtual) or 8 (REF_newInvokeSpecial),
@@ -357,7 +358,7 @@ class Parser extends ParseBase {
                 checkReferenceIndex(getPosition(), ConstType.CONSTANT_INTERFACEMETHODREF, null);
             }
             default ->
-                    // should not reach
+                // should not reach
                     throw new SyntaxError();
         }
         return refCell;
@@ -681,11 +682,17 @@ class Parser extends ParseBase {
      * Parse a field.
      */
     private void parseField(int mod) throws SyntaxError {
+        // Parses in the form:
+        // FIELD (, FIELD)*;
+        // where
+        // FIELD = NAME:DESCRIPTOR(:SIGNATURE)? CONST_VALUE?
+        // NAME = (CPINDEX | IDENT)
+        // DESCRIPTOR = (CPINDEX | STRING)
+        // SIGNATURE  = (CPINDEX | STRING)
+        // CONST_VALUE = ASSIGN CONSTREF
         traceMethodInfoLn("Begin");
-
         // check access modifiers:
         Checker.checkFieldModifiers(classData, mod, scanner.prevPos);
-
         while (true) {
             ConstCell nameCell = parseName();
             scanner.expect(COLON);
@@ -824,6 +831,15 @@ class Parser extends ParseBase {
         if (paramCount > 255) {
             environment.warning(scanner.pos, "warn.msig.more255", Integer.toString(paramCount));
         }
+
+
+        // Parse the optional attribute: signature
+        ConstCell signatureCell = null;
+        if (scanner.token == COLON) {
+            scanner.scan();
+            signatureCell = parseName();
+        }
+
         // Parse throws clause
         ArrayList<ConstCell<?>> exc_table = null;
         if (scanner.token == Token.THROWS) {
@@ -850,6 +866,10 @@ class Parser extends ParseBase {
         }
 
         MethodData curMethod = classData.StartMethod(mod, nameCell, typeCell, exc_table);
+        if (signatureCell != null) {
+            curMethod.setSignatureAttr(signatureCell);
+        }
+
         Indexer max_stack = null, max_locals = null;
 
         if (scanner.token == Token.STACK) {
@@ -933,9 +953,23 @@ class Parser extends ParseBase {
     }
 
     /**
+     * Parse the class Signature entry.
+     */
+    private void parseClassSignature() throws SyntaxError {
+        // Parses in the form:
+        // SIGNATURE;
+        // where
+        // SIGNATURE = (CPINDEX | STRING)
+        traceMethodInfoLn("Begin");
+        ConstCell signatureCell = parseName();
+        traceMethodInfoLn("Signature: " + signatureCell);
+        classData.setSignatureAttr(signatureCell);
+    }
+
+    /**
      * Parse a NestHost entry
      */
-    private void parseNestHost() throws SyntaxError, IOException {
+    private void parseNestHost() throws SyntaxError {
         // Parses in the form:
         // NESTHOST IDENT;
         traceMethodInfoLn("Begin");
@@ -1063,7 +1097,7 @@ class Parser extends ParseBase {
             nameCell = pool.getCell(0);  // no NameIndex
             parseInnerClass_s2(mod, nameCell, innerClass, outerClass);
         } else {
-            if ( scanner.token == Token.IDENT && scanner.checkTokenIdent() ) {
+            if (scanner.token == Token.IDENT && scanner.checkTokenIdent()) {
                 // Got a Class Name
                 nameCell = parseName();
                 parseInnerClass_s1(mod, nameCell, innerClass, outerClass);
@@ -1083,7 +1117,7 @@ class Parser extends ParseBase {
                     nameCell = pool.getCell(0);  // no NameIndex
                     parseInnerClass_s2(mod, nameCell, innerClass, outerClass);
                 }
-            } else if( scanner.token.isPossibleJasmIdentifier()) {
+            } else if (scanner.token.isPossibleJasmIdentifier()) {
                 // The name InnerClass of the inner class is allowed.
                 nameCell = pool.findUTF8Cell(scanner.token.parseKey());
                 scanner.scan();
@@ -1117,7 +1151,7 @@ class Parser extends ParseBase {
                 scanner.scan();
                 // innerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS); ignore keywords as much as possible:
                 // private static InnerClass Module = class NormalModule$Module of class NormalModule;
-                innerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS,null, true);
+                innerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
             }
 
             // See if declaration is terminated
@@ -1147,7 +1181,7 @@ class Parser extends ParseBase {
                 scanner.scan();
                 // outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);; ignore keywords as much as possible:
                 // private static InnerClass NormalModule = class Module$NormalModule of class Module;
-                outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS,null, true);
+                outerClass = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
 
             }
             if (scanner.token == Token.CPINDEX) {
@@ -1348,6 +1382,10 @@ class Parser extends ParseBase {
         } else if (scanner.token == SEMICOLON) {
             // drop the semicolon following a name
             scanner.scan();
+        } else if (scanner.token == COLON) {
+            // parse optional attribute Signature
+            scanner.scan();
+            parseClassSignature();
         }
 
         // Parse extends clause
@@ -1356,13 +1394,13 @@ class Parser extends ParseBase {
             scanner.scan();
             // sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS); ignore keywords as much as possible:
             // class Module$NormalModule extends Module version 63:0
-            sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS,null, true);
+            sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
             while (scanner.token == COMMA) {
                 scanner.scan();
                 environment.warning(posa, "warn.multiple.inherit");
                 // sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS); ignore keywords as much as possible:
                 // class Module$NormalModule extends Module version 63:0
-                sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS,null, true);
+                sup = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
             }
         }
 
@@ -1373,7 +1411,7 @@ class Parser extends ParseBase {
                 scanner.scan();
                 // Indexer intf = cpParser.parseConstRef(ConstType.CONSTANT_CLASS); ignore keywords as much as possible:
                 // public interface AddressField implements Field version 63:0
-                Indexer intf = cpParser.parseConstRef(ConstType.CONSTANT_CLASS,null, true);
+                Indexer intf = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
                 if (impl.contains(intf)) {
                     environment.warning(posa, "warn.intf.repeated", intf);
                 } else {
@@ -1381,6 +1419,8 @@ class Parser extends ParseBase {
                 }
             } while (scanner.token == COMMA);
         }
+
+
         // parse version
         if (scanner.token == Token.LBRACE) {
             if (!classData.cfv.isSet() && classData.cfv.isSetByParameter()) {
@@ -1388,7 +1428,7 @@ class Parser extends ParseBase {
                 environment.warning(scanner.pos, "warn.default.cfv", classData.cfv.asString());
             }
         } else {
-            if (classData.cfv.isSet()  && classData.cfv.isSetByParameter() && classData.cfv.isFrozen()) {
+            if (classData.cfv.isSet() && classData.cfv.isSetByParameter() && classData.cfv.isFrozen()) {
                 CFVersion version = CFVersion.copyOf(classData.cfv).setFrozen(true);
                 classData.cfv.setFrozen(false);
                 parseVersion();
@@ -1407,7 +1447,7 @@ class Parser extends ParseBase {
         while ((scanner.token != Token.EOF) && (scanner.token != Token.RBRACE)) {
             switch (scanner.token) {
                 case SEMICOLON ->
-                        // Empty fields are allowed
+                    // Empty fields are allowed
                         scanner.scan();
                 case CONST -> {
                     scanner.scan();
@@ -1565,7 +1605,7 @@ class Parser extends ParseBase {
                         "err.provides.expected");
                 case USES -> scanStatement(moduleAttribute.uses, "err.uses.expected");
                 case SEMICOLON ->
-                        // Empty fields are allowed
+                    // Empty fields are allowed
                         scanner.scan();
                 default -> {
                     environment.error(scanner.pos, "err.module.statement.expected");
@@ -1811,9 +1851,18 @@ class Parser extends ParseBase {
                     scanner.scan();
                     parseCPXBootstrapMethod();
                 }
+                case SIGNATURE -> {
+                    if (classData.signatureAttr != null) {
+                        environment.error(scanner.pos, "err.extra.attribute", SIGNATURE.parseKey(), "ClassData");
+                        throw new SyntaxError();
+                    }
+                    scanner.scan();
+                    parseClassSignature();
+                    scanner.expect(SEMICOLON);
+                }
                 case NESTHOST -> {
                     if (classData.nestHostAttributeExists()) {
-                        environment.error(scanner.pos, "err.extra.nesthost.attribute");
+                        environment.error(scanner.pos, "err.extra.attribute", NESTHOST.parseKey(), "ClassData");
                         throw new SyntaxError();
                     } else if (classData.nestMembersAttributesExist()) {
                         environment.error(scanner.pos, "err.both.nesthost.nestmembers.found");
@@ -1824,7 +1873,7 @@ class Parser extends ParseBase {
                 }
                 case NESTMEMBERS -> {
                     if (classData.nestMembersAttributesExist()) {
-                        environment.error(scanner.pos, "err.extra.nestmembers.attribute");
+                        environment.error(scanner.pos, "err.extra.attribute", NESTMEMBERS.parseKey(), "ClassData");
                         throw new SyntaxError();
                     } else if (classData.nestHostAttributeExists()) {
                         environment.error(scanner.pos, "err.both.nesthost.nestmembers.found");
@@ -1835,7 +1884,7 @@ class Parser extends ParseBase {
                 }
                 case PERMITTEDSUBCLASSES -> {         // JEP 360
                     if (classData.nestMembersAttributesExist()) {
-                        environment.error(scanner.pos, "err.extra.permittedsubclasses.attribute");
+                        environment.error(scanner.pos, "err.extra.attribute", PERMITTEDSUBCLASSES.parseKey(), "ClassData");
                         throw new SyntaxError();
                     }
                     scanner.scan();
@@ -1843,7 +1892,7 @@ class Parser extends ParseBase {
                 }
                 case RECORD -> {                    // JEP 359
                     if (classData.recordAttributeExists()) {
-                        environment.error(scanner.pos, "err.extra.record.attribute");
+                        environment.error(scanner.pos, "err.extra.attribute", RECORD.parseKey(), "ClassData");
                         throw new SyntaxError();
                     }
                     scanner.scan();
@@ -1851,7 +1900,7 @@ class Parser extends ParseBase {
                 }
                 case PRELOAD -> {
                     if (classData.preloadAttributeExists()) {
-                        environment.error(scanner.pos, "err.extra.preload.attribute");
+                        environment.error(scanner.pos, "err.extra.attribute", PRELOAD.parseKey(), "ClassData");
                         throw new SyntaxError();
                     }
                     scanner.scan();
@@ -2123,7 +2172,7 @@ class Parser extends ParseBase {
                 } catch (SyntaxError e) {
                     // KTL
                     environment.traceln("^^^^^^^ Syntax Error ^^^^^^^^^^^^");
-                    if (scanner.debugFlag)
+                    if (scanner.environment.getVerboseFlag())
                         e.printStackTrace();
                     if (!e.isFatal()) {
                         recoverFile();

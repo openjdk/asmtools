@@ -457,7 +457,7 @@ class ClassData extends MemberData<JasmEnvironment> {
         } else {
             return populateAttributesList(sourceFileNameAttr,
                     recordData,                                     // JEP 359 since class file 58.65535
-                    innerClasses, syntheticAttr, deprecatedAttr,
+                    innerClasses, syntheticAttr, deprecatedAttr, signatureAttr,
                     annotAttrVis, annotAttrInv,
                     type_annotAttrVis, type_annotAttrInv,
                     bootstrapMethodsAttr,

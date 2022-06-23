@@ -191,7 +191,7 @@ class MethodData extends MemberData<JasmEnvironment> {
 
     @Override
     protected DataVector getAttrVector() {
-        DataVector dv = getDataVector( exceptions, syntheticAttr, deprecatedAttr, methodParameters, code, defaultAnnot);
+        DataVector dv = getDataVector( exceptions, syntheticAttr, deprecatedAttr, signatureAttr, methodParameters, code, defaultAnnot);
         if (pannotAttrVis != null) {
             dv.add(pannotAttrVis);
         }

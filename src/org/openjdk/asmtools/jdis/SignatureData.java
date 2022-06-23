@@ -23,11 +23,13 @@
 package org.openjdk.asmtools.jdis;
 
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.common.structure.EAttribute;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 
@@ -62,6 +64,16 @@ public class SignatureData extends MemberData<ClassData> {
     }
 
     public String asString() {
-        return pool.StringValue(getIndex());
+        return pool.StringValue(index);
+    }
+
+    /**
+     * @param checkRange function to check that index belongs CP
+     * @return string presentation of index and signature used to print
+     * ClassFile, field_info, method_info, or record_component_info
+     */
+    public Pair<String,String> getPrintInfo(Function<Integer, Boolean> checkRange) {
+        return new Pair<>( format(":#%d",index),
+                checkRange.apply(index) ?  format(":%s",pool.StringValue(index)) : ":?? invalid index");
     }
 }

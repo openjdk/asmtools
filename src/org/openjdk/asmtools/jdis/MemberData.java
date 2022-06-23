@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.jasm.JasmTokens;
@@ -168,25 +169,21 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
     }
 
     protected void printVar(StringBuilder prefix, String postfix, int name_cpx, int type_cpx) {
+
+        Pair<String, String> signInfo = ( signature != null) ?
+                signature.getPrintInfo((i)->pool.inRange(i)) :
+                new Pair<>("", "");
+
         if(printCPIndex) {
-            prefix.append('#').append(name_cpx).append(":#").append(type_cpx);
-            if( signature != null ) {
-                prefix.append(":#").append(signature.getIndex());
-            }
+            prefix.append('#').append(name_cpx).append(":#").append(type_cpx).append(signInfo.first);
             if(postfix != null) {
                 prefix.append(postfix);
             }
             prefix.append(';');
             printPadRight(prefix.toString(), getCommentOffset()-1).print(" // ");
-            print( data.pool.getName(name_cpx) + ":" + data.pool.getName(type_cpx));
-            if(signature != null) {
-                print( ":".concat(signature.asString()));
-            }
+            print( data.pool.getName(name_cpx) + ":" + data.pool.getName(type_cpx) + signInfo.second);
         } else {
-            prefix.append(data.pool.getName(name_cpx)).append(':').append(data.pool.getName(type_cpx));
-            if( signature != null ) {
-                prefix.append(':').append(signature.asString());
-            }
+            prefix.append(data.pool.getName(name_cpx)).append(':').append(data.pool.getName(type_cpx)).append(signInfo.second);
             if( postfix != null ) {
                 prefix.append(postfix);
             }

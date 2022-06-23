@@ -53,23 +53,20 @@ public class FieldData extends MemberData<ClassData> {
         // Read the Attributes
         boolean handled = true;
         switch (attributeTag) {
-            case ATT_Signature:
+            case ATT_Signature -> {
                 if (signature != null) {
-                    environment.warning("Record attribute:  more than one attribute Signature are in component.attribute_info_attributes[attribute_count]");
-                    environment.traceln("Last one will be used.");
+                    environment.warning("warn.one.attribute.required", "Signature", "field_info");
                 }
                 signature = new SignatureData(data).read(in, attributeLength);
-                break;
-            case ATT_ConstantValue:
+            }
+            case ATT_ConstantValue -> {
                 if (attributeLength != 2) {
                     throw new FormatError("err.invalid.attribute.length",
                             EAttribute.ATT_ConstantValue.printValue(), attributeLength);
                 }
                 value_cpx = in.readUnsignedShort();
-                break;
-            default:
-                handled = false;
-                break;
+            }
+            default -> handled = false;
         }
         return handled;
     }
@@ -91,7 +88,6 @@ public class FieldData extends MemberData<ClassData> {
                 type_cpx, data.pool.getString(type_cpx, index -> "#" + index + "?"),
                 signature != null ? signature : "");
     }
-
 
     /**
      * Prints the field data to the current output stream. called from ClassData.

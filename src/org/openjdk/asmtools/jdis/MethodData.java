@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.structure.ClassFileContext;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
@@ -86,6 +87,12 @@ public class MethodData extends MemberData<ClassData> {
             case ATT_Code -> {
                 code = new CodeData(this);
                 code.read(in, attributeLength);
+            }
+            case ATT_Signature -> {
+                if (signature != null) {
+                    environment.warning("warn.one.attribute.required", "Signature", "method_info");
+                }
+                signature = new SignatureData(data).read(in, attributeLength);
             }
             case ATT_Exceptions -> readExceptions(in);
             case ATT_MethodParameters -> readMethodParameters(in);
@@ -227,7 +234,7 @@ public class MethodData extends MemberData<ClassData> {
                 } else {
                     firstTime = false;
                 }
-                annot.setElementState(PARAMETER_ANNOTATION).setOffset(offset+getIndentSize()).print();
+                annot.setElementState(PARAMETER_ANNOTATION).setOffset(offset + getIndentSize()).print();
             }
         }
         return firstTime;
@@ -265,21 +272,25 @@ public class MethodData extends MemberData<ClassData> {
         methSignature = methSignature.concat(getPseudoFlagsAsString());
         methSignature = methSignature.concat(Token.METHODREF.parseKey() + " ");
 
+        Pair<String, String> signInfo = ( signature != null) ?
+                signature.getPrintInfo((i)->pool.inRange(i)) :
+                new Pair<>("", "");
+
         boolean extraMethodInfo = code != null || exc_table != null || defaultAnnotation != null;
         int newLineIdent;
         if (printCPIndex) {
             // print the CPX method descriptor
-            methSignature = methSignature.concat("#" + name_cpx + ":#" + sig_cpx + (extraMethodInfo ? "" : ";"));
+            methSignature = methSignature.concat("#" + name_cpx + ":#" + sig_cpx + signInfo.first + (extraMethodInfo ? "" : ";"));
             printIndent(PadRight(methSignature, getCommentOffset() - 1));
             String comment = (defaultAnnotation != null ? " /* " : " // ").
-                    concat(String.format("0x%04X ", access)).
-                    concat(data.pool.getName(name_cpx) + ":" + data.pool.getName(sig_cpx)).
+//                    concat(String.format("0x%04X ", access)).
+                    concat(data.pool.getName(name_cpx) + ":" + data.pool.getName(sig_cpx) + signInfo.second).
                     concat(defaultAnnotation != null ? " */ " : " ");
             newLineIdent = getCommentOffset() + comment.length() - 1;
             print(comment);
         } else {
             methSignature = methSignature.concat(data.pool.getName(name_cpx) + ":").
-                    concat(data.pool.getName(sig_cpx) + (extraMethodInfo ? " " : ";"));
+                    concat(data.pool.getName(sig_cpx) + signInfo.second + (extraMethodInfo ? " " : ";"));
             printIndent(methSignature);
             newLineIdent = methSignature.length();
         }

@@ -33,5 +33,4 @@ public record Range<T extends Comparable<T>>(T from, T to) {
     public boolean in(T value) {
         return (this.from.compareTo(value) <= 0) && (this.to.compareTo(value) >= 0);
     }
-
 }

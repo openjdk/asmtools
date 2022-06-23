@@ -81,53 +81,45 @@ public final class ModuleContent extends Indenter {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        requires.stream()
-                .sorted()
-                .forEach(d ->
-                        sb.append(IndentPadRight("requires", MODULE_DIRECTIVE_PADDING)).
-                                append(d).
-                                append(format(";%s%n", d.getModuleVersion() == null ? "" : " // @" + d.getModuleVersion())));
+        requires.stream().forEach(
+                d -> sb.append(IndentPadRight("requires", MODULE_DIRECTIVE_PADDING)).
+                        append(d).
+                        append(format(";%s%n", d.getModuleVersion() == null ? "" : " // @" + d.getModuleVersion())));
         //
         exports.entrySet().stream()
                 .filter(e -> e.getValue().isEmpty())
-                .sorted(Map.Entry.comparingByKey())
                 .map(e -> IndentPadRight("exports", MODULE_DIRECTIVE_PADDING).concat(format("%s;%n", e.getKey().toString())))
                 .forEach(sb::append);
         exports.entrySet().stream()
                 .filter(e -> !e.getValue().isEmpty())
-                .sorted(Map.Entry.comparingByKey())
                 .map(e -> IndentPadRight("exports", MODULE_DIRECTIVE_PADDING).
                         concat(format("%s to%n%s;%n", e.getKey().toString(),
-                                e.getValue().stream().sorted().
+                                e.getValue().stream().
                                         map(mn -> this.enlargedIndent(mn.toString(), MODULE_DIRECTIVE_PADDING)).
                                         collect(Collectors.joining(",\n"))))
                 ).forEach(sb::append);
         //
         opens.entrySet().stream()
                 .filter(e -> e.getValue().isEmpty())
-                .sorted(Map.Entry.comparingByKey())
                 .map(e -> IndentPadRight("opens", MODULE_DIRECTIVE_PADDING).concat(format("%s;%n", e.getKey().toString())))
                 .forEach(sb::append);
         opens.entrySet().stream()
                 .filter(e -> !e.getValue().isEmpty())
-                .sorted(Map.Entry.comparingByKey())
                 .map(e -> IndentPadRight("opens", MODULE_DIRECTIVE_PADDING).
                         concat(format("%s to%n%s;%n", e.getKey().toString(),
-                                e.getValue().stream().sorted()
+                                e.getValue().stream()
                                         .map(mn -> this.enlargedIndent(mn.toString(), MODULE_DIRECTIVE_PADDING))
                                         .collect(Collectors.joining(",\n")))))
                 .forEach(sb::append);
         //
-        uses.stream().sorted()
-                .map(s -> IndentPadRight("uses", MODULE_DIRECTIVE_PADDING).concat(format("%s;%n", s)))
+        uses.stream().map(s -> IndentPadRight("uses", MODULE_DIRECTIVE_PADDING).concat(format("%s;%n", s)))
                 .forEach(sb::append);
         //
         provides.entrySet().stream()
                 .filter(e -> !e.getValue().isEmpty())
-                .sorted(Map.Entry.comparingByKey())
                 .map(e -> IndentPadRight("provides", MODULE_DIRECTIVE_PADDING).
                         concat(format("%s with%n%s;%n", e.getKey().toString(),
-                                e.getValue().stream().sorted()
+                                e.getValue().stream()
                                         .map(mn -> this.enlargedIndent(mn.toString(), MODULE_DIRECTIVE_PADDING))
                                         .collect(Collectors.joining(",\n")))))
                 .forEach(sb::append);
@@ -318,7 +310,7 @@ public final class ModuleContent extends Indenter {
 
         @Override
         public String toString() {
-            return (Options.contains(Options.PR.CPX)) ? String.format("#%-4d /* %s */" , getCPIndex(),name()) : name();
+            return (Options.contains(Options.PR.CPX)) ? String.format("#%-4d /* %s */", getCPIndex(), name()) : name();
         }
     }
 
@@ -337,7 +329,8 @@ public final class ModuleContent extends Indenter {
         private String moduleName;
         private String moduleVersion;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         public Builder(int cpIndex, String moduleName, int moduleFlags, String moduleVersion) {
             this.cpIndex = cpIndex;

@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
+import org.openjdk.asmtools.asmutils.Range;
 import org.openjdk.asmtools.asmutils.StringUtils;
 
 import java.io.DataInputStream;
@@ -85,6 +86,7 @@ public class ConstantPool extends Indenter {
      * The actual pool of Constants
      */
     private ArrayList<Constant> pool;
+    private Range<Integer> range;
 
     private boolean printTAG = false;
 
@@ -110,6 +112,17 @@ public class ConstantPool extends Indenter {
 
     public int size() {
         return pool.size();
+    }
+
+    public Range<Integer> getBounds() {
+        return new Range<>(1, pool.size() - 1);
+    }
+
+    public boolean inRange(int value) {
+        if( range == null ) {
+            range = new Range<>(1, pool.size() - 1);
+        }
+        return range.in(value);
     }
 
     /**
