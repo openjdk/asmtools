@@ -114,10 +114,6 @@ public class ConstantPool extends Indenter {
         return pool.size();
     }
 
-    public Range<Integer> getBounds() {
-        return new Range<>(1, pool.size() - 1);
-    }
-
     public boolean inRange(int value) {
         if( range == null ) {
             range = new Range<>(1, pool.size() - 1);

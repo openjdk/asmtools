@@ -61,7 +61,7 @@ public class RecordData extends  MemberData<ClassData> {
     public void print() throws IOException {
         int count = components.size();
         if (count > 0) {
-            printIndent(RECORD.parseKey() + " {");
+            printIndentLn(RECORD.parseKey() + " {");
             for (int i = 0; i < count; i++) {
                 Component cn = components.get(i);
                 cn.setCommentOffset(getCommentOffset() + getIndentSize()).incIndent();

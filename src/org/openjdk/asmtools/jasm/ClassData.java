@@ -22,18 +22,19 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.*;
 import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static org.openjdk.asmtools.common.structure.ClassFileContext.INNER_CLASS;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_DYNAMIC;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_INVOKEDYNAMIC;
 import static org.openjdk.asmtools.jasm.ClassFileConst.JAVA_MAGIC;
 
 /**
@@ -164,14 +165,14 @@ class ClassData extends MemberData<JasmEnvironment> {
                 ref = cell.ref;
             }
             if (ref != null
-                    && (ref.tag == ConstType.CONSTANT_INVOKEDYNAMIC || ref.tag == ConstType.CONSTANT_DYNAMIC)) {
+                    && (ref.tag == CONSTANT_INVOKEDYNAMIC || ref.tag == CONSTANT_DYNAMIC)) {
                 // Find only the Constant
                 ConstantPool.ConstValue_BootstrapMethod refval = (ConstantPool.ConstValue_BootstrapMethod) ref;
-                BootstrapMethodData bsmdata = refval.bsmData;
+                BootstrapMethodData bsmdata = refval.bsmData();
                 // only care about BSM Data that were placeholders
                 if (bsmdata != null && bsmdata.isPlaceholder()) {
                     // find the real BSM Data at the index
-                    int bsmindex = bsmdata.placeholder_index;
+                    int bsmindex = bsmdata.cpIndex;
                     if (bsmindex < 0 || bsmindex > bootstrapMethodsAttr.size()) {
                         // bad BSM index --
                         // give a warning, but place the index in the arg anyway
@@ -180,7 +181,7 @@ class ClassData extends MemberData<JasmEnvironment> {
                         bsmdata.cpIndex = bsmindex;
                     } else {
                         // make the IndyPairs BSM Data point to the one from the attribute
-                        refval.bsmData = bootstrapMethodsAttr.get(bsmindex);
+                        refval.setBsmData(bootstrapMethodsAttr.get(bsmindex));
                     }
                 }
             }
@@ -192,17 +193,29 @@ class ClassData extends MemberData<JasmEnvironment> {
         if (bootstrapMethodsAttr == null) {
             return;
         }
-        // remove duplicates if found
+        boolean duplicateExists = false;
+        // remove duplicates in BootstrapMethod_Attribute if found
         // Fix 7902888: Excess entries in BootstrapMethods with the same bsm, bsmKind, bsmArgs
-        HashSet<BootstrapMethodData> bsmHashSet = new HashSet<>();
-        //
+        ArrayList<ConstCell<?>> list = this.getPool().getPoolCellsByType(CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC);
+        BootstrapMethodData[] bsmAttributes = new BootstrapMethodData[list.size()];
+        HashMap<BootstrapMethodData, Integer> bsmHashMap = new HashMap<>();
         int index = 0;
-        for (BootstrapMethodData data : bootstrapMethodsAttr) {
-            if( bsmHashSet.add(data) ) {
-                data.cpIndex = index++;
+        //
+        for (int i = 0; i < list.size(); i++) {
+            ConstantPool.ConstValue_BootstrapMethod cell = (ConstantPool.ConstValue_BootstrapMethod) list.get(i).ref;
+            BootstrapMethodData bsmData = ((ConstantPool.ConstValue_BootstrapMethod) list.get(i).ref).bsmData();
+            if (bsmHashMap.keySet().contains(bsmData)) {
+                duplicateExists = true;
+                cell.setBsmData(bsmAttributes[bsmHashMap.get(bsmData)]);
+            } else {
+                bsmAttributes[i] = bsmData.clone(index++);
+                cell.setBsmData(bsmAttributes[i]);
+                bsmHashMap.put(bsmData, i);
             }
         }
-        bootstrapMethodsAttr.replaceAll(bsmHashSet);
+        if( duplicateExists ) {
+            bootstrapMethodsAttr.replaceAll(Arrays.stream(bsmAttributes).filter(i -> i != null).toList());
+        }
     }
 
     // API
@@ -327,11 +340,11 @@ class ClassData extends MemberData<JasmEnvironment> {
         }
         pool.itemizePool();
         super_class = pool.specifyCell(super_class);
-        this_class  = pool.specifyCell(this_class);
+        this_class = pool.specifyCell(this_class);
         pool.checkGlobals();
-        numberBootstrapMethods();
         pool.fixIndexesInPool();
         itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);
+        numberBootstrapMethods();
         try {
             ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) this_class.ref;
             ConstantPool.ConstValue_UTF8 this_class_name = this_class_value.value.ref;
@@ -359,7 +372,7 @@ class ClassData extends MemberData<JasmEnvironment> {
         this.super_class = pool.findClassCell("java/lang/Object");
         pool.itemizePool();
         super_class = pool.specifyCell(super_class);
-        this_class  = pool.specifyCell(this_class);
+        this_class = pool.specifyCell(this_class);
         pool.checkGlobals();
     }
 
@@ -368,7 +381,7 @@ class ClassData extends MemberData<JasmEnvironment> {
         this.myClassName = "module-info";
         this.this_class = pool.findClassCell(this.myClassName);
         pool.itemizePool();
-        this_class  = pool.specifyCell(this_class);
+        this_class = pool.specifyCell(this_class);
         pool.checkGlobals();
         // a module is annotated
         itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);

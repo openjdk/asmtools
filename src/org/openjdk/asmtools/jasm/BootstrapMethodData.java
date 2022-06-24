@@ -28,7 +28,6 @@ import java.util.Objects;
 
 class BootstrapMethodData extends Indexer implements DataWriter {
 
-    public int placeholder_index = -1;
     ConstCell bootstrapMethodHandle;
     ArrayList<ConstCell<?>> arguments;
 
@@ -38,11 +37,23 @@ class BootstrapMethodData extends Indexer implements DataWriter {
         this.arguments = arguments;
     }
 
+    // placeholder - bootstrap_method_attr_index
+    // The value of the bootstrap_method_attr_index item must be a valid index into the bootstrap_methods array
+    // of the bootstrap method table of this class file (§4.7.23).
+    protected BootstrapMethodData clone(int placeholder) {
+        BootstrapMethodData instance = new BootstrapMethodData(this.bootstrapMethodHandle, arguments);
+        instance.cpIndex = placeholder;
+        return instance;
+    }
+
+    // placeholder - bootstrap_method_attr_index
+    // The value of the bootstrap_method_attr_index item must be a valid index into the bootstrap_methods array
+    // of the bootstrap method table of this class file (§4.7.23).
     public BootstrapMethodData(int placeholder) {
         super();
         this.bootstrapMethodHandle = null;
         this.arguments = null;
-        this.placeholder_index = placeholder;
+        this.cpIndex = placeholder;
     }
 
     public int getLength() {
@@ -50,7 +61,7 @@ class BootstrapMethodData extends Indexer implements DataWriter {
     }
 
     public boolean isPlaceholder() {
-        return placeholder_index > -1;
+        return super.isSet();
     }
 
     public void write(CheckedDataOutputStream out) throws IOException {

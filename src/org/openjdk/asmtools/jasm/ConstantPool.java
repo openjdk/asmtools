@@ -29,6 +29,7 @@ import org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
@@ -448,10 +449,6 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         return findCell(CONSTANT_PACKAGE, nameInfo);
     }
 
-    public ConstCell findStringCell(String value) {
-        return findCell(CONSTANT_STRING, findUTF8Cell(value));
-    }
-
     public ConstCell findCell(ConstType tag, ConstCell value) {
         return findCell(new ConstValue_Cell(tag, value));
     }
@@ -490,6 +487,10 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
             value.write(out);
             i += value.size();
         }
+    }
+
+    public ArrayList<ConstCell<?>>  getPoolCellsByType(ClassFileConst.ConstType... types) {
+    return pool.stream().filter(c->c.getType().oneOf(types)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public enum ReferenceRank {
@@ -865,11 +866,20 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     static public class ConstValue_BootstrapMethod extends ConstValue<ConstCell> {
-        BootstrapMethodData bsmData;
+
+        private BootstrapMethodData bsmData;
 
         public ConstValue_BootstrapMethod(ConstType tag, BootstrapMethodData bsmdata, ConstCell value) {
             super(tag, value);
             this.bsmData = bsmdata;
+        }
+
+        public BootstrapMethodData bsmData() {
+            return bsmData;
+        }
+
+        public void setBsmData(BootstrapMethodData bsmData) {
+            this.bsmData = bsmData;
         }
 
         @Override
