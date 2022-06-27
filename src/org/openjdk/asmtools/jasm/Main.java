@@ -63,18 +63,18 @@ public class Main extends JasmTool {
     private boolean debugAnnot = false;
     private boolean debugInstr = false;
 
-    public Main(String[] argv) {
+    public Main(String... argv) {
         super();
         parseArgs(argv);
     }
 
-    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String[] argv) {
+    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String... argv) {
         super(errorLogger, outputLogger);
         parseArgs(argv);
     }
 
     // jasm entry point
-    public static void main(String[] argv) {
+    public static void main(String... argv) {
         Main compiler = new Main(new PrintWriter(System.err, true),
                 new PrintWriter(System.out, true), argv);
         System.exit(compiler.compile());
@@ -130,7 +130,7 @@ public class Main extends JasmTool {
     }
 
     @Override
-    protected void parseArgs(String[] argv) {
+    protected void parseArgs(String... argv) {
         try {
             // Parse arguments
             for (int i = 0; i < argv.length; i++) {

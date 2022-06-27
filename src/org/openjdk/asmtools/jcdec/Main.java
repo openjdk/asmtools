@@ -856,7 +856,7 @@ public class Main {
     /**
      * Run the decoder
      */
-    public synchronized boolean decode(String argv[]) {
+    public synchronized boolean decode(String... argv) {
 //      int flags = F_WARNINGS;
         long tm = System.currentTimeMillis();
         ArrayList<String> vargs = new ArrayList<>();
@@ -950,7 +950,7 @@ decode:
     /**
      * Main program
      */
-    public static void main(String argv[]) {
+    public static void main(String... argv) {
         Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), "jcdec");
         System.exit(decoder.decode(argv) ? 0 : 1);
     }
