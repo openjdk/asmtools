@@ -15,7 +15,7 @@ class MainTest {
         ThreeStringWriters outs = new ThreeStringWriters();
         String nonExisitngFile = "someNonExiostingFile";
         //for 0 file args, there is hardcoded System.exit
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), new String[]{nonExisitngFile});
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), nonExisitngFile);
         int i = decoder.decode();
         outs.flush();
         Assertions.assertEquals(1, i);
@@ -28,7 +28,7 @@ class MainTest {
     @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), new String[]{"./target/classes/org/openjdk/asmtools/jdec/Main.class"});
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "./target/classes/org/openjdk/asmtools/jdec/Main.class");
         int i = decoder.decode();
         outs.flush();
         Assertions.assertEquals(0, i);

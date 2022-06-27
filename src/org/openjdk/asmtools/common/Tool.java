@@ -67,9 +67,9 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     protected abstract void usage();
 
     // Parse arguments. Tool will be left using System.Exit if error found.
-    protected abstract void parseArgs(String[] argv);
+    protected abstract void parseArgs(String... argv);
 
-    protected File setDestDir(int index, String[] argv) {
+    protected File setDestDir(int index, String... argv) {
         File destDir;
         if ((index) >= argv.length) {
             environment.error("err.d_requires_argument");

@@ -38,7 +38,7 @@ public class Main {
      *
      * @param args - command line arguments
      */
-    public static void main(String args[]) {
+    public static void main(String... args) {
         if (args.length == 0) {
             usage(i18n.getString("main.error.no_arguments"), 1);
         }
@@ -90,35 +90,35 @@ public class Main {
     /**
      * Invokes jasm main class with passed arguments
      */
-    public static void jasm(String[] args) {
+    public static void jasm(String... args) {
         org.openjdk.asmtools.jasm.Main.main(args);
     }
 
     /**
      * Invokes jcdec main class with passed arguments
      */
-    public static void jcdec(String[] args) {
+    public static void jcdec(String... args) {
         org.openjdk.asmtools.jcdec.Main.main(args);
     }
 
     /**
      * Invokes jcoder main class with passed arguments
      */
-    public static void jcoder(String[] args) {
+    public static void jcoder(String... args) {
         org.openjdk.asmtools.jcoder.Main.main(args);
     }
 
     /**
      * Invokes jdec main class with passed arguments
      */
-    public static void jdec(String[] args) {
+    public static void jdec(String... args) {
         org.openjdk.asmtools.jdec.Main.main(args);
     }
 
     /**
      * Invokes jdis main class with passed arguments
      */
-    public static void jdis(String[] args) {
+    public static void jdis(String... args) {
         org.openjdk.asmtools.jdis.Main.main(args);
     }
 }

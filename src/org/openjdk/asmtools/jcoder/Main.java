@@ -49,18 +49,18 @@ public class Main extends JcoderTool {
     private boolean noWriteFlag = false;        // Do not write generated class files
     private boolean ignoreFlag = false;         // Ignore non-fatal error(s) that suppress writing class files
 
-    public Main(String[] argv) {
+    public Main(String... argv) {
         super();
         parseArgs(argv);
     }
 
-    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String[] argv) {
+    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String... argv) {
         super(errorLogger, outputLogger);
         parseArgs(argv);
     }
 
     // jcoder entry point
-    public static void main(String[] argv) {
+    public static void main(String... argv) {
         Main compiler = new Main(argv);
         System.exit(compiler.compile());
     }
@@ -105,7 +105,7 @@ public class Main extends JcoderTool {
     }
 
     @Override
-    protected void parseArgs(String[] argv) {
+    protected void parseArgs(String... argv) {
         try {
             // Parse arguments
             for (int i = 0; i < argv.length; i++) {

@@ -46,23 +46,23 @@ public class Main extends JdisTool {
 
     private ArrayList<String> fileList = new ArrayList<>();
 
-    public Main(PrintStream toolOutput, String[] argv) {
+    public Main(PrintStream toolOutput, String... argv) {
         super(toolOutput);
         parseArgs(argv);
     }
 
-    public Main(PrintWriter toolOutput, String[] argv) {
+    public Main(PrintWriter toolOutput, String... argv) {
         super(toolOutput);
         parseArgs(argv);
     }
 
-    public Main(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput, String[] argv) {
+    public Main(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput, String... argv) {
         super(toolOutput, errorOutput, loggerOutput);
         parseArgs(argv);
     }
 
     // jdis entry point
-    public static void main(String[] argv) {
+    public static void main(String... argv) {
         Main disassembler = new Main(new PrintWriter(new uEscWriter(System.out)), argv);
         System.exit(disassembler.disasm());
     }
@@ -111,7 +111,7 @@ public class Main extends JdisTool {
     }
 
     @Override
-    protected void parseArgs(String[] argv) {
+    protected void parseArgs(String... argv) {
         // Parse arguments
         for (String arg : argv) {
             switch (arg) {
