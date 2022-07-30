@@ -45,7 +45,10 @@ public enum EModifier {
 
     ACC_FINAL(0x0010, "final", CLASS, INNER_CLASS, FIELD, METHOD, METHOD_PARAMETERS),
 
-    ACC_SUPER(0x0020, "super", CLASS),                                    // <<ignored>>
+    ACC_SUPER(0x0020, "super", CLASS),   // although this seems to be easily ignored, but not including it to the class, where it originally was,
+                                                      // will cause running hotswap to fail, with
+                                                      //java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
+
     ACC_TRANSITIVE(0x0020, "transitive", REQUIRES),
     ACC_SYNCHRONIZED(0x0020, "synchronized", METHOD),
     ACC_OPEN(0x0020, "open", MODULE),
@@ -368,9 +371,9 @@ public enum EModifier {
                     // In Java SE 8, the ACC_SUPER semantics became mandatory,
                     // regardless of the setting of ACC_SUPER or the class file version number,
                     // and the flags no longer had any effect.
-                    if (isName) {
-                        list.add(ACC_SUPER.getFlagName());
-                    }
+                    // still we have to keep it in here (if it was here), as if the new class is used for hotswap, it s absence would casue
+                    // java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
+                    flags = addTo(list, flags, isName, ACC_SUPER);
                 }
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_TRANSITIVE);
                 case METHOD -> flags = addTo(list, flags, isName, ACC_SYNCHRONIZED);

@@ -35,4 +35,25 @@ class MainTest {
         Assertions.assertTrue(outs.getLoggerBos().isEmpty());
     }
 
+
+    @Test
+    public void superIsNotOmited() throws IOException {
+        ThreeStringWriters outs = new ThreeStringWriters();
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "./target/classes/org/openjdk/asmtools/jdis/Main.class");
+        int i = decoder.disasm();
+        outs.flush();
+        Assertions.assertEquals(0, i);
+        Assertions.assertFalse(outs.getToolBos().isEmpty());
+        Assertions.assertTrue(outs.getErrorBos().isEmpty());
+        Assertions.assertTrue(outs.getLoggerBos().isEmpty());
+        String clazz = outs.getToolBos();
+        for(String line: clazz.split("\n")) {
+            if (line.contains("class Main extends JdisTool")){
+                Assertions.assertTrue(line.contains("super"), "class declaration had super omitted - " + line);
+                return;
+            }
+        }
+        Assertions.assertTrue(false, "class Main was not found in disassembled output");
+    }
+
 }
