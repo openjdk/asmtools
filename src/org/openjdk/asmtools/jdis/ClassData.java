@@ -401,8 +401,8 @@ public class ClassData extends MemberData<ClassData> {
             printAnnotations(visibleTypeAnnotations, invisibleTypeAnnotations);
             // In Java SE 8, the ACC_SUPER semantics became mandatory, regardless of the setting of ACC_SUPER or
             // the class file version number, and the flag no longer had any effect.
-            // Skip printing "super modifier"
-            access &= ~ACC_SUPER.getFlag();
+            // however, to not print it where it was, would cause hotswap of such class to
+            // throw java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
 
             String name = pool.inRange(this_cpx) ? pool.getShortClassName(this_cpx, this.packageName) :  "?? invalid index";
             Pair<String, String> signInfo = ( signature != null) ?
