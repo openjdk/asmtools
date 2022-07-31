@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class BruteForceHelper {
 
     public static final String FRESHLY_BUILT_ASMTOOLS = "target/classes";
+    public static final String FRESHLY_BUILT_TESTS = "target/test-classes";
 
     private final ClassProvider classProvider;
 
@@ -49,6 +51,7 @@ public class BruteForceHelper {
 
     public void work(AsmToolsExecutable diasm, AsmToolsExecutable asm) throws IOException {
         List<File> classes = classProvider.getClasses();
+        Assertions.assertNotEquals(0, classes.size(), "There must be more then 0 class compiled in " + classProvider.getClassesRoot() + " before running this tests!");
         tryAll(classes, failedJdis, passedJdis, diasm);
         diasm.ensure(classes, failedJdis);
 
@@ -123,7 +126,6 @@ public class BruteForceHelper {
                 return FileVisitResult.CONTINUE;
             }
         });
-        Assertions.assertNotEquals(0, classes.size(), "There must be more then 0 class compiled in " + classesRoot + " before running this tests!");
         Collections.sort(classes);
         return classes;
     }
@@ -172,6 +174,28 @@ public class BruteForceHelper {
         }
     }
 
+    public static class SingleTestClassProvider implements ClassProvider {
+
+        private final String clazz;
+
+        public SingleTestClassProvider(String clazz, String origName) throws IOException {
+            this.clazz = clazz;
+            if (origName!=null) {
+                Files.copy(new File(FRESHLY_BUILT_TESTS + origName).toPath(), new File(FRESHLY_BUILT_TESTS+clazz).toPath());
+            }
+        }
+
+        @Override
+        public File getClassesRoot() {
+            return new File(FRESHLY_BUILT_TESTS).getAbsoluteFile();
+        }
+
+        @Override
+        public List<File> getClasses() throws IOException {
+            return Arrays.asList(new File(FRESHLY_BUILT_TESTS+clazz));
+        }
+    }
+
     public interface ClassProvider {
 
         File getClassesRoot();
@@ -180,7 +204,7 @@ public class BruteForceHelper {
     }
 
     public interface AsmToolsExecutable {
-        
+
         int run(ThreeStringWriters out, File clazz) throws IOException;
 
         void ensure(List<File> all, Map<File, ThreeStringWriters> failures);
