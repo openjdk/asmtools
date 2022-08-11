@@ -25,7 +25,7 @@ package org.openjdk.asmtools.jasm;
 import java.io.PrintWriter;
 
 /**
- * Type annotation types: target_type, target_info &amp;&amp; target_path
+ * Type annotation types: target_type, target_info and target_path
  */
 public class TypeAnnotationTypes {
 
@@ -94,7 +94,7 @@ public class TypeAnnotationTypes {
         @Override
         public String toString() {
             // Chapter 4.7.20.2 The type_path structure
-            // if the value of the type_path_kind is 0,1, or 2, thebn the value of the
+            // if the value of the type_path_kind is 0,1, or 2, then the value of the
             // type_argument_index item is 0.
             return kind.parseKey() +  ( kind.tag == 3 ?
                     JasmTokens.Token.LBRACE.parseKey() + typeArgumentIndex + JasmTokens.Token.RBRACE.parseKey() :
