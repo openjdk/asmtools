@@ -69,7 +69,7 @@ public class ClassData extends MemberData {
     protected ConstantPool pool;
 
     // -----------------------------
-    // Interfaces,Fields,Methods && Attributes
+    // Interfaces,Fields,Methods and Attributes
     // -----------------------------
     // The interfaces this class implements
     protected int[] interfaces;
@@ -541,4 +541,3 @@ printSugar:
     }
 
 }// end class ClassData
-
