@@ -55,7 +55,7 @@ public class ClassArrayAttr extends AttrData {
     public ClassArrayAttr(ConstantPool pool, EAttribute attribute, List<ConstCell> constCellList) {
         super(pool, attribute);
         for (ConstCell<?> cell : constCellList) {
-            this.classes.add(classifyConstCell(cell));
+            this.classes.add(classifyConstCell(pool, cell));
         }
     }
 

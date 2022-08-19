@@ -35,8 +35,7 @@ import static org.openjdk.asmtools.asmutils.StringUtils.Utf8ToString;
 import static org.openjdk.asmtools.asmutils.StringUtils.isPrintableChar;
 import static org.openjdk.asmtools.jasm.ClassFileConst.AnnotationElementType;
 import static org.openjdk.asmtools.jasm.ClassFileConst.getAnnotationElementType;
-import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.HAS_DEFAULT_VALUE;
-import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.INLINED_ELEMENT;
+import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.*;
 
 /**
  * Base class of all AnnotationElement entries
@@ -116,6 +115,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
             if (((Array_AnnotationValue<?>) value).annotationValues.size() == 0) {
                 print("{ }");
             } else {
+                println().print(getIndentString());
                 value.print();
                 printIndent("}");
             }
@@ -202,8 +202,11 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
 
         @Override
         public void print() {
-            if (getAnnotationElementState() == HAS_DEFAULT_VALUE) {
+            AnnotationElementState state = getAnnotationElementState();
+            if ( state == HAS_DEFAULT_VALUE) {
                 print(DEFAULT_VALUE_PREFIX + "%s }", stringVal());
+            } else if( state == RIGHT_OPERAND) {
+                print(" %s }", stringVal());
             } else {
                 print(stringVal());
             }
@@ -315,26 +318,27 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
 
         public void printDefaultAnnotationElement(int count, int ItemsPerLine) throws IOException {
             int i = 0, lineIndent = getIndent(annotationValues.get(0));
-            print(DEFAULT_VALUE_PREFIX + "{ ");
+            println(DEFAULT_VALUE_PREFIX + "{ ");
+            printPadLeft(INDENT_STRING, INDENT_OFFSET*2);
             for (AnnotationValue<T> annotationValue : annotationValues) {
                 annotationValue.setElementState(INLINED_ELEMENT);
                 annotationValue.setCommentOffset(lineIndent);
                 if (annotationValue instanceof Annotation_AnnotationValue ||
                         annotationValue instanceof CPX_AnnotationValue) {
                     if (i % ItemsPerLine == 0 && i != 0)
-                        print(enlargedIndent(lineIndent));
+                        printPadLeft(INDENT_STRING, INDENT_OFFSET*2);
                 }
                 annotationValue.print(); // entry
                 if (i < count - 1)
                     print("," + (i % ItemsPerLine == (ItemsPerLine - 1) ? System.lineSeparator() : " "));
                 i++;
             }
-            print(" } }");
+            println(" }").print("  }");
         }
 
         public void printAnnotationElement(int count) throws IOException {
             int i = 0;
-            toolOutput.println("{");
+            println("{");
             for (AnnotationValue<T> annotationValue : annotationValues) {
                 annotationValue.setTheSame(this);
                 if (annotationValue instanceof CPX_AnnotationValue) {

@@ -715,7 +715,7 @@ class Parser extends ParseBase {
             // Parse the optional initializer
             if (scanner.token == ASSIGN) {
                 scanner.scan();
-                fld.SetValue(cpParser.parseConstRef(null));
+                fld.SetInitialValue(cpParser.parseConstRef(null));
             }
 
             // If the next scanner.token is a comma, then there is more
@@ -1976,8 +1976,8 @@ class Parser extends ParseBase {
             String sourceFileName = environment.getSimpleInputFileName();
             String sourceName = sourceFileName.substring(0, sourceFileName.indexOf('.'));
             classData.sourceFileNameAttr = new SourceFileAttr(this.classData.pool, sourceFileName).
-                    updateIfFound(name ->
-                            name.startsWith(sourceName) &&
+                    updateIfFound( this.classData.pool,
+                            name -> name.startsWith(sourceName) &&
                                     StringUtils.contains.apply(name, List.of(".java", ".jcod", ".jasm", ".class"))
                     );
         } else {
@@ -1999,7 +1999,7 @@ class Parser extends ParseBase {
             pool.fixRefsInPool();
             String sourceName = environment.getSimpleInputFileName();
             classData.sourceFileNameAttr = new SourceFileAttr(this.classData.pool, sourceName).
-                    updateIfFound(name -> name.contains("package-info."));
+                    updateIfFound(this.classData.pool, name -> name.contains("package-info."));
         } else {
             classData.sourceFileNameAttr = new CPXAttr(pool,
                     EAttribute.ATT_SourceFile,
@@ -2019,7 +2019,7 @@ class Parser extends ParseBase {
             pool.fixRefsInPool();
             String sourceName = environment.getSimpleInputFileName();
             classData.sourceFileNameAttr = new SourceFileAttr(this.classData.pool, sourceName).
-                    updateIfFound(name -> name.contains("module-info."));
+                    updateIfFound(this.classData.pool, name -> name.contains("module-info."));
         } else {
             classData.sourceFileNameAttr = new CPXAttr(pool,
                     EAttribute.ATT_SourceFile,

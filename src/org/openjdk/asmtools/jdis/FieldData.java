@@ -97,12 +97,13 @@ public class FieldData extends MemberData<ClassData> {
         // Print annotations first
         super.printAnnotations();
         // print field
-        StringBuilder prefix = new StringBuilder(getIndentString()).append(EModifier.asKeywords(access, ClassFileContext.FIELD));
+        StringBuilder prefix = new StringBuilder(getIndentString()).
+                append(EModifier.asKeywords(access, ClassFileContext.FIELD));
         // add synthetic, deprecated if necessary
         prefix.append(getPseudoFlagsAsString());
         // field
         prefix.append(JasmTokens.Token.FIELDREF.parseKey()).append(' ');
-        printVar(prefix, (value_cpx != 0) ? (" = ").concat(data.pool.ConstantStrValue(value_cpx)) : null, name_cpx, type_cpx);
+        printVar(prefix, (value_cpx != 0) ? (" = ").concat(data.pool.ConstantStrValue(value_cpx)) : null,
+                name_cpx, type_cpx, value_cpx);
     }
 } // end FieldData
-

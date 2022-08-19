@@ -27,7 +27,7 @@ import org.openjdk.asmtools.common.structure.EAttribute;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_CLASS;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
 
 /**
  * AttrData
@@ -35,19 +35,37 @@ import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_CLASS;
  * AttrData is the base class for many attributes (or parts of attributes), and it is
  * instantiated directly for simple attributes (like Synthetic or Deprecated).
  */
-class AttrData implements DataWriter {
+class AttrData implements ConstantPoolDataVisitor {
 
-    protected final ConstantPool pool;
     private final EAttribute attribute;
-    private final Indexer attributeNameConstantCell;
+    private final ConstCell attributeNameConstantCell;
 
     AttrData(ConstantPool pool, EAttribute attribute) {
-        this.pool = pool;
         this.attribute = attribute;
         this.attributeNameConstantCell = pool.findUTF8Cell(attribute.parseKey());
     }
 
-    protected ConstCell<?> classifyConstCell(ConstCell<?> cell) {
+    @Override
+    public <T extends DataWriter> T visit(ConstantPool pool) {
+        if (this instanceof CPXAttr cpxAttr) {
+            final ConstCell cell = cpxAttr.cell;
+            if (! cell.isSet()) {
+                if (cell.getType() ==  CONSTANT_STRING)  {
+                    if (attribute.getCPTypeOfIndex() == CONSTANT_UTF8) {
+                        Optional<ConstCell<?>> strCell = pool.ConstantPoolHashByValue.values().stream().
+                                filter(v -> v.isSet() && v.getType() == CONSTANT_STRING && v.equalsByValue(cell)).
+                                findAny();
+                        cpxAttr.cell = strCell.isPresent() ?
+                                strCell.get() :
+                                pool.findCell(new ConstantPool.ConstValue_String((ConstCell<ConstantPool.ConstValue_UTF8>) cell.ref.value));
+                        }
+                    }
+                }
+            }
+        return (T) this;
+    }
+
+    protected ConstCell<?> classifyConstCell(ConstantPool pool, ConstCell<?> cell) {
         switch (cell.getType()) {
             case CONSTANT_CLASS -> {
                 return cell;
@@ -66,7 +84,7 @@ class AttrData implements DataWriter {
                 }
             }
             default -> {
-
+                // no action
             }
         }
         return cell;
@@ -90,4 +108,3 @@ class AttrData implements DataWriter {
         out.writeInt(attrLength()); // attribute length
     }
 } // end class AttrData
-
