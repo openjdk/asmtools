@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,10 +61,10 @@ class ModuleAttr extends AttrData {
     ModuleAttr(ClassData classData) {
         super(classData.pool, EAttribute.ATT_Module);
         builder = new ModuleContent.Builder();
-        findUTF8Cell = targetType -> pool.findUTF8Cell(targetType);
-        findClassCell = targetType -> pool.findClassCell(targetType);
-        findModuleCell = targetType -> pool.findModuleCell(targetType);
-        findPackageCell = targetType -> pool.findPackageCell(targetType);
+        findUTF8Cell = targetType -> classData.pool.findUTF8Cell(targetType);
+        findClassCell = targetType -> classData.pool.findClassCell(targetType);
+        findModuleCell = targetType -> classData.pool.findModuleCell(targetType);
+        findPackageCell = targetType -> classData.pool.findPackageCell(targetType);
     }
 
     void openModule() {

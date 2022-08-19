@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,7 @@ class FieldData extends MemberData<JasmEnvironment> {
 
     /* FieldData Fields */
     private ConstantPool.ConstValue_FieldRef fieldRef;
-    private AttrData initValue;
+    private AttrData initialValue;
 
     public FieldData(ClassData classData, int access, ConstantPool.ConstValue_FieldRef fieldRef) {
         super(classData.pool, classData.getEnvironment(), access);
@@ -48,13 +48,17 @@ class FieldData extends MemberData<JasmEnvironment> {
         return fieldRef;
     }
 
-    public void SetValue(ConstCell<?>  cell) {
-        initValue = new CPXAttr(pool, EAttribute.ATT_ConstantValue, cell);
+    public void SetInitialValue(ConstCell<?>  cell) {
+        initialValue = new CPXAttr(pool, EAttribute.ATT_ConstantValue, cell);
+    }
+
+    public AttrData getInitialValue() {
+        return initialValue;
     }
 
     @Override
     protected DataVector getAttrVector() {
-        return getDataVector(initValue, syntheticAttr, deprecatedAttr, signatureAttr);
+        return getDataVector(initialValue, syntheticAttr, deprecatedAttr, signatureAttr);
     }
 
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
@@ -65,4 +69,3 @@ class FieldData extends MemberData<JasmEnvironment> {
         attrs.write(out);
     }
 } // end FieldData
-

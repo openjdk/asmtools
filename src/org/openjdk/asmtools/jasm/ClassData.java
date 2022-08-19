@@ -22,7 +22,6 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
@@ -299,7 +298,8 @@ class ClassData extends MemberData<JasmEnvironment> {
     }
 
     public void addInnerClass(int access, ConstCell name, ConstCell innerClass, ConstCell outerClass) {
-        environment.traceln("addInnerClass (with indexes: Name (" + name.toString() + "), Inner (" + innerClass.toString() + "), Outer (" + outerClass.toString() + ").");
+        environment.traceln("addInnerClass (with indexes: Name (" + name.toString() +
+                "), Inner (" + innerClass.toString() + "), Outer (" + outerClass.toString() + ").");
         if (innerClasses == null) {
             innerClasses = new DataVectorAttr<>(pool, EAttribute.ATT_InnerClasses);
         }
@@ -343,7 +343,9 @@ class ClassData extends MemberData<JasmEnvironment> {
         this_class = pool.specifyCell(this_class);
         pool.checkGlobals();
         pool.fixIndexesInPool();
-        itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);
+        itemizeAttributes(new DataVectorAttr<>(pool, EAttribute.ATT_ConstantValue).
+                        addAll(fields.stream().map(f->f.getInitialValue())),
+                annotAttrInv, annotAttrVis);
         numberBootstrapMethods();
         try {
             ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) this_class.ref;
@@ -384,20 +386,27 @@ class ClassData extends MemberData<JasmEnvironment> {
         this_class = pool.specifyCell(this_class);
         pool.checkGlobals();
         // a module is annotated
-        itemizeAnnotationAttributes(annotAttrInv, annotAttrVis);
+        itemizeAttributes(annotAttrInv, annotAttrVis);
     }
 
     /**
-     * Scans all attribute values which only have cap Index != 0 when they are found
-     * sets value and type from Constant Pool by cpIndex
+     * Scans all attributes that
+     * 1. only have cpIndex != 0 and undefined values, types if they are found the method sets their values and types.
+     *    It applies to DataVectorAttr<AnnotationData>
+     * 2. only have values and undefined cpIndex if they are found the method finds the identical values in CP and
+     *    assigns their cpIndexes instead of  undefined indexes.
+     *    It works for DataVectorAttr<?>
      *
-     * @param annotationList annotation attributes
+     * @param attributeList list of attribute's list
      */
-    private void itemizeAnnotationAttributes(DataVectorAttr<AnnotationData>... annotationList) {
-        for (DataVectorAttr<AnnotationData> annotations : annotationList) {
-            if (annotations != null) {
-                for (AnnotationData annotationData : annotations) {
-                    annotationData.visit(pool);
+    private <A extends AttrData> void itemizeAttributes(A... attributeList) {
+        for (A attributes : attributeList) {
+            if( attributes != null ) {
+                if ( attributes instanceof DataVectorAttr<?>) {
+                    ((DataVectorAttr<?>) attributes).getElements().stream().
+                            map(e->(ConstantPoolDataVisitor)e).forEach(v->v.visit(pool));
+                } else if( attributes instanceof AttrData ) {
+                    attributes.visit(pool);
                 }
             }
         }

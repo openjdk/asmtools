@@ -22,8 +22,6 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.io.PrintWriter;
-
 /**
  * Type annotation types: target_type, target_info and target_path
  */

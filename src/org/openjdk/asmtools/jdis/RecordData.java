@@ -133,7 +133,7 @@ public class RecordData extends  MemberData<ClassData> {
             prefix.append(getPseudoFlagsAsString());
             // component
             prefix.append(JasmTokens.Token.COMPONENT.parseKey()).append(' ');
-            printVar(prefix, null, name_cpx, descriptor_cpx);
+            printVar(prefix, null, name_cpx, descriptor_cpx, 0);
         }
     }
 }

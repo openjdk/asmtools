@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -66,7 +66,7 @@ public class SourceFileAttr extends AttrData {
      * If such UTF8 string exists then replaces it with a new source file name
      * otherwise creates a new UTF8 cell to fulfill Source File Attribute
      */
-    public SourceFileAttr updateIfFound(Function<String, Boolean> rule) {
+    public SourceFileAttr updateIfFound(ConstantPool pool, Function<String, Boolean> rule) {
         sourceFileNameCell = pool.lookupUTF8Cell(rule);
         if( sourceFileNameCell != null ) {
             sourceFileNameCell.ref.value = sourceFileName;

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Container for attributes having inline tables:
@@ -72,7 +73,13 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
     }
 
     public void add(T element) {
-        elements.add(element);
+        if (element != null)
+            elements.add(element);
+    }
+
+    public DataVectorAttr<T> addAll(Stream<T> s) {
+        s.filter(e->e != null).forEach(elements::add);
+        return this;
     }
 
     public void put(int i, T element) {
@@ -84,6 +91,10 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
     public void replaceAll(Collection<T> collection) {
         elements.clear();
         elements.addAll(collection);
+    }
+
+    public ArrayList<T> getElements() {
+        return elements;
     }
 
     @Override

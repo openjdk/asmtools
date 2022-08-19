@@ -85,7 +85,7 @@ class CodeAttr extends AttrData {
         this.max_stack = max_stack;
         this.max_locals = max_locals;
         this.locVarSlots = new ArrayList<>(Collections.nCopies(max_locals != null ? max_locals.value() : paramCount, VACANT));
-        lastInstr = zeroInstr = new Instr(pool, environment);
+        lastInstr = zeroInstr = new Instr(methodData.pool, environment);
         exceptionTable = new DataVector<>(0); // TrapData
         attributes = new DataVector<>();
         if (environment.getVerboseFlag()) {
@@ -320,7 +320,7 @@ class CodeAttr extends AttrData {
 
     // Instructions
     void addInstr(int mnenoc_pos, Opcode opcode, Indexer arg, Object arg2) {
-        Instr newInstr = new Instr(pool, environment).set(curPC, environment.getPosition(), opcode, arg, arg2);
+        Instr newInstr = new Instr(methodData.pool, environment).set(curPC, environment.getPosition(), opcode, arg, arg2);
         lastInstr.next = newInstr;
         lastInstr = newInstr;
         int len = opcode.length();
@@ -426,4 +426,3 @@ class CodeAttr extends AttrData {
     }
 
 } // end CodeAttr
-

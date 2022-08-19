@@ -27,12 +27,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class AnnotationData<T extends MemberData> extends MemberData {
+import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.*;
 
+public class AnnotationData<T extends MemberData> extends MemberData {
     protected String visibleAnnotationToken = "@+";
     protected String invisibleAnnotationToken = "@-";
     protected String dataName = "AnnotationData";
-
     private final ArrayList<AnnotationElement> annotationElements = new ArrayList<>();
 
     private int type_cpx = 0;       //an index into the constant pool indicating the annotation type for this annotation.
@@ -89,7 +89,7 @@ public class AnnotationData<T extends MemberData> extends MemberData {
         } else {
             switch (getAnnotationElementState()) {
                 case HAS_DEFAULT_VALUE -> {
-                    println("{");
+                    println(" {");
                     printBodyOfDefaultData();
                     print(" }");
                 }
@@ -112,7 +112,7 @@ public class AnnotationData<T extends MemberData> extends MemberData {
         int prefixLength = getCommentOffset();
         for (AnnotationElement annotationElement : annotationElements) {
             print(enlargedIndent(prefixLength));
-            annotationElement.setElementState(this.getAnnotationElementState());
+            annotationElement.setElementState(RIGHT_OPERAND);
             annotationElement.print();
         }
     }
@@ -149,4 +149,3 @@ public class AnnotationData<T extends MemberData> extends MemberData {
         return annotationElements.isEmpty();
     }
 }
-

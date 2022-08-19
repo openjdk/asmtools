@@ -58,6 +58,7 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         HAS_DEFAULT_VALUE,       // An annotation interface element has a default value
         DEFAULT_STATE,
         PARAMETER_ANNOTATION,
+        RIGHT_OPERAND,
         INLINED_ELEMENT          // An annotation element is element of an annotation element.
     }
 
@@ -168,7 +169,16 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         }
     }
 
-    protected void printVar(StringBuilder prefix, String postfix, int name_cpx, int type_cpx) {
+    /**
+     * Prints field or a record component
+     * @param prefix      the field prefix: "private static final Field" or the component prefix: "synthetic Component"
+     * @param postfix     String presentation of the initial value if exists ( = String "ABC" )
+     * @param name_cpx    Field/Component name cpIndex
+     * @param type_cpx    Field/Component type cpIndex
+     * @param value_cpx   either cpIndex of an initial value of a field or 0
+     *                    if it's a component or the field doesn't have an initial value.
+     */
+    protected void printVar(StringBuilder prefix, String postfix, int name_cpx, int type_cpx, int value_cpx) {
 
         Pair<String, String> signInfo = ( signature != null) ?
                 signature.getPrintInfo((i)->pool.inRange(i)) :
@@ -176,14 +186,19 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
 
         if(printCPIndex) {
             prefix.append('#').append(name_cpx).append(":#").append(type_cpx).append(signInfo.first);
-            if(postfix != null) {
-                prefix.append(postfix);
+            if(value_cpx != 0) {
+                prefix.append(" = #").append(value_cpx);
             }
             prefix.append(';');
             printPadRight(prefix.toString(), getCommentOffset()-1).print(" // ");
-            print( data.pool.getName(name_cpx) + ":" + data.pool.getName(type_cpx) + signInfo.second);
+            print( data.pool.getName(name_cpx) + ":" +
+                    data.pool.getName(type_cpx) +
+                    signInfo.second +
+                    (postfix != null ? postfix : "")) ;
         } else {
-            prefix.append(data.pool.getName(name_cpx)).append(':').append(data.pool.getName(type_cpx)).append(signInfo.second);
+            prefix.append(data.pool.getName(name_cpx)).append(':').
+                    append(data.pool.getName(type_cpx)).
+                    append(signInfo.second);
             if( postfix != null ) {
                 prefix.append(postfix);
             }
