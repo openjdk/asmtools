@@ -25,7 +25,7 @@ package org.openjdk.asmtools.jasm;
 import org.openjdk.asmtools.common.CompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.structure.ToolInput;
+import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;

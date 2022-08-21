@@ -22,7 +22,6 @@
  */
 package org.openjdk.asmtools.common;
 
-import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.IOException;
