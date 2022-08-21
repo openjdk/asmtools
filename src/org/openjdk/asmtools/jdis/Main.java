@@ -27,11 +27,14 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
+import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
@@ -74,7 +77,9 @@ public class Main extends JdisTool {
             try {
                 environment.setInputFile(inputFileName);
                 ClassData classData = new ClassData(environment);
-                inputFileName.provide(classData);
+                try(DataInputStream dis=inputFileName.getDataInputStream(Optional.of(environment))) {
+                    classData.read(dis, Paths.get(inputFileName.getFileName()));
+                }
                 classData.print();
                 environment.getToolOutput().flush();
                 continue;
