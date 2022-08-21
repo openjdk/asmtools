@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.common;
 
+import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.IOException;
@@ -67,9 +68,9 @@ public class ToolLogger implements ILogger {
         return i18n.getString(id, args);
     }
 
-    public void setInputFileName(String inputFileName) throws IOException {
-        this.inputFileName = inputFileName;
-        this.simpleInputFileName = Paths.get(inputFileName).getFileName().toString();
+    public void setInputFileName(ToolInput inputFileName) throws IOException {
+        this.inputFileName = inputFileName.getFileName();
+        this.simpleInputFileName = Paths.get(inputFileName.getFileName()).getFileName().toString();
         // content of the input file will be loaded only if the file will be parsed by jasm/jcoder
     }
 
