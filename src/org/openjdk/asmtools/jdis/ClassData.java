@@ -120,16 +120,14 @@ public class ClassData extends MemberData<ClassData> {
 
     public void read(File inputFile) throws IOException {
         try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFile))) {
-            read(dis);
+            read(dis, inputFile.toPath());
         }
-        classFile = inputFile.toPath();
     }
 
     public void read(String inputFileName) throws IOException {
         try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFileName))) {
-            read(dis);
+            read(dis, Paths.get(inputFileName));
         }
-        classFile = Paths.get(inputFileName);
     }
 
     /**
@@ -250,7 +248,8 @@ public class ClassData extends MemberData<ClassData> {
     /**
      * Read and resolve the class data
      */
-    private void read(DataInputStream in) throws IOException {
+    public void read(final DataInputStream in, final Path src) throws IOException {
+        classFile = src;
         // Read the header
         try {
             int magic = in.readInt();
