@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.common;
 
+import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;
@@ -33,6 +34,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * TODO: Replacement for Environment that will replace it.
@@ -45,8 +47,8 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     T toolLogger;
 
-    // processed input file
-    private String inputFileName;
+    // processed input file or stdin
+    private ToolInput inputFileName;
     // checks output verbosity
     private boolean verboseFlag;
 
@@ -60,7 +62,7 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         this.toolLogger = (T) builder.toolLogger;
     }
 
-    public void setInputFile(String inputFileName) throws IOException, URISyntaxException {
+    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
         this.inputFileName = inputFileName;
         toolLogger.setInputFileName(inputFileName);
     }
@@ -79,31 +81,14 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     public String getSimpleInputFileName() { return toolLogger.getSimpleInputFileName(); }
 
-    public String getInputFileName() { return inputFileName; }
+    public ToolInput getInputFile() { return inputFileName; }
 
     /**
      * @return DataInputStream or null if the method can't read a file
      */
     protected DataInputStream getDataInputStream() throws URISyntaxException, IOException {
         Objects.requireNonNull(this.inputFileName, "Input file name should be defined.");
-        try {
-            return new DataInputStream(new FileInputStream(this.inputFileName));
-        } catch (IOException ex) {
-            if (this.inputFileName.matches("^[A-Za-z]+:.*")) {
-                try {
-                    final URI uri = new URI(this.inputFileName);
-                    final URL url = uri.toURL();
-                    final URLConnection conn = url.openConnection();
-                    conn.setUseCaches(false);
-                    return new DataInputStream(conn.getInputStream());
-                } catch (URISyntaxException | IOException exception) {
-                    error("err.cannot.read", this.inputFileName);
-                    throw exception;
-                }
-            } else {
-                throw ex;
-            }
-        }
+        return inputFileName.getDataInputStream(Optional.of(this));
     }
 
     @Override

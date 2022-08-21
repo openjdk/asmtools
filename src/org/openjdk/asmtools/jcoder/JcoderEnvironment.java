@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jcoder;
 import org.openjdk.asmtools.common.CompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
+import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.*;
@@ -41,7 +42,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
     }
 
     @Override
-    public void setInputFile(String inputFileName) throws IOException, URISyntaxException {
+    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
         try {
             // content of the jcod input file
             super.setInputFile(inputFileName);
