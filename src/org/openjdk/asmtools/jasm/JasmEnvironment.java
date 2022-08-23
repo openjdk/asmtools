@@ -25,7 +25,6 @@ package org.openjdk.asmtools.jasm;
 import org.openjdk.asmtools.common.CompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;
@@ -45,7 +44,7 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
     }
 
     @Override
-    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
+    public void setInputFile(String inputFileName) throws IOException, URISyntaxException {
         try {
             // content of the jasm input file
             super.setInputFile(inputFileName);

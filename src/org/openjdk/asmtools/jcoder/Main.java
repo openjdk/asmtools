@@ -22,8 +22,6 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.structure.ToolInput;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,7 +42,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JcoderTool {
 
-    private final ArrayList<ToolInput> fileList = new ArrayList<>(1);
+    private final ArrayList<String> fileList = new ArrayList<>(1);
     HashMap<String, String> macros = new HashMap<>(1);
     private File destDir;
     // tool options
@@ -85,7 +83,7 @@ public class Main extends JcoderTool {
         // compile all input files
         int rc = OK;
         try {
-            for (ToolInput inputFileName : fileList) {
+            for (String inputFileName : fileList) {
                 environment.setInputFile(inputFileName);
                 Jcoder parser = new Jcoder(environment, macros);
                 parser.parseFile();
@@ -142,23 +140,20 @@ public class Main extends JcoderTool {
                     case "-nowrite" -> noWriteFlag = true;
                     case "-ignore" -> ignoreFlag = true;
                     case "-version" -> environment.println(FULL_VERSION);
-                    case "-h", "-help" -> {
-                        usage();
-                        System.exit((OK));
-                    }
                     default -> {
                         if (arg.startsWith("-")) {
                             environment.error("err.invalid_option", arg);
                             usage();
                             throw new IllegalArgumentException();
                         } else {
-                            fileList.add(new ToolInput.FileInput(argv[i]));
+                            fileList.add(argv[i]);
                         }
                     }
                 }
             }
             if (fileList.size() == 0) {
-                fileList.add(new ToolInput.StdinInput());
+                usage();
+                throw new IllegalArgumentException();
             }
         } catch (IllegalArgumentException iae) {
             if (environment.hasMessages()) {

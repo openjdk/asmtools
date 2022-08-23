@@ -23,7 +23,6 @@
 package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.asmutils.Pair;
-import org.openjdk.asmtools.common.structure.ToolInput;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -87,10 +86,10 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     }
 
     @Override
-    public void setInputFileName(ToolInput inputFileName) throws IOException {
+    public void setInputFileName(String inputFileName) throws IOException {
         super.setInputFileName(inputFileName);
         fileContent.clear();
-        fileContent.addAll(inputFileName.readAllLines());
+        fileContent.addAll(Files.readAllLines(Paths.get(inputFileName)));
     }
 
     /**

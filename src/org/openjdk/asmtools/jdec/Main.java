@@ -22,7 +22,6 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.*;
@@ -40,7 +39,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdecTool {
 
-    private ArrayList<ToolInput> fileList = new ArrayList<>();
+    private ArrayList<String> fileList = new ArrayList<>();
 
     public Main(PrintStream toolOutput, String... argv) {
         super(toolOutput);
@@ -111,21 +110,19 @@ public class Main extends JdecTool {
                 case "-version":
                     environment.println(FULL_VERSION);
                     break;
-                case "-h", "-help":
-                    usage();
-                    System.exit(OK);
                 default:
                     if (arg.startsWith("-")) {
                         environment.error("err.invalid_option", arg);
                         usage();
                         System.exit(FAILED);
                     } else {
-                        fileList.add(new ToolInput.FileInput(arg));
+                        fileList.add(arg);
                     }
             }
         }
         if (fileList.isEmpty()) {
-            fileList.add(new ToolInput.StdinInput());
+            usage();
+            System.exit(FAILED);
         }
     }
 
@@ -133,7 +130,7 @@ public class Main extends JdecTool {
      * Run the decoder
      */
     public synchronized int decode() {
-        for (ToolInput inputFileName : fileList) {
+        for (String inputFileName : fileList) {
             try {
 //                DataInputStream dataInputStream = getDataInputStream(inpname);
 //                if (dataInputStream == null)
