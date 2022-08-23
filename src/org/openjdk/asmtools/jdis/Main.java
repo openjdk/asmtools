@@ -48,8 +48,6 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdisTool {
 
-    private ArrayList<ToolInput> fileList = new ArrayList<>();
-
     public Main(PrintStream toolOutput, String... argv) {
         super(toolOutput);
         parseArgs(argv);
