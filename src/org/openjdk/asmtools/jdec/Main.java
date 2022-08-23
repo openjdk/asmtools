@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.*;

@@ -1,4 +1,7 @@
-package org.openjdk.asmtools.common;
+package org.openjdk.asmtools.common.structure;
+
+import org.openjdk.asmtools.common.Environment;
+import org.openjdk.asmtools.jdis.ClassData;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

@@ -23,9 +23,12 @@
 package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.structure.ToolInput;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static java.lang.String.format;
