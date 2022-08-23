@@ -82,7 +82,7 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
      * @return DataInputStream or null if the method can't read a file
      */
     protected DataInputStream getDataInputStream() throws URISyntaxException, IOException {
-        Objects.requireNonNull(this.inputFileName, "Input must be defined.");
+        Objects.requireNonNull(this.inputFileName, "Input file name should be defined.");
         return inputFileName.getDataInputStream(Optional.of(this));
     }
 
