@@ -22,17 +22,12 @@
  */
 package org.openjdk.asmtools.common;
 
-import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Objects;
 import java.util.Optional;
 
