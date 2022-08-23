@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.openjdk.asmtools.ThreeStringWriters;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -15,7 +17,6 @@ class MainTest {
     public void main3StreamsNoSuchFileError() {
         ThreeStringWriters outs = new ThreeStringWriters();
         String nonExisitngFile = "someNonExiostingFile";
-        //for 0 file args, there is hardcoded System.exit
         Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), nonExisitngFile);
         int i = decoder.disasm();
         outs.flush();
@@ -36,6 +37,27 @@ class MainTest {
         Assertions.assertFalse(outs.getToolBos().isEmpty());
         Assertions.assertTrue(outs.getErrorBos().isEmpty());
         Assertions.assertTrue(outs.getLoggerBos().isEmpty());
+        Assertions.assertTrue(outs.getToolBos().contains("invoke"));
+    }
+
+    @Test
+    public void main3StreamsStdinCorrectStream() throws IOException {
+        ThreeStringWriters outs = new ThreeStringWriters();
+        File in =  new File("./target/classes/org/openjdk/asmtools/jdis/Main.class");
+        InputStream is = System.in;
+        try {
+            System.setIn(new FileInputStream(in));
+            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput());
+            int i = decoder.disasm();
+            outs.flush();
+            Assertions.assertEquals(0, i);
+            Assertions.assertFalse(outs.getToolBos().isEmpty());
+            Assertions.assertTrue(outs.getErrorBos().isEmpty());
+            Assertions.assertTrue(outs.getLoggerBos().isEmpty());
+            Assertions.assertTrue(outs.getToolBos().contains("invoke"));
+        }finally {
+            System.setIn(is);
+        }
     }
 
 
