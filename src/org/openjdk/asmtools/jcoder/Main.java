@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.structure.ToolInput;
 
 import java.io.File;
 import java.io.IOException;

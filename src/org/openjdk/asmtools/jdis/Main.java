@@ -24,7 +24,7 @@ package org.openjdk.asmtools.jdis;
 
 // import org.openjdk.asmtools.common.Tool;
 
-import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.DataInputStream;
