@@ -24,6 +24,8 @@ public interface ToolInput {
 
     String getFileName();
 
+    void provide(ClassData classData) throws IOException;
+
     DataInputStream getDataInputStream(Optional<Environment> logger) throws URISyntaxException, IOException;
 
     Collection<String> readAllLines() throws IOException;
@@ -38,6 +40,11 @@ public interface ToolInput {
         @Override
         public String getFileName() {
             return file;
+        }
+
+        @Override
+        public void provide(ClassData classData) throws IOException {
+            classData.read(file);
         }
 
         public Collection<String> readAllLines() throws IOException {
@@ -97,6 +104,13 @@ public interface ToolInput {
         public String getFileName() {
             //get parent is used
             return "stdin/in";
+        }
+
+        @Override
+        public void provide(ClassData classData) throws IOException {
+            try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes))) {
+                classData.read(dis, Paths.get(getFileName()));
+            }
         }
 
         @Override
