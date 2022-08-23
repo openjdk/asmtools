@@ -24,7 +24,6 @@ package org.openjdk.asmtools.jdis;
 
 // import org.openjdk.asmtools.common.Tool;
 
-import org.openjdk.asmtools.common.structure.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.FileNotFoundException;
@@ -45,7 +44,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdisTool {
 
-    private ArrayList<ToolInput> fileList = new ArrayList<>();
+    private ArrayList<String> fileList = new ArrayList<>();
 
     public Main(PrintStream toolOutput, String... argv) {
         super(toolOutput);
@@ -70,11 +69,11 @@ public class Main extends JdisTool {
 
     // Run disassembler when args already parsed
     public synchronized int disasm() {
-        for (ToolInput inputFileName : fileList) {
+        for (String inputFileName : fileList) {
             try {
-                environment.setInputFile(inputFileName.getFileName());
+                environment.setInputFile(inputFileName);
                 ClassData classData = new ClassData(environment);
-                inputFileName.provide(classData);
+                classData.read(inputFileName);
                 classData.print();
                 environment.getToolOutput().flush();
                 continue;
@@ -143,25 +142,20 @@ public class Main extends JdisTool {
                     break;
                 case "-version":
                     environment.println(FULL_VERSION);
-                    System.exit(OK);
-                case "-h":
-                    usage();
-                    System.exit(OK);
-                case "-help":
-                    usage();
-                    System.exit(OK);
+                    break;
                 default:
                     if (arg.startsWith("-")) {
                         environment.error("err.invalid_option", arg);
                         usage();
                         System.exit(FAILED);
                     } else {
-                        fileList.add(new ToolInput.FileInput(arg));
+                        fileList.add(arg);
                     }
             }
         }
         if (fileList.isEmpty()) {
-            fileList.add(new ToolInput.StdinInput());
+            usage();
+            System.exit(FAILED);
         }
     }
 }
