@@ -6,13 +6,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -73,23 +71,29 @@ public interface ToolInput {
         }
     }
 
-    public static class ByteInput implements  ToolInput {
+    public static class StdinInput implements  ToolInput {
 
         //compilers passes input more then one times, so saving it for reuse;
         private final byte[] bytes;
 
-        public ByteInput(final byte[] bytes) {
-            this.bytes = bytes;
-        }
-
-        public ByteInput(final String bytes) {
-            this.bytes = bytes.getBytes(StandardCharsets.UTF_8);
+        public StdinInput() {
+            try {
+                byte[] buffer = new byte[32 * 1024];
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int bytesRead;
+                while ((bytesRead = System.in.read(buffer)) > 0) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+                bytes = baos.toByteArray();
+            }catch (Exception ex){
+                throw new RuntimeException(ex);
+            }
         }
 
         @Override
         public String getFileName() {
             //get parent is used
-            return "bytes/bytes";
+            return "stdin/in";
         }
 
         @Override
@@ -115,46 +119,6 @@ public interface ToolInput {
                 }
             };
             return r;
-        }
-    }
-
-    public static class StreamInput extends ByteInput {
-
-        public StreamInput(InputStream is) {
-            super(drainIs(is));
-        }
-
-        public static byte[] drainIs(InputStream is) {
-            try {
-                byte[] buffer = new byte[32 * 1024];
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) > 0) {
-                    baos.write(buffer, 0, bytesRead);
-                }
-                return baos.toByteArray();
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        @Override
-        public String getFileName() {
-            //get parent is used
-            return "stream/stream";
-        }
-    }
-
-    public static class StdinInput extends StreamInput {
-
-        public StdinInput() {
-            super(System.in);
-        }
-
-        @Override
-        public String getFileName() {
-            //get parent is used
-            return "stdin/in";
         }
     }
 }
