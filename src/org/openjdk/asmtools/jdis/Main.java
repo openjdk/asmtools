@@ -72,7 +72,7 @@ public class Main extends JdisTool {
     public synchronized int disasm() {
         for (ToolInput inputFileName : fileList) {
             try {
-                environment.setInputFile(inputFileName);
+                environment.setInputFile(inputFileName.getFileName());
                 ClassData classData = new ClassData(environment);
                 inputFileName.provide(classData);
                 classData.print();
@@ -144,7 +144,10 @@ public class Main extends JdisTool {
                 case "-version":
                     environment.println(FULL_VERSION);
                     System.exit(OK);
-                case "-h", "-help":
+                case "-h":
+                    usage();
+                    System.exit(OK);
+                case "-help":
                     usage();
                     System.exit(OK);
                 default:

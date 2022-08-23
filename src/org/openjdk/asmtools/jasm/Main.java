@@ -23,7 +23,6 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.structure.CFVersion;
-import org.openjdk.asmtools.common.structure.ToolInput;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class Main extends JasmTool {
 
     private final CFVersion cfv = new CFVersion();
 
-    private final ArrayList<ToolInput> fileList = new ArrayList<>();
+    private final ArrayList<String> fileList = new ArrayList<>();
     private File destDir;
 
     // tool options
@@ -86,7 +85,7 @@ public class Main extends JasmTool {
         // compile all input files
         int rc = OK;
         try {
-            for (ToolInput inputFileName : fileList) {
+            for (String inputFileName : fileList) {
                 environment.setInputFile(inputFileName);
                 Parser parser = new Parser(environment, cfv);
                 // Set hidden options: Parser debug flags
@@ -148,10 +147,6 @@ public class Main extends JasmTool {
                     case "-nowrite" -> noWriteFlag = true;
                     case "-version" -> environment.println(FULL_VERSION);
                     case "-d" -> destDir = setDestDir(++i, argv);
-                    case "-h", "-help" -> {
-                        usage();
-                        System.exit(OK);
-                    }
                     // overrides cf version even if it's defined in the source file.
                     case "-fixcv", "-cv" -> {
                         boolean frozenCFV = (arg.startsWith("-fix"));
@@ -208,13 +203,14 @@ public class Main extends JasmTool {
                             usage();
                             throw new IllegalArgumentException();
                         } else {
-                            fileList.add(new ToolInput.FileInput(argv[i]));
+                            fileList.add(argv[i]);
                         }
                     }
                 }
             }
             if (fileList.size() == 0) {
-                fileList.add(new ToolInput.StdinInput());
+                usage();
+                throw new IllegalArgumentException();
             }
         } catch (IllegalArgumentException iae) {
             if (environment.hasMessages()) {

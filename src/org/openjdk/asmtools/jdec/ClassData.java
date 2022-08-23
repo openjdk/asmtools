@@ -32,7 +32,6 @@ import org.openjdk.asmtools.jcoder.JcodTokens;
 
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -69,10 +68,10 @@ class ClassData {
     /*========================================================*/
     private int indent = 0;
 
-    ClassData(JdecEnvironment environment) throws IOException, URISyntaxException {
+    ClassData(JdecEnvironment environment) throws IOException {
         this.environment = environment;
         //
-        try (DataInputStream dis = environment.getInputFile().getDataInputStream(Optional.empty())) {
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(environment.getInputFileName()))) {
             byte[] buf = new byte[dis.available()];
             if (dis.read(buf) <= 0) {
                 throw new FormatError("err.file.empty", environment.getSimpleInputFileName());
@@ -1133,7 +1132,7 @@ class ClassData {
                     out_begin(format("%s %s {", entityType, entityName));
                 }
             } catch (Exception e) {
-                entityName = environment.getInputFile().getFileName();
+                entityName = environment.getInputFileName();
                 environment.println("// " + e.getMessage() + " while accessing entityName");
                 out_begin(format("%s %s { // source file name", entityType, entityName));
             }
