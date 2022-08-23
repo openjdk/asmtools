@@ -44,6 +44,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JcoderTool {
 
+    private final ArrayList<ToolInput> fileList = new ArrayList<>(1);
     HashMap<String, String> macros = new HashMap<>(1);
     private File destDir;
     // tool options

@@ -48,6 +48,7 @@ public class Main extends JasmTool {
 
     private final CFVersion cfv = new CFVersion();
 
+    private final ArrayList<ToolInput> fileList = new ArrayList<>();
     private File destDir;
 
     // tool options
