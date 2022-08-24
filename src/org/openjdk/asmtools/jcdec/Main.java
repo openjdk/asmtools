@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jcdec;
 
+import static org.openjdk.asmtools.common.Environment.OK;
 import static org.openjdk.asmtools.jcoder.JcodTokens.*;
 import org.openjdk.asmtools.common.uEscWriter;
 import org.openjdk.asmtools.util.I18NResourceBundle;
@@ -874,8 +875,9 @@ public class Main {
                 DebugFlag = true;
                 vargs.add(arg);
                 out.println("arg[" + i + "]=" + argv[i] + "/verbose");
-            } else if (arg.equals("-version")) {
+            } else if (arg.equals(org.openjdk.asmtools.Main.VERSION_SWITCH)) {
                 out.println(ProductInfo.FULL_VERSION);
+                System.exit(OK);
             } else if (arg.startsWith("-")) {
 //out.println("arg["+i+"]="+argv[i]+"/invalid flag");
                 error(i18n.getString("jcdec.error.invalid_flag", arg));

@@ -140,7 +140,10 @@ public class Main extends JcoderTool {
                     }
                     case "-nowrite" -> noWriteFlag = true;
                     case "-ignore" -> ignoreFlag = true;
-                    case "-version" -> environment.println(FULL_VERSION);
+                    case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
+                        environment.println(FULL_VERSION);
+                        System.exit(OK);
+                    }
                     case "-h", "-help" -> {
                         usage();
                         System.exit((OK));
