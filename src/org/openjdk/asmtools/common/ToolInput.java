@@ -76,10 +76,14 @@ public interface ToolInput {
     public static class ByteInput implements  ToolInput {
 
         //compilers passes input more then one times, so saving it for reuse;
-        private final byte[] bytes;
+        protected byte[] bytes;
 
         public ByteInput(final byte[] bytes) {
             this.bytes = bytes;
+        }
+
+        protected ByteInput() {
+
         }
 
         public ByteInput(final String bytes) {
@@ -97,13 +101,19 @@ public interface ToolInput {
             return getFileName();
         }
 
+        protected void init() {
+
+        }
+
         @Override
         public DataInputStream getDataInputStream(Optional<Environment> logger) throws URISyntaxException, IOException {
+            init();
             return new DataInputStream(new ByteArrayInputStream(bytes));
         }
 
         @Override
         public Collection<String> readAllLines() throws IOException {
+            init();
             ArrayList r = new ArrayList();
             try(BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), "utf-8"))){
                 while(true){
@@ -120,8 +130,17 @@ public interface ToolInput {
 
     public static class StreamInput extends ByteInput {
 
+        private final InputStream originalStream;
+
         public StreamInput(InputStream is) {
-            super(drainIs(is));
+            originalStream = is;
+        }
+
+        @Override
+        protected void init() {
+            if (bytes == null){
+                bytes=drainIs(originalStream);
+            }
         }
 
         public static byte[] drainIs(InputStream is) {
