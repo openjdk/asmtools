@@ -154,7 +154,7 @@ public interface ToolInput {
         @Override
         public String getFileName() {
             //get parent is used
-            return "stdin/in";
+            return "stdin/stdin";
         }
     }
 }
