@@ -106,9 +106,9 @@ public class Main extends JdecTool {
                     environment.setVerboseFlag(true);
                     environment.setTraceFlag(true);
                     break;
-                case "-version":
+                case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
-                    break;
+                    System.exit(OK);
                 case "-h", "-help":
                     usage();
                     System.exit(OK);

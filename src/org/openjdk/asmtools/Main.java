@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools;
 
+import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 
@@ -32,6 +33,7 @@ import org.openjdk.asmtools.util.ProductInfo;
 public class Main {
 
     public static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
+    public static final String VERSION_SWITCH="-version";
 
     /**
      * Parses the first argument and deligates execution to an appropriate tool
@@ -44,9 +46,10 @@ public class Main {
         }
         String cmd = args[0];
         if (cmd.equals("-?") || cmd.equals("-h") || cmd.equals("-help")) {
-            usage(null, 0);
-        } else if (cmd.equals("-version")) {
+            usage(null, Environment.OK);
+        } else if (cmd.equals(VERSION_SWITCH)) {
             printVersion();
+            System.exit(Environment.OK);
         } else {
             String[] newArgs = new String[args.length - 1];
             System.arraycopy(args, 1, newArgs, 0, args.length - 1);

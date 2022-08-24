@@ -144,7 +144,7 @@ public class Main extends JdisTool {
                 case "-hx":
                     Options.set(Options.PR.HEX);
                     break;
-                case "-version":
+                case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
                     System.exit(OK);
                 case "-h", "-help":
