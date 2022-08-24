@@ -1974,7 +1974,7 @@ class Parser extends ParseBase {
             classData.relinkBootstrapMethods();
             // Fix Source file
             String sourceFileName = environment.getSimpleInputFileName();
-            String sourceName = sourceFileName.substring(0, sourceFileName.indexOf('.'));
+            String sourceName = sourceFileName.contains(".") ? sourceFileName.substring(0, sourceFileName.indexOf('.')) : sourceFileName;
             classData.sourceFileNameAttr = new SourceFileAttr(this.classData.pool, sourceFileName).
                     updateIfFound( this.classData.pool,
                             name -> name.startsWith(sourceName) &&
