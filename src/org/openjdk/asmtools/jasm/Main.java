@@ -145,7 +145,10 @@ public class Main extends JasmTool {
                     case "-strict" -> environment.setStrictWarnings(true);
                     case "-nowarn" -> environment.setIgnoreWarnings(true);
                     case "-nowrite" -> noWriteFlag = true;
-                    case "-version" -> environment.println(FULL_VERSION);
+                    case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
+                        environment.println(FULL_VERSION);
+                        System.exit(OK);
+                    }
                     case "-d" -> destDir = setDestDir(++i, argv);
                     case "-h", "-help" -> {
                         usage();
