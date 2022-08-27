@@ -147,6 +147,9 @@ public class Main extends JdisTool {
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
                     System.exit(OK);
+                case org.openjdk.asmtools.Main.STDIN_SWITCH:
+                    addStdIn();
+                    break;
                 case "-h", "-help":
                     usage();
                     System.exit(OK);
@@ -161,7 +164,8 @@ public class Main extends JdisTool {
             }
         }
         if (fileList.isEmpty()) {
-            fileList.add(new ToolInput.StdinInput());
+            usage();
+            System.exit(FAILED);
         }
     }
 }

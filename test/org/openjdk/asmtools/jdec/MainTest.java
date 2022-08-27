@@ -1,17 +1,23 @@
 package org.openjdk.asmtools.jdec;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.openjdk.asmtools.ClassPathClassWork;
 import org.openjdk.asmtools.ThreeStringWriters;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
+import java.util.regex.Pattern;
 
-class MainTest {
+class MainTest extends ClassPathClassWork {
+
+    @BeforeAll
+    public static void prepareClass() {
+        initClassData(org.openjdk.asmtools.jdec.Main.class);
+    }
 
     @Test
     public void main3StreamsNoSuchFileError() {
@@ -30,7 +36,7 @@ class MainTest {
     @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "./target/classes/org/openjdk/asmtools/jdec/Main.class");
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
         int i = decoder.decode();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -43,11 +49,11 @@ class MainTest {
     @Test
     public void main3StreamsStdinCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        File in =  new File("./target/classes/org/openjdk/asmtools/jdec/Main.class");
+        File in =  new File(classFile);
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
-            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput());
+            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), org.openjdk.asmtools.Main.STDIN_SWITCH);
             int i = decoder.decode();
             outs.flush();
             Assertions.assertEquals(0, i);

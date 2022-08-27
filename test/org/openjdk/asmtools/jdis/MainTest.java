@@ -1,7 +1,9 @@
 package org.openjdk.asmtools.jdis;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.openjdk.asmtools.ClassPathClassWork;
 import org.openjdk.asmtools.ThreeStringWriters;
 
 import java.io.File;
@@ -11,7 +13,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-class MainTest {
+class MainTest extends ClassPathClassWork {
+
+    @BeforeAll
+    public static void prepareClass() {
+        initClassData(org.openjdk.asmtools.jdis.Main.class);
+    }
 
     @Test
     public void main3StreamsNoSuchFileError() {
@@ -30,7 +37,7 @@ class MainTest {
     @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "./target/classes/org/openjdk/asmtools/jdis/Main.class");
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -38,16 +45,18 @@ class MainTest {
         Assertions.assertTrue(outs.getErrorBos().isEmpty());
         Assertions.assertTrue(outs.getLoggerBos().isEmpty());
         Assertions.assertTrue(outs.getToolBos().contains("invoke"));
+        Assertions.assertEquals(1, packageName.matcher(outs.getToolBos()).results().count());
+        Assertions.assertEquals(1, className.matcher(outs.getToolBos()).results().count());
     }
 
     @Test
     public void main3StreamsStdinCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        File in =  new File("./target/classes/org/openjdk/asmtools/jdis/Main.class");
+        File in = new File(classFile);
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
-            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput());
+            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), org.openjdk.asmtools.Main.STDIN_SWITCH);
             int i = decoder.disasm();
             outs.flush();
             Assertions.assertEquals(0, i);
@@ -55,18 +64,19 @@ class MainTest {
             Assertions.assertTrue(outs.getErrorBos().isEmpty());
             Assertions.assertTrue(outs.getLoggerBos().isEmpty());
             Assertions.assertTrue(outs.getToolBos().contains("invoke"));
-        }finally {
+            Assertions.assertEquals(1, packageName.matcher(outs.getToolBos()).results().count());
+            Assertions.assertEquals(1, className.matcher(outs.getToolBos()).results().count());
+        } finally {
             System.setIn(is);
         }
     }
 
-
     @Test
     public void superIsNotOmited() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        String testClazz = "org/openjdk/asmtools/jdis/Main";
+        String testClazz = clazz.getName().replace('.', '/');
         String name = testClazz.replaceAll(".*/", "");
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "./target/classes/" + testClazz + ".class");
+        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -112,6 +122,29 @@ class MainTest {
             }
         }
         Assertions.assertTrue(false, "class Main was not found in disassembled output");
+    }
+
+    @Test
+    public void mainBothFileAndStreamIsRead() throws IOException {
+        ThreeStringWriters outs = new ThreeStringWriters();
+        File in = new File(classFile);
+        InputStream is = System.in;
+        try {
+            System.setIn(new FileInputStream(in));
+            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile, org.openjdk.asmtools.Main.STDIN_SWITCH, classFile, org.openjdk.asmtools.Main.STDIN_SWITCH);
+            int i = decoder.disasm();
+            outs.flush();
+            Assertions.assertEquals(0, i);
+            Assertions.assertFalse(outs.getToolBos().isEmpty());
+            Assertions.assertTrue(outs.getErrorBos().isEmpty());
+            Assertions.assertTrue(outs.getLoggerBos().isEmpty());
+            Assertions.assertTrue(outs.getToolBos().contains("invoke"));
+            //3, both files, but stream only once, despite two are sets
+            Assertions.assertEquals(3, packageName.matcher(outs.getToolBos()).results().count());
+            Assertions.assertEquals(3, className.matcher(outs.getToolBos()).results().count());
+        } finally {
+            System.setIn(is);
+        }
     }
 
 }
