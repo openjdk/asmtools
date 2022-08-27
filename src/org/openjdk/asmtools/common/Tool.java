@@ -85,4 +85,14 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
         }
         return destDir;
     }
+
+    protected void addStdIn() {
+        for (ToolInput toolInput: fileList) {
+            if (toolInput instanceof ToolInput.StdinInput) {
+                //or throw?
+                return;
+            }
+        }
+        fileList.add(new ToolInput.StdinInput());
+    }
 }

@@ -26,7 +26,6 @@ import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.*;
-import java.util.ArrayList;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
@@ -112,6 +111,9 @@ public class Main extends JdecTool {
                 case "-h", "-help":
                     usage();
                     System.exit(OK);
+                case org.openjdk.asmtools.Main.STDIN_SWITCH:
+                    addStdIn();
+                    break;
                 default:
                     if (arg.startsWith("-")) {
                         environment.error("err.invalid_option", arg);
@@ -123,7 +125,8 @@ public class Main extends JdecTool {
             }
         }
         if (fileList.isEmpty()) {
-            fileList.add(new ToolInput.StdinInput());
+            usage();
+            System.exit(FAILED);
         }
     }
 

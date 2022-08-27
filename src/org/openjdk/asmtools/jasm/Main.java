@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.regex.PatternSyntaxException;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -204,6 +203,10 @@ public class Main extends JasmTool {
                             }
                         }
                     }
+                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> {
+                        addStdIn();
+                        break;
+                    }
                     default -> {
                         if (arg.startsWith("-")) {
                             environment.error("err.invalid_option", arg);
@@ -215,8 +218,9 @@ public class Main extends JasmTool {
                     }
                 }
             }
-            if (fileList.size() == 0) {
-                fileList.add(new ToolInput.StdinInput());
+            if (fileList.isEmpty()) {
+                usage();
+                System.exit(FAILED);
             }
         } catch (IllegalArgumentException iae) {
             if (environment.hasMessages()) {

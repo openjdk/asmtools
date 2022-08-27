@@ -148,6 +148,10 @@ public class Main extends JcoderTool {
                         usage();
                         System.exit((OK));
                     }
+                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> {
+                        addStdIn();
+                        break;
+                    }
                     default -> {
                         if (arg.startsWith("-")) {
                             environment.error("err.invalid_option", arg);
@@ -159,8 +163,9 @@ public class Main extends JcoderTool {
                     }
                 }
             }
-            if (fileList.size() == 0) {
-                fileList.add(new ToolInput.StdinInput());
+            if (fileList.isEmpty()) {
+                usage();
+                System.exit(FAILED);
             }
         } catch (IllegalArgumentException iae) {
             if (environment.hasMessages()) {
