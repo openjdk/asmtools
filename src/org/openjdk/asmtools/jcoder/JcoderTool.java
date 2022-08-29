@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.Tool;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.PrintWriter;
 
@@ -30,15 +31,15 @@ public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
 
     protected JcoderTool() {
-        super(new PrintWriter(System.err, true), new PrintWriter(System.out, true));
+        super(new PrintWriter(System.err, true), new ToolOutput.OutputStreamOutput(System.out));
     }
 
-    protected JcoderTool(PrintWriter errorLogger, PrintWriter outputLogger) {
+    protected JcoderTool(PrintWriter errorLogger, ToolOutput outputLogger) {
         super(errorLogger, outputLogger);
     }
 
     @Override
-    public JcoderEnvironment getEnvironment(PrintWriter errorLogger, PrintWriter outputLogger) {
+    public JcoderEnvironment getEnvironment(PrintWriter errorLogger, ToolOutput outputLogger) {
         JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(errorLogger, outputLogger);
         return builder.build();
     }

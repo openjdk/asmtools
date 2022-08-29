@@ -34,11 +34,11 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     protected final ArrayList<ToolInput> fileList = new ArrayList<>();
     protected T environment;
 
-    protected Tool(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+    protected Tool(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
         this.environment = getEnvironment(toolOutput, errorLogger, outputLogger);
     }
 
-    protected Tool(PrintWriter errorLogger, PrintWriter outputLogger) {
+    protected Tool(PrintWriter errorLogger, ToolOutput outputLogger) {
         this.environment = getEnvironment(errorLogger, outputLogger);
     }
 
@@ -57,11 +57,11 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     }
 
     // Build environment
-    public T getEnvironment(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+    public T getEnvironment(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
         throw new NotImplementedException();
     }
 
-    public T getEnvironment(PrintWriter errorLogger, PrintWriter outputLogger) {
+    public T getEnvironment(PrintWriter errorLogger, ToolOutput outputLogger) {
         throw new NotImplementedException();
     }
 

@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.PrintWriter;
@@ -34,8 +35,8 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     protected boolean printDetailsFlag;
 
-    // Output stream
-    private final PrintWriter toolOutput;
+    // Output stream or files or custom Strings
+    private final ToolOutput toolOutput;
 
     private JdecEnvironment(Builder<JdecEnvironment, DecompilerLogger> builder, I18NResourceBundle i18n) {
         super(builder, i18n);
@@ -47,7 +48,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
         getLogger().printErrorLn(format, args);
     }
 
-    public PrintWriter getToolOutput() {
+    public ToolOutput getToolOutput() {
         return toolOutput;
     }
 
@@ -63,7 +64,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     @Override
     public void println() {
-        getToolOutput().println();
+        getToolOutput().println("");
     }
 
     @Override
@@ -79,7 +80,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     static class JDecBuilder extends Builder<JdecEnvironment, DecompilerLogger> {
 
-        public JDecBuilder(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+        public JDecBuilder(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
             super("jdec", toolOutput, new DecompilerLogger(errorLogger, outputLogger));
         }
 

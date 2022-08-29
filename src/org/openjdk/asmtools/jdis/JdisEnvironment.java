@@ -26,18 +26,16 @@ import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.ToolLogger;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.PrintWriter;
 
 public class JdisEnvironment extends Environment<DecompilerLogger> {
 
-    // Output stream
-    private final PrintWriter toolOutput;
 
     private JdisEnvironment(Builder<JdisEnvironment, DecompilerLogger> builder, I18NResourceBundle i18n) {
         super(builder, i18n);
-        this.toolOutput = builder.toolOutput;
     }
 
     @Override
@@ -51,13 +49,10 @@ public class JdisEnvironment extends Environment<DecompilerLogger> {
                 new ToolLogger.Message(EMessageKind.ERROR, exception.getMessage())));
     }
 
-    public PrintWriter getToolOutput() {
-        return toolOutput;
-    }
 
     static class JDecBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
 
-        public JDecBuilder(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+        public JDecBuilder(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
             super("jdis", toolOutput, new DecompilerLogger(errorLogger, outputLogger));
         }
 

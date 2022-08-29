@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.Tool;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.PrintStream;
@@ -43,7 +44,7 @@ public abstract class JdecTool extends Tool<JdecEnvironment> {
     }
 
     @Override
-    public JdecEnvironment getEnvironment(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+    public JdecEnvironment getEnvironment(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
         JdecEnvironment.JDecBuilder builder = new JdecEnvironment.JDecBuilder(toolOutput, errorLogger, outputLogger);
         return builder.build();
     }

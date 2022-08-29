@@ -142,10 +142,10 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
      */
     public abstract static class Builder<E extends Environment, T extends ToolLogger> {
         T toolLogger;
-        public PrintWriter toolOutput;
+        public ToolOutput toolOutput;
         protected String programName;
 
-        public Builder(String programName, PrintWriter toolOutput, T toolLogger) {
+        public Builder(String programName, ToolOutput toolOutput, T toolLogger) {
             this.programName = programName;
             this.toolOutput = toolOutput;
             this.toolLogger = toolLogger;
