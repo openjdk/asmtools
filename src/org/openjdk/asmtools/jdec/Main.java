@@ -147,7 +147,7 @@ public class Main extends JdecTool {
                 environment.setInputFile(inputFileName);
                 ClassData classData = new ClassData(environment);
                 classData.decodeClass();
-                environment.getToolOutput().flush();
+                environment.getToolOutput().finishClass(inputFileName.getFileName()/*TODO replace by proper pkg.name?*/);
                 continue;
             } catch (FileNotFoundException fnf) {
                 environment.printException(fnf);
