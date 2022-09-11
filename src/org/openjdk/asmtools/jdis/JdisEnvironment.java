@@ -52,8 +52,8 @@ public class JdisEnvironment extends Environment<DecompilerLogger> {
 
     static class JDecBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
 
-        public JDecBuilder(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
-            super("jdis", toolOutput, new DecompilerLogger(errorLogger, outputLogger));
+        public JDecBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+            super("jdis", toolOutput, new DecompilerLogger(outerLog));
         }
 
         @Override

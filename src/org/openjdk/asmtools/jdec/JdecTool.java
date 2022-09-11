@@ -31,21 +31,21 @@ import java.io.PrintWriter;
 
 public abstract class JdecTool extends Tool<JdecEnvironment> {
 
-    protected JdecTool(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput) {
-        super(toolOutput, errorOutput, loggerOutput);
+    protected JdecTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+        super(toolOutput, log);
     }
 
-    protected JdecTool(PrintWriter toolOutput) {
-        super(toolOutput, new PrintWriter(System.err, true), new PrintWriter(System.out, true));
+    protected JdecTool(ToolOutput toolOutput) {
+        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
     }
 
     protected JdecTool(PrintStream toolOutput) {
-        this(new PrintWriter(new uEscWriter(toolOutput)));
+        this(new ToolOutput.EscapedPrintStreamOutput(toolOutput));
     }
 
     @Override
-    public JdecEnvironment getEnvironment(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
-        JdecEnvironment.JDecBuilder builder = new JdecEnvironment.JDecBuilder(toolOutput, errorLogger, outputLogger);
+    public JdecEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+        JdecEnvironment.JDecBuilder builder = new JdecEnvironment.JDecBuilder(toolOutput, log);
         return builder.build();
     }
 }

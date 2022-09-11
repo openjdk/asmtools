@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.ToolInput;
 
@@ -67,15 +68,14 @@ public class Main extends JasmTool {
         parseArgs(argv);
     }
 
-    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String... argv) {
-        super(errorLogger, outputLogger);
+    public Main(ToolOutput.DualStreamToolOutput log, String... argv) {
+        super(log);
         parseArgs(argv);
     }
 
     // jasm entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new PrintWriter(System.err, true),
-                new PrintWriter(System.out, true), argv);
+        Main compiler = new Main(new ToolOutput.DualOutputStreamOutput(), argv);
         System.exit(compiler.compile());
     }
 

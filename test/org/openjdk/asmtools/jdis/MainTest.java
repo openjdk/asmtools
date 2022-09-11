@@ -24,7 +24,7 @@ class MainTest extends ClassPathClassWork {
     public void main3StreamsNoSuchFileError() {
         ThreeStringWriters outs = new ThreeStringWriters();
         String nonExisitngFile = "someNonExiostingFile";
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), nonExisitngFile);
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), nonExisitngFile);
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(1, i);
@@ -37,7 +37,7 @@ class MainTest extends ClassPathClassWork {
     @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), classFile);
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -56,10 +56,11 @@ class MainTest extends ClassPathClassWork {
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
-            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), org.openjdk.asmtools.Main.STDIN_SWITCH);
+            Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), org.openjdk.asmtools.Main.STDIN_SWITCH);
             int i = decoder.disasm();
             outs.flush();
             Assertions.assertEquals(0, i);
+            //pise to do stder:-/
             Assertions.assertFalse(outs.getToolBos().isEmpty());
             Assertions.assertTrue(outs.getErrorBos().isEmpty());
             Assertions.assertTrue(outs.getLoggerBos().isEmpty());
@@ -76,7 +77,7 @@ class MainTest extends ClassPathClassWork {
         ThreeStringWriters outs = new ThreeStringWriters();
         String testClazz = clazz.getName().replace('.', '/');
         String name = testClazz.replaceAll(".*/", "");
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), classFile);
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -107,7 +108,7 @@ class MainTest extends ClassPathClassWork {
         org.openjdk.asmtools.jasm.Main jasmTool = new org.openjdk.asmtools.jasm.Main(sourceWithoutSuper.getAbsolutePath(), "-d", dir.getAbsolutePath());
         jasmTool.compile();
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), dir.getAbsolutePath() + "/" + fqn + ".class");
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), dir.getAbsolutePath() + "/" + fqn + ".class");
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -131,7 +132,7 @@ class MainTest extends ClassPathClassWork {
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
-            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile, org.openjdk.asmtools.Main.STDIN_SWITCH, classFile, org.openjdk.asmtools.Main.STDIN_SWITCH);
+            Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), classFile, org.openjdk.asmtools.Main.STDIN_SWITCH, classFile, org.openjdk.asmtools.Main.STDIN_SWITCH);
             int i = decoder.disasm();
             outs.flush();
             Assertions.assertEquals(0, i);

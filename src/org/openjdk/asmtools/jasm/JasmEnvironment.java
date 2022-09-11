@@ -26,6 +26,7 @@ import org.openjdk.asmtools.common.CompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;
@@ -131,8 +132,8 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
 
     static class JasmBuilder extends Environment.Builder<JasmEnvironment, CompilerLogger> {
 
-        public JasmBuilder(PrintWriter errorLogger, PrintWriter outputLogger) {
-            super("jasm", new CompilerLogger(errorLogger, outputLogger));
+        public JasmBuilder(ToolOutput.DualStreamToolOutput logger) {
+            super("jasm", new CompilerLogger(logger));
         }
 
         @Override

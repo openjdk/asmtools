@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.common.ToolOutput;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -59,7 +61,7 @@ public class Indenter {
     protected final boolean printLineTable = Options.contains(LNT);
     protected final boolean printHEX = Options.contains(HEX);
     //
-    protected PrintWriter toolOutput;
+    protected ToolOutput toolOutput;
     //
     private int commentOffset = COMMENT_OFFSET;
     private int length, offset, step;
@@ -69,7 +71,7 @@ public class Indenter {
         throw new RuntimeException("not yet implemented");
     }
 
-    public Indenter(PrintWriter toolOutput) {
+    public Indenter(ToolOutput toolOutput) {
         this();
         this.toolOutput = toolOutput;
     }
@@ -82,12 +84,12 @@ public class Indenter {
     }
 
     public Indenter printIndentLn(String s) {
-        toolOutput.println(Indent(s));
+        toolOutput.printlns(Indent(s));
         return this;
     }
 
     public Indenter printIndentLn() {
-        toolOutput.println();
+        toolOutput.printlns("'");
         return this;
     }
 
@@ -96,70 +98,70 @@ public class Indenter {
     }
 
     public Indenter printIndentLn(String format, Object... args) {
-        toolOutput.println(Indent(new Formatter().format(format, args).toString()));
+        toolOutput.printlns(Indent(new Formatter().format(format, args).toString()));
         return this;
     }
 
     public Indenter printIndent(String format, Object... args) {
-        toolOutput.print(Indent(new Formatter().format(format, args).toString()));
+        toolOutput.prints(Indent(new Formatter().format(format, args).toString()));
         return this;
     }
 
     public Indenter printIndent(String s) {
-        toolOutput.print(Indent(s));
+        toolOutput.prints(Indent(s));
         return this;
     }
 
     public Indenter printIndent() {
-        toolOutput.print(getIndentString());
+        toolOutput.prints(getIndentString());
         return this;
     }
 
     public Indenter printPadRight(String s, int totalWidth) {
-        toolOutput.print(PadRight(s, totalWidth));
+        toolOutput.prints(PadRight(s, totalWidth));
         return this;
     }
 
     public Indenter printPadLeft(String s, int totalWidth) {
-        toolOutput.print(PadLeft(s, totalWidth));
+        toolOutput.prints(PadLeft(s, totalWidth));
         return this;
     }
 
     public Indenter printIndentPadRight(String str, int totalWidth) {
-        toolOutput.print(IndentPadRight(str, totalWidth));
+        toolOutput.prints(IndentPadRight(str, totalWidth));
         return this;
     }
 
     public Indenter print(String s) {
-        toolOutput.print(s);
+        toolOutput.prints(s);
         return this;
     }
 
     public Indenter print(String format, Object... args) {
-        toolOutput.print(new Formatter().format(format, args));
+        toolOutput.prints(new Formatter().format(format, args).toString());
         return this;
     }
 
     public Indenter println(String s) {
-        toolOutput.println(s);
+        toolOutput.printlns(s);
         return this;
     }
 
     public Indenter println() {
-        toolOutput.println();
+        toolOutput.printlns("");
         return this;
     }
 
     public Indenter println(Supplier<Boolean> isPrint) {
         if(isPrint.get()) {
-            toolOutput.println();
+            toolOutput.printlns("");
         }
         return this;
     }
 
 
     public Indenter println(String format, Object... args) {
-        toolOutput.println(new Formatter().format(format, args));
+        toolOutput.printlns(new Formatter().format(format, args).toString());
         return this;
     }
 

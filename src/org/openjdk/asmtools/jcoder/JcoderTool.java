@@ -31,16 +31,16 @@ public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
 
     protected JcoderTool() {
-        super(new PrintWriter(System.err, true), new ToolOutput.OutputStreamOutput(System.out));
+        super(new ToolOutput.DualOutputStreamOutput());
     }
 
-    protected JcoderTool(PrintWriter errorLogger, ToolOutput outputLogger) {
-        super(errorLogger, outputLogger);
+    protected JcoderTool(ToolOutput.DualStreamToolOutput logger) {
+        super(logger);
     }
 
     @Override
-    public JcoderEnvironment getEnvironment(PrintWriter errorLogger, ToolOutput outputLogger) {
-        JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(errorLogger, outputLogger);
+    public JcoderEnvironment getEnvironment(ToolOutput.DualStreamToolOutput log) {
+        JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(log);
         return builder.build();
     }
 }

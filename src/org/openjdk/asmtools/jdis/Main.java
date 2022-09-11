@@ -22,18 +22,13 @@
  */
 package org.openjdk.asmtools.jdis;
 
-// import org.openjdk.asmtools.common.Tool;
-
 import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.uEscWriter;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -48,24 +43,19 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdisTool {
 
-    public Main(PrintStream toolOutput, String... argv) {
+    public Main(ToolOutput toolOutput, String... argv) {
         super(toolOutput);
         parseArgs(argv);
     }
 
-    public Main(PrintWriter toolOutput, String... argv) {
-        super(toolOutput);
-        parseArgs(argv);
-    }
-
-    public Main(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput, String... argv) {
-        super(toolOutput, errorOutput, loggerOutput);
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger, String... argv) {
+        super(toolOutput, logger);
         parseArgs(argv);
     }
 
     // jdis entry point
     public static void main(String... argv) {
-        Main disassembler = new Main(new PrintWriter(new uEscWriter(System.out)), argv);
+        Main disassembler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
         System.exit(disassembler.disasm());
     }
 
@@ -79,7 +69,7 @@ public class Main extends JdisTool {
                     classData.read(dis, Paths.get(inputFileName.getFileName()));
                 }
                 classData.print();
-                environment.getToolOutput().flush();
+                environment.getOutputs().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
                 environment.printException(fnf);

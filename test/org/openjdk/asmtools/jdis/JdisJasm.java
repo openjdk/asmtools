@@ -3,6 +3,7 @@ package org.openjdk.asmtools.jdis;
 import org.junit.jupiter.api.Assertions;
 import org.openjdk.asmtools.BruteForceHelper;
 import org.openjdk.asmtools.ThreeStringWriters;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +26,9 @@ class JdisJasm {
             public int run(ThreeStringWriters outs, File clazz) throws IOException {
                 Main disassem;
                 if (g) {
-                    disassem = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "-g", clazz.getAbsolutePath());
+                    disassem = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), "-g", clazz.getAbsolutePath());
                 } else {
-                    disassem = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), clazz.getAbsolutePath());
+                    disassem = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), clazz.getAbsolutePath());
                 }
                 return disassem.disasm();
             }
@@ -61,7 +62,7 @@ class JdisJasm {
         @Override
         public int run(ThreeStringWriters outs, File clazz) throws IOException {
             File savedAsm = BruteForceHelper.saveDecompiledCode(worker.getDecompiledClass(clazz), "JdisJasmWorks");
-            org.openjdk.asmtools.jasm.Main asm = new org.openjdk.asmtools.jasm.Main(outs.getErrorOutput(), outs.getLoggerOutput(), savedAsm.getAbsolutePath(), "-d", worker.getCompileDir().getAbsolutePath());
+            org.openjdk.asmtools.jasm.Main asm = new org.openjdk.asmtools.jasm.Main(outs.getLoggers(), savedAsm.getAbsolutePath(), "-d", worker.getCompileDir().getAbsolutePath());
             BruteForceHelper.createMetadata(outs, clazz, savedAsm, worker.getCompileDir(), worker.getClassesRoot());
             return asm.compile();
         }

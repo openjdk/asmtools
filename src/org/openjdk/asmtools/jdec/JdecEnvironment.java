@@ -59,29 +59,29 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     @Override
     public void println(String format, Object... args) {
-        getToolOutput().println(( args == null || args.length == 0) ? format : format(format, args));
+        getToolOutput().printlns(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     @Override
     public void println() {
-        getToolOutput().println("");
+        getToolOutput().printlns("");
     }
 
     @Override
     public void print(String format, Object... args) {
-        getToolOutput().print(( args == null || args.length == 0) ? format : format(format, args));
+        getToolOutput().prints(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     @Override
     public void print(char ch) {
-        getToolOutput().print(ch);
+        getToolOutput().prints(ch);
     }
 
 
     static class JDecBuilder extends Builder<JdecEnvironment, DecompilerLogger> {
 
-        public JDecBuilder(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
-            super("jdec", toolOutput, new DecompilerLogger(errorLogger, outputLogger));
+        public JDecBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+            super("jdec", toolOutput, new DecompilerLogger(log));
         }
 
         @Override

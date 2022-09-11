@@ -25,7 +25,6 @@ package org.openjdk.asmtools.common;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -38,16 +37,13 @@ public class ToolLogger implements ILogger {
 
     private static String programName;
     private static I18NResourceBundle i18n;
-    // Logger's streams
-    final private PrintWriter errLog;
-    final private PrintWriter outLog;
+    ToolOutput.DualStreamToolOutput outerLog;
     // Input file name is needed for logging purposes
     private String inputFileName;
     private String simpleInputFileName;
 
-    protected ToolLogger(PrintWriter errLog, PrintWriter outLog) {
-        this.errLog = errLog;
-        this.outLog = outLog;
+    protected ToolLogger(ToolOutput.DualStreamToolOutput outerLog) {
+        this.outerLog = outerLog;
     }
 
     static void setResources(String programName, I18NResourceBundle i18n) {
@@ -87,13 +83,8 @@ public class ToolLogger implements ILogger {
     }
 
     @Override
-    public PrintWriter getErrLog() {
-        return errLog;
-    }
-
-    @Override
-    public PrintWriter getOutLog() {
-        return outLog;
+    public ToolOutput.DualStreamToolOutput getOutputs() {
+        return outerLog;
     }
 
     public String getSimpleInputFileName() {
@@ -102,8 +93,9 @@ public class ToolLogger implements ILogger {
 
     @Override
     public void printException(Throwable throwable) {
-        throwable.printStackTrace(errLog);
+        getOutputs().stacktrace(throwable);
     }
+
 
     public enum EMessageFormatter {
         SHORT((severity, message) -> format("%s", message)),

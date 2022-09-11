@@ -42,8 +42,8 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     private final Map<Integer, Set<Message>> container = new HashMap<>();
     private final List<String> fileContent = new ArrayList<>();
 
-    public CompilerLogger(PrintWriter errLog, PrintWriter outLog) {
-        super(errLog, outLog);
+    public CompilerLogger(ToolOutput.DualStreamToolOutput oser) {
+        super(oser);
     }
 
     @Override
@@ -132,14 +132,14 @@ public class CompilerLogger extends ToolLogger implements ILogger {
             int where = entry.getKey();
             Pair<Integer, Integer> filePosition = filePosition(where);
             for (Message msg : entry.getValue()) {
-                PrintWriter output = msg.kind() == ERROR ? getErrLog() : getOutLog();
+                ToolOutput output = msg.kind() == ERROR ? getOutputs().getEToolObject() : getOutputs().getSToolObject();
                 nErrors += msg.kind() == ERROR ? 1 : 0;
                 nWarnings += msg.kind() == WARNING ? 1 : 0;
                 if (where == NOWHERE) {
                     // direct message isn't connected to a position in a scanned file
-                    output.println(msg.text());
+                    output.printlns(msg.text());
                 } else {
-                    output.println(format("%s (%d:%d) %s", getSimpleInputFileName(),
+                    output.printlns(format("%s (%d:%d) %s", getSimpleInputFileName(),
                             filePosition.first, filePosition.second,
                             msg.text()));
                     printAffectedSourceLine(output, filePosition);
@@ -153,23 +153,23 @@ public class CompilerLogger extends ToolLogger implements ILogger {
         }
         if (printTotals && (nWarnings != 0 || nErrors != 0)) {
             if (nWarnings != 0)
-                getOutLog().print(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : ""));
+                getOutputs().printe(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : ""));
             if (nErrors != 0)
-                getOutLog().println(format("%d error(s)", nErrors));
-            getOutLog().flush();
+                getOutputs().printlne(format("%d error(s)", nErrors));
+            getOutputs().flush();
         }
         container.clear();
         return nErrors;
     }
 
     // Removes tabs from a source line to get correct line position while printing.
-    private void printAffectedSourceLine(PrintWriter output, Pair<Integer, Integer> filePosition) {
+    private void printAffectedSourceLine(ToolOutput output, Pair<Integer, Integer> filePosition) {
         String line = fileContent.get(filePosition.first - 1);
         long countOfExtraSpaces = line.chars().filter(ch -> ch == '\t').count();
         long linePosition = (filePosition.second + countOfExtraSpaces * TAB_REPLACEMENT.length()) - countOfExtraSpaces;
         line = line.replace("\t", TAB_REPLACEMENT);
-        output.println(line);
-        output.println(repeat(" ", (int) linePosition) + "^");
+        output.printlns(line);
+        output.printlns(repeat(" ", (int) linePosition) + "^");
     }
 
     /**

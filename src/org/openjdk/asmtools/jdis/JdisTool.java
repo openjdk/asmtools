@@ -23,29 +23,22 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.uEscWriter;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.jdis.JdisEnvironment.JDecBuilder;
-
-import java.io.PrintStream;
-import java.io.PrintWriter;
 
 public abstract class JdisTool extends Tool<JdisEnvironment> {
 
-    protected JdisTool(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput) {
-        super(toolOutput, errorOutput, loggerOutput);
+    protected JdisTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+        super(toolOutput, outerLog);
     }
 
-    protected JdisTool(PrintWriter toolOutput) {
-        super(toolOutput, new PrintWriter(System.err, true), new PrintWriter(System.out, true));
-    }
-
-    protected JdisTool(PrintStream toolOutput) {
-        this(new PrintWriter(new uEscWriter(toolOutput)));
+    protected JdisTool(ToolOutput toolOutput) {
+        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
     }
 
     @Override
-    public JdisEnvironment getEnvironment(PrintWriter toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
-        JDecBuilder builder = new JDecBuilder(toolOutput, errorLogger, outputLogger);
+    public JdisEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+        JDecBuilder builder = new JDecBuilder(toolOutput, outerLog);
         return builder.build();
     }
 }
