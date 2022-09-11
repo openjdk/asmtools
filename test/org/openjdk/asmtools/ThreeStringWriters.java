@@ -1,5 +1,7 @@
 package org.openjdk.asmtools;
 
+import org.openjdk.asmtools.common.ToolOutput;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 
@@ -17,6 +19,9 @@ public class ThreeStringWriters {
         loggerOutput.flush();
     }
 
+    public ToolOutput getToolOutputWrapper() {
+        return new ToolOutput.PrintWriterOutput(toolOutput);
+    }
     public PrintWriter getToolOutput() {
         return toolOutput;
     }
@@ -39,5 +44,9 @@ public class ThreeStringWriters {
 
     public String getToolBos() {
         return toolBos.toString();
+    }
+
+    public ToolOutput.DualStreamToolOutput getLoggers() {
+        return new ToolOutput.DualOutputStreamOutput(getLoggerOutput(), getErrorOutput());
     }
 }

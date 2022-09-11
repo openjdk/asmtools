@@ -38,32 +38,34 @@ public interface ILogger {
     }
 
     default void trace(String format, Object... args) {
-        getOutLog().print(( args == null || args.length == 0) ? format : format(format, args));
+        getOutputs().prints(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     default void printErrorLn(String format, Object... args) {
-        getErrLog().println(( args == null || args.length == 0) ? format : format(format, args));
+        getOutputs().printlne(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     default void println(String format, Object... args) {
-        getOutLog().println(( args == null || args.length == 0) ? format : format(format, args));
+        getOutputs().printlns(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     default void println() {
-        getOutLog().println();
+        getOutputs().printlns("");
     }
 
     default void print(String format, Object... args) {
-        getOutLog().print(( args == null || args.length == 0) ? format : format(format, args));
+        getOutputs().prints(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     default void print(char ch) {
-        getOutLog().print(ch);
+        getOutputs().prints(ch);
     }
 
-    PrintWriter getErrLog();
+    ToolOutput.DualStreamToolOutput getOutputs();
 
-    PrintWriter getOutLog();
+    default ToolOutput getToolOutput() {
+        throw new NotImplementedException("implement wisely!");
+    }
 
     void printException(Throwable throwable);
 

@@ -5,4 +5,7 @@ public class NotImplementedException extends RuntimeException {
     public NotImplementedException() {
         super("The method is not yet implemented");
     }
+    public NotImplementedException(String reason) {
+        super(reason);
+    }
 }

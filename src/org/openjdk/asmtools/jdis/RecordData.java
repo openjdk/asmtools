@@ -66,7 +66,7 @@ public class RecordData extends  MemberData<ClassData> {
                 Component cn = components.get(i);
                 cn.setCommentOffset(getCommentOffset() + getIndentSize()).incIndent();
                 if (i != 0 && cn.getAnnotationsCount() > 0)
-                    cn.toolOutput.println();
+                    cn.toolOutput.printlns("");
                 cn.print();
             }
             printIndentLn("}");

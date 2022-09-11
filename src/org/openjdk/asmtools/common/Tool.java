@@ -34,12 +34,12 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     protected final ArrayList<ToolInput> fileList = new ArrayList<>();
     protected T environment;
 
-    protected Tool(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
-        this.environment = getEnvironment(toolOutput, errorLogger, outputLogger);
+    protected Tool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+        this.environment = getEnvironment(toolOutput, outerLog);
     }
 
-    protected Tool(PrintWriter errorLogger, ToolOutput outputLogger) {
-        this.environment = getEnvironment(errorLogger, outputLogger);
+    protected Tool(ToolOutput.DualStreamToolOutput logger) {
+        this.environment = getEnvironment(logger);
     }
 
     public Environment<?> setVerboseFlag(boolean value) {
@@ -57,11 +57,11 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     }
 
     // Build environment
-    public T getEnvironment(ToolOutput toolOutput, PrintWriter errorLogger, PrintWriter outputLogger) {
+    public T getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
         throw new NotImplementedException();
     }
 
-    public T getEnvironment(PrintWriter errorLogger, ToolOutput outputLogger) {
+    public T getEnvironment(ToolOutput.DualStreamToolOutput log) {
         throw new NotImplementedException();
     }
 

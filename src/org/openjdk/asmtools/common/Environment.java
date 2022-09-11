@@ -26,7 +26,6 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,6 +43,7 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     // processed input file or stdin
     private ToolInput inputFileName;
+    private ToolOutput toolOutput;
     // checks output verbosity
     private boolean verboseFlag;
 
@@ -54,6 +54,7 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     protected Environment(Builder builder, I18NResourceBundle i18n) {
         ToolLogger.setResources(builder.programName, i18n);
+        this.toolOutput = builder.toolOutput;
         this.toolLogger = (T) builder.toolLogger;
     }
 
@@ -115,13 +116,14 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     }
 
     @Override
-    public PrintWriter getErrLog() {
-        return toolLogger.getErrLog();
+    public ToolOutput.DualStreamToolOutput getOutputs() {
+        return getLogger().getOutputs();
     }
 
+
     @Override
-    public PrintWriter getOutLog() {
-        return toolLogger.getOutLog();
+    public ToolOutput getToolOutput() {
+        return toolOutput;
     }
 
     public boolean getVerboseFlag() {

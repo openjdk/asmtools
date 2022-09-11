@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.*;
@@ -39,24 +40,19 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdecTool {
 
-    public Main(PrintStream toolOutput, String... argv) {
-        super(toolOutput);
+
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+        super(toolOutput, log);
         parseArgs(argv);
     }
 
-    public Main(PrintWriter toolOutput, String... argv) {
-        super(toolOutput);
-        parseArgs(argv);
-    }
-
-    public Main(PrintWriter toolOutput, PrintWriter errorOutput, PrintWriter loggerOutput, String... argv) {
-        super(toolOutput, errorOutput, loggerOutput);
-        parseArgs(argv);
+    public Main(ToolOutput.EscapedPrintStreamOutput toolOutput, String[] argv) {
+        this(toolOutput, new ToolOutput.DualOutputStreamOutput(), argv);
     }
 
     // jdec entry point
     public static void main(String... argv) {
-        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), argv);
+        Main decoder = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
         System.exit(decoder.decode());
     }
 

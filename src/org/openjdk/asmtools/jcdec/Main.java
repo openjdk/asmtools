@@ -24,14 +24,14 @@ package org.openjdk.asmtools.jcdec;
 
 import static org.openjdk.asmtools.common.Environment.OK;
 import static org.openjdk.asmtools.jcoder.JcodTokens.*;
-import org.openjdk.asmtools.common.uEscWriter;
+
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 import org.openjdk.asmtools.util.ProductInfo;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
@@ -52,7 +52,7 @@ public class Main {
     /**
      * The stream where error message are printed.
      */
-    PrintWriter out;
+    ToolOutput out;
     boolean DebugFlag = false;
     boolean printDetails = false;
     int shift = 0;
@@ -80,40 +80,40 @@ public class Main {
         return toHex(val, width);
     }
 
-    void printByteHex(PrintWriter out, int b) {
-        out.print(hexTable[(b >> 4) & 0xF]);
-        out.print(hexTable[b & 0xF]);
+    void printByteHex(ToolOutput out, int b) {
+        out.prints(hexTable[(b >> 4) & 0xF]);
+        out.prints(hexTable[b & 0xF]);
     }
 
     /*========================================================*/
     void out_begin(String s) {
         for (int i = 0; i < shift; i++) {
-            out.print("  ");
+            out.prints("  ");
         }
-        out.println(s);
+        out.printlns(s);
         shift++;
     }
 
     void out_print(String s) {
         for (int i = 0; i < shift; i++) {
-            out.print("  ");
+            out.prints("  ");
         }
-        out.print(s);
+        out.prints(s);
     }
 
     void out_println(String s) {
         for (int i = 0; i < shift; i++) {
-            out.print("  ");
+            out.prints("  ");
         }
-        out.println(s);
+        out.printlns(s);
     }
 
     void out_end(String s) {
         shift--;
         for (int i = 0; i < shift; i++) {
-            out.print("  ");
+            out.prints("  ");
         }
-        out.println(s);
+        out.printlns(s);
     }
 
     String startArray(int length) {
@@ -128,12 +128,12 @@ public class Main {
                 }
                 printByteHex(out, in.readByte());
                 if (i % 8 == 7) {
-                    out.println(";");
+                    out.printlns(";");
                 }
             }
         } finally {
             if (len % 8 != 0) {
-                out.println(";");
+                out.printlns(";");
             }
         }
     }
@@ -200,11 +200,11 @@ public class Main {
         int magic = in.readInt();
         out_print(toHex(magic, 4) + ";  // ");
         if (magic != EXPORT_MAGIC) {
-            out.print("wrong magic: 0x" + Integer.toString(EXPORT_MAGIC, 16) + " expected");
+            out.prints("wrong magic: 0x" + Integer.toString(EXPORT_MAGIC, 16) + " expected");
         } else {
             out_print("magic");
         }
-        out.println();
+        out.printlns("");
         out_println(in.readUnsignedByte() + "b;  // minor version");
         out_println(in.readUnsignedByte() + "b;  // major version");
 
@@ -240,7 +240,7 @@ public class Main {
                                 sb.append(c);
                         }
                     }
-                    out.println(sb.append("\"; // #").append(i).toString());
+                    out.printlns(sb.append("\"; // #").append(i).toString());
                     break;
 
                 case CONSTANT_INTEGER:
@@ -282,7 +282,7 @@ public class Main {
             out_print("0x");
             printByteHex(out, flags >> 8);
             printByteHex(out, flags);
-            out.println("; // flags");
+            out.printlns("; // flags");
 
             out_println("#" + in.readUnsignedShort() + ";  // this class");
 
@@ -310,7 +310,7 @@ public class Main {
                 out_print("0x");
                 printByteHex(out, f_flags >> 8);
                 printByteHex(out, f_flags);
-                out.println("; // flags");
+                out.printlns("; // flags");
 
                 out_println("#" + in.readUnsignedShort() + ";  // this field name");
                 out_println("#" + in.readUnsignedShort() + ";  // this field descriptor");
@@ -335,7 +335,7 @@ public class Main {
                 out_print("0x");
                 printByteHex(out, mth_flags >> 8);
                 printByteHex(out, mth_flags);
-                out.println("; // flags");
+                out.printlns("; // flags");
 
                 out_println("#" + in.readUnsignedShort() + ";  // this method name");
                 out_println("#" + in.readUnsignedShort() + ";  // this method descriptor");
@@ -356,7 +356,7 @@ public class Main {
         out_print("Component(" + tag);
         int size = in.readUnsignedShort();
         if (printDetails) {
-            out.print(", " + size);
+            out.prints(", " + size);
         }
         out_begin(") { // " + compName(tag));
         return in;
@@ -366,7 +366,7 @@ public class Main {
         out_end("};"); // Component
         int avail = in.available();
         if (avail > 0) {
-            out.println("=========== extra bytes:");
+            out.printlns("=========== extra bytes:");
             for (int k = 0; k < 8; k++) {
                 printBytes(in, avail >= 8 ? 8 : avail);
                 avail = in.available();
@@ -375,7 +375,7 @@ public class Main {
                 }
             }
             if (avail > 0) {
-                out.println("  there is also " + avail + " bytes available");
+                out.printlns("  there is also " + avail + " bytes available");
             }
         }
         in.close();
@@ -390,11 +390,11 @@ public class Main {
         int magic = in.readInt();
         out_print(toHex(magic, 4) + ";  // ");
         if (magic != HEADER_MAGIC) {
-            out.print("wrong magic: 0x" + Integer.toString(HEADER_MAGIC, 16) + " expected");
+            out.prints("wrong magic: 0x" + Integer.toString(HEADER_MAGIC, 16) + " expected");
         } else {
             out_print("magic");
         }
-        out.println();
+        out.printlns("");
         out_println(in.readUnsignedByte() + "b;  // minor version");
         out_println(in.readUnsignedByte() + "b;  // major version");
         out_println(toHex(in.readUnsignedByte(), 1) + ";  // flags");
@@ -513,15 +513,15 @@ public class Main {
                     } else {
                         out_print(info1 + "b " + ((info2 << 8) | info3) + ";");
                     }
-                    out.print(" // internal ");
+                    out.prints(" // internal ");
                 } else {
-                    out.print(info1 + "b " + info2 + "b " + info3 + "b;");
-                    out.print(" // external ");
+                    out.prints(info1 + "b " + info2 + "b " + info3 + "b;");
+                    out.prints(" // external ");
                 }
-                out.println(refNames[tag - 1]);
+                out.printlns(refNames[tag - 1]);
             } else {
-                out.print(info1 + "b " + info2 + "b " + info3 + "b;");
-                out.println(" // unknown tag ");
+                out.prints(info1 + "b " + info2 + "b " + info3 + "b;");
+                out.printlns(" // unknown tag ");
             }
         }
         out_end("};"); //  CP array
@@ -550,7 +550,7 @@ public class Main {
             int interface_count = bitfield & 0x0F;
             out_print("0x");
             printByteHex(out, bitfield);
-            out.println("; // bitfield");
+            out.printlns("; // bitfield");
             if ((bitfield & 0x80) != 0) {
                 // interface
                 for (int k = 0; k < interface_count; k++) {
@@ -607,7 +607,7 @@ public class Main {
             out_println(in.readUnsignedByte() + "b; // token");
             out_print("0x");
             printByteHex(out, in.readUnsignedByte());
-            out.println("; // flags");
+            out.printlns("; // flags");
             printClassref(in);
             int icount = in.readUnsignedByte();
             out_println(icount + "b; // interface count");
@@ -628,7 +628,7 @@ public class Main {
                 int flags = in.readUnsignedByte();
                 out_print("0x");
                 printByteHex(out, flags);
-                out.println("; // flags");
+                out.printlns("; // flags");
                 if ((flags & 0x08) == 0) {
                     printClassref(in);
                     out_println(in.readUnsignedByte() + "b; // token");
@@ -638,10 +638,10 @@ public class Main {
                             info3 = in.readUnsignedByte();
                     if ((info1 & 0x80) == 0) {
                         out_print(info1 + "b " + ((info2 << 8) | info3) + ";");
-                        out.println(" // internal field");
+                        out.printlns(" // internal field");
                     } else {
-                        out.print(info1 + "b " + info2 + "b " + info3 + "b;");
-                        out.println(" // external field");
+                        out.prints(info1 + "b " + info2 + "b " + info3 + "b;");
+                        out.printlns(" // external field");
                     }
                 }
                 int type = in.readUnsignedShort();
@@ -651,7 +651,7 @@ public class Main {
                     out_print("0x");
                     printByteHex(out, type >> 8);
                     printByteHex(out, type);
-                    out.println("; // primitive type");
+                    out.printlns("; // primitive type");
                 }
                 out_end("};");
             }
@@ -671,7 +671,7 @@ public class Main {
                 out_println(token + "b; // token");
                 out_print("0x");
                 printByteHex(out, flags);
-                out.println("; // flags");
+                out.printlns("; // flags");
                 out_println(m_offset + "; // method offset");
                 out_println(t_offset + "; // type offset");
                 out_println(bytecode_count + "; // bytecode count");
@@ -713,38 +713,38 @@ public class Main {
         for (int i = 0; i < handler_count; i++) {
             out_print(in.readUnsignedShort() + ", ");
             int bitfield = in.readUnsignedShort();
-            out.print("0x");
+            out.prints("0x");
             printByteHex(out, bitfield >> 8);
             printByteHex(out, bitfield);
-            out.print(", " + in.readUnsignedShort() + ", ");
-            out.println(in.readUnsignedShort() + "; // handler " + i);
+            out.prints(", " + in.readUnsignedShort() + ", ");
+            out.printlns(in.readUnsignedShort() + "; // handler " + i);
         }
         out_end("};"); // handlers
 
         if (methodsLengths == null) {
-            out.println("// Descriptor.cap absent - methods not printed");
+            out.printlns("// Descriptor.cap absent - methods not printed");
         } else {
             int f_offset = 1 + handler_count * 8;
             for (int i = 0; i < methodsLengths.size(); i++) {
                 out_begin("{ // method " + i);
                 int m_offset = methodsOffsets.get(i);
                 if (m_offset != f_offset) {
-                    out.println("file offset=" + f_offset + " but m_offset=" + m_offset);
+                    out.printlns("file offset=" + f_offset + " but m_offset=" + m_offset);
                     break;
                 }
                 int bitfield = in.readUnsignedByte();
                 if ((bitfield & 0x80) == 0) {
                     out_print("0x");
                     printByteHex(out, bitfield);
-                    out.println("; // flags, max_stack");
+                    out.printlns("; // flags, max_stack");
                     out_print("0x");
                     printByteHex(out, in.readUnsignedByte());
-                    out.println("; // nargs, max_locals");
+                    out.printlns("; // nargs, max_locals");
                     f_offset += 2;
                 } else {
                     out_print("0x");
                     printByteHex(out, bitfield);
-                    out.println("; // flags, padding");
+                    out.printlns("; // flags, padding");
                     out_println(in.readUnsignedByte() + "b; // max_stack");
                     out_println(in.readUnsignedByte() + "b; // nargs");
                     out_println(in.readUnsignedByte() + "b; // max_locals");
@@ -836,22 +836,22 @@ public class Main {
     /**
      * Constructor.
      */
-    public Main(PrintWriter out, String program) {
+    public Main(ToolOutput out, String program) {
         this.out = out;
         this.program = program;
     }
 
     public void error(String msg) {
-        out.println(program + ": " + msg);
+        out.printlns(program + ": " + msg);
     }
 
     /**
      * Usage
      */
     public void usage() {
-        out.println(i18n.getString("jcdec.usage"));
-        out.println(i18n.getString("jcdec.opt.g"));
-        out.println(i18n.getString("jcdec.opt.version"));
+        out.printlns(i18n.getString("jcdec.usage"));
+        out.printlns(i18n.getString("jcdec.opt.g"));
+        out.printlns(i18n.getString("jcdec.opt.version"));
     }
 
     /**
@@ -874,12 +874,12 @@ public class Main {
             } else if (arg.equals("-v")) {
                 DebugFlag = true;
                 vargs.add(arg);
-                out.println("arg[" + i + "]=" + argv[i] + "/verbose");
+                out.printlns("arg[" + i + "]=" + argv[i] + "/verbose");
             } else if (arg.equals(org.openjdk.asmtools.Main.VERSION_SWITCH)) {
-                out.println(ProductInfo.FULL_VERSION);
+                out.printlns(ProductInfo.FULL_VERSION);
                 System.exit(OK);
             } else if (arg.startsWith("-")) {
-//out.println("arg["+i+"]="+argv[i]+"/invalid flag");
+//out.printlns("arg["+i+"]="+argv[i]+"/invalid flag");
                 error(i18n.getString("jcdec.error.invalid_flag", arg));
                 usage();
                 return false;
@@ -929,10 +929,10 @@ decode:
                     } else {
                         continue decode;
                     }
-                    out.println("");
+                    out.printlns("");
                 } else if (inpname.endsWith(".exp")) {
                     decodeExp(inpname);
-                    out.println("");
+                    out.printlns("");
                 }
                 continue decode;
             } catch (FileNotFoundException ee) {
@@ -942,7 +942,7 @@ decode:
                 error(i18n.getString("jcdec.error.fatal_error"));
             } catch (Exception ee) {
                 ee.printStackTrace();
-                error(i18n.getString("jcdec.error.fatal_exception"));
+                error(i18n.getString("jcdec.error.fatal_exceptPrintWriter ion"));
             }
             return false;
         }
@@ -953,7 +953,7 @@ decode:
      * Main program
      */
     public static void main(String... argv) {
-        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), "jcdec");
+        Main decoder = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), "jcdec");
         System.exit(decoder.decode(argv) ? 0 : 1);
     }
 }

@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.asmutils.Range;
 import org.openjdk.asmtools.asmutils.StringUtils;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -563,8 +564,8 @@ public class ConstantPool extends Indenter {
             this.value = value;
         }
 
-        public void print(PrintWriter out, int spacePadding) {
-            out.print(PadRight(tag.tagName(), spacePadding));
+        public void print(ToolOutput out, int spacePadding) {
+            out.prints(PadRight(tag.tagName(), spacePadding));
         }
 
         public int size() {
@@ -624,9 +625,9 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            out.println(stringVal() + ";");
+            out.printlns(stringVal() + ";");
         }
     }
 
@@ -648,9 +649,9 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            out.println(stringVal() + ";");
+            out.printlns(stringVal() + ";");
         }
     }
 
@@ -673,9 +674,9 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            out.println(stringVal() + ";");
+            out.printlns(stringVal() + ";");
         }
 
         @Override
@@ -706,9 +707,9 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            out.println(stringVal() + ";");
+            out.printlns(stringVal() + ";");
         }
     }
 
@@ -735,9 +736,9 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            out.println(stringVal() + ";");
+            out.printlns(stringVal() + ";");
         }
 
         @Override
@@ -771,7 +772,7 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
             switch (tag) {
                 case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHODTYPE, CONSTANT_PACKAGE, CONSTANT_MODULE -> printPadRight("#" + value + ";", commentPadding).println("// " + stringVal());
@@ -892,7 +893,7 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(PrintWriter out, int spacePadding) {
+        public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
             switch (tag) {
                 case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD -> printPadRight(format("#%d.#%d;", value, value2), commentPadding).println("// " + stringVal());

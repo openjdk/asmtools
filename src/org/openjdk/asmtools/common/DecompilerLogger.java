@@ -28,8 +28,8 @@ import static java.lang.String.format;
 
 public class DecompilerLogger extends ToolLogger implements ILogger {
 
-    public DecompilerLogger(PrintWriter errLog, PrintWriter outLog) {
-        super(errLog, outLog);
+    public DecompilerLogger(ToolOutput.DualStreamToolOutput oser) {
+        super(oser);
     }
 
     @Override

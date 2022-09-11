@@ -23,7 +23,7 @@ class MainTest extends ClassPathClassWork {
     public void main3StreamsNoSuchFileError() {
         ThreeStringWriters outs = new ThreeStringWriters();
         String nonExisitngFile = "someNonExiostingFile";
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), nonExisitngFile);
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), nonExisitngFile);
         int i = decoder.decode();
         outs.flush();
         Assertions.assertEquals(1, i);
@@ -36,7 +36,7 @@ class MainTest extends ClassPathClassWork {
     @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), classFile);
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), classFile);
         int i = decoder.decode();
         outs.flush();
         Assertions.assertEquals(0, i);
@@ -53,7 +53,7 @@ class MainTest extends ClassPathClassWork {
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
-            Main decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), org.openjdk.asmtools.Main.STDIN_SWITCH);
+            Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), org.openjdk.asmtools.Main.STDIN_SWITCH);
             int i = decoder.decode();
             outs.flush();
             Assertions.assertEquals(0, i);

@@ -25,9 +25,9 @@ class JdecJcod {
             public int run(ThreeStringWriters outs, File clazz) throws IOException {
                 Main decoder;
                 if (g) {
-                    decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), "-g", clazz.getAbsolutePath());
+                    decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), "-g", clazz.getAbsolutePath());
                 } else {
-                    decoder = new Main(outs.getToolOutput(), outs.getErrorOutput(), outs.getLoggerOutput(), clazz.getAbsolutePath());
+                    decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), clazz.getAbsolutePath());
                 }
                 return decoder.decode();
             }
@@ -61,7 +61,7 @@ class JdecJcod {
         @Override
         public int run(ThreeStringWriters outs, File clazz) throws IOException {
             File savedCode = BruteForceHelper.saveDecompiledCode(worker.getDecompiledClass(clazz), "JdecJcodWorks");
-            org.openjdk.asmtools.jcoder.Main coder = new org.openjdk.asmtools.jcoder.Main(outs.getErrorOutput(), outs.getLoggerOutput(), savedCode.getAbsolutePath(), "-d", worker.getCompileDir().getAbsolutePath());
+            org.openjdk.asmtools.jcoder.Main coder = new org.openjdk.asmtools.jcoder.Main(outs.getLoggers(), savedCode.getAbsolutePath(), "-d", worker.getCompileDir().getAbsolutePath());
             BruteForceHelper.createMetadata(outs, clazz, savedCode, worker.getCompileDir(), worker.getClassesRoot());
             return coder.compile();
         }

@@ -3,7 +3,8 @@ package org.openjdk.asmtools.common;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 
 public interface ToolOutput {
@@ -14,89 +15,78 @@ public interface ToolOutput {
 
     void finishClass(String fqn) throws IOException;
 
-    void addClassOutputListener(ClassProgressListener l);
+    void printlns(String line);
 
-    void removeClassOutputListener(ClassProgressListener l);
+    void prints(String line);
 
-    void println(String line);
-    void print(String line);
-    void print(char line);
+    void prints(char line);
 
-    public interface ClassProgressListener {
+    void flush();
 
-        public void classStarted(String fqn);
+    public static interface DualStreamToolOutput extends ToolOutput {
+        void printlne(String line);
 
-        public void classEnded(String fqn);
+        void printe(String line);
 
+        void printe(char line);
+
+        void stacktrace(Throwable ex);
+
+        ToolOutput getSToolObject();
+        ToolOutput getEToolObject();
     }
 
-
-    public static abstract class ObservableToolOutput implements ToolOutput {
-
-        protected ArrayList<ClassProgressListener> classProgressListeners = new ArrayList<>();
-        protected String currentFqn = null;
+    /**
+     * Historically, the output loggers for compilers had two stderrs, one to sdout and secon to stderr.
+     * That should be removed, in favour of just dualstream tool output, printing output to stdout and log into stderr
+     */
+    public abstract class NamedToolOutput implements ToolOutput {
+        private String fqn;
 
         @Override
         public String getCurrentClassName() {
-            return currentFqn;
-        }
-
-        @Override
-        public void addClassOutputListener(ClassProgressListener l) {
-            classProgressListeners.add(l);
-        }
-
-        @Override
-        public void removeClassOutputListener(ClassProgressListener l) {
-            if (!classProgressListeners.remove(l)) {
-                throw new RuntimeException("ClassProgressListener " + l + " not registered");
-            }
+            return fqn;
         }
 
         @Override
         public void startClass(String fqn) throws IOException {
-            currentFqn = fqn;
-            for (ClassProgressListener classProgressListener : classProgressListeners) {
-                classProgressListener.classEnded(fqn);
-            }
+            this.fqn = fqn;
         }
 
         @Override
         public void finishClass(String fqn) throws IOException {
-            try {
-                for (ClassProgressListener classProgressListener : classProgressListeners) {
-                    classProgressListener.classEnded(fqn);
-                }
-            } finally {
-                currentFqn = null;
-            }
+            this.fqn = null;
         }
     }
 
 
-    public static class DirOutput extends ObservableToolOutput {
+    public abstract class NamedDualStreamToolOutput implements DualStreamToolOutput {
+        private String fqn;
+
+        @Override
+        public String getCurrentClassName() {
+            return fqn;
+        }
+
+        @Override
+        public void startClass(String fqn) throws IOException {
+            this.fqn = fqn;
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            this.fqn = null;
+        }
+    }
+
+
+    public static class DirOutput extends NamedToolOutput {
 
         private final String dir;
-        private final ClassProgressListener classProgressListener;
 
         public DirOutput(String dir) {
             this.dir = dir;
-            classProgressListener = new ClassProgressListener() {
-
-                @Override
-                public void classStarted(String fqn) {
-                    //mkdir
-                    //fileopen
-
-                }
-
-                @Override
-                public void classEnded(String fqn) {
-                    //fileclose
-                }
-            };
         }
-
 
         @Override
         public String toString() {
@@ -104,61 +94,168 @@ public interface ToolOutput {
         }
 
         @Override
-        public void println(String line) {
+        public void printlns(String line) {
             throw new RuntimeException("Not yet implemented");
-        }
-        @Override
-        public void print(String line) {
-            throw new RuntimeException("Not yet implemented");
-        }
-        @Override
-        public void print(char line) {
-            throw new RuntimeException("Not yet implemented");
-        }
-    }
-
-    public static class OutputStreamOutput extends ObservableToolOutput {
-
-        private PrintStream os;
-
-        public OutputStreamOutput(PrintStream os) {
-            //although it is usually System.out, it is set from Environment, or custom
-            this.os = os;
-        }
-
-        /**
-         * One can chane the stream as action to new class
-         *
-         * @param os
-         */
-        public void setOutputStream(PrintStream os) {
-            this.os = os;
         }
 
         @Override
-        public void println(String line) {
+        public void prints(String line) {
             throw new RuntimeException("Not yet implemented");
         }
+
         @Override
-        public void print(String line) {
+        public void prints(char line) {
             throw new RuntimeException("Not yet implemented");
         }
+
         @Override
-        public void print(char line) {
-            throw new RuntimeException("Not yet implemented");
+        public void startClass(String fqn) throws IOException {
+            super.startClass(fqn);
+            //mkdir
+            //open file?
+
         }
 
         @Override
         public void finishClass(String fqn) throws IOException {
+            super.finishClass(fqn);
+        }
+
+        @Override
+        public void flush() {
+            //todo flush to file
+        }
+    }
+
+    public static class PrintWriterOutput extends NamedToolOutput {
+
+        protected PrintWriter os;
+
+        public PrintWriterOutput(OutputStream os) {
+            //although it is usually System.out, it is set from Environment, or custom
+            this.os = new PrintWriter(os, true);
+        }
+        public PrintWriterOutput(Writer os) {
+            //although it is usually System.out, it is set from Environment, or custom
+            this.os = new PrintWriter(os, true);
+        }
+
+        @Override
+        public void printlns(String line) {
+            os.println(line);
+        }
+
+        @Override
+        public void prints(String line) {
+            os.print(line);
+        }
+
+        @Override
+        public void prints(char line) {
+            os.print(line);
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            super.finishClass(fqn);
+            os.flush();
+        }
+
+        @Override
+        public void flush() {
+            os.flush();
+        }
+    }
+
+    public static class EscapedPrintStreamOutput extends PrintWriterOutput {
+
+        public EscapedPrintStreamOutput(OutputStream os) {
+            super(new uEscWriter(os));
+        }
+    }
+
+    public static class DualOutputStreamOutput extends NamedDualStreamToolOutput {
+
+        protected PrintWriter os;
+        protected PrintWriter es;
+
+
+        public DualOutputStreamOutput() {
+            this(System.out, System.err);
+        }
+
+        //todo, remove once tests asdapts
+        public DualOutputStreamOutput(PrintWriter os, PrintWriter er) {
+            this.os = os;
+            this.es = er;
+        }
+        public DualOutputStreamOutput(PrintStream os, PrintStream er) {
+            //although it is usually System.out, it is set from Environment, or custom
+            this.os = new PrintWriter(os, true);
+            //although it is usually System.err, it is set from Environment, or custom
+            this.es = new PrintWriter(er, true);
+        }
+
+        @Override
+        public void printlns(String line) {
+            os.println(line);
+        }
+
+        @Override
+        public void prints(String line) {
+            os.print(line);
+        }
+
+        @Override
+        public void prints(char line) {
+            os.print(line);
+        }
+
+        @Override
+        public void printlne(String line) {
+            es.println(line);
+        }
+
+        @Override
+        public void printe(String line) {
+            es.print(line);
+        }
+
+        @Override
+        public void printe(char line) {
+            es.print(line);
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            super.finishClass(fqn);
             try {
-                super.finishClass(fqn);
-            } finally {
                 os.flush();
+            } finally {
+                es.flush();
             }
         }
 
+        @Override
+        public void stacktrace(Throwable ex) {
+            ex.printStackTrace(es);
+        }
 
+        @Override
+        public ToolOutput getSToolObject() {
+            return new PrintWriterOutput(os);
+        }
+
+        @Override
+        public ToolOutput getEToolObject() {
+            return new PrintWriterOutput(es);
+        }
+
+        @Override
+        public void flush() {
+            this.os.flush();
+            this.es.flush();
+        }
     }
-
 }
 

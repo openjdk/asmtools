@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,8 +56,8 @@ public class Main extends JcoderTool {
         parseArgs(argv);
     }
 
-    public Main(PrintWriter errorLogger, PrintWriter outputLogger, String... argv) {
-        super(errorLogger, outputLogger);
+    public Main(ToolOutput.DualStreamToolOutput log, String... argv) {
+        super(log);
         parseArgs(argv);
     }
 

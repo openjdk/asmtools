@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.structure.ClassFileContext;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
@@ -449,7 +450,7 @@ class ClassData {
         }
     }
 
-    private void decodeElementValue(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeElementValue(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  element_value");
         try {
             char tg = (char) in.readByte();
@@ -502,7 +503,7 @@ class ClassData {
                 block != Character.UnicodeBlock.SPECIALS;
     }
 
-    private void decodeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAnnotation(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  annotation");
         try {
             decodeCPXAttr(in, 2, "field descriptor");
@@ -513,7 +514,7 @@ class ClassData {
         }
     }
 
-    private void decodeElementValuePairs(int count, DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeElementValuePairs(int count, DataInputStream in, ToolOutput out) throws IOException {
         startArrayCmt(count, "element_value_pairs");
         try {
             for (int i = 0; i < count; i++) {
@@ -558,7 +559,7 @@ class ClassData {
      * attribute_info attributes[attributes_count];
      * }
      */
-    private void decodeInfo(DataInputStream in, PrintWriter out, String elementName, boolean hasAccessFlag) throws IOException {
+    private void decodeInfo(DataInputStream in, ToolOutput out, String elementName, boolean hasAccessFlag) throws IOException {
         out_begin("{  // " + elementName + (environment.printDetailsFlag ? getStringPos() : ""));
         try {
             if (hasAccessFlag) {
@@ -577,7 +578,7 @@ class ClassData {
         }
     }
 
-    private void decodeTypeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeTypeAnnotation(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  type_annotation");
         try {
             decodeTargetTypeAndRefInfo(in);
@@ -607,7 +608,7 @@ class ClassData {
         }
     }
 
-    private void decodeAttr(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAttr(DataInputStream in, ToolOutput out) throws IOException {
         // Read one attribute
         String posComment = getStringPos();
         int name_cpx = in.readUnsignedShort(), btag, len;
@@ -1072,7 +1073,7 @@ class ClassData {
         }
     }
 
-    private void decodeAttrs(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAttrs(DataInputStream in, ToolOutput out) throws IOException {
         // Read the attributes
         int attr_num = in.readUnsignedShort();
         startArrayCmt(attr_num, "Attributes");
@@ -1088,7 +1089,7 @@ class ClassData {
         }
     }
 
-    private void decodeMembers(DataInputStream in, PrintWriter out, String groupName, String elementName) throws IOException {
+    private void decodeMembers(DataInputStream in, ToolOutput out, String groupName, String elementName) throws IOException {
         int count = in.readUnsignedShort();
         environment.traceln(groupName + "=" + count);
         startArrayCmt(count, groupName);

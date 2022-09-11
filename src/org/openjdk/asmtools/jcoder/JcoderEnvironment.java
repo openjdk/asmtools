@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jcoder;
 import org.openjdk.asmtools.common.CompilerLogger;
 import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
+import org.openjdk.asmtools.common.NotImplementedException;
 import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
@@ -110,8 +111,8 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
 
     static class JcoderBuilder extends Builder<JcoderEnvironment, CompilerLogger> {
 
-        public JcoderBuilder(PrintWriter errorLogger, ToolOutput outputLogger) {
-            super("jcoder", new CompilerLogger(errorLogger, outputLogger));
+        public JcoderBuilder(ToolOutput.DualStreamToolOutput log) {
+            super("jcoder", new CompilerLogger(log));
         }
 
         @Override
