@@ -75,7 +75,7 @@ public class Main extends JcoderTool {
         environment.info("info.opt.ignore");
         environment.info("info.opt.d");
         environment.info("info.opt.v");
-        environment.info("info.opt.g");
+        environment.info("info.opt.t");
         environment.info("info.opt.version");
     }
 

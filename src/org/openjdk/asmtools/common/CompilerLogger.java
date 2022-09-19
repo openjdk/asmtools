@@ -25,7 +25,6 @@ package org.openjdk.asmtools.common;
 import org.openjdk.asmtools.asmutils.Pair;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 
 import static java.lang.String.format;

@@ -37,11 +37,15 @@ public class ToolLogger implements ILogger {
 
     private static String programName;
     private static I18NResourceBundle i18n;
+    private static I18NResourceBundle sharedI18n = I18NResourceBundle.getBundleForClass(org.openjdk.asmtools.Main.class);
     ToolOutput.DualStreamToolOutput outerLog;
     // Input file name is needed for logging purposes
     private String inputFileName;
     private String simpleInputFileName;
 
+    static {
+        sharedI18n.setWarn(false);
+    }
     protected ToolLogger(ToolOutput.DualStreamToolOutput outerLog) {
         this.outerLog = outerLog;
     }
@@ -51,16 +55,26 @@ public class ToolLogger implements ILogger {
         ToolLogger.i18n = i18n;
     }
 
-    public static I18NResourceBundle getI18n() {
-        return i18n;
-    }
-
     public static String getProgramName() {
         return programName;
     }
 
     public static String getResourceString(String id, Object... args) {
-        return i18n.getString(id, args);
+        String r = null;
+        i18n.setWarn(false);
+        try {
+            r = i18n.getString(id, args);
+        } finally {
+            i18n.setWarn(true);
+        }
+        if (r == null || r.equals(id)) {
+            r = sharedI18n.getString(id, args);
+        }
+        if (r == null || r.equals(id)) {
+            //to get proper error message
+            r = i18n.getString(id, args);
+        }
+        return r;
     }
 
     public void setInputFileName(ToolInput inputFileName) throws IOException {
@@ -72,7 +86,7 @@ public class ToolLogger implements ILogger {
     public Message getResourceString(EMessageKind kind, String id, Object... args) {
         String str;
         for (String prefix : Set.of("", kind.prefix)) {
-            if (ToolLogger.i18n.containsKey(prefix + id)) {
+            if (ToolLogger.i18n.containsKey(prefix + id) || ToolLogger.sharedI18n.containsKey(prefix + id)) {
                 str = getResourceString(id, args);
                 if (str != null) {
                     return new Message(kind, str);

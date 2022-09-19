@@ -118,7 +118,7 @@ public class Main extends JasmTool {
         environment.flush(false);
         environment.info("info.usage");
         environment.info("info.opt.d");
-        environment.info("info.opt.g");
+        environment.info("info.opt.t");
         environment.info("info.opt.v");
         environment.info("info.opt.nowrite");
         environment.info("info.opt.nowarn");
