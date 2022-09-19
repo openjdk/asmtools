@@ -34,6 +34,8 @@ import java.util.ResourceBundle;
  */
 public class I18NResourceBundle extends ResourceBundle {
 
+    private boolean warn = true;
+
     /**
      * Get a package-specific resource bundle for a class containing localization data.
      * The bundle is named i18n.properties in the same package as the given class.
@@ -115,6 +117,10 @@ public class I18NResourceBundle extends ResourceBundle {
         }
     }
 
+    public void setWarn(boolean warn) {
+        this.warn = warn;
+    }
+
     /**
      * A required internal method for ResourceBundle. Load the actual resource bundle, if
      * it has not yet been loaded, then hand the request off to that bundle. If the
@@ -128,7 +134,9 @@ public class I18NResourceBundle extends ResourceBundle {
             }
             return delegate.getObject(key);
         } catch (MissingResourceException e) {
-            System.err.println("WARNING: missing resource: \"" + key + " for \"" + name);
+            if (warn) {
+                System.err.println("WARNING: missing resource: \"" + key + " for \"" + name);
+            }
             return key;
         }
     }

@@ -22,8 +22,6 @@
  */
 package org.openjdk.asmtools.common;
 
-import java.io.PrintWriter;
-
 import static java.lang.String.format;
 
 public class DecompilerLogger extends ToolLogger implements ILogger {
