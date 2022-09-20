@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -48,8 +49,6 @@ public class Main extends JasmTool {
 
     private final CFVersion cfv = new CFVersion();
 
-    private File destDir;
-
     // tool options
     private boolean noWriteFlag = false;        // Do not write generated class files
 
@@ -63,19 +62,19 @@ public class Main extends JasmTool {
     private boolean debugAnnot = false;
     private boolean debugInstr = false;
 
-    public Main(String... argv) {
-        super();
+    public Main(ToolOutput toolOutput, String... argv) {
+        super(toolOutput);
         parseArgs(argv);
     }
 
-    public Main(ToolOutput.DualStreamToolOutput log, String... argv) {
-        super(log);
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+        super(toolOutput, log);
         parseArgs(argv);
     }
 
     // jasm entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new ToolOutput.DualOutputStreamOutput(), argv);
+        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.DualOutputStreamOutput(), argv);
         System.exit(compiler.compile());
     }
 
@@ -92,13 +91,16 @@ public class Main extends JasmTool {
                 parser.parseFile();
                 if (environment.getErrorCount() > 0) break;
                 if (noWriteFlag) continue;
+                String fqn = parser.getClassesData()[0].myClassName;
+                environment.getToolOutput().startClass(fqn, Optional.of(parser.getClassesData()[0].fileExtension), environment);
                 ClassData[] clsData = parser.getClassesData();
                 for (ClassData cd : clsData) {
                     if (byteLimit > 0) {
                         cd.setByteLimit(byteLimit);
                     }
-                    cd.write(destDir);
+                    cd.write(environment.getToolOutput());
                 }
+                environment.getToolOutput().finishClass(fqn);
                 if (environment.hasMessages()) rc += environment.flush(true);
             }
         } catch (IOException | URISyntaxException | Error exception) {
@@ -148,7 +150,7 @@ public class Main extends JasmTool {
                         environment.println(FULL_VERSION);
                         System.exit(OK);
                     }
-                    case "-d" -> destDir = setDestDir(++i, argv);
+                    case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
                     case "-h", "-help" -> {
                         usage();
                         System.exit(OK);
@@ -228,5 +230,6 @@ public class Main extends JasmTool {
             }
             System.exit(FAILED);
         }
+
     }
 }

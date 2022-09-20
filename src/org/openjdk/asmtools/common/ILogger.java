@@ -67,6 +67,10 @@ public interface ILogger {
         throw new NotImplementedException("implement wisely!");
     }
 
+    default void setToolOutput(ToolOutput toolOutput) {
+        throw new NotImplementedException("implement wisely!");
+    }
+
     void printException(Throwable throwable);
 
 }

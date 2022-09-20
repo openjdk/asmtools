@@ -82,6 +82,7 @@ public class Main extends JdecTool {
     public void usage() {
         environment.info("info.usage");
         environment.info("info.opt.g");
+        environment.info("info.opt.d");
         environment.info("info.opt.v");
         environment.info("info.opt.version");
     }
@@ -89,7 +90,8 @@ public class Main extends JdecTool {
     @Override
     protected void parseArgs(String... argv) {
         // Parse arguments
-        for (String arg : argv) {
+        for (int i = 0; i < argv.length; i++) {
+            String arg = argv[i];
             switch (arg) {
                 case "-g":
                     environment.setPrintDetailsFlag(true);
@@ -100,6 +102,9 @@ public class Main extends JdecTool {
                 case "-t":
                     environment.setVerboseFlag(true);
                     environment.setTraceFlag(true);
+                    break;
+                case org.openjdk.asmtools.Main.DIR_SWITCH:
+                    setDestDir(++i, argv);
                     break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
@@ -143,7 +148,6 @@ public class Main extends JdecTool {
                 environment.setInputFile(inputFileName);
                 ClassData classData = new ClassData(environment);
                 classData.decodeClass();
-                environment.getToolOutput().finishClass(inputFileName.getFileName()/*TODO replace by proper pkg.name?*/);
                 continue;
             } catch (FileNotFoundException fnf) {
                 environment.printException(fnf);

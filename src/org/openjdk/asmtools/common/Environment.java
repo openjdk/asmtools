@@ -126,6 +126,11 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         return toolOutput;
     }
 
+    @Override
+    public void setToolOutput(ToolOutput toolOutput) {
+        this.toolOutput = toolOutput;
+    }
+
     public boolean getVerboseFlag() {
         return verboseFlag;
     }
@@ -150,11 +155,6 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         public Builder(String programName, ToolOutput toolOutput, T toolLogger) {
             this.programName = programName;
             this.toolOutput = toolOutput;
-            this.toolLogger = toolLogger;
-        }
-
-        public  Builder(String programName, T toolLogger) {
-            this.programName = programName;
             this.toolLogger = toolLogger;
         }
 

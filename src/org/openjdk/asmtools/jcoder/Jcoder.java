@@ -28,6 +28,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Stack;
 
 import static org.openjdk.asmtools.jcoder.JcodTokens.ConstType;
@@ -694,7 +695,7 @@ class Jcoder {
     /**
      * write to the directory passed with -d option
      */
-    public void write(ByteBuffer cls, File destDir) throws IOException {
+    public void write(ByteBuffer cls) throws IOException {
         String myname = cls.myname;
         if (myname == null) {
             environment.error("cannot.write");
@@ -702,30 +703,8 @@ class Jcoder {
         }
 
         environment.traceln("writing " + myname);
-        File outfile;
-        if (destDir == null) {
-            int startofname = myname.lastIndexOf('/');
-            if (startofname != -1) {
-                myname = myname.substring(startofname + 1);
-            }
-            outfile = new File(myname);
-        } else {
-            environment.traceln("writing -d " + destDir.getPath());
-            if (fileSeparator == 0) {
-                fileSeparator = System.getProperty("file.separator").charAt(0);
-            }
-            if (fileSeparator != '/') {
-                myname = myname.replace('/', fileSeparator);
-            }
-            outfile = new File(destDir, myname);
-            File outdir = new File(outfile.getParent());
-            if (!outdir.exists() && !outdir.mkdirs()) {
-                environment.error("cannot.write", outdir.getPath());
-                return;
-            }
-        }
 
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
+        BufferedOutputStream out = new BufferedOutputStream(environment.getToolOutput().getDataOutputStream());
         out.write(cls.data, 0, cls.length);
         try {
             out.close();
@@ -735,9 +714,11 @@ class Jcoder {
     /**
      * Writes the classes
      */
-    public void write(File destdir) throws IOException {
+    public void write() throws IOException {
         for (ByteBuffer cls : Classes) {
-            write(cls, destdir);
+            environment.getToolOutput().startClass(cls.myname, Optional.empty(), environment);
+            write(cls);
+            environment.getToolOutput().finishClass(cls.myname);
         }
     }  // end write()
 } // end Jcoder

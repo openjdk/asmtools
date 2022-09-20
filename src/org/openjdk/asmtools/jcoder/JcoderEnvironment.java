@@ -111,8 +111,8 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
 
     static class JcoderBuilder extends Builder<JcoderEnvironment, CompilerLogger> {
 
-        public JcoderBuilder(ToolOutput.DualStreamToolOutput log) {
-            super("jcoder", new CompilerLogger(log));
+        public JcoderBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+            super("jcoder", toolOutput, new CompilerLogger(log));
         }
 
         @Override

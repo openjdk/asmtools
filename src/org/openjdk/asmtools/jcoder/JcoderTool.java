@@ -30,17 +30,17 @@ import java.io.PrintWriter;
 public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
 
-    protected JcoderTool() {
-        super(new ToolOutput.DualOutputStreamOutput());
+    protected JcoderTool(ToolOutput toolOutput) {
+        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
     }
 
-    protected JcoderTool(ToolOutput.DualStreamToolOutput logger) {
-        super(logger);
+    protected JcoderTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+        super(toolOutput, logger);
     }
 
     @Override
-    public JcoderEnvironment getEnvironment(ToolOutput.DualStreamToolOutput log) {
-        JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(log);
+    public JcoderEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+        JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(toolOutput, log);
         return builder.build();
     }
 }
