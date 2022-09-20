@@ -68,7 +68,9 @@ public class Main extends JdisTool {
                 try(DataInputStream dis=inputFileName.getDataInputStream(Optional.of(environment))) {
                     classData.read(dis, Paths.get(inputFileName.getFileName()));
                 }
+                environment.getToolOutput().startClass(classData.className, Optional.of(".jasm"), environment);
                 classData.print();
+                environment.getToolOutput().finishClass(classData.className);
                 environment.getOutputs().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
@@ -99,6 +101,7 @@ public class Main extends JdisTool {
         environment.info("info.opt.lt");
         environment.info("info.opt.lv");
         environment.info("info.opt.hx");
+        environment.info("info.opt.d");
         environment.info("info.opt.v");
         environment.info("info.opt.t");
         environment.info("info.opt.version");
@@ -107,7 +110,8 @@ public class Main extends JdisTool {
     @Override
     protected void parseArgs(String... argv) {
         // Parse arguments
-        for (String arg : argv) {
+        for (int i = 0; i < argv.length; i++) {
+            String arg = argv[i];
             switch (arg) {
                 case "-g":
                     Options.setDetailedOutputOptions();
@@ -133,6 +137,9 @@ public class Main extends JdisTool {
                     break;
                 case "-hx":
                     Options.set(Options.PR.HEX);
+                    break;
+                case org.openjdk.asmtools.Main.DIR_SWITCH:
+                    setDestDir(++i, argv);
                     break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);

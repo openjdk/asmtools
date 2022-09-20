@@ -31,17 +31,17 @@ import java.io.PrintWriter;
 public abstract class JasmTool extends Tool<JasmEnvironment> {
 
 
-    protected JasmTool() {
-        super(new ToolOutput.DualOutputStreamOutput());
+    protected JasmTool(ToolOutput toolOutput) {
+        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
     }
 
-    protected JasmTool(ToolOutput.DualStreamToolOutput logger) {
-        super(logger);
+    protected JasmTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+        super(toolOutput, logger);
     }
 
     @Override
-    public JasmEnvironment getEnvironment(ToolOutput.DualStreamToolOutput logger) {
-        JasmBuilder builder = new JasmBuilder(logger);
+    public JasmEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+        JasmBuilder builder = new JasmBuilder(toolOutput, logger);
         return builder.build();
     }
 }

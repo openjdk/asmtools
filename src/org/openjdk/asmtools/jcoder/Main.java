@@ -46,24 +46,23 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 public class Main extends JcoderTool {
 
     HashMap<String, String> macros = new HashMap<>(1);
-    private File destDir;
     // tool options
     private boolean noWriteFlag = false;        // Do not write generated class files
     private boolean ignoreFlag = false;         // Ignore non-fatal error(s) that suppress writing class files
 
-    public Main(String... argv) {
-        super();
+    public Main(ToolOutput toolOutput, String... argv) {
+        super(toolOutput);
         parseArgs(argv);
     }
 
-    public Main(ToolOutput.DualStreamToolOutput log, String... argv) {
-        super(log);
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+        super(toolOutput, log);
         parseArgs(argv);
     }
 
     // jcoder entry point
     public static void main(String... argv) {
-        Main compiler = new Main(argv);
+        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
         System.exit(compiler.compile());
     }
 
@@ -92,7 +91,7 @@ public class Main extends JcoderTool {
                 if (noWriteFlag || (environment.getErrorCount() > 0 && !ignoreFlag)) {
                     continue;
                 }
-                parser.write(destDir);
+                parser.write();
                 if (environment.hasMessages()) rc += environment.flush(true);
             }
         } catch (IOException | URISyntaxException | Error exception) {
@@ -119,7 +118,7 @@ public class Main extends JcoderTool {
                         setVerboseFlag(true);
                         setTraceFlag(true);
                     }
-                    case "-d" -> destDir = setDestDir(++i, argv);
+                    case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
                     case "-m" -> {
                         if ((i + 1) >= argv.length) {
                             environment.error("err.m_requires_macro");

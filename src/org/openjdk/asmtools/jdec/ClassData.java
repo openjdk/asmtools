@@ -1120,6 +1120,7 @@ class ClassData {
 
             try {
                 entityName = (String) cpool[(Integer) cpool[this_cpx]];
+                environment.getToolOutput().startClass(entityName, Optional.of(".jcod"), environment);
                 if (entityName.equals("module-info")) {
                     entityType = "module";
                     entityName = "";
@@ -1183,10 +1184,12 @@ class ClassData {
                     (msg == null || msg.isEmpty() ? "" : ": " + msg));
             printRestOfBytes();
         } finally {
-            if (environment.printDetailsFlag)
+            if (environment.printDetailsFlag) {
                 out_end(format("} // end of %s %s", entityType, entityName));
-            else
+            } else {
                 out_end("}");
+            }
+            environment.getToolOutput().finishClass(entityName);
         }
     } // end decodeClass()
 

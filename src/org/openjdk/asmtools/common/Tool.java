@@ -37,10 +37,6 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
         this.environment = getEnvironment(toolOutput, outerLog);
     }
 
-    protected Tool(ToolOutput.DualStreamToolOutput logger) {
-        this.environment = getEnvironment(logger);
-    }
-
     public Environment<?> setVerboseFlag(boolean value) {
         environment.setVerboseFlag(value);
         return environment;
@@ -60,17 +56,13 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
         throw new NotImplementedException();
     }
 
-    public T getEnvironment(ToolOutput.DualStreamToolOutput log) {
-        throw new NotImplementedException();
-    }
-
     // Usage
     protected abstract void usage();
 
     // Parse arguments. Tool will be left using System.Exit if error found.
     protected abstract void parseArgs(String... argv);
 
-    protected File setDestDir(int index, String... argv) {
+    protected void setDestDir(int index, String... argv) {
         File destDir;
         if ((index) >= argv.length) {
             environment.error("err.d_requires_argument");
@@ -82,7 +74,7 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
             environment.error("err.does_not_exist", destDir.getPath());
             throw new IllegalArgumentException();
         }
-        return destDir;
+        environment.setToolOutput(new ToolOutput.DirOutput(destDir));
     }
 
     protected void addStdIn() {

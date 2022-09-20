@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
@@ -503,28 +504,8 @@ class ClassData extends MemberData<JasmEnvironment> {
     /**
      * Writes to the directory passed with -d option
      */
-    public void write(File destDir) throws IOException {
-        final String fileSeparator = FileSystems.getDefault().getSeparator();
-        File outfile;
-        if (destDir == null) {
-            int startOfName = myClassName.lastIndexOf(fileSeparator);
-            if (startOfName != -1) {
-                myClassName = myClassName.substring(startOfName + 1);
-            }
-            outfile = new File(myClassName + fileExtension);
-        } else {
-            environment.traceln("writing -d " + destDir.getPath());
-            if (!fileSeparator.equals("/")) {
-                myClassName = myClassName.replace("/", fileSeparator);
-            }
-            outfile = new File(destDir, myClassName + fileExtension);
-            File outDir = new File(outfile.getParent());
-            if (!outDir.exists() && !outDir.mkdirs()) {
-                environment.error("err.cannot.write", outDir.getPath());
-                return;
-            }
-        }
-        try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outfile)))) {
+    public void write(ToolOutput toolOutput) throws IOException {
+        try (DataOutputStream dos = toolOutput.getDataOutputStream()) {
             cdos.setDataOutputStream(dos);
             write(cdos);
         } catch (Exception ex) {

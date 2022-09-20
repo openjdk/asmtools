@@ -1,17 +1,29 @@
 package org.openjdk.asmtools.common;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.file.FileSystems;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 
 public interface ToolOutput {
 
+    DataOutputStream getDataOutputStream() throws FileNotFoundException;
+
     String getCurrentClassName();
 
-    void startClass(String fqn) throws IOException;
+    void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException;
 
     void finishClass(String fqn) throws IOException;
 
@@ -34,6 +46,11 @@ public interface ToolOutput {
 
         ToolOutput getSToolObject();
         ToolOutput getEToolObject();
+
+        @Override
+        default DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            throw new NotImplementedException("Not going to happen");
+        }
     }
 
     /**
@@ -42,6 +59,8 @@ public interface ToolOutput {
      */
     public abstract class NamedToolOutput implements ToolOutput {
         private String fqn;
+        private Optional<String> suffix;
+        private Environment environment;
 
         @Override
         public String getCurrentClassName() {
@@ -49,8 +68,10 @@ public interface ToolOutput {
         }
 
         @Override
-        public void startClass(String fqn) throws IOException {
+        public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
             this.fqn = fqn;
+            this.suffix = suffix;
+            this.environment = logger;
         }
 
         @Override
@@ -62,6 +83,8 @@ public interface ToolOutput {
 
     public abstract class NamedDualStreamToolOutput implements DualStreamToolOutput {
         private String fqn;
+        private Optional<String> suffix;
+        private Environment environment;
 
         @Override
         public String getCurrentClassName() {
@@ -69,8 +92,10 @@ public interface ToolOutput {
         }
 
         @Override
-        public void startClass(String fqn) throws IOException {
+        public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
             this.fqn = fqn;
+            this.suffix = suffix;
+            this.environment = logger;
         }
 
         @Override
@@ -82,9 +107,12 @@ public interface ToolOutput {
 
     public static class DirOutput extends NamedToolOutput {
 
-        private final String dir;
+        private final File dir;
+        private File outfile;
+        private FileOutputStream fos;
+        private PrintWriter pw;
 
-        public DirOutput(String dir) {
+        public DirOutput(File dir) {
             this.dir = dir;
         }
 
@@ -95,35 +123,65 @@ public interface ToolOutput {
 
         @Override
         public void printlns(String line) {
-            throw new RuntimeException("Not yet implemented");
+            pw.println(line);
         }
 
         @Override
         public void prints(String line) {
-            throw new RuntimeException("Not yet implemented");
+            pw.print(line);
         }
 
         @Override
         public void prints(char line) {
-            throw new RuntimeException("Not yet implemented");
+            pw.print(line);
         }
 
         @Override
-        public void startClass(String fqn) throws IOException {
-            super.startClass(fqn);
-            //mkdir
-            //open file?
-
+        public void startClass(String fqn, Optional<String> fileExtension, Environment environment) throws IOException {
+            super.startClass(fqn, fileExtension, environment);
+            final String fileSeparator = FileSystems.getDefault().getSeparator();
+            if (dir == null) {
+                int startOfName = fqn.lastIndexOf(fileSeparator);
+                if (startOfName != -1) {
+                    fqn = fqn.substring(startOfName + 1);
+                }
+                outfile = new File(fqn + fileExtension.orElseGet(() -> ""));
+            } else {
+                environment.traceln("writing -d " + dir.getPath());
+                if (!fileSeparator.equals("/")) {
+                    fqn = fqn.replace("/", fileSeparator);
+                }
+                outfile = new File(dir, fqn + fileExtension.orElseGet(() -> ""));
+                File outDir = new File(outfile.getParent());
+                if (!outDir.exists() && !outDir.mkdirs()) {
+                    environment.error("err.cannot.write", outDir.getPath());
+                    return;
+                }
+            }
+            fos = new FileOutputStream(outfile);
+            pw = new PrintWriter(new OutputStreamWriter(fos));
         }
 
         @Override
         public void finishClass(String fqn) throws IOException {
             super.finishClass(fqn);
+            flush();
+            try {
+                pw.close();
+            } finally {
+                fos.close();
+            }
+
         }
 
         @Override
         public void flush() {
             //todo flush to file
+        }
+
+        @Override
+        public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            return new DataOutputStream(new BufferedOutputStream(fos));
         }
     }
 
@@ -165,12 +223,33 @@ public interface ToolOutput {
         public void flush() {
             os.flush();
         }
+
+        @Override
+        public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            throw  new  NotImplementedException("Use EscapedPrintStreamOutput");
+        }
+
+
     }
 
     public static class EscapedPrintStreamOutput extends PrintWriterOutput {
 
+        private final OutputStream originalStream;
+
         public EscapedPrintStreamOutput(OutputStream os) {
             super(new uEscWriter(os));
+            this.originalStream = os;
+        }
+
+        @Override
+        public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            return new DataOutputStream(new BufferedOutputStream(originalStream));
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            super.finishClass(fqn);
+            originalStream.flush();
         }
     }
 

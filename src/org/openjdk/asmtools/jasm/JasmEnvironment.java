@@ -132,8 +132,8 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
 
     static class JasmBuilder extends Environment.Builder<JasmEnvironment, CompilerLogger> {
 
-        public JasmBuilder(ToolOutput.DualStreamToolOutput logger) {
-            super("jasm", new CompilerLogger(logger));
+        public JasmBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+            super("jasm", toolOutput, new CompilerLogger(logger));
         }
 
         @Override

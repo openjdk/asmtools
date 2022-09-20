@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.openjdk.asmtools.ClassPathClassWork;
 import org.openjdk.asmtools.ThreeStringWriters;
+import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,8 +106,9 @@ class MainTest extends ClassPathClassWork {
         dir.delete();
         dir.mkdir();
         dir.deleteOnExit();
-        org.openjdk.asmtools.jasm.Main jasmTool = new org.openjdk.asmtools.jasm.Main(sourceWithoutSuper.getAbsolutePath(), "-d", dir.getAbsolutePath());
-        jasmTool.compile();
+        org.openjdk.asmtools.jasm.Main jasmTool = new org.openjdk.asmtools.jasm.Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.DualOutputStreamOutput(), sourceWithoutSuper.getAbsolutePath(), "-d", dir.getAbsolutePath());
+        int ii = jasmTool.compile();
+        Assertions.assertEquals(0, ii);
         ThreeStringWriters outs = new ThreeStringWriters();
         Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), dir.getAbsolutePath() + "/" + fqn + ".class");
         int i = decoder.disasm();

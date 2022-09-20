@@ -48,10 +48,6 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
         getLogger().printErrorLn(format, args);
     }
 
-    public ToolOutput getToolOutput() {
-        return toolOutput;
-    }
-
     public Environment setPrintDetailsFlag(boolean value) {
         this.printDetailsFlag = value;
         return this;
