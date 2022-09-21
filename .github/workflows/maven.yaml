@@ -1,0 +1,49 @@
+name: Java CI
+
+on:
+  push:
+    branches:
+      - master
+      - at8
+  pull_request:
+    branches:
+      - master
+      - at8
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        java-version: [ 17 ]
+      fail-fast: false
+
+    name: ${{ matrix.os }} - Java ${{ matrix.java-version }} - Maven
+    steps:
+      - name: Checkout asmtools repo
+        uses: actions/checkout@v2
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'adopt'
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.4
+        with:
+          maven-version: 3.8.4
+
+      - name: Build asmtools with Maven
+        run: |
+            set -x
+            pwd
+            ls
+            cd maven ;
+            bash mvngen.sh  ;
+            mvn "--batch-mode" "--update-snapshots" "clean" "install"
+            mvn "--batch-mode" "--update-snapshots" "test"
+
+
