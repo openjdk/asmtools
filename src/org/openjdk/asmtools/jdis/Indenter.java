@@ -89,7 +89,7 @@ public class Indenter {
     }
 
     public Indenter printIndentLn() {
-        toolOutput.printlns("'");
+        toolOutput.printlns("");
         return this;
     }
 
