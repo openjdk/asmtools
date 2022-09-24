@@ -33,7 +33,7 @@ public abstract class JdisTool extends Tool<JdisEnvironment> {
     }
 
     protected JdisTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
+        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
     }
 
     @Override

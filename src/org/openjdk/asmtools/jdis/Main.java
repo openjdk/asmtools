@@ -141,6 +141,9 @@ public class Main extends JdisTool {
                 case org.openjdk.asmtools.Main.DIR_SWITCH:
                     setDestDir(++i, argv);
                     break;
+                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
+                    this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                    break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
                     System.exit(OK);

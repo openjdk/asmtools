@@ -26,9 +26,7 @@ import org.openjdk.asmtools.common.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.ToolInput;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
@@ -74,7 +72,7 @@ public class Main extends JasmTool {
 
     // jasm entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.DualOutputStreamOutput(), argv);
+        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.SingleDualOutputStreamOutput(), argv);
         System.exit(compiler.compile());
     }
 
@@ -151,6 +149,9 @@ public class Main extends JasmTool {
                         System.exit(OK);
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> {
+                        this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                    }
                     case "-h", "-help" -> {
                         usage();
                         System.exit(OK);

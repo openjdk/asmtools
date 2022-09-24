@@ -25,11 +25,8 @@ package org.openjdk.asmtools.jcoder;
 import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.ToolOutput;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.PatternSyntaxException;
 
@@ -119,6 +116,7 @@ public class Main extends JcoderTool {
                         setTraceFlag(true);
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
                     case "-m" -> {
                         if ((i + 1) >= argv.length) {
                             environment.error("err.m_requires_macro");

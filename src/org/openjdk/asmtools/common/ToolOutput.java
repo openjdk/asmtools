@@ -1,7 +1,6 @@
 package org.openjdk.asmtools.common;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,7 +13,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.file.FileSystems;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 
 public interface ToolOutput {
@@ -334,6 +332,20 @@ public interface ToolOutput {
         public void flush() {
             this.os.flush();
             this.es.flush();
+        }
+    }
+
+    public static class SingleDualOutputStreamOutput extends DualOutputStreamOutput {
+        public SingleDualOutputStreamOutput() {
+            this(System.err);
+        }
+
+        public SingleDualOutputStreamOutput(PrintWriter er) {
+            super(er, er);
+        }
+
+        public SingleDualOutputStreamOutput(PrintStream er) {
+            super(er, er);
         }
     }
 }

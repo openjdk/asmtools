@@ -101,6 +101,11 @@ public class ToolLogger implements ILogger {
         return outerLog;
     }
 
+    @Override
+    public void setOutputs(ToolOutput.DualStreamToolOutput nwoutput) {
+        this.outerLog = nwoutput;
+    }
+
     public String getSimpleInputFileName() {
         return simpleInputFileName;
     }
