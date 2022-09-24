@@ -120,6 +120,11 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         return getLogger().getOutputs();
     }
 
+    @Override
+    public void setOutputs(ToolOutput.DualStreamToolOutput nw) {
+        getLogger().setOutputs(nw);
+    }
+
 
     @Override
     public ToolOutput getToolOutput() {

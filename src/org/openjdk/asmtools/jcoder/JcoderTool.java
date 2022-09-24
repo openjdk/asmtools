@@ -31,7 +31,7 @@ public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
 
     protected JcoderTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
+        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
     }
 
     protected JcoderTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {

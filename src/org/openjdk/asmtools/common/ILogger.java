@@ -62,6 +62,7 @@ public interface ILogger {
     }
 
     ToolOutput.DualStreamToolOutput getOutputs();
+    void setOutputs(ToolOutput.DualStreamToolOutput nwoutput);
 
     default ToolOutput getToolOutput() {
         throw new NotImplementedException("implement wisely!");

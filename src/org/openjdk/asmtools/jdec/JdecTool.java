@@ -36,7 +36,7 @@ public abstract class JdecTool extends Tool<JdecEnvironment> {
     }
 
     protected JdecTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
+        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
     }
 
     protected JdecTool(PrintStream toolOutput) {

@@ -24,7 +24,6 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.common.uEscWriter;
 
 import java.io.*;
 
@@ -47,7 +46,7 @@ public class Main extends JdecTool {
     }
 
     public Main(ToolOutput.EscapedPrintStreamOutput toolOutput, String[] argv) {
-        this(toolOutput, new ToolOutput.DualOutputStreamOutput(), argv);
+        this(toolOutput, new ToolOutput.SingleDualOutputStreamOutput(), argv);
     }
 
     // jdec entry point
@@ -105,6 +104,9 @@ public class Main extends JdecTool {
                     break;
                 case org.openjdk.asmtools.Main.DIR_SWITCH:
                     setDestDir(++i, argv);
+                    break;
+                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
+                    this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
                     break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);

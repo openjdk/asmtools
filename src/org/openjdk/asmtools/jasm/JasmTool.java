@@ -32,7 +32,7 @@ public abstract class JasmTool extends Tool<JasmEnvironment> {
 
 
     protected JasmTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.DualOutputStreamOutput());
+        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
     }
 
     protected JasmTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {

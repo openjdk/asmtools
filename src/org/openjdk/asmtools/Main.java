@@ -36,6 +36,7 @@ public class Main {
     public static final String VERSION_SWITCH="-version";
     public static final String STDIN_SWITCH="-";
     public static final String DIR_SWITCH="-d";
+    public static final String DUAL_LOG_SWITCH ="-dls";
 
     /**
      * Parses the first argument and deligates execution to an appropriate tool

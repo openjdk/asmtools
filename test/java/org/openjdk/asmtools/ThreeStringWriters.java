@@ -47,6 +47,6 @@ public class ThreeStringWriters {
     }
 
     public ToolOutput.DualStreamToolOutput getLoggers() {
-        return new ToolOutput.DualOutputStreamOutput(getLoggerOutput(), getErrorOutput());
+        return new ToolOutput.SingleDualOutputStreamOutput(getErrorOutput());
     }
 }
