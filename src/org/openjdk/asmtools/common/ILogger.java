@@ -34,11 +34,11 @@ public interface ILogger {
     default void error(Throwable exception) { error(NOWHERE, exception.getMessage()); }
 
     default void traceln(String format, Object... args) {
-        println(format, args);
+        getOutputs().printlne(( args == null || args.length == 0) ? format : format(format, args));;
     }
 
     default void trace(String format, Object... args) {
-        getOutputs().prints(( args == null || args.length == 0) ? format : format(format, args));
+        getOutputs().printe(( args == null || args.length == 0) ? format : format(format, args));
     }
 
     default void printErrorLn(String format, Object... args) {

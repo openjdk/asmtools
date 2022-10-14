@@ -18,7 +18,7 @@ class MainTest extends ClassPathClassWork {
 
     @BeforeAll
     public static void prepareClass() {
-        initClassData(org.openjdk.asmtools.jdis.Main.class);
+        initMainClassData(org.openjdk.asmtools.jdis.Main.class);
     }
 
     @Test

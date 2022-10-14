@@ -10,13 +10,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.regex.Pattern;
 
 class MainTest extends ClassPathClassWork {
 
     @BeforeAll
     public static void prepareClass() {
-        initClassData(org.openjdk.asmtools.jdec.Main.class);
+        initMainClassData(org.openjdk.asmtools.jdec.Main.class);
     }
 
     @Test

@@ -3,7 +3,6 @@ package org.openjdk.asmtools.jdis;
 import org.junit.jupiter.api.Assertions;
 import org.openjdk.asmtools.BruteForceHelper;
 import org.openjdk.asmtools.ThreeStringWriters;
-import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.File;
 import java.io.IOException;
