@@ -53,8 +53,23 @@ public class Main extends JcoderTool {
     }
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+        this(toolOutput, log, null, argv);
+    }
+
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
+        if (toolInput!=null){
+            fileList.add(toolInput);
+        }
         parseArgs(argv);
+    }
+
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+        super(toolOutput, log);
+        for(ToolInput toolInput: toolInputs){
+            fileList.add(toolInput);
+        }
+        parseArgs(new String[0]);
     }
 
     // jcoder entry point

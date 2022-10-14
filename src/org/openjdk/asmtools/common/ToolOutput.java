@@ -1,6 +1,7 @@
 package org.openjdk.asmtools.common;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,7 +12,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.util.ArrayList;
 import java.util.Optional;
 
 
@@ -174,7 +177,11 @@ public interface ToolOutput {
 
         @Override
         public void flush() {
-            //todo flush to file
+            try {
+                fos.flush();
+            }catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         @Override
@@ -347,6 +354,219 @@ public interface ToolOutput {
         public SingleDualOutputStreamOutput(PrintStream er) {
             super(er, er);
         }
+    }
+
+    public static class ByteOutput extends NamedToolOutput {
+        private final ArrayList<NamedBinary> outputs = new ArrayList<>();
+        private ByteArrayOutputStream currentClass;
+
+        public ArrayList<NamedBinary> getOutputs() {
+            return outputs;
+        }
+
+        @Override
+        public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            return new DataOutputStream(currentClass);
+        }
+
+
+        @Override
+        public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
+            super.startClass(fqn, suffix, logger);
+            currentClass = new ByteArrayOutputStream(1024);
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            if (!getCurrentClassName().equals(fqn)) {
+                throw new RuntimeException("Ended different class - " + fqn + " - then started - " + super.fqn);
+            }
+            outputs.add(new NamedBinary(fqn, currentClass.toByteArray()));
+            super.fqn = null;
+            currentClass = null;
+
+        }
+
+        @Override
+        public void printlns(String line) {
+            try {
+                currentClass.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void prints(String line) {
+            try {
+                currentClass.write(line.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void prints(char line) {
+            currentClass.write(line);
+        }
+
+        @Override
+        public void flush() {
+
+        }
+
+        public class NamedBinary {
+            private final String fqn;
+            private final byte[] body;
+
+            public NamedBinary(String fqn, byte[] body) {
+                this.fqn = fqn;
+                this.body = body;
+            }
+
+            public String getFqn() {
+                return fqn;
+            }
+
+            public byte[] getBody() {
+                return body;
+            }
+        }
+    }
+
+    public static class TextOutput extends NamedToolOutput {
+        private final ArrayList<NamedSource> outputs = new ArrayList<>();
+        private StringBuilder currentClass;
+
+        public ArrayList<NamedSource> getOutputs() {
+            return outputs;
+        }
+
+        @Override
+        public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+            return null;
+        }
+
+        @Override
+        public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
+            super.startClass(fqn, suffix, logger);
+            currentClass = new StringBuilder();
+        }
+
+        @Override
+        public void finishClass(String fqn) throws IOException {
+            if (!getCurrentClassName().equals(fqn)) {
+                throw new RuntimeException("Ended different class - " + fqn + " - then started - " + super.fqn);
+            }
+            outputs.add(new NamedSource(fqn, currentClass.toString()));
+            super.fqn = null;
+            currentClass = null;
+
+        }
+
+        @Override
+        public void printlns(String line) {
+            currentClass.append(line).append("\n");
+        }
+
+        @Override
+        public void prints(String line) {
+            currentClass.append(line);
+        }
+
+        @Override
+        public void prints(char line) {
+            currentClass.append(line);
+        }
+
+        @Override
+        public void flush() {
+
+        }
+
+        public class NamedSource {
+            private final String fqn;
+            private final String body;
+
+            public NamedSource(String fqn, String body) {
+                this.fqn = fqn;
+                this.body = body;
+            }
+
+            public String getFqn() {
+                return fqn;
+            }
+
+            public String getBody() {
+                return body;
+            }
+        }
+    }
+
+    public static class StringLog extends NamedDualStreamToolOutput {
+
+        private final StringBuilder log = new StringBuilder();
+
+        @Override
+        public String toString() {
+            return log.toString();
+        }
+
+        @Override
+        public void printlns(String line) {
+            log.append(line).append("\n");
+        }
+
+        @Override
+        public void prints(String line) {
+            log.append(line);
+        }
+
+        @Override
+        public void prints(char line) {
+            log.append(line);
+        }
+
+        @Override
+        public void flush() {
+
+        }
+
+        @Override
+        public void printlne(String line) {
+            log.append(line).append("\n");
+        }
+
+        @Override
+        public void printe(String line) {
+            log.append(line);
+        }
+
+        @Override
+        public void printe(char line) {
+            log.append(line);
+        }
+
+        @Override
+        public void stacktrace(Throwable ex) {
+            log.append(exToString(ex));
+        }
+
+        @Override
+        public ToolOutput getSToolObject() {
+            return this;
+        }
+
+        @Override
+        public ToolOutput getEToolObject() {
+            return this;
+        }
+    }
+
+    public static String exToString(Throwable e) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        e.printStackTrace(new PrintStream(out, true, StandardCharsets.UTF_8));
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 }
 

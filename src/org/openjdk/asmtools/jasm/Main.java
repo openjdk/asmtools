@@ -70,6 +70,22 @@ public class Main extends JasmTool {
         parseArgs(argv);
     }
 
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+        super(toolOutput, log);
+        if (toolInput!=null){
+            fileList.add(toolInput);
+        }
+        parseArgs(argv);
+    }
+
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+        super(toolOutput, log);
+        for(ToolInput toolInput: toolInputs){
+            fileList.add(toolInput);
+        }
+        parseArgs(new String[0]);
+    }
+
     // jasm entry point
     public static void main(String... argv) {
         Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.SingleDualOutputStreamOutput(), argv);

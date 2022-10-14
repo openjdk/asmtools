@@ -39,10 +39,24 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdecTool {
 
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+        super(toolOutput, log);
+        for(ToolInput toolInput: toolInputs){
+            fileList.add(toolInput);
+        }
+        parseArgs(new String[0]);
+    }
+
+    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+        super(toolOutput, log);
+        if (toolInput != null) {
+            fileList.add(toolInput);
+        }
+        parseArgs(argv);
+    }
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
-        super(toolOutput, log);
-        parseArgs(argv);
+        this(toolOutput, log, null, argv);
     }
 
     public Main(ToolOutput.EscapedPrintStreamOutput toolOutput, String[] argv) {
