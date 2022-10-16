@@ -15,7 +15,9 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 public interface ToolOutput {
@@ -365,6 +367,11 @@ public interface ToolOutput {
         }
 
         @Override
+        public String toString() {
+            return  outputs.stream().map(a->a.toString()).collect(Collectors.joining("\n"));
+        }
+
+        @Override
         public DataOutputStream getDataOutputStream() throws FileNotFoundException {
             return new DataOutputStream(currentClass);
         }
@@ -431,6 +438,11 @@ public interface ToolOutput {
             public byte[] getBody() {
                 return body;
             }
+
+            @Override
+            public String toString() {
+                return fqn + ": " + body.length + "b";
+            }
         }
     }
 
@@ -440,6 +452,11 @@ public interface ToolOutput {
 
         public ArrayList<NamedSource> getOutputs() {
             return outputs;
+        }
+
+        @Override
+        public String toString() {
+            return  outputs.stream().map(a->a.toString()).collect(Collectors.joining("\n"));
         }
 
         @Override
@@ -499,6 +516,11 @@ public interface ToolOutput {
 
             public String getBody() {
                 return body;
+            }
+
+            @Override
+            public String toString() {
+                return "/**********\n" + fqn + "\n**********/\n" + body + "\n/*end of " + fqn + "*/";
             }
         }
     }

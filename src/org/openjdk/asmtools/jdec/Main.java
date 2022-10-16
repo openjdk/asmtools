@@ -107,7 +107,7 @@ public class Main extends JdecTool {
             String arg = argv[i];
             switch (arg) {
                 case "-g":
-                    environment.setPrintDetailsFlag(true);
+                    setPrintDetails();
                     break;
                 case "-v":
                     environment.setVerboseFlag(true);
@@ -145,6 +145,10 @@ public class Main extends JdecTool {
             usage();
             System.exit(FAILED);
         }
+    }
+
+    public void setPrintDetails() {
+        environment.setPrintDetailsFlag(true);
     }
 
     /**
