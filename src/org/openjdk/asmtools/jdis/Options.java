@@ -70,6 +70,11 @@ public class Options {
         printOptions.remove(PR.LABS);
     }
 
+    public static  void unsetDetailedOutputOptions() {
+        printOptions.removeAll(DETAILED_OUTPUT);
+        printOptions.add(PR.LABS);
+    }
+
     public static boolean contains(PR val) { return printOptions.contains(val); }
 
     public static boolean traceEnabled() { return printOptions.contains(PR.TRACE); }
