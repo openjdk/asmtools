@@ -18,6 +18,7 @@ class MainTest extends ClassPathClassWork {
 
     @BeforeAll
     public static void prepareClass() {
+        Options.unsetDetailedOutputOptions();
         initMainClassData(org.openjdk.asmtools.jdis.Main.class);
     }
 
