@@ -883,6 +883,7 @@ class Parser extends ParseBase {
         scanner.expect(Token.COLON);
         ConstCell typeCell = parseName();
         int paramcnt = countParams(typeCell);
+        int decriptorParams = paramcnt;
         if ((!Modifiers.isStatic(mod)) && !is_clinit) {
             paramcnt++;
         }
@@ -938,7 +939,7 @@ class Parser extends ParseBase {
             max_locals = parseUInt(2);
         }
         if (scanner.token == Token.INTVAL) {
-            annotParser.parseParamAnnots(paramcnt, curMethod);
+            annotParser.parseParamAnnots(decriptorParams, curMethod);
         }
 
         if (scanner.token == SEMICOLON) {

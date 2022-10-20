@@ -294,11 +294,8 @@ public class ParserAnnotation extends ParseBase {
      * @throws org.openjdk.asmtools.jasm.Scanner.SyntaxError
      * @throws IOException
      */
-    protected void parseParamAnnots(int _totalParams, MethodData curMethod) throws Scanner.SyntaxError, IOException {
-        debugScan(" - - - > [ParserAnnotation.parseParamAnnots]: Begin, totalParams =  " + _totalParams + " ");
-        // The _method thinks there are N+1 params in the signature
-        // (N = total params in the call list) + 1 (return value)
-        int totalParams = _totalParams - 1;
+    protected void parseParamAnnots(int totalParams, MethodData curMethod) throws Scanner.SyntaxError, IOException {
+        debugScan(" - - - > [ParserAnnotation.parseParamAnnots]: Begin, totalParams =  " + totalParams + " ");
         TreeMap<Integer, ArrayList<AnnotationData>> pAnnots = new TreeMap<>();
 
         while (scanner.token == Token.INTVAL) {
