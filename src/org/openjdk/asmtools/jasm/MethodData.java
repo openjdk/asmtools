@@ -160,7 +160,7 @@ class MethodData extends MemberData<JasmEnvironment> {
                 methodParameters.add(new MethodParameterData(0, null));
             }
         }
-        methodParameters.put(paramNum, new MethodParameterData(access, name));
+        methodParameters.set(paramNum, new MethodParameterData(access, name));
     }
 
     public CodeAttr startCode(int paramCount, Indexer max_stack, Indexer max_locals) {
@@ -208,4 +208,3 @@ class MethodData extends MemberData<JasmEnvironment> {
         getAttrVector().write(out);
     }
 } // end MethodData
-

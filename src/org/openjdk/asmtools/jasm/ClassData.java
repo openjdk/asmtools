@@ -28,14 +28,16 @@ import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.*;
-import java.nio.file.FileSystems;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.openjdk.asmtools.common.structure.ClassFileContext.INNER_CLASS;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_DYNAMIC;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_INVOKEDYNAMIC;
 import static org.openjdk.asmtools.jasm.ClassFileConst.JAVA_MAGIC;
+import static org.openjdk.asmtools.jasm.Indexer.NotSet;
 
 /**
  * ClassData
@@ -148,73 +150,85 @@ class ClassData extends MemberData<JasmEnvironment> {
 
     /*
      * After a constant pool has been explicitly declared,
-     * this method links the Constant_InvokeDynamic Constant_Dynamic
+     * this method links the Constant_InvokeDynamic|Constant_Dynamic
      * constants with any bootstrap methods that they index in the
      * Bootstrap Methods Attribute
      */
     protected void relinkBootstrapMethods() {
-        if (bootstrapMethodsAttr == null) {
-            return;
-        }
-
-        environment.traceln("relinkBootstrapMethods");
-
-        for (ConstCell cell : pool) {
-            ConstValue ref = null;
-            if (cell != null) {
-                ref = cell.ref;
-            }
-            if (ref != null
-                    && (ref.tag == CONSTANT_INVOKEDYNAMIC || ref.tag == CONSTANT_DYNAMIC)) {
-                // Find only the Constant
-                ConstantPool.ConstValue_BootstrapMethod refval = (ConstantPool.ConstValue_BootstrapMethod) ref;
-                BootstrapMethodData bsmdata = refval.bsmData();
-                // only care about BSM Data that were placeholders
-                if (bsmdata != null && bsmdata.isPlaceholder()) {
+        if (bootstrapMethodsAttr != null) {
+            ArrayList<ConstCell<?>> cells = pool.getPoolValuesByRefType(CONSTANT_INVOKEDYNAMIC, CONSTANT_DYNAMIC);
+            environment.traceln("relinkBSMs: %d items", cells.size());
+            for (ConstCell<?> cell : cells) {
+                ConstantPool.ConstValue_BootstrapMethod refVal = (ConstantPool.ConstValue_BootstrapMethod) cell.ref;
+                BootstrapMethodData bsmData = refVal.bsmData();
+                if (refVal.isSet() & refVal.value.ref == null) {
+                    ConstCell c = pool.getCell(((ConstCell) refVal.value).cpIndex);
+                    refVal.setValue(c);
+                }
+                if (bsmData != null && bsmData.hasMethodAttrIndex()) {
                     // find the real BSM Data at the index
-                    int bsmindex = bsmdata.cpIndex;
-                    if (bsmindex < 0 || bsmindex > bootstrapMethodsAttr.size()) {
-                        // bad BSM index --
-                        // give a warning, but place the index in the arg anyway
-                        environment.traceln("Warning: (ClassData.relinkBootstrapMethods()): Bad bootstrapMethods index: " + bsmindex);
-                        // env.error("const.bsmindex", bsmindex);
-                        bsmdata.cpIndex = bsmindex;
+                    int methodAttrIndex = bsmData.getMethodAttrIndex();
+                    if (methodAttrIndex < 0 || methodAttrIndex > bootstrapMethodsAttr.size()) {
+                        // bad BSM index - give a warning, but place the index in the arg anyway
+                        environment.warning("warn.bootstrapmethod.attr.bad", methodAttrIndex);
+                        bsmData.setMethodAttrIndex(methodAttrIndex);
                     } else {
                         // make the IndyPairs BSM Data point to the one from the attribute
-                        refval.setBsmData(bootstrapMethodsAttr.get(bsmindex));
+                        refVal.setBsmData(bootstrapMethodsAttr.get(methodAttrIndex), methodAttrIndex);
                     }
                 }
             }
         }
     }
 
-    protected void numberBootstrapMethods() {
-        environment.traceln("Numbering Bootstrap Methods");
-        if (bootstrapMethodsAttr == null) {
-            return;
-        }
-        boolean duplicateExists = false;
-        // remove duplicates in BootstrapMethod_Attribute if found
-        // Fix 7902888: Excess entries in BootstrapMethods with the same bsm, bsmKind, bsmArgs
-        ArrayList<ConstCell<?>> list = this.getPool().getPoolCellsByType(CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC);
-        BootstrapMethodData[] bsmAttributes = new BootstrapMethodData[list.size()];
-        HashMap<BootstrapMethodData, Integer> bsmHashMap = new HashMap<>();
-        int index = 0;
-        //
-        for (int i = 0; i < list.size(); i++) {
-            ConstantPool.ConstValue_BootstrapMethod cell = (ConstantPool.ConstValue_BootstrapMethod) list.get(i).ref;
-            BootstrapMethodData bsmData = ((ConstantPool.ConstValue_BootstrapMethod) list.get(i).ref).bsmData();
-            if (bsmHashMap.keySet().contains(bsmData)) {
-                duplicateExists = true;
-                cell.setBsmData(bsmAttributes[bsmHashMap.get(bsmData)]);
-            } else {
-                bsmAttributes[i] = bsmData.clone(index++);
-                cell.setBsmData(bsmAttributes[i]);
-                bsmHashMap.put(bsmData, i);
+    /**
+     * Finds first BSM data element by value in a collection
+     */
+    private <T extends Collection<BootstrapMethodData>> int getFirstIndex(T collection, BootstrapMethodData bsmData) {
+        if (!collection.isEmpty()) {
+            BootstrapMethodData[] array = collection.toArray(BootstrapMethodData[]::new);
+            for (int i = 0; i < array.length; i++) {
+                if (bsmData.equalsByValue(array[i])) {
+                    return i;
+                }
             }
         }
-        if( duplicateExists ) {
-            bootstrapMethodsAttr.replaceAll(Arrays.stream(bsmAttributes).filter(i -> i != null).toList());
+        return NotSet;
+    }
+
+    /**
+     * Relinks BSM data (BootstrapMethod Attribute) and Constant Pool Constant_InvokeDynamic|Constant_Dynamic entries if
+     * at least one CP cell has undefined method attribute index also the method removes duplicates in BootstrapMethod
+     * Attribute if found
+     */
+    private void uniquifyBootstrapMethods() {
+        if (bootstrapMethodsAttr != null) {
+            int index = 0;
+            final List<BootstrapMethodData> cpBsmList = this.getPool().
+                    getPoolCellsByType(CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC).
+                    stream().map(item -> ((ConstantPool.ConstValue_BootstrapMethod) item.ref).
+                            bsmData()).toList();
+            if (cpBsmList.stream().anyMatch(item -> !item.hasMethodAttrIndex())) {
+                environment.traceln("numberBSM: %d items", cpBsmList.size());
+                // remove duplicates in BootstrapMethod_Attribute if found
+                // Fix 7902888: Excess entries in BootstrapMethods with the same bsm, bsmKind, bsmArgs
+                final ArrayList<BootstrapMethodData> newBsmList = new ArrayList<>(cpBsmList.size());
+                for (int i = 0; i < cpBsmList.size(); i++) {
+                    BootstrapMethodData bsmData = cpBsmList.get(i);
+                    int cachedIndex = getFirstIndex(newBsmList, bsmData);
+                    if (cachedIndex != NotSet) {
+                        bsmData.setMethodAttrIndex(cachedIndex);
+                    } else {
+                        if (getFirstIndex(this.bootstrapMethodsAttr, bsmData) == NotSet) {
+                            environment.warning("warn.bootstrapmethod.attr.expected", bsmData.toString());
+                        } else {
+                            bsmData.setMethodAttrIndex(index++);
+                        }
+                        newBsmList.add(bsmData);
+                    }
+                }
+                bootstrapMethodsAttr.replaceAll(newBsmList);
+            }
         }
     }
 
@@ -308,11 +322,11 @@ class ClassData extends MemberData<JasmEnvironment> {
     }
 
     public void addBootstrapMethod(BootstrapMethodData bsmData) {
-        environment.traceln("addBootstrapMethod");
         if (bootstrapMethodsAttr == null) {
             bootstrapMethodsAttr = new DataVectorAttr<>(pool, EAttribute.ATT_BootstrapMethods);
         }
         bootstrapMethodsAttr.add(bsmData);
+        environment.traceln("addBootstrapMethod: " + bsmData.toString());
     }
 
     public void addNestHost(ConstCell hostClass) {
@@ -345,9 +359,9 @@ class ClassData extends MemberData<JasmEnvironment> {
         pool.checkGlobals();
         pool.fixIndexesInPool();
         itemizeAttributes(new DataVectorAttr<>(pool, EAttribute.ATT_ConstantValue).
-                        addAll(fields.stream().map(f->f.getInitialValue())),
+                        addAll(fields.stream().map(f -> f.getInitialValue())),
                 annotAttrInv, annotAttrVis);
-        numberBootstrapMethods();
+        uniquifyBootstrapMethods();
         try {
             ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) this_class.ref;
             ConstantPool.ConstValue_UTF8 this_class_name = this_class_value.value.ref;
