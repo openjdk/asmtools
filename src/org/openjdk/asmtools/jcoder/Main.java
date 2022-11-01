@@ -26,6 +26,8 @@ import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.regex.PatternSyntaxException;
@@ -72,6 +74,28 @@ public class Main extends JcoderTool {
         parseArgs(new String[0]);
     }
 
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param ref      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintWriter ref, String toolName) {
+        super(new ToolOutput.PrintWriterOutput(ref));
+    }
+
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param out      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintStream out, String toolName) {
+        this(new PrintWriter(out), toolName);
+    }
+
     // jcoder entry point
     public static void main(String... argv) {
         Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
@@ -88,6 +112,12 @@ public class Main extends JcoderTool {
         environment.info("info.opt.v");
         environment.info("info.opt.t");
         environment.info("info.opt.version");
+    }
+
+    // Run jcoder compiler with args
+    public synchronized boolean compile(String... argv) {
+        parseArgs(argv);
+        return this.compile() == OK;
     }
 
     // Run jcoder compiler when args already parsed

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ public class Main {
     public static final String DUAL_LOG_SWITCH ="-dls";
 
     /**
-     * Parses the first argument and deligates execution to an appropriate tool
+     * Parses the first argument and delegates execution to an appropriate tool
      *
      * @param args - command line arguments
      */

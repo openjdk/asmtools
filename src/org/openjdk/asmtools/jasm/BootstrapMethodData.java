@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jasm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 class BootstrapMethodData extends Indexer implements DataWriter {
 
@@ -37,33 +38,32 @@ class BootstrapMethodData extends Indexer implements DataWriter {
         this.arguments = arguments;
     }
 
-    // placeholder - bootstrap_method_attr_index
+    // methodAttrIndex - bootstrap_method_attr_index
     // The value of the bootstrap_method_attr_index item must be a valid index into the bootstrap_methods array
     // of the bootstrap method table of this class file (§4.7.23).
-    protected BootstrapMethodData clone(int placeholder) {
-        BootstrapMethodData instance = new BootstrapMethodData(this.bootstrapMethodHandle, arguments);
-        instance.cpIndex = placeholder;
-        return instance;
-    }
-
-    // placeholder - bootstrap_method_attr_index
-    // The value of the bootstrap_method_attr_index item must be a valid index into the bootstrap_methods array
-    // of the bootstrap method table of this class file (§4.7.23).
-    public BootstrapMethodData(int placeholder) {
+    public BootstrapMethodData(int methodAttrIndex) {
         super();
         this.bootstrapMethodHandle = null;
         this.arguments = null;
-        this.cpIndex = placeholder;
+        super.cpIndex = methodAttrIndex;
     }
 
     public int getLength() {
         return 4 + arguments.size() * 2;
     }
 
-    public boolean isPlaceholder() {
+    public boolean hasMethodAttrIndex() {
         return super.isSet();
     }
 
+    public void setMethodAttrIndex(int methodAttrIndex) {
+        super.cpIndex = methodAttrIndex;
+    }
+
+    public int getMethodAttrIndex() {
+        return super.cpIndex;
+
+    }
     public void write(CheckedDataOutputStream out) throws IOException {
         out.writeShort(bootstrapMethodHandle.cpIndex);
         out.writeShort(arguments.size());
@@ -74,13 +74,21 @@ class BootstrapMethodData extends Indexer implements DataWriter {
     }
 
     @Override
+    public String toString() {
+        return String.format("{MethodHandle:%s Arguments:%s}",
+                bootstrapMethodHandle == null || bootstrapMethodHandle.cpIndex == NotSet ? " n/a" : " #" + bootstrapMethodHandle.cpIndex,
+                arguments == null || arguments.isEmpty() ? "{}" :
+                        "{ " + arguments.stream().map(a -> String.format("#%d", a.cpIndex)).collect(Collectors.joining(", ")) + " }");
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof BootstrapMethodData)) return false;
         BootstrapMethodData that = (BootstrapMethodData) o;
         if (!Objects.equals(bootstrapMethodHandle, that.bootstrapMethodHandle))
             return false;
-        return Objects.equals(arguments, that.arguments);
+        return this.cpIndex == that.cpIndex & Objects.equals(arguments, that.arguments);
     }
 
     @Override

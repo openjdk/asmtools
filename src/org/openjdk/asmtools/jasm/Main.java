@@ -27,6 +27,8 @@ import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.ToolInput;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
@@ -86,10 +88,38 @@ public class Main extends JasmTool {
         parseArgs(new String[0]);
     }
 
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param ref      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintWriter ref, String toolName) {
+        super(new ToolOutput.PrintWriterOutput(ref));
+    }
+
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param out      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintStream out, String toolName) {
+        this(new PrintWriter(out), toolName);
+    }
+
     // jasm entry point
     public static void main(String... argv) {
         Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.SingleDualOutputStreamOutput(), argv);
         System.exit(compiler.compile());
+    }
+
+    // Run jasm compiler with args
+    public synchronized boolean compile(String... argv) {
+        parseArgs(argv);
+        return this.compile() == OK;
     }
 
     // Run jasm compiler when args already parsed

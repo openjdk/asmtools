@@ -557,7 +557,7 @@ class Parser extends ParseBase {
     /**
      * Parse constant declaration
      */
-    private void parseConstDef() throws IOException {
+    private void parseConstDef() {
         for (; ; ) {
             if (scanner.token == Token.CPINDEX) {
                 int cpx = scanner.intValue;

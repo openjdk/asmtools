@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  * InnerClasses, BootstrapMethods, LineNumberTable, Runtime(In)Visible(Type|Parameter)Annotations,
  * LocalVariableTable, StackMapTable
  */
-class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<T> {
+class DataVectorAttr<T extends DataWriter> extends AttrData implements Collection<T> {
 
     private ArrayList<T> elements;
     private boolean     byteIndex;
@@ -72,9 +72,39 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
         return elements.get(index);
     }
 
-    public void add(T element) {
-        if (element != null)
-            elements.add(element);
+    @Override
+    public boolean add(T element) {
+        return elements.add(element);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return elements.remove(o);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return elements.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends T> c) {
+        return elements.addAll(c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return elements.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return elements.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+        elements.clear();
     }
 
     public DataVectorAttr<T> addAll(Stream<T> s) {
@@ -82,11 +112,21 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
         return this;
     }
 
-    public void put(int i, T element) {
-        elements.set(i, element);
+    public T set(int i, T element) {
+        return elements.set(i, element);
     }
 
     public int size() { return elements.size(); }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return false;
+    }
 
     public void replaceAll(Collection<T> collection) {
         elements.clear();
@@ -101,6 +141,18 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
     public Iterator<T> iterator() {
         return elements.iterator();
     }
+
+    @Override
+    public Object[] toArray() {
+        return elements.toArray();
+    }
+
+    @Override
+    public <V> V[] toArray(V[] a) {
+        return elements.toArray(a);
+    }
+
+    public Stream<T> stream() { return elements.stream(); };
 
     @Override
     public int attrLength() {
@@ -123,5 +175,4 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Iterable<
             elem.write(out);
         }
     }
-
 }

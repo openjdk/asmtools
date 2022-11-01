@@ -28,6 +28,7 @@ import org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -173,10 +174,9 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
      * and the second pass, which links references to existing constants.
      */
     public void fixRefsInPool() {
-        // used to fix CP refs when a constant pool is constructed by refs alone.
-        environment.traceln("Fixing CP for explicit Constant Entries.");
-        // simply iterate through the pool.
-        environment.traceln("fixRefsInPool %d items", pool.size());
+        // Simply iterating through the pool the method is used to fix CP refs
+        // when a constant pool is constructed by refs alone.
+        environment.traceln("fixRefsInPool: Fixing CP for %d explicit Constant Entries", pool.size());
         for (ConstCell item : pool) {
             checkAndFixCPRef(item);
         }
@@ -186,10 +186,9 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
      * Fix Indexes in constant pool.
      */
     public void fixIndexesInPool() {
-        // used to fix CP Indexes when a constant pool is constructed by values alone.
-        environment.traceln("Fixing CP for explicit Constant Entries.");
-        // simply iterate through the pool.
-        environment.traceln("fixIndexesInPool %d items", pool.size());
+        // Simply iterate through the pool the method is used to fix CP Indexes
+        // when a constant pool is constructed by values alone.
+        environment.traceln("fixIndexesInPool: Fixing CP for %d explicit Constant Entries.", pool.size());
         for (ConstCell item : pool) {
             checkAndFixCPIndexes(item);
         }
@@ -214,7 +213,6 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
 
     /*
      *  Helper function for "fixRefsInPool"
-     *
      *  Does recursive checking of references, using a locally-defined visitor.
      */
     private void checkAndFixCPRef(ConstCell item) {
@@ -308,8 +306,8 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
                 return;
             }
             if (cell.isSet() && (cell.cpIndex != cpx)) {
-                environment.traceln("setCell: new ConstCell");
                 cell = new ConstCell(value);
+                environment.traceln("setCell: new ConstCell %s", cell.toString());
             }
         }
         cpool_set(cpx, cell, sz);
@@ -491,6 +489,11 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
 
     public ArrayList<ConstCell<?>>  getPoolCellsByType(ClassFileConst.ConstType... types) {
     return pool.stream().filter(c->c.getType().oneOf(types)).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public ArrayList<ConstCell<?>> getPoolValuesByRefType(ClassFileConst.ConstType... types) {
+        return pool.stream().filter(c->c.ref != null && c.getType().oneOf(types)).
+                collect(Collectors.toCollection(ArrayList::new));
     }
 
     public enum ReferenceRank {
@@ -878,6 +881,11 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
             return bsmData;
         }
 
+        public void setBsmData(BootstrapMethodData bsmData, int methodAttrIndex) {
+            this.bsmData = bsmData;
+            this.bsmData.cpIndex = methodAttrIndex;
+        }
+
         public void setBsmData(BootstrapMethodData bsmData) {
             this.bsmData = bsmData;
         }
@@ -927,7 +935,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
 
     /**
      * The CONSTANT_Dynamic (17) structure is used to represent a dynamically-computed constant, an arbitrary value
-     * that is produced by invocation of a bootstrap method in the course of an ldc instruction, among others.
+     * that is produced by invocation of a bootstrap method in the course of a ldc instruction, among others.
      * The auxiliary type specified by the structure constrains the type of the dynamically-computed constant.
      */
     static public class ConstValue_Dynamic extends ConstValue_BootstrapMethod {

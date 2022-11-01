@@ -44,6 +44,11 @@ public abstract class ConstValue<T> {
 
     public boolean isSet() { return value != null; }
 
+    public ConstValue<T> setValue(T value) {
+        this.value = value;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         int result = value != null ? value.hashCode() : 0;
