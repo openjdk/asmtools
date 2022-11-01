@@ -109,6 +109,28 @@ public class Main extends JasmTool {
         this(new PrintWriter(out), toolName);
     }
 
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param ref      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintWriter ref, String toolName) {
+        super(new ToolOutput.PrintWriterOutput(ref));
+    }
+
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param out      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintStream out, String toolName) {
+        this(new PrintWriter(out), toolName);
+    }
+
     // jasm entry point
     public static void main(String... argv) {
         Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.SingleDualOutputStreamOutput(), argv);
