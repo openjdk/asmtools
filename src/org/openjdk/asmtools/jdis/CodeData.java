@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -78,6 +78,11 @@ public class CodeData extends Indenter {
      */
     private ArrayList<LocVarData> loc_var_tb = new ArrayList<>(0);   // LocVarData
     /**
+     * (parsed) Local Variable type table, describes generic variable scopes
+     * associated with ByteCode indexes
+     */
+    private ArrayList<LocVarData> loc_var_type_tb = new ArrayList<>(0);   // LocVarTypeData
+    /**
      * (parsed) stack map table, describes compiler hints for stack rep, associated with
      * ByteCode indexes
      */
@@ -155,7 +160,17 @@ public class CodeData extends Indenter {
         loc_var_tb = new ArrayList<>(numlines);
         TraceUtils.traceln(3,  "CodeAttr:  LocalVariableTable[" + numlines + "] len=" + len);
         for (int l = 0; l < numlines; l++) {
-            loc_var_tb.add(new LocVarData(in));
+            loc_var_tb.add(new LocVarData(in, /* isForTypeTable: */ false));
+        }
+    }
+
+    private void readLocVarTypeTable(DataInputStream in) throws IOException {
+        int len = in.readInt(); // attr_length
+        int numlines = in.readUnsignedShort();
+        loc_var_type_tb = new ArrayList<>(numlines);
+        TraceUtils.traceln(3,  "CodeAttr:  LocalVariableTypeTable[" + numlines + "] len=" + len);
+        for (int l = 0; l < numlines; l++) {
+            loc_var_type_tb.add(new LocVarData(in, /* isForTypeTable: */ true));
         }
     }
 
@@ -254,6 +269,9 @@ public class CodeData extends Indenter {
                         break;
                     case ATT_LocalVariableTable:
                         readLocVarTable(in);
+                        break;
+                    case ATT_LocalVariableTypeTable:
+                        readLocVarTypeTable(in);
                         break;
                     case ATT_StackMap:
                         readStackMap(in);
@@ -365,6 +383,10 @@ public class CodeData extends Indenter {
 
     private void loadLocVarTable() {
         for (LocVarData entry : loc_var_tb) {
+            get_iAtt(entry.start_pc).add_var(entry);
+            get_iAtt(entry.start_pc + entry.length).add_endvar(entry);
+        }
+        for (LocVarData entry : loc_var_type_tb) {
             get_iAtt(entry.start_pc).add_var(entry);
             get_iAtt(entry.start_pc + entry.length).add_endvar(entry);
         }
@@ -719,12 +741,22 @@ public class CodeData extends Indenter {
     public static class LocVarData {
 
         short start_pc, length, name_cpx, sig_cpx, slot;
+        final Integer generic_cpx;
 
         public LocVarData(DataInputStream in) throws IOException {
+            this(in, false);
+        }
+
+        public LocVarData(DataInputStream in, boolean isForTypeTable) throws IOException {
             start_pc = in.readShort();
             length = in.readShort();
             name_cpx = in.readShort();
-            sig_cpx = in.readShort();
+            if (isForTypeTable) {
+                generic_cpx = in.readUnsignedShort();
+            } else {
+                generic_cpx = null;
+                sig_cpx = in.readShort();
+            }
             slot = in.readShort();
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.asmutils.ListUtils;
 import org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
 import org.openjdk.asmtools.jasm.Tables.AttrTag;
 
@@ -44,9 +45,11 @@ class CodeAttr extends AttrData {
     protected DataVectorAttr<LineNumData> lin_num_tb; // LineNumData
     protected int lastln = 0;
     protected DataVectorAttr<LocVarData> loc_var_tb;  // LocVarData
+    protected DataVectorAttr<LocVarTypeData> loc_var_type_tb;  // LocVarData
     protected DataVector<DataVectorAttr<? extends Data>> attrs;
     protected ArrayList<Integer> slots;
     protected HashMap<String, LocVarData> locvarsHash;
+    protected HashMap<Integer, LocVarData> locvarsPosHash;
     protected HashMap<String, Label> labelsHash;
     protected HashMap<String, Trap> trapsHash;
     protected StackMapData curMapEntry = null;
@@ -96,13 +99,13 @@ class CodeAttr extends AttrData {
                 TypeAnnotationData ta = (TypeAnnotationData) item;
                 if (invisible) {
                     if (type_annotAttrInv == null) {
-                        type_annotAttrInv = new DataVectorAttr(cls,
+                        type_annotAttrInv = new DataVectorAttr<>(cls,
                                 AttrTag.ATT_RuntimeInvisibleTypeAnnotations.parsekey());
                     }
                     type_annotAttrInv.add(ta);
                 } else {
                     if (type_annotAttrVis == null) {
-                        type_annotAttrVis = new DataVectorAttr(cls,
+                        type_annotAttrVis = new DataVectorAttr<>(cls,
                                 AttrTag.ATT_RuntimeVisibleTypeAnnotations.parsekey());
                     }
                     type_annotAttrVis.add(ta);
@@ -236,13 +239,19 @@ class CodeAttr extends AttrData {
     }
 
     public void LocVarDataDef(int slot) {
-        slots.set(slot, 1);
+        if (slot > slots.size()) {
+            slots.ensureCapacity(slot);
+            do {
+                slots.add(0);
+            } while (slot > slots.size());
+        }
+        ListUtils.setOrAdd(slots, slot, 1);
         if ((max_locals != null) && (max_locals.arg < slots.size())) {
             env.error("warn.illslot", Integer.toString(slot));
         }
     }
 
-    public void LocVarDataDef(String name, ConstantPool.ConstCell type) {
+    public void LocVarDataDef(Integer indexOrNull, String name, ConstantPool.ConstCell type, ConstantPool.ConstCell signatureOrNull) {
         LocVarData locvar = locvarDecl(name);
         if (locvar.defd) {
             env.error("locvar.redecl", name);
@@ -251,10 +260,16 @@ class CodeAttr extends AttrData {
         locvar.defd = true;
         locvar.start_pc = (short) cur_pc;
         locvar.name_cpx = cls.pool.FindCellAsciz(name);
-        locvar.sig_cpx = type;
+        locvar.desc_cpx = type;
         int k;
         findSlot:
-        {
+        if (indexOrNull != null) {
+            if (locvarsPosHash == null) {
+                locvarsPosHash = new HashMap<>(10);
+            }
+            locvarsPosHash.put(indexOrNull, locvar);
+            k = indexOrNull;
+        } else {
             for (k = 0; k < slots.size(); k++) {
                 if (slots.get(k) == 0) {
                     break findSlot;
@@ -269,6 +284,13 @@ class CodeAttr extends AttrData {
             attrs.add(loc_var_tb);
         }
         loc_var_tb.add(locvar);
+        if (signatureOrNull != null) {
+            if (loc_var_type_tb == null) {
+                loc_var_type_tb = new DataVectorAttr<>(cls, AttrTag.ATT_LocalVariableTypeTable.parsekey());
+                attrs.add(loc_var_type_tb);
+            }
+            loc_var_type_tb.add(new LocVarTypeData(locvar, signatureOrNull));
+        }
     }
 
     public Argument LocVarDataRef(String name) {
@@ -282,7 +304,17 @@ class CodeAttr extends AttrData {
     }
 
     public void LocVarDataEnd(int slot) {
-        slots.set(slot, 0);
+        LocVarData locvar;
+        if (locvarsPosHash != null) {
+            locvar = locvarsPosHash.get(slot);
+        } else {
+            locvar = null;
+        }
+        if (locvar == null) {
+            slots.set(slot, 0);
+        } else {
+            LocVarDataEnd(locvar);
+        }
     }
 
     public void LocVarDataEnd(String name) {
@@ -294,6 +326,11 @@ class CodeAttr extends AttrData {
             env.error("locvar.undecl", name);
             return;
         }
+        LocVarDataEnd(locvar);
+    }
+
+    private void LocVarDataEnd(LocVarData locvar) {
+        String name = locvar.name;
         locvar.length = (short) (cur_pc - locvar.start_pc);
 
         slots.set(locvar.arg, 0);
@@ -432,7 +469,7 @@ class CodeAttr extends AttrData {
 
         // arg means slot
         short start_pc, length;
-        ConstantPool.ConstCell name_cpx, sig_cpx;
+        ConstantPool.ConstCell name_cpx, desc_cpx;
 
         public LocVarData(String name) {
             super(name);
@@ -445,11 +482,38 @@ class CodeAttr extends AttrData {
 
         @Override
         public void write(CheckedDataOutputStream out) throws IOException {
+            writeImpl(out, desc_cpx);
+        }
+
+        void writeImpl(CheckedDataOutputStream out, ConstantPool.ConstCell type_cpx) throws IOException {
             out.writeShort(start_pc);
             out.writeShort(length);
             out.writeShort(name_cpx.arg);
-            out.writeShort(sig_cpx.arg);
+            out.writeShort(type_cpx.arg);
             out.writeShort(arg);
+        }
+    }
+
+    /**
+     *
+     */
+    class LocVarTypeData implements Data {
+        LocVarData rawLocal;
+        ConstantPool.ConstCell sig_cpx;
+
+        public LocVarTypeData(LocVarData rawLocal, ConstantPool.ConstCell sig_cpx) {
+            this.rawLocal = rawLocal;
+            this.sig_cpx = sig_cpx;
+        }
+
+        @Override
+        public int getLength() {
+            return 10;
+        }
+
+        @Override
+        public void write(CheckedDataOutputStream out) throws IOException {
+            rawLocal.writeImpl(out, sig_cpx);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -200,44 +200,64 @@ class Parser extends ParseBase {
      * Parse a local variable
      */
     void parseLocVarDef() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // LOCAL_VAR_DEF
+        // where
+        // LOCAL_VAR_DEF = (INDEXED_LOCAL_VAR | NAMED_LOCAL_VAR)
+        // INDEXED_LOCAL_VAR = INTVAL(:NAMED_LOCAL_VAR)?
+        // NAMED_LOCAL_VAR = NAME:DESCRIPTOR(:SIGNATURE)?
+        // NAME = (CPINDEX | IDENT)
+        // DESCRIPTOR = (CPINDEX | STRING)
+        // SIGNATURE = (CPINDEX | STRING)
+        Integer v = null;
         if (scanner.token == Token.INTVAL) {
-            int v = scanner.intValue;
+            v = scanner.intValue;
             scanner.scan();
-            curCode.LocVarDataDef(v);
-        } else {
-            String name = scanner.stringValue, type;
-            scanner.expect(Token.IDENT);
-            if (scanner.token == Token.COLON) {
-                scanner.scan();
-                type = parseIdent();
-            } else {
-                type = "I";                  // TBD
+            if (scanner.token != Token.COLON) {
+                curCode.LocVarDataDef(v);
+                return;
             }
-            curCode.LocVarDataDef(name, pool.FindCellAsciz(type));
+            scanner.scan();
         }
+        ConstCell name = parseName(), type, signature = null;
+        scanner.expect(Token.COLON);
+        type = parseName();
+        if (scanner.token == Token.COLON) {
+            scanner.scan();
+            signature = parseName();
+        }
+        curCode.LocVarDataDef(v, ((ConstValue_String) name.ref)._toString(), type, signature);
     }
 
     Argument parseLocVarRef() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // LOCAL_VAR_REF
+        // where
+        // LOCAL_VAR_REF = (INTVAL | NAME)
+        // NAME = (CPINDEX | IDENT)
         if (scanner.token == Token.INTVAL) {
             int v = scanner.intValue;
             scanner.scan();
             return new Argument(v);
         } else {
-            String name = scanner.stringValue;
-            scanner.expect(Token.IDENT);
-            return curCode.LocVarDataRef(name);
+            ConstCell name = parseName();
+            return curCode.LocVarDataRef(((ConstValue_String) name.ref)._toString());
         }
     }
 
     void parseLocVarEnd() throws Scanner.SyntaxError, IOException {
+        // Parses in the form:
+        // LOCAL_VAR_END
+        // where
+        // LOCAL_VAR_END = (INTVAL | NAME)
+        // NAME = (CPINDEX | IDENT)
         if (scanner.token == Token.INTVAL) {
             int v = scanner.intValue;
             scanner.scan();
             curCode.LocVarDataEnd(v);
         } else {
-            String name = scanner.stringValue;
-            scanner.expect(Token.IDENT);
-            curCode.LocVarDataEnd(name);
+            ConstCell name = parseName();
+            curCode.LocVarDataEnd(((ConstValue_String) name.ref)._toString());
         }
     }
 
