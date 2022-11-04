@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,8 @@ import org.openjdk.asmtools.jasm.Tables;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 /**
  * instruction attributes
@@ -41,8 +43,8 @@ class iAtt {
 
     short lnum = 0;
     boolean referred = false; // from some other instruction
-    ArrayList<CodeData.LocVarData> vars;
-    ArrayList<CodeData.LocVarData> endvars;
+    LinkedHashMap<LocVarData, LocVarData> vars;
+    LinkedHashMap<LocVarData, LocVarData> endvars;
     ArrayList<TrapData> handlers;
     ArrayList<TrapData> traps;
     ArrayList<TrapData> endtraps;
@@ -61,16 +63,32 @@ class iAtt {
 
     void add_var(CodeData.LocVarData var) {
         if (vars == null) {
-            vars = new ArrayList<>(4);
+            vars = new LinkedHashMap<>(4);
         }
-        vars.add(var);
+        LocVarData locvar = new LocVarData(var);
+        locvar = vars.putIfAbsent(locvar, locvar);
+        if (locvar != null) {
+            if (var.generic_cpx != null) {
+                locvar.generic_cpx = var.generic_cpx;
+            } else {
+                locvar.desc_cpx = var.sig_cpx & 0xFFFF;
+            }
+        }
     }
 
     void add_endvar(CodeData.LocVarData endvar) {
         if (endvars == null) {
-            endvars = new ArrayList<>(4);
+            endvars = new LinkedHashMap<>(4);
         }
-        endvars.add(endvar);
+        LocVarData locvar = new LocVarData(endvar);
+        locvar = endvars.putIfAbsent(locvar, locvar);
+        if (locvar != null) {
+            if (endvar.generic_cpx != null) {
+                locvar.generic_cpx = endvar.generic_cpx;
+            } else {
+                locvar.desc_cpx = endvar.sig_cpx & 0xFFFF;
+            }
+        }
     }
 
     void add_trap(TrapData trap) {
@@ -101,7 +119,7 @@ class iAtt {
         if ((endvars != null) && (options.contains(Options.PR.VAR))) {
             len = endvars.size() - 1;
             out.print("\t\tendvar");
-            for (CodeData.LocVarData line : endvars) {
+            for (LocVarData line : endvars.values()) {
                 out.print(" " + line.slot);
                 if (len-- > 0) {
                     out.print(",");
@@ -161,8 +179,26 @@ class iAtt {
             out.print(";\n\t");
         }
         if ((vars != null) && options.contains(Options.PR.VAR)) {
-            for (CodeData.LocVarData line : vars) {
-                out.println("\tvar " + line.slot + "; // " + cls.pool.getName(line.name_cpx) + ":" + cls.pool.getName(line.sig_cpx));
+            boolean pr_cpx = options.contains(Options.PR.CPX);
+            for (LocVarData line : vars.values()) {
+                out.print("\tvar " + line.slot + ":");
+                if (pr_cpx) {
+                    // print the CPX var descriptor
+                    out.print("#" + line.name_cpx + ":#" + line.desc_cpx);
+                    if (line.generic_cpx != null) {
+                        out.print(":#" + (int) line.generic_cpx);
+                    }
+                    out.print(";\t// ");
+                }
+                out.print(cls.pool.getName(line.name_cpx) + ":" + cls.pool.getName(line.desc_cpx));
+                if (line.generic_cpx != null) {
+                    out.print(':');
+                    out.print(cls.pool.getName(line.generic_cpx));
+                }
+                if (!pr_cpx) {
+                    out.print(';');
+                }
+                out.println();
                 out.print("\t");
             }
         }
@@ -233,6 +269,38 @@ class iAtt {
 // empty attribute should be printed anyway - it should not
 // be eliminated after jdis/jasm cycle
             out.print(Opcode.opc_locals_map.parsekey() + " ;\n\t\t");
+        }
+    }
+
+    public static class LocVarData {
+        int slot, name_cpx, desc_cpx;
+        Integer generic_cpx;
+
+        public LocVarData(CodeData.LocVarData locvar) {
+            this.slot = locvar.slot & 0xFFFF;
+            this.name_cpx = locvar.name_cpx & 0xFFFF;
+            if (locvar.generic_cpx != null) {
+                this.generic_cpx = locvar.generic_cpx;
+            } else {
+                this.desc_cpx = locvar.sig_cpx & 0xFFFF;
+            }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof LocVarData)) {
+                return false;
+            }
+            LocVarData other = (LocVarData) obj;
+            return this.slot == other.slot && this.name_cpx == other.name_cpx;
+        }
+
+        @Override
+        public int hashCode() {
+            return slot << 16 + name_cpx;
         }
     }
 }

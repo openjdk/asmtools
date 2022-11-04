@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -87,6 +87,23 @@ public class Main extends Tool {
                     break;
                 case "-version":
                     out.println(ProductInfo.FULL_VERSION);
+                    break;
+                // non-public options
+                case "-Xcp":
+                    options.set(Options.PR.CP);
+                    break;
+                case "-Xcpx":
+                    options.set(Options.PR.CP);
+                    options.set(Options.PR.CPX);
+                    break;
+                case "-Xlnt":
+                    options.set(Options.PR.LNT);
+                    break;
+                case "-Xpc":
+                    options.set(Options.PR.PC);
+                    break;
+                case "-Xvar":
+                    options.set(Options.PR.VAR);
                     break;
                 default:
                     if (arg.startsWith("-")) {
