@@ -135,16 +135,16 @@ public class Main extends JasmTool {
                 parser.parseFile();
                 if (environment.getErrorCount() > 0) break;
                 if (noWriteFlag) continue;
-                String fqn = parser.getClassesData()[0].myClassName;
-                environment.getToolOutput().startClass(fqn, Optional.of(parser.getClassesData()[0].fileExtension), environment);
                 ClassData[] clsData = parser.getClassesData();
                 for (ClassData cd : clsData) {
+                    String fqn = cd.myClassName;
+                    environment.getToolOutput().startClass(fqn, Optional.of(cd.fileExtension), environment);
                     if (byteLimit > 0) {
                         cd.setByteLimit(byteLimit);
                     }
                     cd.write(environment.getToolOutput());
+                    environment.getToolOutput().finishClass(fqn);
                 }
-                environment.getToolOutput().finishClass(fqn);
                 if (environment.hasMessages()) rc += environment.flush(true);
             }
         } catch (IOException | URISyntaxException | Error exception) {
