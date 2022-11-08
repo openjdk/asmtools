@@ -1,0 +1,790 @@
+/*
+ * Ident: @(#)spinum00101m10p.jasm generated from:%Z%%M% %I% %E%
+ *
+ * Copyright (c) 1996, 2018 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package javasoft/sqe/tests/vm/classfmt/lmt/spinum001/spinum00101m1;
+
+interface spinum00101m1_0I  {
+} // end interface
+interface spinum00101m1_1I  {
+} // end interface
+interface spinum00101m1_2I  {
+} // end interface
+interface spinum00101m1_3I  {
+} // end interface
+interface spinum00101m1_4I  {
+} // end interface
+interface spinum00101m1_5I  {
+} // end interface
+interface spinum00101m1_6I  {
+} // end interface
+interface spinum00101m1_7I  {
+} // end interface
+interface spinum00101m1_8I  {
+} // end interface
+interface spinum00101m1_9I  {
+} // end interface
+interface spinum00101m1_10I  {
+} // end interface
+interface spinum00101m1_11I  {
+} // end interface
+interface spinum00101m1_12I  {
+} // end interface
+interface spinum00101m1_13I  {
+} // end interface
+interface spinum00101m1_14I  {
+} // end interface
+interface spinum00101m1_15I  {
+} // end interface
+interface spinum00101m1_16I  {
+} // end interface
+interface spinum00101m1_17I  {
+} // end interface
+interface spinum00101m1_18I  {
+} // end interface
+interface spinum00101m1_19I  {
+} // end interface
+interface spinum00101m1_20I  {
+} // end interface
+interface spinum00101m1_21I  {
+} // end interface
+interface spinum00101m1_22I  {
+} // end interface
+interface spinum00101m1_23I  {
+} // end interface
+interface spinum00101m1_24I  {
+} // end interface
+interface spinum00101m1_25I  {
+} // end interface
+interface spinum00101m1_26I  {
+} // end interface
+interface spinum00101m1_27I  {
+} // end interface
+interface spinum00101m1_28I  {
+} // end interface
+interface spinum00101m1_29I  {
+} // end interface
+interface spinum00101m1_30I  {
+} // end interface
+interface spinum00101m1_31I  {
+} // end interface
+interface spinum00101m1_32I  {
+} // end interface
+interface spinum00101m1_33I  {
+} // end interface
+interface spinum00101m1_34I  {
+} // end interface
+interface spinum00101m1_35I  {
+} // end interface
+interface spinum00101m1_36I  {
+} // end interface
+interface spinum00101m1_37I  {
+} // end interface
+interface spinum00101m1_38I  {
+} // end interface
+interface spinum00101m1_39I  {
+} // end interface
+interface spinum00101m1_40I  {
+} // end interface
+interface spinum00101m1_41I  {
+} // end interface
+interface spinum00101m1_42I  {
+} // end interface
+interface spinum00101m1_43I  {
+} // end interface
+interface spinum00101m1_44I  {
+} // end interface
+interface spinum00101m1_45I  {
+} // end interface
+interface spinum00101m1_46I  {
+} // end interface
+interface spinum00101m1_47I  {
+} // end interface
+interface spinum00101m1_48I  {
+} // end interface
+interface spinum00101m1_49I  {
+} // end interface
+interface spinum00101m1_50I  {
+} // end interface
+interface spinum00101m1_51I  {
+} // end interface
+interface spinum00101m1_52I  {
+} // end interface
+interface spinum00101m1_53I  {
+} // end interface
+interface spinum00101m1_54I  {
+} // end interface
+interface spinum00101m1_55I  {
+} // end interface
+interface spinum00101m1_56I  {
+} // end interface
+interface spinum00101m1_57I  {
+} // end interface
+interface spinum00101m1_58I  {
+} // end interface
+interface spinum00101m1_59I  {
+} // end interface
+interface spinum00101m1_60I  {
+} // end interface
+interface spinum00101m1_61I  {
+} // end interface
+interface spinum00101m1_62I  {
+} // end interface
+interface spinum00101m1_63I  {
+} // end interface
+interface spinum00101m1_64I  {
+} // end interface
+interface spinum00101m1_65I  {
+} // end interface
+interface spinum00101m1_66I  {
+} // end interface
+interface spinum00101m1_67I  {
+} // end interface
+interface spinum00101m1_68I  {
+} // end interface
+interface spinum00101m1_69I  {
+} // end interface
+interface spinum00101m1_70I  {
+} // end interface
+interface spinum00101m1_71I  {
+} // end interface
+interface spinum00101m1_72I  {
+} // end interface
+interface spinum00101m1_73I  {
+} // end interface
+interface spinum00101m1_74I  {
+} // end interface
+interface spinum00101m1_75I  {
+} // end interface
+interface spinum00101m1_76I  {
+} // end interface
+interface spinum00101m1_77I  {
+} // end interface
+interface spinum00101m1_78I  {
+} // end interface
+interface spinum00101m1_79I  {
+} // end interface
+interface spinum00101m1_80I  {
+} // end interface
+interface spinum00101m1_81I  {
+} // end interface
+interface spinum00101m1_82I  {
+} // end interface
+interface spinum00101m1_83I  {
+} // end interface
+interface spinum00101m1_84I  {
+} // end interface
+interface spinum00101m1_85I  {
+} // end interface
+interface spinum00101m1_86I  {
+} // end interface
+interface spinum00101m1_87I  {
+} // end interface
+interface spinum00101m1_88I  {
+} // end interface
+interface spinum00101m1_89I  {
+} // end interface
+interface spinum00101m1_90I  {
+} // end interface
+interface spinum00101m1_91I  {
+} // end interface
+interface spinum00101m1_92I  {
+} // end interface
+interface spinum00101m1_93I  {
+} // end interface
+interface spinum00101m1_94I  {
+} // end interface
+interface spinum00101m1_95I  {
+} // end interface
+interface spinum00101m1_96I  {
+} // end interface
+interface spinum00101m1_97I  {
+} // end interface
+interface spinum00101m1_98I  {
+} // end interface
+interface spinum00101m1_99I  {
+} // end interface
+interface spinum00101m1_100I  {
+} // end interface
+interface spinum00101m1_101I  {
+} // end interface
+interface spinum00101m1_102I  {
+} // end interface
+interface spinum00101m1_103I  {
+} // end interface
+interface spinum00101m1_104I  {
+} // end interface
+interface spinum00101m1_105I  {
+} // end interface
+interface spinum00101m1_106I  {
+} // end interface
+interface spinum00101m1_107I  {
+} // end interface
+interface spinum00101m1_108I  {
+} // end interface
+interface spinum00101m1_109I  {
+} // end interface
+interface spinum00101m1_110I  {
+} // end interface
+interface spinum00101m1_111I  {
+} // end interface
+interface spinum00101m1_112I  {
+} // end interface
+interface spinum00101m1_113I  {
+} // end interface
+interface spinum00101m1_114I  {
+} // end interface
+interface spinum00101m1_115I  {
+} // end interface
+interface spinum00101m1_116I  {
+} // end interface
+interface spinum00101m1_117I  {
+} // end interface
+interface spinum00101m1_118I  {
+} // end interface
+interface spinum00101m1_119I  {
+} // end interface
+interface spinum00101m1_120I  {
+} // end interface
+interface spinum00101m1_121I  {
+} // end interface
+interface spinum00101m1_122I  {
+} // end interface
+interface spinum00101m1_123I  {
+} // end interface
+interface spinum00101m1_124I  {
+} // end interface
+interface spinum00101m1_125I  {
+} // end interface
+interface spinum00101m1_126I  {
+} // end interface
+interface spinum00101m1_127I  {
+} // end interface
+interface spinum00101m1_128I  {
+} // end interface
+interface spinum00101m1_129I  {
+} // end interface
+interface spinum00101m1_130I  {
+} // end interface
+interface spinum00101m1_131I  {
+} // end interface
+interface spinum00101m1_132I  {
+} // end interface
+interface spinum00101m1_133I  {
+} // end interface
+interface spinum00101m1_134I  {
+} // end interface
+interface spinum00101m1_135I  {
+} // end interface
+interface spinum00101m1_136I  {
+} // end interface
+interface spinum00101m1_137I  {
+} // end interface
+interface spinum00101m1_138I  {
+} // end interface
+interface spinum00101m1_139I  {
+} // end interface
+interface spinum00101m1_140I  {
+} // end interface
+interface spinum00101m1_141I  {
+} // end interface
+interface spinum00101m1_142I  {
+} // end interface
+interface spinum00101m1_143I  {
+} // end interface
+interface spinum00101m1_144I  {
+} // end interface
+interface spinum00101m1_145I  {
+} // end interface
+interface spinum00101m1_146I  {
+} // end interface
+interface spinum00101m1_147I  {
+} // end interface
+interface spinum00101m1_148I  {
+} // end interface
+interface spinum00101m1_149I  {
+} // end interface
+interface spinum00101m1_150I  {
+} // end interface
+interface spinum00101m1_151I  {
+} // end interface
+interface spinum00101m1_152I  {
+} // end interface
+interface spinum00101m1_153I  {
+} // end interface
+interface spinum00101m1_154I  {
+} // end interface
+interface spinum00101m1_155I  {
+} // end interface
+interface spinum00101m1_156I  {
+} // end interface
+interface spinum00101m1_157I  {
+} // end interface
+interface spinum00101m1_158I  {
+} // end interface
+interface spinum00101m1_159I  {
+} // end interface
+interface spinum00101m1_160I  {
+} // end interface
+interface spinum00101m1_161I  {
+} // end interface
+interface spinum00101m1_162I  {
+} // end interface
+interface spinum00101m1_163I  {
+} // end interface
+interface spinum00101m1_164I  {
+} // end interface
+interface spinum00101m1_165I  {
+} // end interface
+interface spinum00101m1_166I  {
+} // end interface
+interface spinum00101m1_167I  {
+} // end interface
+interface spinum00101m1_168I  {
+} // end interface
+interface spinum00101m1_169I  {
+} // end interface
+interface spinum00101m1_170I  {
+} // end interface
+interface spinum00101m1_171I  {
+} // end interface
+interface spinum00101m1_172I  {
+} // end interface
+interface spinum00101m1_173I  {
+} // end interface
+interface spinum00101m1_174I  {
+} // end interface
+interface spinum00101m1_175I  {
+} // end interface
+interface spinum00101m1_176I  {
+} // end interface
+interface spinum00101m1_177I  {
+} // end interface
+interface spinum00101m1_178I  {
+} // end interface
+interface spinum00101m1_179I  {
+} // end interface
+interface spinum00101m1_180I  {
+} // end interface
+interface spinum00101m1_181I  {
+} // end interface
+interface spinum00101m1_182I  {
+} // end interface
+interface spinum00101m1_183I  {
+} // end interface
+interface spinum00101m1_184I  {
+} // end interface
+interface spinum00101m1_185I  {
+} // end interface
+interface spinum00101m1_186I  {
+} // end interface
+interface spinum00101m1_187I  {
+} // end interface
+interface spinum00101m1_188I  {
+} // end interface
+interface spinum00101m1_189I  {
+} // end interface
+interface spinum00101m1_190I  {
+} // end interface
+interface spinum00101m1_191I  {
+} // end interface
+interface spinum00101m1_192I  {
+} // end interface
+interface spinum00101m1_193I  {
+} // end interface
+interface spinum00101m1_194I  {
+} // end interface
+interface spinum00101m1_195I  {
+} // end interface
+interface spinum00101m1_196I  {
+} // end interface
+interface spinum00101m1_197I  {
+} // end interface
+interface spinum00101m1_198I  {
+} // end interface
+interface spinum00101m1_199I  {
+} // end interface
+interface spinum00101m1_200I  {
+} // end interface
+interface spinum00101m1_201I  {
+} // end interface
+interface spinum00101m1_202I  {
+} // end interface
+interface spinum00101m1_203I  {
+} // end interface
+interface spinum00101m1_204I  {
+} // end interface
+interface spinum00101m1_205I  {
+} // end interface
+interface spinum00101m1_206I  {
+} // end interface
+interface spinum00101m1_207I  {
+} // end interface
+interface spinum00101m1_208I  {
+} // end interface
+interface spinum00101m1_209I  {
+} // end interface
+interface spinum00101m1_210I  {
+} // end interface
+interface spinum00101m1_211I  {
+} // end interface
+interface spinum00101m1_212I  {
+} // end interface
+interface spinum00101m1_213I  {
+} // end interface
+interface spinum00101m1_214I  {
+} // end interface
+interface spinum00101m1_215I  {
+} // end interface
+interface spinum00101m1_216I  {
+} // end interface
+interface spinum00101m1_217I  {
+} // end interface
+interface spinum00101m1_218I  {
+} // end interface
+interface spinum00101m1_219I  {
+} // end interface
+interface spinum00101m1_220I  {
+} // end interface
+interface spinum00101m1_221I  {
+} // end interface
+interface spinum00101m1_222I  {
+} // end interface
+interface spinum00101m1_223I  {
+} // end interface
+interface spinum00101m1_224I  {
+} // end interface
+interface spinum00101m1_225I  {
+} // end interface
+interface spinum00101m1_226I  {
+} // end interface
+interface spinum00101m1_227I  {
+} // end interface
+interface spinum00101m1_228I  {
+} // end interface
+interface spinum00101m1_229I  {
+} // end interface
+interface spinum00101m1_230I  {
+} // end interface
+interface spinum00101m1_231I  {
+} // end interface
+interface spinum00101m1_232I  {
+} // end interface
+interface spinum00101m1_233I  {
+} // end interface
+interface spinum00101m1_234I  {
+} // end interface
+interface spinum00101m1_235I  {
+} // end interface
+interface spinum00101m1_236I  {
+} // end interface
+interface spinum00101m1_237I  {
+} // end interface
+interface spinum00101m1_238I  {
+} // end interface
+interface spinum00101m1_239I  {
+} // end interface
+interface spinum00101m1_240I  {
+} // end interface
+interface spinum00101m1_241I  {
+} // end interface
+interface spinum00101m1_242I  {
+} // end interface
+interface spinum00101m1_243I  {
+} // end interface
+interface spinum00101m1_244I  {
+} // end interface
+interface spinum00101m1_245I  {
+} // end interface
+interface spinum00101m1_246I  {
+} // end interface
+interface spinum00101m1_247I  {
+} // end interface
+interface spinum00101m1_248I  {
+} // end interface
+interface spinum00101m1_249I  {
+} // end interface
+interface spinum00101m1_250I  {
+} // end interface
+interface spinum00101m1_251I  {
+} // end interface
+interface spinum00101m1_252I  {
+} // end interface
+interface spinum00101m1_253I  {
+} // end interface
+interface spinum00101m1_254I  {
+} // end interface
+interface spinum00101m1_255I  {
+} // end interface
+interface spinum00101m1_256I  {
+} // end interface
+
+public class spinum00101m10p implements 
+ spinum00101m1_0I, 
+ spinum00101m1_1I, 
+ spinum00101m1_2I, 
+ spinum00101m1_3I, 
+ spinum00101m1_4I, 
+ spinum00101m1_5I, 
+ spinum00101m1_6I, 
+ spinum00101m1_7I, 
+ spinum00101m1_8I, 
+ spinum00101m1_9I, 
+ spinum00101m1_10I, 
+ spinum00101m1_11I, 
+ spinum00101m1_12I, 
+ spinum00101m1_13I, 
+ spinum00101m1_14I, 
+ spinum00101m1_15I, 
+ spinum00101m1_16I, 
+ spinum00101m1_17I, 
+ spinum00101m1_18I, 
+ spinum00101m1_19I, 
+ spinum00101m1_20I, 
+ spinum00101m1_21I, 
+ spinum00101m1_22I, 
+ spinum00101m1_23I, 
+ spinum00101m1_24I, 
+ spinum00101m1_25I, 
+ spinum00101m1_26I, 
+ spinum00101m1_27I, 
+ spinum00101m1_28I, 
+ spinum00101m1_29I, 
+ spinum00101m1_30I, 
+ spinum00101m1_31I, 
+ spinum00101m1_32I, 
+ spinum00101m1_33I, 
+ spinum00101m1_34I, 
+ spinum00101m1_35I, 
+ spinum00101m1_36I, 
+ spinum00101m1_37I, 
+ spinum00101m1_38I, 
+ spinum00101m1_39I, 
+ spinum00101m1_40I, 
+ spinum00101m1_41I, 
+ spinum00101m1_42I, 
+ spinum00101m1_43I, 
+ spinum00101m1_44I, 
+ spinum00101m1_45I, 
+ spinum00101m1_46I, 
+ spinum00101m1_47I, 
+ spinum00101m1_48I, 
+ spinum00101m1_49I, 
+ spinum00101m1_50I, 
+ spinum00101m1_51I, 
+ spinum00101m1_52I, 
+ spinum00101m1_53I, 
+ spinum00101m1_54I, 
+ spinum00101m1_55I, 
+ spinum00101m1_56I, 
+ spinum00101m1_57I, 
+ spinum00101m1_58I, 
+ spinum00101m1_59I, 
+ spinum00101m1_60I, 
+ spinum00101m1_61I, 
+ spinum00101m1_62I, 
+ spinum00101m1_63I, 
+ spinum00101m1_64I, 
+ spinum00101m1_65I, 
+ spinum00101m1_66I, 
+ spinum00101m1_67I, 
+ spinum00101m1_68I, 
+ spinum00101m1_69I, 
+ spinum00101m1_70I, 
+ spinum00101m1_71I, 
+ spinum00101m1_72I, 
+ spinum00101m1_73I, 
+ spinum00101m1_74I, 
+ spinum00101m1_75I, 
+ spinum00101m1_76I, 
+ spinum00101m1_77I, 
+ spinum00101m1_78I, 
+ spinum00101m1_79I, 
+ spinum00101m1_80I, 
+ spinum00101m1_81I, 
+ spinum00101m1_82I, 
+ spinum00101m1_83I, 
+ spinum00101m1_84I, 
+ spinum00101m1_85I, 
+ spinum00101m1_86I, 
+ spinum00101m1_87I, 
+ spinum00101m1_88I, 
+ spinum00101m1_89I, 
+ spinum00101m1_90I, 
+ spinum00101m1_91I, 
+ spinum00101m1_92I, 
+ spinum00101m1_93I, 
+ spinum00101m1_94I, 
+ spinum00101m1_95I, 
+ spinum00101m1_96I, 
+ spinum00101m1_97I, 
+ spinum00101m1_98I, 
+ spinum00101m1_99I, 
+ spinum00101m1_100I, 
+ spinum00101m1_101I, 
+ spinum00101m1_102I, 
+ spinum00101m1_103I, 
+ spinum00101m1_104I, 
+ spinum00101m1_105I, 
+ spinum00101m1_106I, 
+ spinum00101m1_107I, 
+ spinum00101m1_108I, 
+ spinum00101m1_109I, 
+ spinum00101m1_110I, 
+ spinum00101m1_111I, 
+ spinum00101m1_112I, 
+ spinum00101m1_113I, 
+ spinum00101m1_114I, 
+ spinum00101m1_115I, 
+ spinum00101m1_116I, 
+ spinum00101m1_117I, 
+ spinum00101m1_118I, 
+ spinum00101m1_119I, 
+ spinum00101m1_120I, 
+ spinum00101m1_121I, 
+ spinum00101m1_122I, 
+ spinum00101m1_123I, 
+ spinum00101m1_124I, 
+ spinum00101m1_125I, 
+ spinum00101m1_126I, 
+ spinum00101m1_127I, 
+ spinum00101m1_128I, 
+ spinum00101m1_129I, 
+ spinum00101m1_130I, 
+ spinum00101m1_131I, 
+ spinum00101m1_132I, 
+ spinum00101m1_133I, 
+ spinum00101m1_134I, 
+ spinum00101m1_135I, 
+ spinum00101m1_136I, 
+ spinum00101m1_137I, 
+ spinum00101m1_138I, 
+ spinum00101m1_139I, 
+ spinum00101m1_140I, 
+ spinum00101m1_141I, 
+ spinum00101m1_142I, 
+ spinum00101m1_143I, 
+ spinum00101m1_144I, 
+ spinum00101m1_145I, 
+ spinum00101m1_146I, 
+ spinum00101m1_147I, 
+ spinum00101m1_148I, 
+ spinum00101m1_149I, 
+ spinum00101m1_150I, 
+ spinum00101m1_151I, 
+ spinum00101m1_152I, 
+ spinum00101m1_153I, 
+ spinum00101m1_154I, 
+ spinum00101m1_155I, 
+ spinum00101m1_156I, 
+ spinum00101m1_157I, 
+ spinum00101m1_158I, 
+ spinum00101m1_159I, 
+ spinum00101m1_160I, 
+ spinum00101m1_161I, 
+ spinum00101m1_162I, 
+ spinum00101m1_163I, 
+ spinum00101m1_164I, 
+ spinum00101m1_165I, 
+ spinum00101m1_166I, 
+ spinum00101m1_167I, 
+ spinum00101m1_168I, 
+ spinum00101m1_169I, 
+ spinum00101m1_170I, 
+ spinum00101m1_171I, 
+ spinum00101m1_172I, 
+ spinum00101m1_173I, 
+ spinum00101m1_174I, 
+ spinum00101m1_175I, 
+ spinum00101m1_176I, 
+ spinum00101m1_177I, 
+ spinum00101m1_178I, 
+ spinum00101m1_179I, 
+ spinum00101m1_180I, 
+ spinum00101m1_181I, 
+ spinum00101m1_182I, 
+ spinum00101m1_183I, 
+ spinum00101m1_184I, 
+ spinum00101m1_185I, 
+ spinum00101m1_186I, 
+ spinum00101m1_187I, 
+ spinum00101m1_188I, 
+ spinum00101m1_189I, 
+ spinum00101m1_190I, 
+ spinum00101m1_191I, 
+ spinum00101m1_192I, 
+ spinum00101m1_193I, 
+ spinum00101m1_194I, 
+ spinum00101m1_195I, 
+ spinum00101m1_196I, 
+ spinum00101m1_197I, 
+ spinum00101m1_198I, 
+ spinum00101m1_199I, 
+ spinum00101m1_200I, 
+ spinum00101m1_201I, 
+ spinum00101m1_202I, 
+ spinum00101m1_203I, 
+ spinum00101m1_204I, 
+ spinum00101m1_205I, 
+ spinum00101m1_206I, 
+ spinum00101m1_207I, 
+ spinum00101m1_208I, 
+ spinum00101m1_209I, 
+ spinum00101m1_210I, 
+ spinum00101m1_211I, 
+ spinum00101m1_212I, 
+ spinum00101m1_213I, 
+ spinum00101m1_214I, 
+ spinum00101m1_215I, 
+ spinum00101m1_216I, 
+ spinum00101m1_217I, 
+ spinum00101m1_218I, 
+ spinum00101m1_219I, 
+ spinum00101m1_220I, 
+ spinum00101m1_221I, 
+ spinum00101m1_222I, 
+ spinum00101m1_223I, 
+ spinum00101m1_224I, 
+ spinum00101m1_225I, 
+ spinum00101m1_226I, 
+ spinum00101m1_227I, 
+ spinum00101m1_228I, 
+ spinum00101m1_229I, 
+ spinum00101m1_230I, 
+ spinum00101m1_231I, 
+ spinum00101m1_232I, 
+ spinum00101m1_233I, 
+ spinum00101m1_234I, 
+ spinum00101m1_235I, 
+ spinum00101m1_236I, 
+ spinum00101m1_237I, 
+ spinum00101m1_238I, 
+ spinum00101m1_239I, 
+ spinum00101m1_240I, 
+ spinum00101m1_241I, 
+ spinum00101m1_242I, 
+ spinum00101m1_243I, 
+ spinum00101m1_244I, 
+ spinum00101m1_245I, 
+ spinum00101m1_246I, 
+ spinum00101m1_247I, 
+ spinum00101m1_248I, 
+ spinum00101m1_249I, 
+ spinum00101m1_250I, 
+ spinum00101m1_251I, 
+ spinum00101m1_252I, 
+ spinum00101m1_253I, 
+ spinum00101m1_254I, 
+ spinum00101m1_255I, 
+ spinum00101m1_256I 
+{
+
+public Method <init>:"()V" stack 1 {
+	aload_0;
+	invokespecial java/lang/Object.<init>:"()V";
+	return;
+}
+} // end Class spinum00101m10p
