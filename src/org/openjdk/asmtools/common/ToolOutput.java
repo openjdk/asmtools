@@ -461,7 +461,7 @@ public interface ToolOutput {
 
         @Override
         public DataOutputStream getDataOutputStream() throws FileNotFoundException {
-            return null;
+            return null; //If you are here, you probbaly wanted ToolOutput.ByteOutput for assmbled binary output
         }
 
         @Override

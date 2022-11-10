@@ -1,0 +1,128 @@
+class IntAndClass$IntAndClassImp {
+  0xCAFEBABE;
+  0;                             // minor version
+  55;                            // version
+  [] {                           // Constant Pool
+    ;                            // first element is empty
+    Method #3 #12;               // #1
+    class #13;                   // #2
+    class #16;                   // #3
+    class #17;                   // #4
+    Utf8 "<init>";               // #5
+    Utf8 "()V";                  // #6
+    Utf8 "Code";                 // #7
+    Utf8 "LineNumberTable";      // #8
+    Utf8 "SourceFile";           // #9
+    Utf8 "IntAndClass.java";     // #10
+    Utf8 "NestHost";             // #11
+    NameAndType #5 #6;           // #12
+    Utf8 "IntAndClass$IntAndClassImp"; // #13
+    Utf8 "IntAndClassImp";       // #14
+    Utf8 "InnerClasses";         // #15
+    Utf8 "java/lang/Object";     // #16
+    Utf8 "IntAndClass";          // #17
+  }
+
+  0x0021;                        // access
+  #2;                            // this_cpx
+  #3;                            // super_cpx
+
+  [] {                           // Interfaces
+#4;
+  }                              // end of Interfaces
+
+  [] {                           // Fields
+  }                              // end of Fields
+
+  [] {                           // Methods
+    {                            // method
+      0x0001;                    // access
+      #5;                        // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+        Attr(#7) {               // Code
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x2AB70001B1;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#8) {           // LineNumberTable
+              [] {               // line_number_table
+                0  3;
+              }
+            }                    // end of LineNumberTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+  }                              // end of Methods
+
+  [] {                           // Attributes
+    Attr(#9) {                   // SourceFile
+      #10;
+    }                            // end of SourceFile
+    ;
+    Attr(#11) {                  // NestHost
+#4;
+    }                            // end of NestHost
+    ;
+    Attr(#15) {                  // InnerClasses
+      [] {                       // classes
+        #2 #4 #14 9;
+      }
+    }                            // end of InnerClasses
+  }                              // end of Attributes
+}
+class IntAndClass {
+  0xCAFEBABE;
+  0;                             // minor version
+  55;                            // version
+  [] {                           // Constant Pool
+    ;                            // first element is empty
+    class #9;                    // #1
+    class #10;                   // #2
+    class #11;                   // #3
+    Utf8 "IntAndClassImp";       // #4
+    Utf8 "InnerClasses";         // #5
+    Utf8 "SourceFile";           // #6
+    Utf8 "IntAndClass.java";     // #7
+    Utf8 "NestMembers";          // #8
+    Utf8 "IntAndClass";          // #9
+    Utf8 "java/lang/Object";     // #10
+    Utf8 "IntAndClass$IntAndClassImp"; // #11
+  }
+
+  0x0601;                        // access
+  #1;                            // this_cpx
+  #2;                            // super_cpx
+
+  [] {                           // Interfaces
+  }                              // end of Interfaces
+
+  [] {                           // Fields
+  }                              // end of Fields
+
+  [] {                           // Methods
+  }                              // end of Methods
+
+  [] {                           // Attributes
+    Attr(#6) {                   // SourceFile
+      #7;
+    }                            // end of SourceFile
+    ;
+    Attr(#8) {                   // NestMembers
+      [] {                       // classes
+#3;
+      }
+    }                            // end of NestMembers
+    ;
+    Attr(#5) {                   // InnerClasses
+      [] {                       // classes
+        #3 #1 #4 9;
+      }
+    }                            // end of InnerClasses
+  }                              // end of Attributes
+}
