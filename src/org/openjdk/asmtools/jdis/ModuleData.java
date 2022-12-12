@@ -111,7 +111,7 @@ public class ModuleData extends MemberData<ClassData>{
             builder = new ModuleContent.Builder(index, moduleName, moduleFlags, version);
 
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_header");
+            throw new FormatError(environment.getLogger(), "err.invalid_header");
         }
 
         try {
@@ -126,7 +126,7 @@ public class ModuleData extends MemberData<ClassData>{
                 builder.require(index, moduleName, requiresFlags, version);
             }
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_requires");
+            throw new FormatError(environment.getLogger(), "err.invalid_requires");
         }
 
         try {
@@ -150,7 +150,7 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_exports");
+            throw new FormatError(environment.getLogger(), "err.invalid_exports");
         }
 
         try {
@@ -174,7 +174,7 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_opens");
+            throw new FormatError(environment.getLogger(), "err.invalid_opens");
         }
 
         try {
@@ -187,7 +187,7 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_uses");
+            throw new FormatError(environment.getLogger(), "err.invalid_uses");
         }
 
         try {
@@ -206,7 +206,7 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError("err.invalid_provides");
+            throw new FormatError(environment.getLogger(), "err.invalid_provides");
         }
         moduleContent = builder.build();
     }

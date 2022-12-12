@@ -86,7 +86,8 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
                     arrayAnnotationValue.add(readValue(in, data, invisible));
                 }
             }
-            default -> throw new FormatError("err.unknown.tag", isPrintableChar(tg) ? tg : '?', Integer.toHexString(tg));
+            default -> throw new FormatError(data.environment.getLogger(),
+                    "err.unknown.tag", isPrintableChar(tg) ? tg : '?', Integer.toHexString(tg));
         }
         return val;
     }

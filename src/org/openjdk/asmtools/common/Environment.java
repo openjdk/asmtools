@@ -22,8 +22,6 @@
  */
 package org.openjdk.asmtools.common;
 
-import org.openjdk.asmtools.util.I18NResourceBundle;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -36,7 +34,7 @@ import java.util.Optional;
 public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     // Results
-    public final static int OK     = 0;
+    public final static int OK = 0;
     public final static int FAILED = 1;
 
     T toolLogger;
@@ -51,9 +49,10 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     private boolean ignoreWarnings;         // do not print / ignore warnings
     private boolean strictWarnings;         // consider warnings as errors
 
-
-    protected Environment(Builder builder, I18NResourceBundle i18n) {
-        ToolLogger.setResources(builder.programName, i18n);
+    /**
+     * @param builder the environment builder
+     */
+    protected Environment(Builder builder) {
         this.toolOutput = builder.toolOutput;
         this.toolLogger = (T) builder.toolLogger;
     }
@@ -89,14 +88,14 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     @Override
     public void traceln(String id, Object... args) {
-        if( traceFlag )
-            ILogger.super.traceln(id,args);
+        if (traceFlag)
+            ILogger.super.traceln(id, args);
     }
 
     @Override
     public void trace(String id, Object... args) {
-        if( traceFlag )
-            ILogger.super.trace(id,args);
+        if (traceFlag)
+            ILogger.super.trace(id, args);
     }
 
     @Override
@@ -155,10 +154,8 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     public abstract static class Builder<E extends Environment, T extends ToolLogger> {
         T toolLogger;
         public ToolOutput toolOutput;
-        protected String programName;
 
-        public Builder(String programName, ToolOutput toolOutput, T toolLogger) {
-            this.programName = programName;
+        public Builder(ToolOutput toolOutput, T toolLogger) {
             this.toolOutput = toolOutput;
             this.toolLogger = toolLogger;
         }

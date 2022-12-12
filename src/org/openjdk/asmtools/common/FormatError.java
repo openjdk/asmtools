@@ -27,9 +27,9 @@ package org.openjdk.asmtools.common;
  */
 public class FormatError extends ClassFormatError {
 
-    public FormatError(String id, Object... args) {
-        super( args.length == 0 ? id :  ToolLogger.getResourceString(id,args) == null ?
-                                        "(i18n.properties) The message '" + id + "' not found" :
-                                        ToolLogger.getResourceString(id,args));
+    public <T extends ToolLogger> FormatError(T logger, String id, Object... args) {
+        super(args.length == 0 ? id : logger.getResourceString(id, args) == null ?
+                "(i18n.properties) The message '" + id + "' not found" :
+                logger.getResourceString(id, args));
     }
 }

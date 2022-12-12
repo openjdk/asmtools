@@ -492,7 +492,7 @@ class Parser extends ParseBase {
             scanner.scan();
         }
         if (scanner.token != Token.INTVAL) {
-            environment.error(scanner.pos, "int.expected");
+            environment.error(scanner.pos, "err.int.expected");
             throw new SyntaxError();
         }
         int arg = scanner.intValue * scanner.sign;

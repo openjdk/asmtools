@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@ import org.openjdk.asmtools.common.ToolInput;
 import org.openjdk.asmtools.common.ToolOutput;
 
 import java.io.*;
+import java.util.Collections;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
@@ -41,10 +42,8 @@ public class Main extends JdecTool {
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
-        for(ToolInput toolInput: toolInputs){
-            fileList.add(toolInput);
-        }
-        parseArgs(new String[0]);
+        Collections.addAll(fileList, toolInputs);
+        parseArgs();
     }
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
@@ -68,28 +67,6 @@ public class Main extends JdecTool {
         Main decoder = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
         System.exit(decoder.decode());
     }
-
-//    public static final I18NResourceBundle i18n
-//            = I18NResourceBundle.getBundleForClass(Main.class);
-//    int printFlags = 0;
-//
-//    public Main(PrintWriter out, PrintWriter err, String programName) {
-//        super(out, err, programName);
-//        printCannotReadMsg = (fname) ->
-//                error(i18n.getString("jdec.error.cannot_read", fname));
-//    }
-//
-//    public Main(PrintStream out, String program) {
-//        this(new PrintWriter(out), new PrintWriter(System.err), program);
-//    }
-//
-//    /**
-//     * Main program
-//     */
-//    public static void main(String... argv) {
-//        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), new PrintWriter(System.err), "jdec");
-//        System.exit(decoder.decode(argv) ? 0 : 1);
-//    }
 
     @Override
     public void usage() {
@@ -157,14 +134,6 @@ public class Main extends JdecTool {
     public synchronized int decode() {
         for (ToolInput inputFileName : fileList) {
             try {
-//                DataInputStream dataInputStream = getDataInputStream(inpname);
-//                if (dataInputStream == null)
-//                    return false;
-//                ClassData cc = new ClassData(dataInputStream, printFlags, toolOutput);
-//                cc.DebugFlag = VerboseFlag.getAsBoolean();
-//                cc.decodeClass(inpname);
-//                toolOutput.flush();
-//                continue;
                 environment.setInputFile(inputFileName);
                 ClassData classData = new ClassData(environment);
                 classData.decodeClass();
@@ -187,38 +156,5 @@ public class Main extends JdecTool {
             return FAILED;
         }
         return OK;
-
-//        long tm = System.currentTimeMillis();
-//        ArrayList<String> vargs = new ArrayList<>();
-//        ArrayList<String> vj = new ArrayList<>();
-//        boolean nowrite = false;
-//        int addOptions = 0;
-//
-//
-//
-//        String[] names = new String[0];
-//        names = vj.toArray(names);
-//        for (String inpname : names) {
-//            try {
-//                DataInputStream dataInputStream = getDataInputStream(inpname);
-//                if (dataInputStream == null)
-//                    return false;
-//                ClassData cc = new ClassData(dataInputStream, printFlags, toolOutput);
-//                cc.DebugFlag = VerboseFlag.getAsBoolean();
-//                cc.decodeClass(inpname);
-//                toolOutput.flush();
-//                continue;
-//            } catch (Error ee) {
-//                if (VerboseFlag.getAsBoolean())
-//                    ee.printStackTrace();
-//                error(i18n.getString("jdec.error.fatal_error"));
-//            } catch (Exception ee) {
-//                if (VerboseFlag.getAsBoolean())
-//                    ee.printStackTrace();
-//                error(i18n.getString("jdec.error.fatal_exception"));
-//            }
-//            return false;
-//        }
-//        return true;
     }
 }

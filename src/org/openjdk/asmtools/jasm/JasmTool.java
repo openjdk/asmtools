@@ -30,7 +30,6 @@ import java.io.PrintWriter;
 
 public abstract class JasmTool extends Tool<JasmEnvironment> {
 
-
     protected JasmTool(ToolOutput toolOutput) {
         super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
     }

@@ -25,9 +25,6 @@ package org.openjdk.asmtools.jdec;
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.util.I18NResourceBundle;
-
-import java.io.PrintWriter;
 
 import static java.lang.String.format;
 
@@ -38,8 +35,11 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
     // Output stream or files or custom Strings
     private final ToolOutput toolOutput;
 
-    private JdecEnvironment(Builder<JdecEnvironment, DecompilerLogger> builder, I18NResourceBundle i18n) {
-        super(builder, i18n);
+    /**
+     * @param builder the jdec environment builder
+     */
+    private JdecEnvironment(Builder<JdecEnvironment, DecompilerLogger> builder) {
+        super(builder);
         this.toolOutput = builder.toolOutput;
     }
 
@@ -55,7 +55,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     @Override
     public void println(String format, Object... args) {
-        getToolOutput().printlns(( args == null || args.length == 0) ? format : format(format, args));
+        getToolOutput().printlns((args == null || args.length == 0) ? format : format(format, args));
     }
 
     @Override
@@ -65,7 +65,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     @Override
     public void print(String format, Object... args) {
-        getToolOutput().prints(( args == null || args.length == 0) ? format : format(format, args));
+        getToolOutput().prints((args == null || args.length == 0) ? format : format(format, args));
     }
 
     @Override
@@ -73,16 +73,15 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
         getToolOutput().prints(ch);
     }
 
-
     static class JDecBuilder extends Builder<JdecEnvironment, DecompilerLogger> {
 
         public JDecBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
-            super("jdec", toolOutput, new DecompilerLogger(log));
+            super(toolOutput, new DecompilerLogger("jdec", JdecEnvironment.class, log));
         }
 
         @Override
         public JdecEnvironment build() {
-            return new JdecEnvironment(this, I18NResourceBundle.getBundleForClass(this.getClass()));
+            return new JdecEnvironment(this);
         }
     }
 }

@@ -225,15 +225,16 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
                 case ATT_Synthetic:
                     // Read Synthetic Attribute
                     if (attrLength != 0) {
-                        throw new FormatError("err.invalid.attribute.length",  tag.printValue(), attrLength);
+                        throw new FormatError(environment.getLogger(),
+                                "err.invalid.attribute.length",  tag.printValue(), attrLength);
                     }
                     isSynthetic = true;
                     break;
                 case ATT_Deprecated:
                     // Read Deprecated Attribute
                     if (attrLength != 0) {
-                        throw new FormatError("err.invalid.attribute.length",
-                                tag.printValue(), attrLength);
+                        throw new FormatError(environment.getLogger(),
+                                "err.invalid.attribute.length", tag.printValue(), attrLength);
                     }
                     isDeprecated = true;
                     break;

@@ -1,0 +1,79 @@
+/*
+ * Ident: @(#)module-info.jcod generated from:%W% %E%
+ *
+ * Copyright (c) 1996, 2018 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+module module-info {
+    0xCAFEBABE;// magic
+    0;// minor class version
+    53;// major class version
+    []s{
+        {  };// first element is empty
+        Utf8 "javasoft/sqe/jck/tests/vm/atrmmc00101m012/Main0012";// #1
+        class #1;// #2
+        Utf8 "module-info";// #3
+        class #3;// #4
+        Utf8 "Module";// #5
+        Utf8 "module012";// #6
+        Module #6;// #7
+        Utf8 "java.base";// #8
+        Module #8;// #9
+        Utf8 "javasoft/sqe/jck/tests/vm/atrmmc00101m012";// #10
+        Package #10;// #11
+        Utf8 "ModuleMainClass";// #12
+        Utf8 "UNUSED_DUMMY_ATTRIBUTE";// #13
+        String #13;// #14
+    };
+    0x8000;//  module
+    #4;// this_class{"module-info"}
+    #0;// super_class#0
+    // interfaces
+    []s{
+    
+    };
+    // fields
+    []s{
+    
+    };
+    // methods
+    []s{
+    
+    };
+    // class attributes
+    []s{
+        // attribute "Module"
+        Attr(#5) {
+            #7;// module_name_index {"module012"}
+            0x0000;
+            #0;// module_version_index #0
+            // requires
+            []s{
+                { #9 0x0020 #0 };
+            };
+            // exports
+            []s{
+                { #11 0x0000 []s{} };
+            };
+            // opens
+            []s{
+                { #11 0x0000 []s{} };
+            };
+            // uses
+            [0]s{
+            
+            };
+            // provides
+            [0]s{
+            
+            };
+        };
+        //test attribute "ModuleMainClass"
+        //attribute_length, 1 less
+        Attr(#12, 1) {
+            #2;// {"javasoft/sqe/jck/tests/vm/atrmmc00101m012/Main0012"}
+        };
+
+
+    };
+} // end of module-info

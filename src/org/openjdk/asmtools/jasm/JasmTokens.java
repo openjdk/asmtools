@@ -43,7 +43,7 @@ public class JasmTokens {
 
     /*-------------------------------------------------------- */
     /* Marker: describes the type of Keyword */
-    static public enum KeywordType {
+    public enum KeywordType {
         TOKEN            (0, "TOKEN"),
         VALUE            (1, "VALUE"),
         JASMIDENTIFIER   (2, "JASM"),

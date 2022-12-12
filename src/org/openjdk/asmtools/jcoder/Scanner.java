@@ -302,14 +302,14 @@ public class Scanner {
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            environment.error(inputFile.pos, "invalid.number", Character.toString((char) ch));
+            environment.error(inputFile.pos, "err.invalid.number", Character.toString((char) ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
             return;
         }
         if (overflow) {
-            environment.error(pos, "overflow");
+            environment.error(pos, "err.overflow");
         }
     } // scanNumber()
 
