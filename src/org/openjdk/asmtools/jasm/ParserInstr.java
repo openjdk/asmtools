@@ -231,7 +231,7 @@ public class ParserInstr extends ParseBase {
                         if (scanner.token == Token.INTVAL) {
                             type = scanner.intValue;
                         } else if ((type = ClassFileConst.basicTypeValue(scanner.idValue)) == -1) {
-                            environment.error(scanner.pos, "type.expected");
+                            environment.error(scanner.pos, "err.array.type.expected");
                             throw new SyntaxError();
                         }
                         scanner.scan();

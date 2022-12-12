@@ -48,7 +48,8 @@ public class SignatureData extends MemberData<ClassData> {
 
     public SignatureData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
         if (attribute_length != 2) {
-            throw new FormatError("err.invalid.attribute.length", EAttribute.ATT_Signature.printValue(), attribute_length);
+            throw new FormatError(environment.getLogger(),
+                    "err.invalid.attribute.length", EAttribute.ATT_Signature.printValue(), attribute_length);
         }
         index = in.readUnsignedShort();
         return this;
@@ -72,8 +73,8 @@ public class SignatureData extends MemberData<ClassData> {
      * @return string presentation of index and signature used to print
      * ClassFile, field_info, method_info, or record_component_info
      */
-    public Pair<String,String> getPrintInfo(Function<Integer, Boolean> checkRange) {
-        return new Pair<>( format(":#%d",index),
-                checkRange.apply(index) ?  format(":%s",pool.StringValue(index)) : ":?? invalid index");
+    public Pair<String, String> getPrintInfo(Function<Integer, Boolean> checkRange) {
+        return new Pair<>(format(":#%d", index),
+                checkRange.apply(index) ? format(":%s", pool.StringValue(index)) : ":?? invalid index");
     }
 }

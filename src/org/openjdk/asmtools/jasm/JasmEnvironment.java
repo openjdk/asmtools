@@ -22,27 +22,24 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.common.CompilerLogger;
-import org.openjdk.asmtools.common.EMessageKind;
-import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.util.I18NResourceBundle;
+import org.openjdk.asmtools.common.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
 
 import static org.openjdk.asmtools.common.CompilerConstants.EOF;
 import static org.openjdk.asmtools.common.CompilerConstants.OFFSETBITS;
 
-public class JasmEnvironment extends Environment<CompilerLogger>  {
+public class JasmEnvironment extends Environment<CompilerLogger> {
 
     InputFile inputFile;
 
-    private JasmEnvironment(Builder<JasmEnvironment, CompilerLogger> builder, I18NResourceBundle i18n) {
-        super(builder, i18n);
+    /**
+     * @param builder the jasm environment builder
+     */
+    private JasmEnvironment(Builder<JasmEnvironment, CompilerLogger> builder) {
+        super(builder);
     }
 
     @Override
@@ -59,16 +56,24 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
 
     // proxy methods
     @Override
-    public void warning(int where, String id, Object... args) { getLogger().warning(where, id, args); }
-    @Override
-    public void error(int where, String id, Object... args) { getLogger().error(where, id, args); }
+    public void warning(int where, String id, Object... args) {
+        getLogger().warning(where, id, args);
+    }
 
     @Override
-    public void warning(String id, Object... args) { getLogger().warning(NOWHERE, id, args); }
+    public void error(int where, String id, Object... args) {
+        getLogger().error(where, id, args);
+    }
 
     @Override
-    public void error(String id, Object... args) { getLogger().error(NOWHERE, id, args); }
+    public void warning(String id, Object... args) {
+        getLogger().warning(NOWHERE, id, args);
+    }
 
+    @Override
+    public void error(String id, Object... args) {
+        getLogger().error(NOWHERE, id, args);
+    }
 
     // Jasm specific methods
     public long getErrorCount() {
@@ -86,7 +91,8 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
 
     /**
      * Throws an error that is not associated with scanner position in an input file
-     * @param id id of a string resource in I18NResourceBundle
+     *
+     * @param id   id of a string resource in I18NResourceBundle
      * @param args arguments referenced by the format specifiers in the resource string
      * @throws Error exception
      */
@@ -97,9 +103,10 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
 
     /**
      * Throws an error that is associated with scanner position in an input file
+     *
      * @param where position in an input file
-     * @param id id of a string resource in I18NResourceBundle
-     * @param args arguments referenced by the format specifiers in the resource string
+     * @param id    id of a string resource in I18NResourceBundle
+     * @param args  arguments referenced by the format specifiers in the resource string
      * @throws Error exception
      */
     public void throwErrorException(int where, String id, Object... args) throws Error {
@@ -112,7 +119,9 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
      * @param printTotals whether to print the total line: N warning(s), K error(s)
      * @return 0 if there are no errors otherwise a numner of errors
      */
-    public int flush(boolean printTotals) { return super.getLogger().flush(printTotals); }
+    public int flush(boolean printTotals) {
+        return super.getLogger().flush(printTotals);
+    }
 
     public int getPosition() {
         return inputFile == null ? 0 : inputFile.pos;
@@ -133,12 +142,12 @@ public class JasmEnvironment extends Environment<CompilerLogger>  {
     static class JasmBuilder extends Environment.Builder<JasmEnvironment, CompilerLogger> {
 
         public JasmBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
-            super("jasm", toolOutput, new CompilerLogger(logger));
+            super(toolOutput, new CompilerLogger("jasm", JasmEnvironment.class, logger));
         }
 
         @Override
         public JasmEnvironment build() {
-            return new JasmEnvironment(this, I18NResourceBundle.getBundleForClass(this.getClass()) );
+            return new JasmEnvironment(this);
         }
     }
 

@@ -23,19 +23,16 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.DecompilerLogger;
-import org.openjdk.asmtools.common.EMessageKind;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.ToolLogger;
 import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.util.I18NResourceBundle;
-
-import java.io.PrintWriter;
 
 public class JdisEnvironment extends Environment<DecompilerLogger> {
 
-
-    private JdisEnvironment(Builder<JdisEnvironment, DecompilerLogger> builder, I18NResourceBundle i18n) {
-        super(builder, i18n);
+    /**
+     * @param builder the jdis environment builder
+     */
+    private JdisEnvironment(Builder<JdisEnvironment, DecompilerLogger> builder) {
+        super(builder);
     }
 
     @Override
@@ -43,22 +40,15 @@ public class JdisEnvironment extends Environment<DecompilerLogger> {
         getLogger().printErrorLn(format, args);
     }
 
-    @Override
-    public void error(Throwable exception) {
-        printErrorLn(ToolLogger.EMessageFormatter.VERBOSE.apply(
-                new ToolLogger.Message(EMessageKind.ERROR, exception.getMessage())));
-    }
+    static class JdisBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
 
-
-    static class JDecBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
-
-        public JDecBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
-            super("jdis", toolOutput, new DecompilerLogger(outerLog));
+        public JdisBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+            super(toolOutput, new DecompilerLogger("jdis", JdisEnvironment.class, outerLog));
         }
 
         @Override
         public JdisEnvironment build() {
-            return new JdisEnvironment(this, I18NResourceBundle.getBundleForClass(this.getClass()));
+            return new JdisEnvironment(this);
         }
     }
 }

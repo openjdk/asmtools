@@ -54,7 +54,6 @@ FILES_LINKS="src/main/java/org=../../../../src/org/
 src/test=../../test
 src/main/resources/org/openjdk/asmtools/i18n.properties=../../../../../../../src/org/openjdk/asmtools/i18n.properties
 src/main/resources/org/openjdk/asmtools/jasm/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jasm/i18n.properties
-src/main/resources/org/openjdk/asmtools/jcdec/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jcdec/i18n.properties
 src/main/resources/org/openjdk/asmtools/jcoder/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jcoder/i18n.properties
 src/main/resources/org/openjdk/asmtools/jdec/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jdec/i18n.properties
 src/main/resources/org/openjdk/asmtools/jdis/i18n.properties=../../../../../../../../src/org/openjdk/asmtools/jdis/i18n.properties
@@ -76,5 +75,3 @@ pushd $SCRIPT_DIR > /dev/null
   done
 popd > /dev/null
 echo "Done"
-
-

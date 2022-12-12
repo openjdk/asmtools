@@ -42,13 +42,13 @@ table { font-family: Arial, Helvetica, sans-serif;
         margin-top: 0px; padding-top: 0px;
         border-top-width: 0px; border-right-width: 0px;
         border-bottom-width: 0px; border-left-width: 0px;
-        margin-bottom: 10px; margin-left: 0px; 
-        padding-bottom: 5px; padding-left: 5px 
+        margin-bottom: 10px; margin-left: 0px;
+        padding-bottom: 5px; padding-left: 5px
 }
 th
 { font-family: Arial, Helvetica, sans-serif;
   text-align: left; vertical-align: bottom;
-  padding-top: 5px; padding-right: 10px; 
+  padding-top: 5px; padding-right: 10px;
   padding-left: 10px; white-space: nowrap
   border-top-width: 0px; border-right-width: 0px;
   border-bottom-width: 0px; border-left-width: 0px;
@@ -62,26 +62,26 @@ td
   border-right-width: 0px; vertical-align: top;
   font-size: 12px;
 }
-td p 
+td p
 { font-family: Arial, Helvetica, sans-serif;
   padding-right:10px; padding-left: 10px; padding-top: 10px
  border-top-width: 0px; border-right-width: 0px;
  border-bottom-width: 0px; border-left-width: 0px;
  vertical-align: top; font-size: 12px;
 }
-td h1 {  text-align: center 
+td h1 {  text-align: center
 }
-td h2 {  text-align: center; padding-top: 0px 
+td h2 {  text-align: center; padding-top: 0px
 }
 td h3 {  text-align: center; padding-top: 0px
 }
-td h4 {  text-align: center; padding-top: 0px 
+td h4 {  text-align: center; padding-top: 0px
 }
-table.Code { margin-bottom: 0.5em; border: 0; 
+table.Code { margin-bottom: 0.5em; border: 0;
  margin-top: 0.5em;
 }
 table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
-               border: 1px solid  #1E475B; 
+               border: 1px solid  #1E475B;
 }
 .Untitled { margin-bottom: 1.0em; margin-top: 1.0em;
 }
@@ -145,7 +145,7 @@ its specification.</p>
 These
 release notes contain information about the ASM Tools version 7.0.
 See the (
-<a href="https://wiki.openjdk.java.net/display/CodeTools/Main">CodeTools</a> project) 
+<a href="https://wiki.openjdk.java.net/display/CodeTools/Main">CodeTools</a> project)
 <a href="https://wiki.openjdk.java.net/display/CodeTools/AsmTools">AsmTools</a> OpenJDK project page for more information about AsmTools.
 </p>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
@@ -165,7 +165,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902525">CODETOOLS-7902525</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902525">CODETOOLS-7902525</a>
       </td>
       <td>
         Asmtools support: JEP 360 Sealed Types(Preview)
@@ -173,7 +173,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902524">CODETOOLS-7902524</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902524">CODETOOLS-7902524</a>
       </td>
       <td>
         Asmtools support: JEP 359 Records(Preview)
@@ -196,7 +196,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902618">CODETOOLS-7902618</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902618">CODETOOLS-7902618</a>
       </td>
       <td>
         Asmtools does not support jasm output/input for TypeAnnotations.
@@ -204,7 +204,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902643">CODETOOLS-7902643</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902643">CODETOOLS-7902643</a>
       </td>
       <td>
         Asmtools(jasm) does not support signature attributes in field_info, component_info
@@ -212,7 +212,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902644">CODETOOLS-7902644</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902644">CODETOOLS-7902644</a>
       </td>
       <td>
         Asmtools (jcoder) fails if an jcod file contains CONSTANT_Utf8_info with non-normative char sequences
@@ -220,7 +220,7 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902648">CODETOOLS-7902648</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902648">CODETOOLS-7902648</a>
       </td>
       <td>
         jasm has no clues about how to interpret CONSTANT_MethodHandle_info:reference_kind in an invokedynamic instruction
@@ -282,7 +282,7 @@ location of this folder.
 <h2>Using AsmTools</h2>
 <p>AsmTools have the following synopsis:</p>
 <div style="margin-left: 40px;">
-<pre>java -jar ${ASMTOOLSHOME}/asmtools.jar TOOL FILE<br>   [TOOL="jasm" | "jdis" | "jcoder" | jdec | jcdec]<br>   [FILE=xxx.jasm (for jasm command) | xxx.jcod (for jcod command) | xxx.class for jdis, jdec, or jcdec command]<br><br></pre>
+<pre>java -jar ${ASMTOOLSHOME}/asmtools.jar TOOL FILE<br>   [TOOL="jasm" | "jdis" | "jcoder" | "jdec"]<br>   [FILE=xxx.jasm (for jasm command) | xxx.jcod (for jcod command) | xxx.class for jdis, jdec command]<br><br></pre>
 </div>
 <p> Examples: </p>
 <div style="margin-left: 40px;">
@@ -303,7 +303,7 @@ MyClass.jcod <br>
 </div>
 
 <p>
-Assembler Syntax and tool usage is covered in the 
+Assembler Syntax and tool usage is covered in the
 <a href="https://wiki.openjdk.java.net/display/CodeTools/AsmTools">AsmTools project wiki</a>.
 </p>
 <br>
@@ -313,7 +313,7 @@ Assembler Syntax and tool usage is covered in the
 <p><a name="known_bugs_and_issues" id="known_bugs_and_issues"></a></p>
 <h2>Known Bugs and Issues</h2>
 <p>
-Many attributes (in the class file, as specified by the 
+Many attributes (in the class file, as specified by the
 
 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html">Java VM Specification, Chapter 4)</a>
 

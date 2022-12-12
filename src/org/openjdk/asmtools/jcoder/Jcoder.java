@@ -671,7 +671,7 @@ class Jcoder {
                             return;
                         default:
                             environment.traceln("unexpected token=" + scanner.token);
-                            environment.error(scanner.pos, "toplevel.expected");
+                            environment.error(scanner.pos, "err.toplevel.expected");
                             throw new SyntaxError();
                     }
                 } catch (SyntaxError e) {

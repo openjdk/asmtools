@@ -76,7 +76,8 @@ class ClassData {
         try (DataInputStream dis = environment.getInputFile().getDataInputStream(Optional.empty())) {
             byte[] buf = new byte[dis.available()];
             if (dis.read(buf) <= 0) {
-                throw new FormatError("err.file.empty", environment.getSimpleInputFileName());
+                throw new FormatError(environment.getLogger(),
+                        "err.file.empty", environment.getSimpleInputFileName());
             }
             arrayInputStream = new NestedByteArrayInputStream(buf);
             inputStream = new DataInputStream(arrayInputStream);
@@ -1217,4 +1218,3 @@ class ClassData {
         return pair[0] + repeat(" ", COMMENT_OFFSET - pair[0].length() - shift * INDENT_LENGTH) + " // " + pair[1];
     }
 }// end class ClassData
-

@@ -61,7 +61,8 @@ public class FieldData extends MemberData<ClassData> {
             }
             case ATT_ConstantValue -> {
                 if (attributeLength != 2) {
-                    throw new FormatError("err.invalid.attribute.length",
+                    throw new FormatError(environment.getLogger(),
+                            "err.invalid.attribute.length",
                             EAttribute.ATT_ConstantValue.printValue(), attributeLength);
                 }
                 value_cpx = in.readUnsignedShort();

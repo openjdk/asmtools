@@ -24,7 +24,7 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.jdis.JdisEnvironment.JDecBuilder;
+import org.openjdk.asmtools.jdis.JdisEnvironment.JdisBuilder;
 
 public abstract class JdisTool extends Tool<JdisEnvironment> {
 
@@ -38,7 +38,7 @@ public abstract class JdisTool extends Tool<JdisEnvironment> {
 
     @Override
     public JdisEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
-        JDecBuilder builder = new JDecBuilder(toolOutput, outerLog);
+        JdisBuilder builder = new JdisBuilder(toolOutput, outerLog);
         return builder.build();
     }
 }

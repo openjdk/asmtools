@@ -28,8 +28,6 @@ import java.util.ArrayList;
 
 public abstract class Tool<T extends Environment<? extends ToolLogger>> {
 
-    // private final long tm = System.currentTimeMillis();
-
     protected final ArrayList<ToolInput> fileList = new ArrayList<>();
     protected T environment;
 

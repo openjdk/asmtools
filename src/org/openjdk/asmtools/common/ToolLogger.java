@@ -26,18 +26,42 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import static java.lang.String.format;
+import static org.openjdk.asmtools.Main.sharedI18n;
 import static org.openjdk.asmtools.common.EMessageKind.ERROR;
 import static org.openjdk.asmtools.common.EMessageKind.INFO;
 
 public class ToolLogger implements ILogger {
 
-    private static String programName;
-    private static I18NResourceBundle i18n;
-    private static I18NResourceBundle sharedI18n = I18NResourceBundle.getBundleForClass(org.openjdk.asmtools.Main.class);
+    class ToolResources {
+        private final static HashMap<String, I18NResourceBundle> resources = new HashMap<>();
+
+        public ToolResources(String programName, Class cls) {
+            if (!ToolResources.resources.containsKey(programName)) {
+                ToolResources.resources.put(programName, I18NResourceBundle.getBundleForClass(cls));
+            }
+        }
+
+        public void setWarn(boolean value) {
+            ToolResources.resources.get(ToolLogger.this.programName).setWarn(value);
+        }
+
+        public String getString(String id, Object... args) {
+            return ToolResources.resources.get(ToolLogger.this.programName).getString(id, args);
+        }
+
+        public boolean containsKey(String key) {
+            return ToolResources.resources.get(ToolLogger.this.programName).containsKey(key);
+        }
+    }
+
+    private final String programName;
+
+    private ToolResources toolResources;
+
     ToolOutput.DualStreamToolOutput outerLog;
     // Input file name is needed for logging purposes
     private String inputFileName;
@@ -46,35 +70,35 @@ public class ToolLogger implements ILogger {
     static {
         sharedI18n.setWarn(false);
     }
-    protected ToolLogger(ToolOutput.DualStreamToolOutput outerLog) {
+
+    /**
+     * @param programName the tool name
+     * @param cls         the environment class of the tool for which to obtain the resource bundle
+     * @param outerLog    the logger stream
+     */
+    public ToolLogger(String programName, Class cls, ToolOutput.DualStreamToolOutput outerLog) {
+        // Set Resource bundle for the tool
+        this.toolResources = new ToolResources(programName, cls);
+        this.programName = programName;
         this.outerLog = outerLog;
     }
 
-    static void setResources(String programName, I18NResourceBundle i18n) {
-        ToolLogger.programName = programName;
-        ToolLogger.i18n = i18n;
-    }
-
-    public static String getProgramName() {
-        return programName;
-    }
-
-    public static String getResourceString(String id, Object... args) {
-        String r = null;
-        i18n.setWarn(false);
+    public String getResourceString(String id, Object... args) {
+        String resString;
+        toolResources.setWarn(false);
         try {
-            r = i18n.getString(id, args);
+            resString = toolResources.getString(id, args);
         } finally {
-            i18n.setWarn(true);
+            toolResources.setWarn(true);
         }
-        if (r == null || r.equals(id)) {
-            r = sharedI18n.getString(id, args);
+        if (resString == null || resString.equals(id)) {
+            resString = sharedI18n.getString(id, args);
         }
-        if (r == null || r.equals(id)) {
+        if (resString == null || resString.equals(id)) {
             //to get proper error message
-            r = i18n.getString(id, args);
+            resString = toolResources.getString(id, args);
         }
-        return r;
+        return resString;
     }
 
     public void setInputFileName(ToolInput inputFileName) throws IOException {
@@ -86,7 +110,7 @@ public class ToolLogger implements ILogger {
     public Message getResourceString(EMessageKind kind, String id, Object... args) {
         String str;
         for (String prefix : Set.of("", kind.prefix)) {
-            if (ToolLogger.i18n.containsKey(prefix + id) || ToolLogger.sharedI18n.containsKey(prefix + id)) {
+            if (toolResources.containsKey(prefix + id) || sharedI18n.containsKey(prefix + id)) {
                 str = getResourceString(id, args);
                 if (str != null) {
                     return new Message(kind, str);
@@ -115,24 +139,33 @@ public class ToolLogger implements ILogger {
         getOutputs().stacktrace(throwable);
     }
 
+    public String getProgramName() {
+        return programName;
+    }
+
+
+    @FunctionalInterface
+    private interface TriFunction<A, B, C, R> {
+        R apply(A a, B b, C c);
+    }
 
     public enum EMessageFormatter {
-        SHORT((severity, message) -> format("%s", message)),
-        LONG((severity, message) -> format("%s: %s", severity.longForm(), message)),
-        VERBOSE((severity, message) -> severity == INFO ? message : format("%-5s-%6s: %s",
-                ToolLogger.getProgramName(), severity.shortForm(), message));
-        final private BiFunction<EMessageKind, String, String> func;
+        SHORT((severity, name, message) -> format("%s", message)),
+        LONG((severity, name, message) -> format("%s: %s", severity.longForm(), message)),
+        VERBOSE((severity, name, message) -> severity == INFO ? message : format("%-7s-%6s: %s",
+                name, severity.shortForm(), message));
+        final private TriFunction<EMessageKind, String, String, String> triFunc;
 
-        EMessageFormatter(BiFunction<EMessageKind, String, String> func) {
-            this.func = func;
+        EMessageFormatter(TriFunction<EMessageKind, String, String, String> func) {
+            this.triFunc = func;
         }
 
-        public String apply(EMessageKind kind, String format, Object... args) {
-            return func.apply(kind, format(format, args));
+        public String apply(EMessageKind kind, String name, String format, Object... args) {
+            return triFunc.apply(kind, name, format(format, args));
         }
 
-        public String apply(Message message) {
-            return message.notFound() ? "" : func.apply(message.kind(), message.text());
+        public String apply(String name, Message message) {
+            return message.notFound() ? "" : triFunc.apply(message.kind(), name, message.text());
         }
     }
 

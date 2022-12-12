@@ -25,10 +25,7 @@ package org.openjdk.asmtools.jcoder;
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.ToolOutput;
 
-import java.io.PrintWriter;
-
 public abstract class JcoderTool extends Tool<JcoderEnvironment> {
-
 
     protected JcoderTool(ToolOutput toolOutput) {
         super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());

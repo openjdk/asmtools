@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.regex.PatternSyntaxException;
 
@@ -68,10 +69,8 @@ public class Main extends JcoderTool {
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
-        for(ToolInput toolInput: toolInputs){
-            fileList.add(toolInput);
-        }
-        parseArgs(new String[0]);
+        Collections.addAll(fileList, toolInputs);
+        parseArgs();
     }
 
     /**

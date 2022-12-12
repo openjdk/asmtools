@@ -122,7 +122,7 @@ class StackMapData extends MemberData<CodeData> {
             mt_val = in.readUnsignedByte();
             StackMap.VerificationType stackMapVerificationType =
                     StackMap.getVerificationType(mt_val, Optional.of((s) -> {
-                        throw new FormatError(s);
+                        throw new FormatError(environment.getLogger(), s);
                     }));
             switch (stackMapVerificationType) {
                 case ITEM_Object -> mt_val = mt_val | (in.readUnsignedShort() << 8);

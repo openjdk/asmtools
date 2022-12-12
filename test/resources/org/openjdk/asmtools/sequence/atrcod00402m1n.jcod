@@ -1,0 +1,74 @@
+/*
+ * Ident: @(#)atrcod00402m1n.jcod generated from: @(#)atrcod00402m.jmpp 1.8 99/10/07
+ *
+ * Copyright 1999 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+
+
+class javasoft/sqe/tests/vm/classfmt/atr/atrcod004/atrcod00402m1/atrcod00402m1n {
+  0xCAFEBABE;
+  3; // minor version
+  45; // version
+
+  [] { // Constant Pool
+    ; // first element is empty
+    class #12; // #1 
+    class #6; // #2
+    Method #1 #4; // #3
+    NameAndType #14 #15; // #4
+    Utf8 "ConstantValue"; // #5
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcod004/atrcod00402m1/atrcod00402m1n"; //
+    Utf8 "Exceptions"; // #7
+    Utf8 "LineNumberTable"; // #8
+    Utf8 "SourceFile"; // #9
+    Utf8 "LocalVariables"; // #10
+    Utf8 "Code"; // #11 at 0x92
+    Utf8 "java/lang/Object"; // #12
+    Utf8 "attr003.jcod"; // #13
+    Utf8 "<init>"; // #14
+    Utf8 "()V"; // #15
+  } // Constant Pool
+
+  0x0001; // access
+  #2;// this_cpx
+  #1;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member at 0xD4
+      0x0001; // access
+      #14; // name_cpx
+      #15; // sig_cpx
+      [] {  // Attributes
+        Attr(#11) { // Code 
+          1; // max_stack
+          1; // max_locals
+/* right:
+          Bytes[5] {
+end right */
+// wrong:
+          Bytes[10] {
+// end wrong
+            0x2AB70003B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] {  // Attributes
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] {  // Attributes
+  } // Attributes
+}
+
+

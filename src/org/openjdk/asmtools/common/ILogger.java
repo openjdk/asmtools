@@ -6,14 +6,15 @@ import static java.lang.String.format;
 
 public interface ILogger {
 
-    // A logged message isn't attached to a position of a parsed file/
+    // A logged message isn't attached to a position of a parsed file
     int NOWHERE = Integer.MAX_VALUE;
     // Replacement for the tab found in an input
     CharSequence TAB_REPLACEMENT = "    ";
 
-    default void warning(int where, String id, Object... args) {
+    default String getResourceString(String id, Object... args) {
         throw new NotImplementedException();
     }
+    default void warning(int where, String id, Object... args) { throw new NotImplementedException(); }
 
     default void error(int where, String id, Object... args) {
         throw new NotImplementedException();
@@ -62,6 +63,7 @@ public interface ILogger {
     }
 
     ToolOutput.DualStreamToolOutput getOutputs();
+
     void setOutputs(ToolOutput.DualStreamToolOutput nwoutput);
 
     default ToolOutput getToolOutput() {
@@ -73,5 +75,4 @@ public interface ILogger {
     }
 
     void printException(Throwable throwable);
-
 }

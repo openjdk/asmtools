@@ -32,7 +32,7 @@ import org.openjdk.asmtools.util.ProductInfo;
  */
 public class Main {
 
-    public static final I18NResourceBundle i18n = I18NResourceBundle.getBundleForClass(Main.class);
+    public static final I18NResourceBundle sharedI18n = I18NResourceBundle.getBundleForClass(org.openjdk.asmtools.Main.class);
     public static final String VERSION_SWITCH="-version";
     public static final String STDIN_SWITCH="-";
     public static final String DIR_SWITCH="-d";
@@ -45,7 +45,7 @@ public class Main {
      */
     public static void main(String... args) {
         if (args.length == 0) {
-            usage(i18n.getString("main.error.no_arguments"), 1);
+            usage(sharedI18n.getString("main.error.no_arguments"), 1);
         }
         String cmd = args[0];
         if (cmd.equals("-?") || cmd.equals("-h") || cmd.equals("-help")) {
@@ -64,10 +64,8 @@ public class Main {
                 jcoder(newArgs);
             } else if (cmd.equals("jdec")) {
                 jdec(newArgs);
-            } else if (cmd.equals("jcdec")) {
-                jcdec(newArgs);
             } else {
-                usage(i18n.getString("main.error.unknown_tool", cmd), 1);
+                usage(sharedI18n.getString("main.error.unknown_tool", cmd), 1);
             }
         }
     }
@@ -79,7 +77,7 @@ public class Main {
      * @param exitCode - exit code to be returned by System.exit()
      */
     public static void usage(String msg, int exitCode) {
-        System.err.println(i18n.getString("main.usage", "asmtools.jar"));
+        System.err.println(sharedI18n.getString("main.usage", "asmtools.jar"));
         if (msg != null) {
             System.err.println(msg);
         }
@@ -98,13 +96,6 @@ public class Main {
      */
     public static void jasm(String... args) {
         org.openjdk.asmtools.jasm.Main.main(args);
-    }
-
-    /**
-     * Invokes jcdec main class with passed arguments
-     */
-    public static void jcdec(String... args) {
-        org.openjdk.asmtools.jcdec.Main.main(args);
     }
 
     /**

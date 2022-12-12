@@ -41,42 +41,52 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     private final Map<Integer, Set<Message>> container = new HashMap<>();
     private final List<String> fileContent = new ArrayList<>();
 
-    public CompilerLogger(ToolOutput.DualStreamToolOutput oser) {
-        super(oser);
+    /**
+     * @param programName the tool name
+     * @param cls         the environment class of the tool for which to obtain the resource bundle
+     * @param outerLog    the logger stream
+     */
+    public CompilerLogger(String programName, Class<?> cls, ToolOutput.DualStreamToolOutput outerLog) {
+        super(programName, cls, outerLog);
     }
 
     @Override
     public void warning(int where, String id, Object... args) {
         Message message = getResourceString(WARNING, id, args);
         if (message.notFound()) {
-            if (EMessageKind.isFromResourceBundle(id))
+            if (EMessageKind.isFromResourceBundle(id)) {
                 insert(NOWHERE, new Message(ERROR, "(I18NResourceBundle) The warning message '%s' not found", id));
-            else
-                message = new Message(WARNING, args.length == 0 ? id : format(id, args));
+            } else {
+                insert(where, new Message(WARNING, args.length == 0 ? id : format(id, args)));
+            }
+        } else {
+            insert(where, message);
         }
-        insert(where, message);
     }
 
     @Override
     public void error(int where, String id, Object... args) {
         Message message = getResourceString(ERROR, id, args);
         if (message.notFound()) {
-            if (EMessageKind.isFromResourceBundle(id))
+            if (EMessageKind.isFromResourceBundle(id)) {
                 insert(NOWHERE, new Message(ERROR, "(I18NResourceBundle) The error message '%s' not found", id));
-            else
-                message = new Message(ERROR, args.length == 0 ? id : format(id, args));
+            } else {
+                insert(where, new Message(ERROR, args.length == 0 ? id : format(id, args)));
+            }
+        } else {
+            insert(where, message);
         }
-        insert(where, message);
     }
 
     @Override
     public void info(String id, Object... args) {
         String message = getResourceString(id, args);
         if (message == null) {
-            if (EMessageKind.isFromResourceBundle(id))
+            if (EMessageKind.isFromResourceBundle(id)) {
                 printErrorLn("(I18NResourceBundle) The info message '%s' not found", id);
-            else
+            } else {
                 println(id, args);
+            }
         } else {
             println(message);
         }
@@ -120,19 +130,22 @@ public class CompilerLogger extends ToolLogger implements ILogger {
 
     /**
      * @param printTotals whether to print the total line: N warning(s), K error(s)
-     * @return 0 if there are no errors otherwise a numner of errors
+     * @return 0 if there are no errors otherwise a number of errors
      */
-    public int flush(boolean printTotals) {
+    public synchronized int flush(boolean printTotals) {
         if (noMessages()) return OK;
         int nErrors = 0, nWarnings = 0;
         List<Map.Entry<Integer, Set<Message>>> list = new ArrayList<>(container.entrySet());
         list.sort(Map.Entry.comparingByKey());
+        ToolOutput output = getOutputs().getSToolObject();
         for (Map.Entry<Integer, Set<Message>> entry : list) {
             int where = entry.getKey();
             Pair<Integer, Integer> filePosition = filePosition(where);
             for (Message msg : entry.getValue()) {
-                ToolOutput output = msg.kind() == ERROR ? getOutputs().getEToolObject() : getOutputs().getSToolObject();
-                nErrors += msg.kind() == ERROR ? 1 : 0;
+                if( msg.kind() == ERROR ) {
+                    output = getOutputs().getEToolObject();
+                    nErrors++;
+                }
                 nWarnings += msg.kind() == WARNING ? 1 : 0;
                 if (where == NOWHERE) {
                     // direct message isn't connected to a position in a scanned file
@@ -143,21 +156,24 @@ public class CompilerLogger extends ToolLogger implements ILogger {
                             msg.text()));
                     printAffectedSourceLine(output, filePosition);
                 }
-                output.flush();
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignore) {
-                }
             }
         }
-        if (printTotals && (nWarnings != 0 || nErrors != 0)) {
+        ToolOutput.DualStreamToolOutput totalOutput = (printTotals) ? getOutputs() : null;
+        if (printTotals) {
             if (nWarnings != 0)
-                getOutputs().printe(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : ""));
+                totalOutput.printe(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : "\n"));
             if (nErrors != 0)
-                getOutputs().printlne(format("%d error(s)", nErrors));
-            getOutputs().flush();
+                totalOutput.printlne(format("%d error(s)", nErrors));
         }
-        container.clear();
+
+        synchronized (output) {
+            output.flush();
+            if( totalOutput != null ) {
+                totalOutput.flush();
+            }
+            container.clear();
+        }
+
         return nErrors;
     }
 
@@ -177,13 +193,14 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     private void insert(int where, Message message) {
         if (where != NOWHERE && fileContent.isEmpty()) {
             addToContainer(NOWHERE,
-                    new Message(ERROR, EMessageFormatter.LONG.apply(ERROR,
+                    new Message(ERROR, EMessageFormatter.LONG.apply(ERROR, this.getProgramName(),
                             "Content of the file %s not found", getSimpleInputFileName())));
             where = NOWHERE;
         }
         // message format
-        addToContainer(where, new Message(message.kind(), where == NOWHERE ? EMessageFormatter.VERBOSE.apply(message) :
-                EMessageFormatter.LONG.apply(message)));
+        addToContainer(where, new Message(message.kind(), where == NOWHERE ?
+                EMessageFormatter.VERBOSE.apply(this.getProgramName(), message) :
+                EMessageFormatter.LONG.apply(this.getProgramName(), message)));
     }
 
     private void addToContainer(int where, Message msg) {

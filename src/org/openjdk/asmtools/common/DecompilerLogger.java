@@ -26,13 +26,24 @@ import static java.lang.String.format;
 
 public class DecompilerLogger extends ToolLogger implements ILogger {
 
-    public DecompilerLogger(ToolOutput.DualStreamToolOutput oser) {
-        super(oser);
+    /**
+     * @param programName the tool name
+     * @param cls         the environment class of the tool for which to obtain the resource bundle
+     * @param outerLog    the logger stream
+     */
+    public DecompilerLogger(String programName, Class cls, ToolOutput.DualStreamToolOutput outerLog) {
+        super(programName, cls, outerLog);
     }
 
     @Override
     public void printErrorLn(String format, Object... args) {
         super.printErrorLn((args == null || args.length == 0) ? format : format(format, args));
+    }
+
+    @Override
+    public void error(Throwable exception) {
+        super.printErrorLn(ToolLogger.EMessageFormatter.VERBOSE.apply(super.getProgramName(),
+                new ToolLogger.Message(EMessageKind.ERROR, super.getProgramName(), exception.getMessage())));
     }
 
     @Override
@@ -43,10 +54,10 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
                 printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR,
                         "(I18NResourceBundle) The warning message '%s' not found", id));
             } else {
-                println(EMessageFormatter.LONG.apply(EMessageKind.WARNING, format(id, args)));
+                println(EMessageFormatter.LONG.apply(EMessageKind.WARNING, super.getProgramName(), format(id, args)));
             }
         } else {
-            println(EMessageFormatter.LONG.apply(EMessageKind.WARNING, message));
+            println(EMessageFormatter.LONG.apply(EMessageKind.WARNING, super.getProgramName(), message));
         }
     }
 
@@ -56,12 +67,13 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
         if (message == null) {
             if (EMessageKind.isFromResourceBundle(id)) {
                 printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR,
+                        super.getProgramName(),
                         "(I18NResourceBundle) The error message '%s' not found", id));
             } else {
-                printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR, format(id, args)));
+                printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR, super.getProgramName(), format(id, args)));
             }
         } else {
-            printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR, message));
+            printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR, super.getProgramName(), message));
         }
     }
 
@@ -70,7 +82,7 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
         String message = getResourceString(id, args);
         if (message == null) {
             if (EMessageKind.isFromResourceBundle(id)) {
-                printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR,
+                printErrorLn(EMessageFormatter.VERBOSE.apply(EMessageKind.ERROR, super.getProgramName(),
                         "(I18NResourceBundle) The error message '%s' not found", id));
             } else {
                 println(id, args);

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
@@ -82,10 +83,8 @@ public class Main extends JasmTool {
 
     public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
-        for(ToolInput toolInput: toolInputs){
-            fileList.add(toolInput);
-        }
-        parseArgs(new String[0]);
+        Collections.addAll(fileList, toolInputs);
+        parseArgs();
     }
 
     /**
@@ -195,9 +194,8 @@ public class Main extends JasmTool {
                         System.exit(OK);
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
-                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> {
-                        this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
-                    }
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
+                            this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
                     case "-h", "-help" -> {
                         usage();
                         System.exit(OK);
@@ -252,10 +250,7 @@ public class Main extends JasmTool {
                             }
                         }
                     }
-                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> {
-                        addStdIn();
-                        break;
-                    }
+                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> addStdIn();
                     default -> {
                         if (arg.startsWith("-")) {
                             environment.error("err.invalid_option", arg);

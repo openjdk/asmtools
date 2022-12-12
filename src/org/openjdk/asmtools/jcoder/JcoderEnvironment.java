@@ -22,15 +22,12 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.CompilerLogger;
-import org.openjdk.asmtools.common.EMessageKind;
-import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.NotImplementedException;
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
-import org.openjdk.asmtools.util.I18NResourceBundle;
+import org.openjdk.asmtools.common.*;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 
 import static org.openjdk.asmtools.common.CompilerConstants.OFFSETBITS;
@@ -39,8 +36,11 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
 
     InputFile inputFile;
 
-    private JcoderEnvironment(Builder<JcoderEnvironment, CompilerLogger> builder, I18NResourceBundle i18n) {
-        super(builder, i18n);
+    /**
+     * @param builder the jcoder environment builder
+     */
+    private JcoderEnvironment(Builder<JcoderEnvironment, CompilerLogger> builder) {
+        super(builder);
     }
 
     @Override
@@ -112,12 +112,12 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
     static class JcoderBuilder extends Builder<JcoderEnvironment, CompilerLogger> {
 
         public JcoderBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
-            super("jcoder", toolOutput, new CompilerLogger(log));
+            super(toolOutput, new CompilerLogger("jcoder", JcoderEnvironment.class, log));
         }
 
         @Override
         public JcoderEnvironment build() {
-            return new JcoderEnvironment(this, I18NResourceBundle.getBundleForClass(this.getClass()));
+            return new JcoderEnvironment(this);
         }
     }
 
@@ -128,12 +128,12 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
         static final int LINEINC = 1 << OFFSETBITS;
         InputStream in;
         int pos;
-        private int chpos;
+        private int chPos;
         private int pushBack = -1;
 
         InputFile(DataInputStream dataInputStream) throws IOException {
             this.in = new BufferedInputStream(dataInputStream);
-            chpos = LINEINC;
+            chPos = LINEINC;
         }
 
         public void close() throws IOException {
@@ -141,8 +141,8 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
         }
 
         public int read() throws IOException {
-            pos = chpos;
-            chpos += OFFSETINC;
+            pos = chPos;
+            chPos += OFFSETINC;
 
             int c = pushBack;
             if (c == -1) {
@@ -164,14 +164,14 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
                         return '\\';
                     }
                     // we have a unicode sequence
-                    chpos += OFFSETINC;
+                    chPos += OFFSETINC;
                     while ((c = in.read()) == 'u') {
-                        chpos += OFFSETINC;
+                        chPos += OFFSETINC;
                     }
 
                     // unicode escape sequence
                     int d = 0;
-                    for (int i = 0; i < 4; i++, chpos += OFFSETINC, c = in.read()) {
+                    for (int i = 0; i < 4; i++, chPos += OFFSETINC, c = in.read()) {
                         switch (c) {
                             case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> d = (d << 4) + c - '0';
                             case 'a', 'b', 'c', 'd', 'e', 'f' -> d = (d << 4) + 10 + c - 'a';
@@ -187,16 +187,16 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
                     return d;
 
                 case '\n':
-                    chpos += LINEINC;
+                    chPos += LINEINC;
                     return '\n';
 
                 case '\r':
                     if ((c = in.read()) != '\n') {
                         pushBack = c;
                     } else {
-                        chpos += OFFSETINC;
+                        chPos += OFFSETINC;
                     }
-                    chpos += LINEINC;
+                    chPos += LINEINC;
                     return '\n';
 
                 default:

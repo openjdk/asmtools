@@ -23,14 +23,11 @@
 package org.openjdk.asmtools.jasm;
 
 
-import org.openjdk.asmtools.common.ToolLogger;
 import org.openjdk.asmtools.common.structure.StackMap;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import static org.openjdk.asmtools.common.EMessageKind.ERROR;
-import static org.openjdk.asmtools.common.ToolLogger.getResourceString;
 import static org.openjdk.asmtools.common.structure.StackMap.FrameType.SAME_FRAME;
 
 /**
@@ -66,7 +63,8 @@ public class StackMapData implements DataWriter {
 
     StackMapData setStackFrameType(String stackFrameType) {
         // TODO: check the case stackFrameType == null && "xxx" && that pc is valid
-        Objects.requireNonNull(stackFrameType, () -> getResourceString( "err.obj.is.null", "String stackFrameType"));
+        Objects.requireNonNull(stackFrameType,
+                () -> this.environment.getLogger().getResourceString("err.obj.is.null", "String stackFrameType"));
         this.stackFrameType = stackFrameType;
         this.frameTypeTag = StackMap.getFrameTypeTag(stackFrameType);
         if (!StackMap.isValidFrameType(this.frameTypeTag)) {

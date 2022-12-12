@@ -192,7 +192,8 @@ public class ClassData extends MemberData<ClassData> {
             case ATT_SourceFile -> {
                 // Read SourceFile Attr
                 if (attributeLength != 2) {
-                    throw new FormatError("err.invalid.attribute.length", "SourceFile_attribute", attributeLength);
+                    throw new FormatError(environment.getLogger(),
+                            "err.invalid.attribute.length", "SourceFile_attribute", attributeLength);
                 }
                 if (source_cpx != 0) {
                     environment.warning("warn.one.attribute.required", "SourceFile", "ClassFile");
@@ -203,7 +204,8 @@ public class ClassData extends MemberData<ClassData> {
                 // Read InnerClasses Attr
                 int num1 = in.readUnsignedShort();
                 if (2 + num1 * 8 != attributeLength) {
-                    throw new FormatError("err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
+                    throw new FormatError(environment.getLogger(),
+                            "err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
                 }
                 innerClasses = new ArrayList<>(num1);
                 for (int j = 0; j < num1; j++) {
@@ -288,7 +290,7 @@ public class ClassData extends MemberData<ClassData> {
             //
             environment.traceln("\n<< Reading is done >>");
         } catch (EOFException eofException) {
-            throw new FormatError("err.eof");
+            throw new FormatError(environment.getLogger(),"err.eof");
         }
     }
 
