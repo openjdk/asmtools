@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
-import static org.openjdk.asmtools.jdis.StackMapData.EDataType.STACKMAPTABLE;
+import static org.openjdk.asmtools.jdis.StackMapData.EAttributeType.STACKMAPTABLE;
 
 /**
  * instruction attributes

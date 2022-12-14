@@ -35,28 +35,34 @@ import static org.openjdk.asmtools.asmutils.StringUtils.mapToHexString;
  * represents one entry of StackMap attribute
  */
 class StackMapData extends MemberData<CodeData> {
-
-    static int prevFramePC = 0;
-
-    EDataType type;
+    EAttributeType type;
     StackMap.FrameType stackFrameType = null;
-    int start_pc;
+    int frame_pc;
+    int offset;
     int[] lockMap;
     int[] stackMap;
 
-    public StackMapData(EDataType type, CodeData code, DataInputStream in) throws IOException {
+    /**
+     * @param type          either Implicit stack map attribute or the StackMapTable attribute
+     * @param firstStackMap is it an entries[0] in the stack_map_frame structure? i.e. Does the StackMapData describe
+     *                      the second stack map frame of the method?
+     * @param prevFrame_pc  the bytecode offset of the previous entry (entries[current_index-1])
+     * @param code          the code attribute where this attribute is located
+     * @param in            the input stream
+     * @throws IOException  the exception if something went wrong
+     */
+    public StackMapData(EAttributeType type, boolean firstStackMap, int prevFrame_pc, CodeData code, DataInputStream in) throws IOException {
         super(code);
         this.type = type;
-        if (type == EDataType.STACKMAP) {
-            start_pc = in.readUnsignedShort();
+        if (type == EAttributeType.STACKMAP) {
+            frame_pc = in.readUnsignedShort();
             lockMap = readMap(in);
             stackMap = readMap(in);
             environment.traceln(" stack_map_entry:pc=%d numloc=%s  numstack=%s",
-                    start_pc, mapToHexString(lockMap), mapToHexString(stackMap));
+                    frame_pc, mapToHexString(lockMap), mapToHexString(stackMap));
         } else { // if (type == EDataType.STACKMAPTABLE)
             int ft_val = in.readUnsignedByte();
             StackMap.FrameType frame_type = StackMap.stackMapFrameType(ft_val);
-            int offset = 0;
             switch (frame_type) {
                 case SAME_FRAME -> {
                     // verificationType is same_frame;
@@ -105,9 +111,19 @@ class StackMapData extends MemberData<CodeData> {
                 default -> environment.traceln("incorrect frame_type argument");
             }
             stackFrameType = frame_type;
-            start_pc = prevFramePC == 0 ? offset : prevFramePC + offset + 1;
-            prevFramePC = start_pc;
+            if( prevFrame_pc == 0 && firstStackMap) {
+                frame_pc = offset;
+            } else {
+                frame_pc = prevFrame_pc + offset + 1;
+            }
         }
+    }
+
+    /**
+     * @return the bytecode offset at which a stack map frame applies
+     */
+    public int getFramePC() {
+        return frame_pc;
     }
 
     private int[] readMap(DataInputStream in) throws IOException {
@@ -137,5 +153,23 @@ class StackMapData extends MemberData<CodeData> {
         return map;
     }
 
-    enum EDataType {STACKMAP, STACKMAPTABLE}
+    /*
+     *  In a class file whose version number is 50.0 or above, if a method's Code attribute does not have a StackMapTable attribute,
+     *  it has an implicit stack map attribute (chapter 4.10.1). This implicit stack map attribute is equivalent to a StackMapTable
+     *  attribute with number_of_entries equal to zero.
+     */
+    enum EAttributeType {
+        // Implicit stack map attribute
+        // This implicit stack map attribute is equivalent to a StackMapTable attribute with number_of_entries equal to zero.
+        STACKMAP("ImplicitStackMap"),
+        // The StackMapTable attribute
+        STACKMAPTABLE("StackMapTable");
+        private final String name;
+        EAttributeType(String name) {
+            this.name = name;
+        }
+        public String getName() {
+            return name;
+        }
+    }
 }
