@@ -152,25 +152,16 @@ public class CodeData extends MemberData<MethodData> {
         }
     }
 
-    private void readStackMap(DataInputStream in) throws IOException {
+    private void readStackMapEntity(StackMapData.EAttributeType type, DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
         int stack_map_len = in.readUnsignedShort();
-        environment.traceln("CodeAttr:  Stack_Map: attrLength=%d num=%d", len, stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
+        environment.traceln("CodeAttr:  %s: attrLength=%d num=%d", type.getName(), len, stack_map_len);
+        int prevFrame_pc = 0;
         for (int k = 0; k < stack_map_len; k++) {
-            stack_map.add(new StackMapData(StackMapData.EDataType.STACKMAP, this, in));
-        }
-    }
-
-    private void readStackMapTable(DataInputStream in) throws IOException {
-        int len = in.readInt(); // attr_length
-        int stack_map_len = in.readUnsignedShort();
-        environment.traceln("CodeAttr:  Stack_Map_Table: attrLength=%d num=%d", len, stack_map_len);
-        stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
-        for (int k = 0; k < stack_map_len; k++) {
-            stack_map.add(new StackMapData(StackMapData.EDataType.STACKMAPTABLE, this, in));
+            StackMapData stackMapData =  new StackMapData(type, k == 0, prevFrame_pc, this, in);
+            prevFrame_pc = stackMapData.getFramePC();
+            stack_map.add(stackMapData);
         }
     }
 
@@ -227,8 +218,8 @@ public class CodeData extends MemberData<MethodData> {
                 switch (attrTag) {
                     case ATT_LineNumberTable -> readLineNumTable(in);
                     case ATT_LocalVariableTable -> readLocVarTable(in);
-                    case ATT_StackMap -> readStackMap(in);
-                    case ATT_StackMapTable -> readStackMapTable(in);
+                    case ATT_StackMap -> readStackMapEntity(StackMapData.EAttributeType.STACKMAP, in);
+                    case ATT_StackMapTable -> readStackMapEntity(StackMapData.EAttributeType.STACKMAPTABLE, in);
                     case ATT_RuntimeVisibleTypeAnnotations, ATT_RuntimeInvisibleTypeAnnotations ->
                             readTypeAnnotations(in, attrTag == ATT_RuntimeInvisibleTypeAnnotations);
                     default -> {
@@ -308,7 +299,7 @@ public class CodeData extends MemberData<MethodData> {
 
     private void loadStackMap() {
         for (StackMapData entry : stack_map) {
-            getInstructionAttribute(entry.start_pc).stackMapEntry = entry;
+            getInstructionAttribute(entry.frame_pc).stackMapEntry = entry;
         }
     }
 
@@ -452,7 +443,7 @@ public class CodeData extends MemberData<MethodData> {
                 List<Integer> breakPositions = new ArrayList<>();
                 if (opcode == Opcode.opc_ldc) {
                     opLength = 2;
-                    breakPositions.addAll(Set.of(3));
+                    breakPositions.add(3);
                     index = getUByte(pc + 1);
                 } else if (opcode == Opcode.opc_invokedynamic) {
                     opLength = 5;
@@ -460,7 +451,7 @@ public class CodeData extends MemberData<MethodData> {
                     index = getUShort(pc + 1); // getUbyte(pc + 3); // getUbyte(pc + 4); // reserved bytes
                 } else {    // opc_ldc*_w
                     opLength = 3;
-                    breakPositions.addAll(Set.of(3));
+                    breakPositions.add(3);
                     index = getUShort(pc + 1);
                 }
                 pool.setPrintTAG(true);
