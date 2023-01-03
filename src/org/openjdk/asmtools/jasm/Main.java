@@ -22,9 +22,15 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
+import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
-import org.openjdk.asmtools.common.ToolInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -68,12 +74,12 @@ public class Main extends JasmTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, String... argv) {
         super(toolOutput, log);
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
         if (toolInput!=null){
             fileList.add(toolInput);
@@ -81,7 +87,7 @@ public class Main extends JasmTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         Collections.addAll(fileList, toolInputs);
         parseArgs();
@@ -95,7 +101,7 @@ public class Main extends JasmTool {
      */
     @Deprecated
     public Main(PrintWriter ref, String toolName) {
-        super(new ToolOutput.PrintWriterOutput(ref));
+        super(new PrintWriterOutput(ref));
     }
 
     /**
@@ -111,7 +117,7 @@ public class Main extends JasmTool {
 
     // jasm entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), new ToolOutput.SingleDualOutputStreamOutput(), argv);
+        Main compiler = new Main(new EscapedPrintStreamOutput(System.out), new SingleDualOutputStreamOutput(), argv);
         System.exit(compiler.compile());
     }
 
@@ -195,7 +201,7 @@ public class Main extends JasmTool {
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
                     case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
-                            this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                            this.environment.setOutputs(new DualOutputStreamOutput());
                     case "-h", "-help" -> {
                         usage();
                         System.exit(OK);
@@ -257,7 +263,7 @@ public class Main extends JasmTool {
                             usage();
                             throw new IllegalArgumentException();
                         } else {
-                            fileList.add(new ToolInput.FileInput(argv[i]));
+                            fileList.add(new FileInput(argv[i]));
                         }
                     }
                 }

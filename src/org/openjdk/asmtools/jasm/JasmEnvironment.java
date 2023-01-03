@@ -23,6 +23,9 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.*;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -141,7 +144,7 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
 
     static class JasmBuilder extends Environment.Builder<JasmEnvironment, CompilerLogger> {
 
-        public JasmBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+        public JasmBuilder(ToolOutput toolOutput, DualStreamToolOutput logger) {
             super(toolOutput, new CompilerLogger("jasm", JasmEnvironment.class, logger));
         }
 

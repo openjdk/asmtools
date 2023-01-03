@@ -22,6 +22,10 @@
  */
 package org.openjdk.asmtools.common;
 
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -115,12 +119,12 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     }
 
     @Override
-    public ToolOutput.DualStreamToolOutput getOutputs() {
+    public DualStreamToolOutput getOutputs() {
         return getLogger().getOutputs();
     }
 
     @Override
-    public void setOutputs(ToolOutput.DualStreamToolOutput nw) {
+    public void setOutputs(DualStreamToolOutput nw) {
         getLogger().setOutputs(nw);
     }
 

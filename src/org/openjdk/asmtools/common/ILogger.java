@@ -1,8 +1,9 @@
 package org.openjdk.asmtools.common;
 
-import java.io.PrintWriter;
-
 import static java.lang.String.format;
+
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 public interface ILogger {
 
@@ -62,9 +63,9 @@ public interface ILogger {
         getOutputs().prints(ch);
     }
 
-    ToolOutput.DualStreamToolOutput getOutputs();
+    DualStreamToolOutput getOutputs();
 
-    void setOutputs(ToolOutput.DualStreamToolOutput nwoutput);
+    void setOutputs(DualStreamToolOutput nwoutput);
 
     default ToolOutput getToolOutput() {
         throw new NotImplementedException("implement wisely!");

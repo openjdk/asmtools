@@ -22,8 +22,13 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
+import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -55,11 +60,11 @@ public class Main extends JcoderTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, String... argv) {
         this(toolOutput, log, null, argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
         if (toolInput!=null){
             fileList.add(toolInput);
@@ -67,7 +72,7 @@ public class Main extends JcoderTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         Collections.addAll(fileList, toolInputs);
         parseArgs();
@@ -81,7 +86,7 @@ public class Main extends JcoderTool {
      */
     @Deprecated
     public Main(PrintWriter ref, String toolName) {
-        super(new ToolOutput.PrintWriterOutput(ref));
+        super(new PrintWriterOutput(ref));
     }
 
     /**
@@ -97,7 +102,7 @@ public class Main extends JcoderTool {
 
     // jcoder entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
+        Main compiler = new Main(new EscapedPrintStreamOutput(System.out), argv);
         System.exit(compiler.compile());
     }
 
@@ -160,7 +165,7 @@ public class Main extends JcoderTool {
                         setTraceFlag(true);
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
-                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> environment.setOutputs(new DualOutputStreamOutput());
                     case "-m" -> {
                         if ((i + 1) >= argv.length) {
                             environment.error("err.m_requires_macro");
@@ -200,7 +205,7 @@ public class Main extends JcoderTool {
                             usage();
                             throw new IllegalArgumentException();
                         } else {
-                            fileList.add(new ToolInput.FileInput(argv[i]));
+                            fileList.add(new FileInput(argv[i]));
                         }
                     }
                 }

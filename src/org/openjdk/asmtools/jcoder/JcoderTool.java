@@ -23,20 +23,22 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
     protected JcoderTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
+        super(toolOutput, new SingleDualOutputStreamOutput());
     }
 
-    protected JcoderTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+    protected JcoderTool(ToolOutput toolOutput, DualStreamToolOutput logger) {
         super(toolOutput, logger);
     }
 
     @Override
-    public JcoderEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+    public JcoderEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput log) {
         JcoderEnvironment.JcoderBuilder builder = new JcoderEnvironment.JcoderBuilder(toolOutput, log);
         return builder.build();
     }
