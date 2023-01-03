@@ -24,7 +24,8 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 public class JdisEnvironment extends Environment<DecompilerLogger> {
 
@@ -42,7 +43,7 @@ public class JdisEnvironment extends Environment<DecompilerLogger> {
 
     static class JdisBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
 
-        public JdisBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+        public JdisBuilder(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
             super(toolOutput, new DecompilerLogger("jdis", JdisEnvironment.class, outerLog));
         }
 

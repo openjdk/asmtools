@@ -23,6 +23,9 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.*;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -111,7 +114,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
 
     static class JcoderBuilder extends Builder<JcoderEnvironment, CompilerLogger> {
 
-        public JcoderBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+        public JcoderBuilder(ToolOutput toolOutput, DualStreamToolOutput log) {
             super(toolOutput, new CompilerLogger("jcoder", JcoderEnvironment.class, log));
         }
 

@@ -23,21 +23,23 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.jdis.JdisEnvironment.JdisBuilder;
 
 public abstract class JdisTool extends Tool<JdisEnvironment> {
 
-    protected JdisTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+    protected JdisTool(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
         super(toolOutput, outerLog);
     }
 
     protected JdisTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
+        super(toolOutput, new SingleDualOutputStreamOutput());
     }
 
     @Override
-    public JdisEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+    public JdisEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
         JdisBuilder builder = new JdisBuilder(toolOutput, outerLog);
         return builder.build();
     }

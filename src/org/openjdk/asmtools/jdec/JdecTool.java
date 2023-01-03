@@ -23,26 +23,29 @@
 package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.PrintStream;
 
 public abstract class JdecTool extends Tool<JdecEnvironment> {
 
-    protected JdecTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+    protected JdecTool(ToolOutput toolOutput, DualStreamToolOutput log) {
         super(toolOutput, log);
     }
 
     protected JdecTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
+        super(toolOutput, new SingleDualOutputStreamOutput());
     }
 
     protected JdecTool(PrintStream toolOutput) {
-        this(new ToolOutput.EscapedPrintStreamOutput(toolOutput));
+        this(new EscapedPrintStreamOutput(toolOutput));
     }
 
     @Override
-    public JdecEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+    public JdecEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput log) {
         JdecEnvironment.JDecBuilder builder = new JdecEnvironment.JDecBuilder(toolOutput, log);
         return builder.build();
     }

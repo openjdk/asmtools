@@ -24,7 +24,8 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import static java.lang.String.format;
 
@@ -75,7 +76,7 @@ public class JdecEnvironment extends Environment<DecompilerLogger> {
 
     static class JDecBuilder extends Builder<JdecEnvironment, DecompilerLogger> {
 
-        public JDecBuilder(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log) {
+        public JDecBuilder(ToolOutput toolOutput, DualStreamToolOutput log) {
             super(toolOutput, new DecompilerLogger("jdec", JdecEnvironment.class, log));
         }
 

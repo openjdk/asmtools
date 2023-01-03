@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.common;
 
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.io.IOException;
@@ -62,7 +64,7 @@ public class ToolLogger implements ILogger {
 
     private ToolResources toolResources;
 
-    ToolOutput.DualStreamToolOutput outerLog;
+    DualStreamToolOutput outerLog;
     // Input file name is needed for logging purposes
     private String inputFileName;
     private String simpleInputFileName;
@@ -76,7 +78,7 @@ public class ToolLogger implements ILogger {
      * @param cls         the environment class of the tool for which to obtain the resource bundle
      * @param outerLog    the logger stream
      */
-    public ToolLogger(String programName, Class cls, ToolOutput.DualStreamToolOutput outerLog) {
+    public ToolLogger(String programName, Class cls, DualStreamToolOutput outerLog) {
         // Set Resource bundle for the tool
         this.toolResources = new ToolResources(programName, cls);
         this.programName = programName;
@@ -121,12 +123,12 @@ public class ToolLogger implements ILogger {
     }
 
     @Override
-    public ToolOutput.DualStreamToolOutput getOutputs() {
+    public DualStreamToolOutput getOutputs() {
         return outerLog;
     }
 
     @Override
-    public void setOutputs(ToolOutput.DualStreamToolOutput nwoutput) {
+    public void setOutputs(DualStreamToolOutput nwoutput) {
         this.outerLog = nwoutput;
     }
 

@@ -25,11 +25,10 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.asmutils.Range;
 import org.openjdk.asmtools.asmutils.StringUtils;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.function.Function;
 
