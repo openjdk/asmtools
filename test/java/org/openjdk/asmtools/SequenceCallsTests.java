@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
 package org.openjdk.asmtools;
 
 
@@ -71,15 +93,46 @@ public class SequenceCallsTests {
             List<String> jcodFiles = cases.get("jcoder").get(index).stream().
                     map(f -> resourceDir + File.separator + f).collect(Collectors.toList());
             if (index % 2 == 0) {
-                assertAll(() -> sequenceCompiler.jasm(jasmFiles),
-                        () -> sequenceCompiler.jcoder(jcodFiles));
+                assertAll(() -> sequenceCompiler.reflectionJasm(jasmFiles),
+                        () -> sequenceCompiler.reflectionJcoder(jcodFiles));
             } else {
-                assertAll(() -> sequenceCompiler.jcoder(jcodFiles),
-                        () -> sequenceCompiler.jasm(jasmFiles));
+                assertAll(() -> sequenceCompiler.reflectionJcoder(jcodFiles),
+                        () -> sequenceCompiler.reflectionJasm(jasmFiles));
             }
         }
     }
 
+    /**
+     * This is the test for CODETOOLS-7903401 (https://bugs.openjdk.org/browse/CODETOOLS-7903401)
+     * jtreg fails if set of jdk tests process jasm,jdis files with defects
+     *
+     * jib make -- test TEST=test/hotspot/jtreg/runtime
+     * Passed: runtime/classFileParserBug/BadInitMethod.java
+     * nonvoidinit.jasm (29:20) Warning: <init> method cannot be an interface method
+     *     public abstract Method "<init>":"()I";
+     *                     ^
+     * Passed: runtime/cds/SharedBaseAddress.java#id1
+     * Passed: runtime/classFileParserBug/FakeMethodAcc.java
+     * switch from jcoder to jcoder
+     * 1 warning(s)
+     * jcoder- ERROR: (I18NResourceBundle) The warning message 'warn.init.in_int' not found
+     * 1 error(s)
+     * --------------------------------------------------
+     * TEST: runtime/classFileParserBug/InitInInterface.java
+     * TEST JDK: /Users/lkuskov/dev/openjdk/build/macosx-x64/images/jdk
+     *
+     * ACTION: compile -- Failed. jasm failed
+     * REASON: User specified action: run compile nonvoidinit.jasm voidinit.jasm
+     * TIME: 0.257 seconds
+     * messages:
+     * command: compile /Users/lkuskov/dev/openjdk/test/hotspot/jtreg/runtime/classFileParserBug/nonvoidinit.jasm
+     *          /Users/lkuskov/dev/openjdk/test/hotspot/jtreg/runtime/classFileParserBug/voidinit.jasm
+     * reason: User specified action: run compile nonvoidinit.jasm voidinit.jasm
+     *
+     * The jtreg uses a single instance of asmtool during a test run that leads to error in switching between jasm
+     * and jcoder environment. I.e. the environment is set to Jcod while jasm is processing sources
+     * and therefore jasm can't find jasm-specific message in Jcoder environment.
+     */
     @Test
     public void testCompilersWithConcurrency() throws InterruptedException {
         int numberOfThreads = cases.get("jasm").size();
@@ -101,6 +154,6 @@ public class SequenceCallsTests {
         //
         assertEquals(6,
                 errors.stream().mapToInt(e -> ((MultipleFailuresError) e).getFailures().size()).sum(),
-                "Expected 4 missing & 2 wrong format files.");
+                "Expected 4 missing plus 2 wrong format files.");
     }
 }

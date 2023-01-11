@@ -536,7 +536,7 @@ public interface ToolOutput {
 
         @Override
         public void printlns(String line) {
-            log.append(line).append("\n");
+            log.append(line).append(System.lineSeparator());
         }
 
         @Override
@@ -556,7 +556,7 @@ public interface ToolOutput {
 
         @Override
         public void printlne(String line) {
-            log.append(line).append("\n");
+            log.append(line).append(System.lineSeparator());
         }
 
         @Override
@@ -591,4 +591,3 @@ public interface ToolOutput {
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 }
-
