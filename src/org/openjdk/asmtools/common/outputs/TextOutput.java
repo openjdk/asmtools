@@ -41,7 +41,7 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public String toString() {
-        return outputs.stream().map(a -> a.toString()).collect(Collectors.joining("\n"));
+        return outputs.stream().map(a -> a.toString()).collect(Collectors.joining(System.lineSeparator()));
     }
 
     @Override

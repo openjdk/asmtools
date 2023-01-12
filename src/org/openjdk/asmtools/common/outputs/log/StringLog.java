@@ -35,7 +35,7 @@ public class StringLog extends NamedDualStreamToolOutput {
 
     @Override
     public void printlns(String line) {
-        log.append(line).append("\n");
+        log.append(line).append(System.lineSeparator());
     }
 
     @Override
@@ -55,7 +55,7 @@ public class StringLog extends NamedDualStreamToolOutput {
 
     @Override
     public void printlne(String line) {
-        log.append(line).append("\n");
+        log.append(line).append(System.lineSeparator());
     }
 
     @Override

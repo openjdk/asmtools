@@ -43,7 +43,7 @@ public class ByteOutput extends NamedToolOutput {
 
     @Override
     public String toString() {
-        return outputs.stream().map(a -> a.toString()).collect(Collectors.joining("\n"));
+        return outputs.stream().map(a -> a.toString()).collect(Collectors.joining(System.lineSeparator()));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ByteOutput extends NamedToolOutput {
     @Override
     public void printlns(String line) {
         try {
-            currentClass.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+            currentClass.write((line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
