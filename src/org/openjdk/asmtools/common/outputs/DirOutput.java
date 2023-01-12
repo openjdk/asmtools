@@ -78,10 +78,8 @@ public class DirOutput extends NamedToolOutput {
             outfile = new File(fqn + fileExtension.orElseGet(() -> ""));
         } else {
             environment.traceln("writing -d " + dir.getPath());
-            if (!fileSeparator.equals("/")) {
-                fqn = fqn.replace("/", fileSeparator);
-            }
-            outfile = new File(dir, fqn + fileExtension.orElseGet(() -> ""));
+            fqn = fqn.replace("/", fileSeparator);
+             outfile = new File(dir, fqn + fileExtension.orElseGet(() -> ""));
             File outDir = new File(outfile.getParent());
             if (!outDir.exists() && !outDir.mkdirs()) {
                 environment.error("err.cannot.write", outDir.getPath());
