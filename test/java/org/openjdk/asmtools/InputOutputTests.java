@@ -2,8 +2,12 @@ package org.openjdk.asmtools;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.inputs.ByteInput;
+import org.openjdk.asmtools.common.inputs.StringInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.ByteOutput;
+import org.openjdk.asmtools.common.outputs.log.StringLog;
+import org.openjdk.asmtools.common.outputs.TextOutput;
 import org.openjdk.asmtools.jdis.Options;
 
 import java.io.File;
@@ -13,28 +17,28 @@ import java.nio.file.Files;
 public class InputOutputTests extends ClassPathClassWork {
 
     public static class LogAndReturn {
-        final ToolOutput.StringLog log;
+        final StringLog log;
         final int result;
 
-        public LogAndReturn(ToolOutput.StringLog log, int result) {
+        public LogAndReturn(StringLog log, int result) {
             this.log = log;
             this.result = result;
         }
     }
 
     public static class LogAndTextResults extends LogAndReturn {
-        final ToolOutput.TextOutput output;
+        final TextOutput output;
 
-        public LogAndTextResults(ToolOutput.TextOutput output, ToolOutput.StringLog log, int result) {
+        public LogAndTextResults(TextOutput output, StringLog log, int result) {
             super(log, result);
             this.output = output;
         }
     }
 
     public static class LogAndBinResults extends LogAndReturn {
-        final ToolOutput.ByteOutput output;
+        final ByteOutput output;
 
-        public LogAndBinResults(ToolOutput.ByteOutput output, ToolOutput.StringLog log, int result) {
+        public LogAndBinResults(ByteOutput output, StringLog log, int result) {
             super(log, result);
             this.output = output;
         }
@@ -43,10 +47,10 @@ public class InputOutputTests extends ClassPathClassWork {
     public LogAndTextResults jdec(boolean g, byte[]... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];
         for (int i = 0; i < clazz.length; i++) {
-            originalFiles[i] = new ToolInput.ByteInput(clazz[i]);
+            originalFiles[i] = new ByteInput(clazz[i]);
         }
-        ToolOutput.TextOutput decodedFiles = new ToolOutput.TextOutput();
-        ToolOutput.StringLog decodeLog = new ToolOutput.StringLog();
+        TextOutput decodedFiles = new TextOutput();
+        StringLog decodeLog = new StringLog();
         org.openjdk.asmtools.jdec.Main jdec = new org.openjdk.asmtools.jdec.Main(decodedFiles, decodeLog, originalFiles);
         jdec.setVerboseFlag(true);
         jdec.setTraceFlag(true);
@@ -60,10 +64,10 @@ public class InputOutputTests extends ClassPathClassWork {
     public LogAndBinResults jcod(String... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];
         for (int i = 0; i < clazz.length; i++) {
-            originalFiles[i] = new ToolInput.ByteInput(clazz[i]);
+            originalFiles[i] = new StringInput(clazz[i]);
         }
-        ToolOutput.ByteOutput encodedFiles = new ToolOutput.ByteOutput();
-        ToolOutput.StringLog encodeLog = new ToolOutput.StringLog();
+        ByteOutput encodedFiles = new ByteOutput();
+        StringLog encodeLog = new StringLog();
         org.openjdk.asmtools.jcoder.Main jcod = new org.openjdk.asmtools.jcoder.Main(encodedFiles, encodeLog, originalFiles);
         jcod.setVerboseFlag(true);
         jcod.setTraceFlag(true);
@@ -74,10 +78,10 @@ public class InputOutputTests extends ClassPathClassWork {
     public LogAndTextResults jdis(boolean g, byte[]... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];
         for (int i = 0; i < clazz.length; i++) {
-            originalFiles[i] = new ToolInput.ByteInput(clazz[i]);
+            originalFiles[i] = new ByteInput(clazz[i]);
         }
-        ToolOutput.TextOutput decodedFiles = new ToolOutput.TextOutput();
-        ToolOutput.StringLog decodeLog = new ToolOutput.StringLog();
+        TextOutput decodedFiles = new TextOutput();
+        StringLog decodeLog = new StringLog();
         org.openjdk.asmtools.jdis.Main jdis = new org.openjdk.asmtools.jdis.Main(decodedFiles, decodeLog, originalFiles);
         jdis.setVerboseFlag(true);
         jdis.setTraceFlag(true);
@@ -91,10 +95,10 @@ public class InputOutputTests extends ClassPathClassWork {
     public LogAndBinResults jasm(String... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];
         for (int i = 0; i < clazz.length; i++) {
-            originalFiles[i] = new ToolInput.ByteInput(clazz[i]);
+            originalFiles[i] = new StringInput(clazz[i]);
         }
-        ToolOutput.ByteOutput encodedFiles = new ToolOutput.ByteOutput();
-        ToolOutput.StringLog encodeLog = new ToolOutput.StringLog();
+        ByteOutput encodedFiles = new ByteOutput();
+        StringLog encodeLog = new StringLog();
         org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(encodedFiles, encodeLog, originalFiles);
         jasm.setVerboseFlag(true);
         jasm.setTraceFlag(true);

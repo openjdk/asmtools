@@ -23,6 +23,9 @@
 package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.IOException;
 import java.util.*;
@@ -46,7 +49,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
      * @param cls         the environment class of the tool for which to obtain the resource bundle
      * @param outerLog    the logger stream
      */
-    public CompilerLogger(String programName, Class<?> cls, ToolOutput.DualStreamToolOutput outerLog) {
+    public CompilerLogger(String programName, Class<?> cls, DualStreamToolOutput outerLog) {
         super(programName, cls, outerLog);
     }
 
@@ -158,7 +161,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
                 }
             }
         }
-        ToolOutput.DualStreamToolOutput totalOutput = (printTotals) ? getOutputs() : null;
+        DualStreamToolOutput totalOutput = (printTotals) ? getOutputs() : null;
         if (printTotals) {
             if (nWarnings != 0)
                 totalOutput.printe(format("%d warning(s)%s", nWarnings, nErrors != 0 ? ", " : "\n"));

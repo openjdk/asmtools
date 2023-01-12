@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,33 +20,18 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jdec;
-
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
-import org.openjdk.asmtools.common.outputs.ToolOutput;
-import org.openjdk.asmtools.common.outputs.log.StderrLog;
+package org.openjdk.asmtools.common.outputs.log;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 
-public abstract class JdecTool extends Tool<JdecEnvironment> {
+public class SingleDualOutputStreamOutput extends DualOutputStreamOutput {
 
-    protected JdecTool(ToolOutput toolOutput, DualStreamToolOutput log) {
-        super(toolOutput, log);
+    public SingleDualOutputStreamOutput(PrintWriter er) {
+        super(er, er);
     }
 
-    protected JdecTool(ToolOutput toolOutput) {
-        super(toolOutput, new StderrLog());
-    }
-
-    protected JdecTool(PrintStream toolOutput) {
-        this(new EscapedPrintStreamOutput(toolOutput));
-    }
-
-    @Override
-    public JdecEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput log) {
-        JdecEnvironment.JDecBuilder builder = new JdecEnvironment.JDecBuilder(toolOutput, log);
-        return builder.build();
+    public SingleDualOutputStreamOutput(PrintStream er) {
+        super(er, er);
     }
 }

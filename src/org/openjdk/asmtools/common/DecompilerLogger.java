@@ -24,6 +24,8 @@ package org.openjdk.asmtools.common;
 
 import static java.lang.String.format;
 
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+
 public class DecompilerLogger extends ToolLogger implements ILogger {
 
     /**
@@ -31,7 +33,7 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
      * @param cls         the environment class of the tool for which to obtain the resource bundle
      * @param outerLog    the logger stream
      */
-    public DecompilerLogger(String programName, Class cls, ToolOutput.DualStreamToolOutput outerLog) {
+    public DecompilerLogger(String programName, Class cls, DualStreamToolOutput outerLog) {
         super(programName, cls, outerLog);
     }
 

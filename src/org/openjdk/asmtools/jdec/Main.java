@@ -22,8 +22,14 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.*;
 import java.util.Collections;
@@ -40,13 +46,13 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdecTool {
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         Collections.addAll(fileList, toolInputs);
         parseArgs();
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
         if (toolInput != null) {
             fileList.add(toolInput);
@@ -54,17 +60,17 @@ public class Main extends JdecTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, String... argv) {
         this(toolOutput, log, null, argv);
     }
 
-    public Main(ToolOutput.EscapedPrintStreamOutput toolOutput, String[] argv) {
-        this(toolOutput, new ToolOutput.SingleDualOutputStreamOutput(), argv);
+    public Main(EscapedPrintStreamOutput toolOutput, String[] argv) {
+        this(toolOutput, new StderrLog(), argv);
     }
 
     // jdec entry point
     public static void main(String... argv) {
-        Main decoder = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
+        Main decoder = new Main(new StdoutOutput(), argv);
         System.exit(decoder.decode());
     }
 
@@ -97,7 +103,7 @@ public class Main extends JdecTool {
                     setDestDir(++i, argv);
                     break;
                 case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
-                    this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                    this.environment.setOutputs(new DualOutputStreamOutput());
                     break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
@@ -114,7 +120,7 @@ public class Main extends JdecTool {
                         usage();
                         System.exit(FAILED);
                     } else {
-                        fileList.add(new ToolInput.FileInput(arg));
+                        fileList.add(new FileInput(arg));
                     }
             }
         }
