@@ -38,8 +38,8 @@ public abstract class NamedDualStreamToolOutput implements DualStreamToolOutput 
     }
 
     @Override
-    public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
-        this.fqn = fqn;
+    public void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException {
+        this.fqn = fullyQualifiedName;
         this.suffix = suffix;
         this.environment = logger;
     }

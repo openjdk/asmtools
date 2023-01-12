@@ -49,9 +49,9 @@ public interface ToolOutput {
 
     String getCurrentClassName();
 
-    void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException;
+    void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException;
 
-    void finishClass(String fqn) throws IOException;
+    void finishClass(String fullyQualifiedName) throws IOException;
 
     void printlns(String line);
 

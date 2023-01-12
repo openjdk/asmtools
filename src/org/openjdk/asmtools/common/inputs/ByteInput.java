@@ -71,17 +71,17 @@ public class ByteInput implements ToolInput {
     @Override
     public Collection<String> readAllLines() throws IOException {
         init();
-        ArrayList r = new ArrayList();
+        ArrayList resultingLines = new ArrayList();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), "utf-8"))) {
             while (true) {
                 String l = br.readLine();
                 if (l == null) {
                     break;
                 }
-                r.add(l);
+                resultingLines.add(l);
             }
         }
         ;
-        return r;
+        return resultingLines;
     }
 }

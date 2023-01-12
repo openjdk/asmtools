@@ -50,8 +50,8 @@ public class TextOutput extends NamedToolOutput {
     }
 
     @Override
-    public void startClass(String fqn, Optional<String> suffix, Environment logger) throws IOException {
-        super.startClass(fqn, suffix, logger);
+    public void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException {
+        super.startClass(fullyQualifiedName, suffix, logger);
         currentClass = new StringBuilder();
     }
 
