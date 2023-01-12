@@ -24,8 +24,8 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.jdis.JdisEnvironment.JdisBuilder;
 
 public abstract class JdisTool extends Tool<JdisEnvironment> {
@@ -35,7 +35,7 @@ public abstract class JdisTool extends Tool<JdisEnvironment> {
     }
 
     protected JdisTool(ToolOutput toolOutput) {
-        super(toolOutput, new SingleDualOutputStreamOutput());
+        super(toolOutput, new StderrLog());
     }
 
     @Override

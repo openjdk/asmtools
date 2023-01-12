@@ -24,8 +24,8 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
 import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 
@@ -75,7 +75,7 @@ public class Main extends JdisTool {
 
     // jdis entry point
     public static void main(String... argv) {
-        Main disassembler = new Main(new EscapedPrintStreamOutput(System.out), argv);
+        Main disassembler = new Main(new StdoutOutput(), argv);
         System.exit(disassembler.disasm());
     }
 

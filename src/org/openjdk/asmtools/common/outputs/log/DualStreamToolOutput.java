@@ -28,6 +28,16 @@ import org.openjdk.asmtools.common.outputs.ToolOutput;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 
+/**
+ * This is special case of output - for log and trace outputs form compilation, not for bytecode/sources themselves.
+ * Historically, asmtoosl had duals streamlooger, where tracing was polluting stdout.
+ * This logic is by default off, but can be turned on by secret switch if needed.
+ * For application, although logging is still done in two streams, the log is united into stderr via StderrLog.
+ *
+ * UnitTest and 3rd party applications such as IDE or instrumentation providers s should be using unified StringLog.
+ *
+ * Once (if ever) the historical dependants on duality of log are removed, the logger should be simple and direct to singlebuffer.
+ */
 public interface DualStreamToolOutput extends ToolOutput {
     void printlne(String line);
 

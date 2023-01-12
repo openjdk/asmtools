@@ -24,14 +24,14 @@ package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.jasm.JasmEnvironment.JasmBuilder;
 
 public abstract class JasmTool extends Tool<JasmEnvironment> {
 
     protected JasmTool(ToolOutput toolOutput) {
-        super(toolOutput, new SingleDualOutputStreamOutput());
+        super(toolOutput, new StderrLog());
     }
 
     protected JasmTool(ToolOutput toolOutput, DualStreamToolOutput logger) {

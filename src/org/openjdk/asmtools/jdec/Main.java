@@ -24,11 +24,12 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
 import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.*;
 import java.util.Collections;
@@ -64,12 +65,12 @@ public class Main extends JdecTool {
     }
 
     public Main(EscapedPrintStreamOutput toolOutput, String[] argv) {
-        this(toolOutput, new SingleDualOutputStreamOutput(), argv);
+        this(toolOutput, new StderrLog(), argv);
     }
 
     // jdec entry point
     public static void main(String... argv) {
-        Main decoder = new Main(new EscapedPrintStreamOutput(System.out), argv);
+        Main decoder = new Main(new StdoutOutput(), argv);
         System.exit(decoder.decode());
     }
 

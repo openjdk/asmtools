@@ -24,8 +24,8 @@ package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
 import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
 import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
@@ -102,7 +102,7 @@ public class Main extends JcoderTool {
 
     // jcoder entry point
     public static void main(String... argv) {
-        Main compiler = new Main(new EscapedPrintStreamOutput(System.out), argv);
+        Main compiler = new Main(new StdoutOutput(), argv);
         System.exit(compiler.compile());
     }
 

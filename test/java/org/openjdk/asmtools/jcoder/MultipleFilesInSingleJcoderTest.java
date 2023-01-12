@@ -6,7 +6,7 @@ import org.openjdk.asmtools.common.inputs.ByteInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ public class MultipleFilesInSingleJcoderTest {
         byte[] jcodFile = getJcodFile("12.jcod");
         ToolInput file = new ByteInput(jcodFile);
         ByteOutput output = new ByteOutput();
-        DualStreamToolOutput log = new SingleDualOutputStreamOutput(); //todo hide to ToolOutput.StringLog once done
+        DualStreamToolOutput log = new StderrLog(); //todo hide to ToolOutput.StringLog once done
         org.openjdk.asmtools.jcoder.Main jcod = new org.openjdk.asmtools.jcoder.Main(output, log, file, "-v");
         int i = jcod.compile();
         Assertions.assertEquals(0, i);

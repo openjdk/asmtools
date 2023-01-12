@@ -24,13 +24,13 @@ package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 public abstract class JcoderTool extends Tool<JcoderEnvironment> {
 
     protected JcoderTool(ToolOutput toolOutput) {
-        super(toolOutput, new SingleDualOutputStreamOutput());
+        super(toolOutput, new StderrLog());
     }
 
     protected JcoderTool(ToolOutput toolOutput, DualStreamToolOutput logger) {

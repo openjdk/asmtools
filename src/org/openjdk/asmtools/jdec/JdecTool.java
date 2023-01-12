@@ -25,8 +25,8 @@ package org.openjdk.asmtools.jdec;
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.PrintStream;
 
@@ -37,7 +37,7 @@ public abstract class JdecTool extends Tool<JdecEnvironment> {
     }
 
     protected JdecTool(ToolOutput toolOutput) {
-        super(toolOutput, new SingleDualOutputStreamOutput());
+        super(toolOutput, new StderrLog());
     }
 
     protected JdecTool(PrintStream toolOutput) {

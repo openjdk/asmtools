@@ -6,7 +6,7 @@ import org.openjdk.asmtools.common.inputs.ByteInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.SingleDualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ public class MultipleFilesInSingleJasmTest {
         byte[] jasmFile = getJasmFile("clfacc00610m10p.jasm");
         ToolInput file = new ByteInput(jasmFile);
         ByteOutput output = new ByteOutput();
-        DualStreamToolOutput log = new SingleDualOutputStreamOutput(); //todo hide to ToolOutput.StringLog once done
+        DualStreamToolOutput log = new StderrLog(); //todo hide to ToolOutput.StringLog once done
         org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(output, log, file, "-v");
         int i = jasm.compile();
         Assertions.assertEquals(0, i);
@@ -43,7 +43,7 @@ public class MultipleFilesInSingleJasmTest {
         byte[] jasmFile = getJasmFile("spinum00101m10p.jasm");
         ToolInput file = new ByteInput(jasmFile);
         ByteOutput output = new ByteOutput();
-        DualStreamToolOutput log = new SingleDualOutputStreamOutput(); //todo hide to ToolOutput.StringLog once done
+        DualStreamToolOutput log = new StderrLog(); //todo hide to ToolOutput.StringLog once done
         org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(output, log, file, "-v");
         int i = jasm.compile();
         Assertions.assertEquals(0, i);
