@@ -23,6 +23,8 @@
 package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.InputOutputTests;
+import org.openjdk.asmtools.common.outputs.ByteOutput;
+import org.openjdk.asmtools.common.outputs.log.StringLog;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,8 +110,8 @@ public class CompileAction {
         toolArgs.add("-d");
         toolArgs.add(destDir.getPath());
         toolArgs.addAll(files);
-        ToolOutput.ByteOutput encodedFiles = new ToolOutput.ByteOutput();
-        ToolOutput.StringLog encodeLog = new ToolOutput.StringLog();
+        ByteOutput encodedFiles = new ByteOutput();
+        StringLog encodeLog = new StringLog();
         if( toolName.equals("jcoder") ) {
             org.openjdk.asmtools.jcoder.Main jcod = new org.openjdk.asmtools.jcoder.Main(encodedFiles, encodeLog, toolArgs.toArray(new String[0]));
             rc = jcod.compile();
