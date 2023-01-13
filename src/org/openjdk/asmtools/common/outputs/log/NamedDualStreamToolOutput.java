@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,36 +20,32 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jdis;
+package org.openjdk.asmtools.common.outputs.log;
 
-import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.ToolOutput;
 
-public class JdisEnvironment extends Environment<DecompilerLogger> {
+import java.io.IOException;
+import java.util.Optional;
 
-    /**
-     * @param builder the jdis environment builder
-     */
-    private JdisEnvironment(Builder<JdisEnvironment, DecompilerLogger> builder) {
-        super(builder);
+public abstract class NamedDualStreamToolOutput implements DualStreamToolOutput {
+    private String fqn;
+    private Optional<String> suffix;
+    private Environment environment;
+
+    @Override
+    public String getCurrentClassName() {
+        return fqn;
     }
 
     @Override
-    public void printErrorLn(String format, Object... args) {
-        getLogger().printErrorLn(format, args);
+    public void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException {
+        this.fqn = fullyQualifiedName;
+        this.suffix = suffix;
+        this.environment = logger;
     }
 
-    static class JdisBuilder extends Environment.Builder<JdisEnvironment, DecompilerLogger> {
-
-        public JdisBuilder(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
-            super(toolOutput, new DecompilerLogger("jdis", JdisEnvironment.class, outerLog));
-        }
-
-        @Override
-        public JdisEnvironment build() {
-            return new JdisEnvironment(this);
-        }
+    @Override
+    public void finishClass(String fqn) throws IOException {
+        this.fqn = null;
     }
 }

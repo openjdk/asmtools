@@ -23,23 +23,23 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.jasm.JasmEnvironment.JasmBuilder;
-
-import java.io.PrintWriter;
 
 public abstract class JasmTool extends Tool<JasmEnvironment> {
 
     protected JasmTool(ToolOutput toolOutput) {
-        super(toolOutput, new ToolOutput.SingleDualOutputStreamOutput());
+        super(toolOutput, new StderrLog());
     }
 
-    protected JasmTool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+    protected JasmTool(ToolOutput toolOutput, DualStreamToolOutput logger) {
         super(toolOutput, logger);
     }
 
     @Override
-    public JasmEnvironment getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger) {
+    public JasmEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput logger) {
         JasmBuilder builder = new JasmBuilder(toolOutput, logger);
         return builder.build();
     }

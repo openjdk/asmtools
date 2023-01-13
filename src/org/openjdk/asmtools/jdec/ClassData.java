@@ -24,7 +24,7 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.common.FormatError;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.structure.ClassFileContext;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;

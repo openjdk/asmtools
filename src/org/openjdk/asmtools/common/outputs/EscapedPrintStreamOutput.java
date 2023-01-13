@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,27 +20,33 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.jdis;
+package org.openjdk.asmtools.common.outputs;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.ToolOutput;
-import org.openjdk.asmtools.common.outputs.log.StderrLog;
-import org.openjdk.asmtools.jdis.JdisEnvironment.JdisBuilder;
+import org.openjdk.asmtools.common.uEscWriter;
 
-public abstract class JdisTool extends Tool<JdisEnvironment> {
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 
-    protected JdisTool(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
-        super(toolOutput, outerLog);
-    }
+public class EscapedPrintStreamOutput extends PrintWriterOutput {
 
-    protected JdisTool(ToolOutput toolOutput) {
-        super(toolOutput, new StderrLog());
+    private final OutputStream originalStream;
+
+    public EscapedPrintStreamOutput(OutputStream os) {
+        super(new uEscWriter(os));
+        this.originalStream = os;
     }
 
     @Override
-    public JdisEnvironment getEnvironment(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
-        JdisBuilder builder = new JdisBuilder(toolOutput, outerLog);
-        return builder.build();
+    public DataOutputStream getDataOutputStream() throws FileNotFoundException {
+        return new DataOutputStream(new BufferedOutputStream(originalStream));
+    }
+
+    @Override
+    public void finishClass(String fqn) throws IOException {
+        super.finishClass(fqn);
+        originalStream.flush();
     }
 }

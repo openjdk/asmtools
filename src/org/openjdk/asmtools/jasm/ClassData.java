@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;

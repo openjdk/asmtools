@@ -23,6 +23,12 @@
 package org.openjdk.asmtools.common;
 
 
+import org.openjdk.asmtools.common.inputs.StdinInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.DirOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -31,7 +37,7 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     protected final ArrayList<ToolInput> fileList = new ArrayList<>();
     protected T environment;
 
-    protected Tool(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+    protected Tool(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
         this.environment = getEnvironment(toolOutput, outerLog);
     }
 
@@ -50,7 +56,7 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
     }
 
     // Build environment
-    public T getEnvironment(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput outerLog) {
+    public T getEnvironment(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
         throw new NotImplementedException();
     }
 
@@ -72,16 +78,16 @@ public abstract class Tool<T extends Environment<? extends ToolLogger>> {
             environment.error("err.does_not_exist", destDir.getPath());
             throw new IllegalArgumentException();
         }
-        environment.setToolOutput(new ToolOutput.DirOutput(destDir));
+        environment.setToolOutput(new DirOutput(destDir));
     }
 
     protected void addStdIn() {
         for (ToolInput toolInput: fileList) {
-            if (toolInput instanceof ToolInput.StdinInput) {
+            if (toolInput instanceof StdinInput) {
                 //or throw?
                 return;
             }
         }
-        fileList.add(new ToolInput.StdinInput());
+        fileList.add(new StdinInput());
     }
 }

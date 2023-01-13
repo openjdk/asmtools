@@ -22,8 +22,12 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.DataInputStream;
 import java.io.FileNotFoundException;
@@ -43,7 +47,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  */
 public class Main extends JdisTool {
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput... toolInputs) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         for(ToolInput toolInput: toolInputs){
             fileList.add(toolInput);
@@ -51,7 +55,7 @@ public class Main extends JdisTool {
         parseArgs(new String[0]);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
         if (toolInput != null) {
             fileList.add(toolInput);
@@ -64,14 +68,14 @@ public class Main extends JdisTool {
         parseArgs(argv);
     }
 
-    public Main(ToolOutput toolOutput, ToolOutput.DualStreamToolOutput logger, String... argv) {
+    public Main(ToolOutput toolOutput, DualStreamToolOutput logger, String... argv) {
         super(toolOutput, logger);
         parseArgs(argv);
     }
 
     // jdis entry point
     public static void main(String... argv) {
-        Main disassembler = new Main(new ToolOutput.EscapedPrintStreamOutput(System.out), argv);
+        Main disassembler = new Main(new StdoutOutput(), argv);
         System.exit(disassembler.disasm());
     }
 
@@ -158,7 +162,7 @@ public class Main extends JdisTool {
                     setDestDir(++i, argv);
                     break;
                 case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
-                    this.environment.setOutputs(new ToolOutput.DualOutputStreamOutput());
+                    this.environment.setOutputs(new DualOutputStreamOutput());
                     break;
                 case org.openjdk.asmtools.Main.VERSION_SWITCH:
                     environment.println(FULL_VERSION);
@@ -175,7 +179,7 @@ public class Main extends JdisTool {
                         usage();
                         System.exit(FAILED);
                     } else {
-                        fileList.add(new ToolInput.FileInput(arg));
+                        fileList.add(new FileInput(arg));
                     }
             }
         }
