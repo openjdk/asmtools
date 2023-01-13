@@ -4,9 +4,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.openjdk.asmtools.common.StringUtils;
-import org.openjdk.asmtools.common.ToolInput;
-import org.openjdk.asmtools.common.ToolOutput;
 
+import org.openjdk.asmtools.common.inputs.ByteInput;
+import org.openjdk.asmtools.common.inputs.StringInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.ByteOutput;
+import org.openjdk.asmtools.common.outputs.TextOutput;
+import org.openjdk.asmtools.common.outputs.log.StringLog;
 import org.openjdk.asmtools.jdis.Options;
 
 import java.io.File;
@@ -18,7 +22,7 @@ public class InputOutputTests extends ClassPathClassWork {
 
     public static class LogAndReturn {
 
-        public final ToolOutput.StringLog log;
+        public final StringLog log;
         public final int result;
 
 
