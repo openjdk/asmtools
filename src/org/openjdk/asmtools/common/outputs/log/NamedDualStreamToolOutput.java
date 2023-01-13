@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 public abstract class NamedDualStreamToolOutput implements DualStreamToolOutput {
-    private String fqn;
+    protected String fqn;
     private Optional<String> suffix;
     private Environment environment;
 

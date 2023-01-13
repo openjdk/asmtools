@@ -144,11 +144,13 @@ public class Main extends JasmTool {
                 for (ClassData cd : clsData) {
                     String fqn = cd.myClassName;
                     environment.getToolOutput().startClass(fqn, Optional.of(cd.fileExtension), environment);
+                    environment.getOutputs().startClass(fqn, Optional.of(cd.fileExtension), environment);
                     if (byteLimit > 0) {
                         cd.setByteLimit(byteLimit);
                     }
                     cd.write(environment.getToolOutput());
                     environment.getToolOutput().finishClass(fqn);
+                    environment.getOutputs().finishClass(fqn);
                 }
                 if (environment.hasMessages()) rc += environment.flush(true);
             }

@@ -63,7 +63,6 @@ public class TextOutput extends NamedToolOutput {
         outputs.add(new NamedSource(fqn, currentClass.toString()));
         super.fqn = null;
         currentClass = null;
-
     }
 
     @Override
@@ -86,7 +85,7 @@ public class TextOutput extends NamedToolOutput {
 
     }
 
-    public class NamedSource {
+    public static class NamedSource {
         private final String fqn;
         private final String body;
 
