@@ -1,0 +1,111 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+class org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA {
+  0xCAFEBABE;
+  0;                             // minor version
+  60;                            // version
+  [22] {                         // Constant Pool
+    ;                            // first element is empty
+    class #2;                    // #1     at 0x0A
+    Utf8 "org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA"; // #2     at 0x0D
+    class #4;                    // #3     at 0x4F
+    Utf8 "java/lang/Object";     // #4     at 0x52
+    Utf8 "stringField";          // #5     at 0x65
+    Utf8 "Ljava/lang/String;";   // #6     at 0x73
+    Utf8 "ConstantValue";        // #7     at 0x88
+    String #9;                   // #8     at 0x98
+    Utf8 "ITestInterfaceA";      // #9     at 0x9B
+    Utf8 "longField";            // #10     at 0xAD
+    Utf8 "J";                    // #11     at 0xB9
+    long 0x000000000000000A;;    // #12     at 0xBD
+    Utf8 "stringField3";         // #14     at 0xC6
+    String #16;                  // #15     at 0xD5
+    Utf8 "ITestInterfaceA3";     // #16     at 0xD8
+    Utf8 "longField3";           // #17     at 0xEB
+    long 0x000000000000000D;;    // #18     at 0xF8
+    Utf8 "SourceFile";           // #20     at 0x0101
+    Utf8 "ITestInterfaceA.java"; // #21     at 0x010E
+  }                              // end of Constant Pool
+
+  0x0601;                        // access [ ACC_PUBLIC, ACC_INTERFACE, ACC_ABSTRACT  ]
+  #1;                            // this_cpx
+  #3;                            // super_cpx
+
+  [0] {                          // Interfaces
+  }                              // end of Interfaces
+
+  [4] {                          // Fields
+    {                            // field at 0x012F
+      0x0019;                    // access
+      #5;                        // name_index       : stringField
+      #6;                        // descriptor_index : Ljava/lang/String;
+      [1] {                      // Attributes
+        Attr(#7, 2) {            // ConstantValue at 0x0137
+          #8;
+        }                        // end of ConstantValue
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field at 0x013F
+      0x0019;                    // access
+      #10;                       // name_index       : longField
+      #11;                       // descriptor_index : J
+      [1] {                      // Attributes
+        Attr(#7, 2) {            // ConstantValue at 0x0147
+          #12;
+        }                        // end of ConstantValue
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field at 0x014F
+      0x0019;                    // access
+      #14;                       // name_index       : stringField3
+      #6;                        // descriptor_index : Ljava/lang/String;
+      [1] {                      // Attributes
+        Attr(#7, 2) {            // ConstantValue at 0x0157
+          #15;
+        }                        // end of ConstantValue
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field at 0x015F
+      0x0019;                    // access
+      #17;                       // name_index       : longField3
+      #11;                       // descriptor_index : J
+      [1] {                      // Attributes
+        Attr(#7, 2) {            // ConstantValue at 0x0167
+          #18;
+        }                        // end of ConstantValue
+      }                          // end of Attributes
+    }
+  }                              // end of Fields
+
+  [0] {                          // Methods
+  }                              // end of Methods
+
+  [1] {                          // Attributes
+    Attr(#20, 2) {               // SourceFile at 0x0173
+      #21;
+    }                            // end of SourceFile
+  }                              // end of Attributes
+}                                // end of class org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA

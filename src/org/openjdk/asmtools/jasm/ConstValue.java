@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,7 +23,6 @@
 package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * A (typed) tagged value in the constant pool like ConstCell<ConstValue_UTF8>
@@ -90,6 +89,6 @@ public abstract class ConstValue<T> {
     }
 
     public void write(CheckedDataOutputStream out) throws IOException {
-        out.writeByte(tag.value());
+        out.writeByte(tag.getTag());
     }
 } // end ConstValue

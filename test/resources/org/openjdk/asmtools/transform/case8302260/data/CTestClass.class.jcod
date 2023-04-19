@@ -1,0 +1,148 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+class org/openjdk/asmtools/transform/case8302260/data/CTestClass {
+  0xCAFEBABE;
+  0;                             // minor version
+  60;                            // version
+  [29] {                         // Constant Pool
+    ;                            // first element is empty
+    Method #2 #3;                // #1     at 0x0A
+    class #4;                    // #2     at 0x0F
+    NameAndType #5 #6;           // #3     at 0x12
+    Utf8 "org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass"; // #4     at 0x17
+    Utf8 "<init>";               // #5     at 0x5D
+    Utf8 "()V";                  // #6     at 0x66
+    String #8;                   // #7     at 0x6C
+    Utf8 "CTestClass";           // #8     at 0x6F
+    Field #10 #11;               // #9     at 0x7C
+    class #12;                   // #10     at 0x81
+    NameAndType #13 #14;         // #11     at 0x84
+    Utf8 "org/openjdk/asmtools/transform/case8302260/data/CTestClass"; // #12     at 0x89
+    Utf8 "ctestString";          // #13     at 0xC6
+    Utf8 "Ljava/lang/String;";   // #14     at 0xD4
+    Field #10 #16;               // #15     at 0xE9
+    NameAndType #17 #18;         // #16     at 0xEE
+    Utf8 "ctestLong";            // #17     at 0xF3
+    Utf8 "J";                    // #18     at 0xFF
+    class #20;                   // #19     at 0x0103
+    Utf8 "org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA"; // #20     at 0x0106
+    Utf8 "Code";                 // #21     at 0x0148
+    Utf8 "LineNumberTable";      // #22     at 0x014F
+    Utf8 "LocalVariableTable";   // #23     at 0x0161
+    Utf8 "this";                 // #24     at 0x0176
+    Utf8 "Lorg/openjdk/asmtools/transform/case8302260/data/CTestClass;"; // #25     at 0x017D
+    Utf8 "<clinit>";             // #26     at 0x01BC
+    Utf8 "SourceFile";           // #27     at 0x01C7
+    Utf8 "CTestClass.java";      // #28     at 0x01D4
+  }                              // end of Constant Pool
+
+  0x0021;                        // access [ ACC_PUBLIC, ACC_SUPER  ]
+  #10;                           // this_cpx
+  #2;                            // super_cpx
+
+  [1] {                          // Interfaces
+    #19;                         // org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA at 0x01F0
+  }                              // end of Interfaces
+
+  [2] {                          // Fields
+    {                            // field at 0x01F2
+      0x0009;                    // access
+      #13;                       // name_index       : ctestString
+      #14;                       // descriptor_index : Ljava/lang/String;
+      [0] {                      // Attributes
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field at 0x01FA
+      0x0009;                    // access
+      #17;                       // name_index       : ctestLong
+      #18;                       // descriptor_index : J
+      [0] {                      // Attributes
+      }                          // end of Attributes
+    }
+  }                              // end of Fields
+
+  [2] {                          // Methods
+    {                            // method at 0x0204
+      0x0001;                    // access
+      #5;                        // name_index       : <init>
+      #6;                        // descriptor_index : ()V
+      [1] {                      // Attributes
+        Attr(#21, 47) {          // Code at 0x020C
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] {                  // Traps
+          }                      // end of Traps
+          [2] {                  // Attributes
+            Attr(#22, 6) {       // LineNumberTable at 0x0223
+              [1] {              // line_number_table
+                0  28;           // at 0x022F
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#23, 12) {      // LocalVariableTable at 0x022F
+              [1] {              // LocalVariableTable
+                0 5 24 25 0;     // at 0x0241
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method at 0x0241
+      0x0008;                    // access
+      #26;                       // name_index       : <clinit>
+      #6;                        // descriptor_index : ()V
+      [1] {                      // Attributes
+        Attr(#21, 38) {          // Code at 0x0249
+          2;                     // max_stack
+          0;                     // max_locals
+          Bytes[10]{
+            0x1207B300090AB300;
+            0x0FB1;
+          }
+          [0] {                  // Traps
+          }                      // end of Traps
+          [1] {                  // Attributes
+            Attr(#22, 10) {      // LineNumberTable at 0x0265
+              [2] {              // line_number_table
+                0  29;           // at 0x0271
+                5  30;           // at 0x0275
+              }
+            }                    // end of LineNumberTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+  }                              // end of Methods
+
+  [1] {                          // Attributes
+    Attr(#27, 2) {               // SourceFile at 0x0277
+      #28;
+    }                            // end of SourceFile
+  }                              // end of Attributes
+}                                // end of class org/openjdk/asmtools/transform/case8302260/data/CTestClass

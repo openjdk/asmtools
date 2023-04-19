@@ -33,6 +33,7 @@ import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -49,10 +50,12 @@ public class Main extends JdisTool {
 
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
-        for(ToolInput toolInput: toolInputs){
-            fileList.add(toolInput);
-        }
-        parseArgs(new String[0]);
+        Collections.addAll(fileList, toolInputs);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput) {
+        super(toolOutput, log);
+        fileList.add(toolInput);
     }
 
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {

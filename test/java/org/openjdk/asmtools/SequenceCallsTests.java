@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.openjdk.asmtools.common.CompileAction;
+import org.openjdk.asmtools.ext.CaptureSystemOutput;
 import org.opentest4j.MultipleFailuresError;
 
 import java.io.File;
@@ -41,8 +42,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.BOTH;
+import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.OUTPUT;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SequenceCallsTests {
@@ -105,12 +110,12 @@ public class SequenceCallsTests {
     /**
      * This is the test for CODETOOLS-7903401 (https://bugs.openjdk.org/browse/CODETOOLS-7903401)
      * jtreg fails if set of jdk tests process jasm,jdis files with defects
-     *
+     * <p>
      * jib make -- test TEST=test/hotspot/jtreg/runtime
      * Passed: runtime/classFileParserBug/BadInitMethod.java
      * nonvoidinit.jasm (29:20) Warning: <init> method cannot be an interface method
-     *     public abstract Method "<init>":"()I";
-     *                     ^
+     * public abstract Method "<init>":"()I";
+     * ^
      * Passed: runtime/cds/SharedBaseAddress.java#id1
      * Passed: runtime/classFileParserBug/FakeMethodAcc.java
      * switch from jcoder to jcoder
@@ -120,21 +125,22 @@ public class SequenceCallsTests {
      * --------------------------------------------------
      * TEST: runtime/classFileParserBug/InitInInterface.java
      * TEST JDK: /Users/lkuskov/dev/openjdk/build/macosx-x64/images/jdk
-     *
+     * <p>
      * ACTION: compile -- Failed. jasm failed
      * REASON: User specified action: run compile nonvoidinit.jasm voidinit.jasm
      * TIME: 0.257 seconds
      * messages:
      * command: compile /Users/lkuskov/dev/openjdk/test/hotspot/jtreg/runtime/classFileParserBug/nonvoidinit.jasm
-     *          /Users/lkuskov/dev/openjdk/test/hotspot/jtreg/runtime/classFileParserBug/voidinit.jasm
+     * /Users/lkuskov/dev/openjdk/test/hotspot/jtreg/runtime/classFileParserBug/voidinit.jasm
      * reason: User specified action: run compile nonvoidinit.jasm voidinit.jasm
-     *
+     * <p>
      * The jtreg uses a single instance of asmtool during a test run that leads to error in switching between jasm
      * and jcoder environment. I.e. the environment is set to Jcod while jasm is processing sources
      * and therefore jasm can't find jasm-specific message in Jcoder environment.
      */
     @Test
-    public void testCompilersWithConcurrency() throws InterruptedException {
+    @CaptureSystemOutput(value = BOTH, mute = true)
+    public void testCompilersWithConcurrency(CaptureSystemOutput.OutputCapture outputCapture) throws InterruptedException {
         int numberOfThreads = cases.get("jasm").size();
         ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
         CountDownLatch latch = new CountDownLatch(numberOfThreads);
@@ -151,7 +157,14 @@ public class SequenceCallsTests {
             );
         }
         latch.await();
-        //
+        // check OK's results
+        List<String> list = outputCapture.getLogAsList(OUTPUT);
+        assertThat(list, allOf(
+                hasItem(matchesPattern("jcoder OK")),
+                hasItem(matchesPattern("jasm OK")))
+        );
+        assertThat(list, hasSize(6));
+        // check ERROR's results
         assertEquals(6,
                 errors.stream().mapToInt(e -> ((MultipleFailuresError) e).getFailures().size()).sum(),
                 "Expected 4 missing plus 2 wrong format files.");

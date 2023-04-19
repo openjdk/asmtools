@@ -36,7 +36,7 @@ import java.util.Optional;
 
 public class ByteInput implements ToolInput {
 
-    //compilers passes input more then one times, so saving it for reuse;
+    //compilers passes input more than one times, so saving it for reuse;
     protected byte[] bytes;
 
     public ByteInput(final byte[] bytes) {

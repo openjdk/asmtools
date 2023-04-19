@@ -1,0 +1,91 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+package org/openjdk/asmtools/transform/case8302260/data/pkg;
+
+public super class #10 /* CTestSuperClass */ version 60:0
+{
+  const #1  = Method      #2.#3;          // java/lang/Object."<init>":"()V"
+  const #2  = class       #4;             // java/lang/Object
+  const #3  = NameAndType #5:#6;          // "<init>":"()V"
+  const #4  = Asciz       "java/lang/Object";
+  const #5  = Asciz       "<init>";
+  const #6  = Asciz       "()V";
+  const #7  = String      #8;             // "CTestSuperClass"
+  const #8  = Asciz       "CTestSuperClass";
+  const #9  = Field       #10.#11;        // CTestSuperClass.stringField:"Ljava/lang/String;"
+  const #10 = class       #12;            // CTestSuperClass
+  const #11 = NameAndType #13:#14;        // stringField:"Ljava/lang/String;"
+  const #12 = Asciz       "org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass";
+  const #13 = Asciz       "stringField";
+  const #14 = Asciz       "Ljava/lang/String;";
+  const #15 = long        100l;
+  const #17 = Field       #10.#18;        // CTestSuperClass.longField:"J"
+  const #18 = NameAndType #19:#20;        // longField:"J"
+  const #19 = Asciz       "longField";
+  const #20 = Asciz       "J";
+  const #21 = String      #22;            // "CTestSuperClass2"
+  const #22 = Asciz       "CTestSuperClass2";
+  const #23 = Field       #10.#24;        // CTestSuperClass.stringField2:"Ljava/lang/String;"
+  const #24 = NameAndType #25:#14;        // stringField2:"Ljava/lang/String;"
+  const #25 = Asciz       "stringField2";
+  const #26 = long        102l;
+  const #28 = Field       #10.#29;        // CTestSuperClass.longField2:"J"
+  const #29 = NameAndType #30:#20;        // longField2:"J"
+  const #30 = Asciz       "longField2";
+  const #31 = Asciz       "Code";
+  const #32 = Asciz       "LineNumberTable";
+  const #33 = Asciz       "LocalVariableTable";
+  const #34 = Asciz       "this";
+  const #35 = Asciz       "Lorg/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass;";
+  const #36 = Asciz       "<clinit>";
+  const #37 = Asciz       "SourceFile";
+  const #38 = Asciz       "CTestSuperClass.java";
+
+  public static Field #13:#14;            // stringField:"Ljava/lang/String;"
+  public static Field #19:#20;            // longField:J
+  public static Field #25:#14;            // stringField2:"Ljava/lang/String;"
+  public static Field #30:#20;            // longField2:J
+
+  public Method #5:#6                     // "<init>":"()V"
+    stack  1 locals  1
+  {
+           var               0 #34:#35;   // this:"Lorg/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass;"
+     0:    aload_0;
+     1:    invokespecial     #1;          // Method java/lang/Object."<init>":"()V"
+     4:    return;
+           endvar            0;
+  }
+  static Method #36:#6                    // "<clinit>":"()V"
+    stack  2 locals  0
+  {
+     0:    ldc               #7;          // String "CTestSuperClass"
+     2:    putstatic         #9;          // Field stringField:"Ljava/lang/String;"
+     5:    ldc2_w            #15;         // long 100l
+     8:    putstatic         #17;         // Field longField:"J"
+    11:    ldc               #21;         // String "CTestSuperClass2"
+    13:    putstatic         #23;         // Field stringField2:"Ljava/lang/String;"
+    16:    ldc2_w            #26;         // long 102l
+    19:    putstatic         #28;         // Field longField2:"J"
+    22:    return;
+  }
+} // end Class CTestSuperClass compiled from "CTestSuperClass.java"

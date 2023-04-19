@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -179,17 +179,20 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
             StringBuilder sb = new StringBuilder();
             switch (elementType) {
                 // String
-                case AE_STRING -> sb.append(valueAsString("", () -> Utf8ToString(pool.getString(cpx, index -> "#" + cpx))));
+                case AE_STRING -> sb.append(valueAsString("",
+                        () -> Utf8ToString(pool.getString(cpx, index -> "#" + cpx), "\"")));
                 // Byte, Char, Short
                 case AE_BYTE, AE_CHAR, AE_SHORT -> sb.append(valueAsString(elementType.printValue(),
                         () -> pool.getConst(cpx).stringVal()));
                 // Int (no need to add keyword), Long, Float, Double
-                case AE_INT, AE_FLOAT, AE_DOUBLE, AE_LONG -> sb.append(valueAsString("", () -> pool.getConst(cpx).stringVal()));
+                case AE_INT, AE_FLOAT, AE_DOUBLE, AE_LONG -> sb.append(valueAsString("",
+                        () -> pool.getConst(cpx).stringVal()));
                 // Boolean
                 case AE_BOOLEAN -> sb.append(valueAsString(elementType.printValue(),
                         () -> ((ConstantPool.CP_Int) pool.getConst(cpx)).value == 0 ? "false" : "true"));
                 // Class
-                case AE_CLASS -> sb.append(valueAsString(elementType.printValue(), () -> pool.decodeClassDescriptor(cpx)));
+                case AE_CLASS -> sb.append(valueAsString(elementType.printValue(),
+                        () -> pool.decodeClassDescriptor(cpx)));
                 default -> {
                 }
             }

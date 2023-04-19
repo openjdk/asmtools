@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,54 +28,17 @@ package org.openjdk.asmtools.common;
  * the interpreter.
  */
 public interface CompilerConstants {
+    // End of input
+    int EOF = -1;
 
-     // End of input
-    int EOF        = -1;
+    // Jasm: Number of bits used in file offsets
+    int OFFSET_BITS = 19;
 
-    /*
-     * Type codes
-     */
-    int TC_BOOLEAN   = 0;
-    int TC_BYTE      = 1;
-    int TC_CHAR      = 2;
-    int TC_SHORT     = 3;
-    int TC_INT       = 4;
-    int TC_LONG      = 5;
-    int TC_FLOAT     = 6;
-    int TC_DOUBLE    = 7;
-    int TC_NULL      = 8;
-    int TC_ARRAY     = 9;
-    int TC_CLASS     = 10;
-    int TC_VOID      = 11;
-    int TC_METHOD    = 12;
-    int TC_ERROR     = 13;
-
-    /*
-     * Type Masks
-     */
-    int TM_NULL      = 1 << TC_NULL;
-    int TM_VOID      = 1 << TC_VOID;
-    int TM_BOOLEAN   = 1 << TC_BOOLEAN;
-    int TM_BYTE      = 1 << TC_BYTE;
-    int TM_CHAR      = 1 << TC_CHAR;
-    int TM_SHORT     = 1 << TC_SHORT;
-    int TM_INT       = 1 << TC_INT;
-    int TM_LONG      = 1 << TC_LONG;
-    int TM_FLOAT     = 1 << TC_FLOAT;
-    int TM_DOUBLE    = 1 << TC_DOUBLE;
-    int TM_ARRAY     = 1 << TC_ARRAY;
-    int TM_CLASS     = 1 << TC_CLASS;
-    int TM_METHOD    = 1 << TC_METHOD;
-    int TM_ERROR     = 1 << TC_ERROR;
-
-    int TM_INT32     = TM_BYTE | TM_SHORT | TM_CHAR | TM_INT;
-    int TM_NUM32     = TM_INT32 | TM_FLOAT;
-    int TM_NUM64     = TM_LONG | TM_DOUBLE;
-    int TM_INTEGER   = TM_INT32 | TM_LONG;
-    int TM_REAL      = TM_FLOAT | TM_DOUBLE;
-    int TM_NUMBER    = TM_INTEGER | TM_REAL;
-    int TM_REFERENCE = TM_ARRAY | TM_CLASS | TM_NULL;
-
-    // Number of bits used in file offsets
-    int OFFSETBITS          = 19;
+    //Jcoder: The increment for each character.
+    int OFFSET_INC = 1;
+    // The increment for each line.
+    int LINE_INC = 1 << OFFSET_BITS;
+    // BACKSLASH is a special code indicating a pushback of a backslash that
+    // definitely isn't the start of a unicode sequence.
+    int BACKSLASH = -2;
 }

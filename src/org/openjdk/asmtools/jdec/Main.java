@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,14 +24,15 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
-import org.openjdk.asmtools.common.outputs.StdoutOutput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
-import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -49,7 +50,6 @@ public class Main extends JdecTool {
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         Collections.addAll(fileList, toolInputs);
-        parseArgs();
     }
 
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
@@ -66,6 +66,11 @@ public class Main extends JdecTool {
 
     public Main(EscapedPrintStreamOutput toolOutput, String[] argv) {
         this(toolOutput, new StderrLog(), argv);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput) {
+        super(toolOutput, log);
+        fileList.add(toolInput);
     }
 
     // jdec entry point

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,9 +54,12 @@ class ClassData extends MemberData<JasmEnvironment> {
     String fileExtension = DEFAULT_EXTENSION;
     MethodData curMethod;
     CFVersion cfv;
-    ConstCell this_class, super_class;
+    ConstCell<?> this_class, super_class;
     String myClassName;
-    AttrData sourceFileNameAttr;
+    AttrData sourceFileAttr;
+
+    SourceDebugExtensionAttr sourceDebugExtensionAttr;
+
     ArrayList<Indexer> interfaces;
     ArrayList<FieldData> fields = new ArrayList<>();
     ArrayList<MethodData> methods = new ArrayList<>();
@@ -69,6 +72,7 @@ class ClassData extends MemberData<JasmEnvironment> {
     ModuleAttr moduleAttribute = null;
     // JEP 359 - Record attribute since class file 58.65535
     private RecordData recordData;
+    //
     // JEP 360 - PermittedSubclasses attribute since class file 59.65535
     private PermittedSubclassesAttr permittedSubclassesAttr;
     // Valhalla
@@ -92,7 +96,7 @@ class ClassData extends MemberData<JasmEnvironment> {
      * @param super_class The constant pool reference to the super class
      * @param interfaces  A list of interfaces that this class implements
      */
-    public final void init(int access, ConstCell this_class, ConstCell super_class, ArrayList<Indexer> interfaces) {
+    public final void init(int access, ConstCell<?> this_class, ConstCell<?> super_class, ArrayList<Indexer> interfaces) {
         this.access = access;
         // normalize the modifiers to access flags
         if (EModifier.hasPseudoMod(access)) {
@@ -230,6 +234,16 @@ class ClassData extends MemberData<JasmEnvironment> {
                 bootstrapMethodsAttr.replaceAll(newBsmList);
             }
         }
+    }
+
+    public AttrData setSourceFileAttr(ConstCell value_cpx) {
+        this.sourceFileAttr = new CPXAttr(pool, EAttribute.ATT_SourceFile, value_cpx);
+        return this.sourceFileAttr;
+    }
+
+    public SourceDebugExtensionAttr setSourceDebugExtensionAttr() {
+        this.sourceDebugExtensionAttr = new SourceDebugExtensionAttr(pool);
+        return this.sourceDebugExtensionAttr;
     }
 
     // API
@@ -492,7 +506,9 @@ class ClassData extends MemberData<JasmEnvironment> {
         if (moduleAttribute != null) {
             return populateAttributesList(annotAttrVis, annotAttrInv, moduleAttribute);
         } else {
-            return populateAttributesList(sourceFileNameAttr,
+            return populateAttributesList(
+                    sourceFileAttr,
+                    sourceDebugExtensionAttr,
                     recordData,                                     // JEP 359 since class file 58.65535
                     innerClasses, syntheticAttr, deprecatedAttr, signatureAttr,
                     annotAttrVis, annotAttrInv,
@@ -526,7 +542,7 @@ class ClassData extends MemberData<JasmEnvironment> {
             environment.error("err.cannot.write", ex.getMessage());
             throw ex;
         }
-    }  // end write()
+    }
 
     public void setByteLimit(int bytelimit) {
         cdos.enable();

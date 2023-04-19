@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class NegativeJasmTests {
     final String NEGATIVE_JASM_TEST_RESOURCE_FOLDER = "negative" + File.separator;
     final int TOOL_PASSED = 0;
-
     CompileAction compiler;
     File resourceDir;
 

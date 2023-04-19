@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,17 +32,22 @@ import org.openjdk.asmtools.common.structure.StackMap;
 import org.openjdk.asmtools.jcoder.JcodTokens;
 
 import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.openjdk.asmtools.asmutils.StringUtils.repeat;
+import static org.openjdk.asmtools.Main.sharedI18n;
+import static org.openjdk.asmtools.asmutils.StringUtils.*;
 import static org.openjdk.asmtools.common.structure.ClassFileContext.MODULE_DIRECTIVES;
 import static org.openjdk.asmtools.jasm.ClassFileConst.*;
 import static org.openjdk.asmtools.jasm.ClassFileConst.AnnotationElementType.AE_UNKNOWN;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_MODULE;
 import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetInfo;
 import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetType;
+import static org.openjdk.asmtools.jcoder.JcodTokens.Token.IDENT;
 
 /**
  * Class data of the Java Decoder
@@ -51,12 +56,9 @@ class ClassData {
 
     private static final int COMMENT_OFFSET = 32;
     private static final String INDENT_STRING = "  ";
-    private static final int   INDENT_LENGTH = INDENT_STRING.length();
+    private static final int INDENT_LENGTH = INDENT_STRING.length();
     /*========================================================*/
-    private static final char[] hexTable = {
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-    };
+
     private final NestedByteArrayInputStream arrayInputStream;
     private final DataInputStream inputStream;
     protected JdecEnvironment environment;
@@ -107,23 +109,50 @@ class ClassData {
         environment.print(hexTable[b & 0xF]);
     }
 
-    private void printBytes(DataInputStream in, int len)
-            throws IOException {
+    /**
+     *
+     * @param in              input stream to get bytes for printing
+     * @param len             number of bytes
+     * @param printSeparately defines a format  of printed lines which will be either  0x04 0x3C 0x04 0x3D; or 0x043C043D043E1B1C;
+     * @throws IOException exception might happen while reading DataInputStream
+     **/
+    private void printBytes(DataInputStream in, int len, boolean printSeparately) throws IOException {
+        int i = 0;
+        final int BYTES_IN_LINE = printSeparately ? 4 : 8;
         try {
-            for (int i = 0; i < len; i++) {
-                if (i % 8 == 0) {
-                    out_print("0x");
+            for (; i < len; i++) {
+                if (i % BYTES_IN_LINE == 0) {
+                    out_print(printSeparately ? "" : "0x");
+                }
+                if (printSeparately) {
+                    environment.print("0x");
                 }
                 printByteHex(in.readByte());
-                if (i % 8 == 7) {
-                    environment.println(";");
+                if (printSeparately) {
+                    if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
+                        environment.println(";");
+                    } else if (i + 1 != len) {
+                        environment.print(" ");
+                    }
+                } else {
+                    if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
+                        environment.println(";");
+                    }
                 }
             }
         } finally {
             if (len % 8 != 0) {
-                environment.println(";");
+                if (i > 0)
+                    environment.println(";");
+                else
+                    out_println(";");
             }
         }
+    }
+
+    private void printUtf8String(DataInputStream in, int len) throws IOException {
+        final int CHARS_IN_LINE = 78;
+        readUtf8String(in, len, CHARS_IN_LINE).forEach(s -> environment.println(getOutString("") + s));
     }
 
     private void printRestOfBytes() {
@@ -154,18 +183,21 @@ class ClassData {
     }
 
     private void out_begin(String s) {
-        s = formatComments(s, indent);
-        environment.println(repeat(INDENT_STRING, indent++) + s);
+        environment.println(getOutString(s));
+        indent++;
     }
 
     private void out_print(String s) {
-        s = formatComments(s, indent);
-        environment.print(repeat(INDENT_STRING, indent) + s);
+        environment.print(getOutString(s));
     }
 
     private void out_println(String s) {
+        environment.println(getOutString(s));
+    }
+
+    private String getOutString(String s) {
         s = formatComments(s, indent);
-        environment.println(repeat(INDENT_STRING, indent) + s);
+        return repeat(INDENT_STRING, indent) + s;
     }
 
     private void out_end(String s) {
@@ -185,7 +217,6 @@ class ClassData {
         out_begin(startArray(length) + format("b {%s", comment == null ? "" : " // " + comment));
     }
 
-    /*========================================================*/
     private void readCP(DataInputStream in) throws IOException {
         int length = in.readUnsignedShort();
         CPlen = length;
@@ -226,8 +257,10 @@ class ClassData {
                     v1 = in.readUnsignedShort();
                     cpool[i] = v1;
                 }
-                case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE -> cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
-                case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
+                case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE ->
+                        cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
+                case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                        cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
                 case CONSTANT_METHODHANDLE -> cpool[i] = in.readUnsignedByte() + "b #" + in.readUnsignedShort();
                 case CONSTANT_METHODTYPE -> cpool[i] = "#" + in.readUnsignedShort();
                 default -> {
@@ -263,7 +296,7 @@ class ClassData {
                 switch (tg) {
                     case CONSTANT_UTF8 -> {
                         tagstr = "Utf8";
-                        valstr = StringUtils.Utf8ToString((String) cpool[i]);
+                        valstr = StringUtils.Utf8ToString((String) cpool[i], "\"");
                     }
                     case CONSTANT_FLOAT, CONSTANT_INTEGER -> {
                         v1 = (Integer) cpool[i];
@@ -297,6 +330,31 @@ class ClassData {
         }
     }
 
+    /**
+     * CONSTANT_Module_info {
+     *     u1 tag;              // == CONSTANT_MODULE(19)
+     *     u2 name_index;
+     * }
+     *
+     * @return Constant Pool module name by name_index
+     */
+    private String getModuleName() {
+        int idx = 0;
+        String name = "";
+        for (int i = 1; i < types.length; i++) {
+            if (types[i] == CONSTANT_MODULE.getTag()) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx != 0) {
+            try {
+                name = StringUtils.Utf8ToString((String) cpool[(int) cpool[idx]]);
+            } catch (Throwable ignored) { /* ignored*/ }
+        }
+        return name;
+    }
+
     private String getStringPos() {
         return " at " + toHex(arrayInputStream.getPos());
     }
@@ -313,10 +371,10 @@ class ClassData {
         decodeCPXAttrM(in, len, attrname, 1);
     }
 
-    private void decodeCPXAttrM(DataInputStream in, int len, String attrname, int expectedIndices) throws IOException {
+    private void decodeCPXAttrM(DataInputStream in, int len, String attrName, int expectedIndices) throws IOException {
         if (len != expectedIndices * 2) {
-            out_println("// invalid length of " + attrname + " attr: " + len + " (should be " + (expectedIndices * 2) + ") > ");
-            printBytes(in, len);
+            out_println("// == invalid length of " + attrName + " attr: " + len + " (should be " + (expectedIndices * 2) + ") ==");
+            printBytes(in, len, false);
         } else {
             StringBuilder outputString = new StringBuilder();
             for (int k = 1; k <= expectedIndices; k++) {
@@ -345,7 +403,7 @@ class ClassData {
             for (int k = 0; k < num; k++) {
                 int maptype = in.readUnsignedByte();
                 StackMap.VerificationType verificationType = StackMap.getVerificationType(maptype,
-                        Optional.of((s)-> environment.printErrorLn(s)));
+                        Optional.of((s) -> environment.printErrorLn(s)));
                 String maptypeImg;
                 if (environment.printDetailsFlag) {
                     maptypeImg = maptype + "b";
@@ -612,10 +670,11 @@ class ClassData {
     private void decodeAttr(DataInputStream in, ToolOutput out) throws IOException {
         // Read one attribute
         String posComment = getStringPos();
-        int name_cpx = in.readUnsignedShort(), btag, len;
+        int name_cpx = 0, btag, len;
 
         String AttrName = "";
         try {
+            name_cpx = in.readUnsignedShort();
             btag = types[name_cpx];
             ConstType tag = tag(btag);
 
@@ -623,16 +682,18 @@ class ClassData {
                 AttrName = (String) cpool[name_cpx];
             }
         } catch (ArrayIndexOutOfBoundsException ignored) {
+            environment.print(getOutString(""));
+            environment.println("// == %s ==", sharedI18n.getString("main.error.wrong.bytes"));
         }
         EAttribute tg = EAttribute.get(AttrName);
-        String endingComment = AttrName;
+        String endingComment = AttrName.isEmpty() ? "#" + name_cpx : AttrName;
         len = in.readInt();
         arrayInputStream.enter(len);
         try {
             if (environment.printDetailsFlag) {
-                out_begin("Attr(#" + name_cpx + ", " + len + ") { // " + AttrName + posComment);
+                out_begin("Attr(#" + name_cpx + ", " + len + ") { // " + endingComment + posComment);
             } else {
-                out_begin("Attr(#" + name_cpx + ") { // " + AttrName);
+                out_begin("Attr(#" + name_cpx + ") { // " + endingComment);
             }
 
             switch (tg) {
@@ -642,7 +703,7 @@ class ClassData {
                     int code_len = in.readInt();
                     out_begin("Bytes" + startArray(code_len) + "{");
                     try {
-                        printBytes(in, code_len);
+                        printBytes(in, code_len, false);
                     } finally {
                         out_end("}");
                     }
@@ -723,7 +784,7 @@ class ClassData {
                     try {
                         for (int k = 0; k < e_num; k++) {
                             int start_pc = in.readUnsignedShort();
-                            environment.println(format("%d, %s, %s;",start_pc,
+                            environment.println(format("%d, %s, %s;", start_pc,
                                     getStackMap(in, 0), getStackMap(in, 0)));
                         }
                     } finally {
@@ -746,14 +807,14 @@ class ClassData {
                                     // verificationType is same_locals_1_stack_item_frame
                                     // read additional single stack element
                                     out_println(format("%db, %s; // same_locals_1_stack_item_frame",
-                                            frame_type, getStackMap(in, 1) ));
+                                            frame_type, getStackMap(in, 1)));
                                 }
                                 case SAME_LOCALS_1_STACK_ITEM_EXTENDED_FRAME -> {
                                     // verificationType is same_locals_1_stack_item_frame_extended
                                     // read additional single stack element
                                     int noffset = in.readUnsignedShort();
                                     out_println(format("%db, %d, %s; // same_locals_1_stack_item_frame_extended",
-                                            frame_type, noffset, getStackMap(in, 1) ));
+                                            frame_type, noffset, getStackMap(in, 1)));
                                 }
                                 case CHOP_1_FRAME, CHOP_2_FRAME, CHOP_3_FRAME -> {
                                     // verificationType is chop_frame
@@ -773,12 +834,12 @@ class ClassData {
                                     int aoffset = in.readUnsignedShort();
                                     out_println(format("%db, %d, %s; // append_frame %d",
                                             frame_type, aoffset,
-                                            getStackMap(in, frame_type - 251), frame_type - 251 ));
+                                            getStackMap(in, frame_type - 251), frame_type - 251));
                                 }
                                 case FULL_FRAME -> {
                                     // verificationType is full_frame
                                     int foffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d, %s, %s; // full_frame",frame_type, foffset,
+                                    out_println(format("%db, %d, %s, %s; // full_frame", frame_type, foffset,
                                             getStackMap(in, 0), getStackMap(in, 0)));
                                 }
                             }
@@ -945,8 +1006,19 @@ class ClassData {
                         out_end("}");
                     }
                 }
+                // SourceDebugExtension_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u1 debug_extension[attribute_length];
+                // }
+                case ATT_SourceDebugExtension -> {
+                    printUtf8String(in, len);
+                    if (AttrName == null) {
+                        endingComment = "Attr(#" + name_cpx + ")";
+                    }
+                }
                 default -> {
-                    printBytes(in, len);
+                    printBytes(in, len, true);
                     if (AttrName == null) {
                         endingComment = "Attr(#" + name_cpx + ")";
                     }
@@ -954,12 +1026,13 @@ class ClassData {
             }
 
         } catch (EOFException e) {
-            environment.println("// ======== unexpected end of attribute array");
+            environment.println(getOutString("") + "// == The unexpected end of attribute array while parsing. ==");
         } finally {
             int rest = arrayInputStream.available();
             if (rest > 0) {
-                environment.println("// ======== attribute array started " + posComment + " has " + rest + " bytes more:");
-                printBytes(in, rest);
+                environment.println(getOutString("") +
+                        "// == The attribute array started at" + posComment + " has " + rest + " bytes more than expected. ==");
+                printBytes(in, rest, true);
             }
             out_end("} // end of " + endingComment);
             arrayInputStream.leave();
@@ -1124,11 +1197,11 @@ class ClassData {
                 environment.getToolOutput().startClass(entityName, Optional.of(".jcod"), environment);
                 if (entityName.equals("module-info")) {
                     entityType = "module";
-                    entityName = "";
+                    entityName = getModuleName();
                 } else {
                     entityType = "class";
                 }
-                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != JcodTokens.Token.IDENT || JcodTokens.constValue(entityName) != -1)) {
+                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != IDENT || JcodTokens.constValue(entityName) != -1)) {
                     // JCod can't parse a entityName matching a keyword or a constant value,
                     // then use the filename instead:
                     out_begin(format("file \"%s.class\" {", entityName));
@@ -1201,7 +1274,7 @@ class ClassData {
             String s = "#" + type_cpx + ";";
             if (environment.printDetailsFlag) {
                 String name = (String) cpool[(int) cpool[type_cpx]];
-                out_println( s +  " // " + name + getStringPos());
+                out_println(s + " // " + name + getStringPos());
             } else {
                 environment.println(s);
             }

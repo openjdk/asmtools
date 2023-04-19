@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,7 +75,11 @@ public class Main extends JcoderTool {
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
         super(toolOutput, log);
         Collections.addAll(fileList, toolInputs);
-        parseArgs();
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput) {
+        super(toolOutput, log);
+        fileList.add(toolInput);
     }
 
     /**

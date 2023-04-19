@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 
 import static org.openjdk.asmtools.jdis.Options.PR.*;
 
-public class Indenter {
+public class Indenter implements Printable {
 
     public static final int INDENT_STEP = 2;
     public static final int INDENT_OFFSET = 2;
@@ -40,7 +40,7 @@ public class Indenter {
 
     // Global formatting strings
     public static final String ARGUMENT_DELIMITER = "^";
-    public static final String LINE_SPLITTER = "Ф";
+    public static final String LINE_SPLITTER = "⾀";
 
     // Global numbers
     public static final int PROGRAM_COUNTER_PLACEHOLDER_LENGTH = 7;

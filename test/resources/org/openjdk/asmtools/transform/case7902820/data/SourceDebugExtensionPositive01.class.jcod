@@ -1,0 +1,203 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+class org/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionPositive01 {
+  0xCAFEBABE;
+  0;                             // minor version
+  58;                            // version
+  [45] {                         // Constant Pool
+    ;                            // first element is empty
+    Method #2 #3;                // #1     at 0x0A
+    class #4;                    // #2     at 0x0F
+    NameAndType #5 #6;           // #3     at 0x12
+    Utf8 "java/lang/Object";     // #4     at 0x17
+    Utf8 "<init>";               // #5     at 0x2A
+    Utf8 "()V";                  // #6     at 0x33
+    class #8;                    // #7     at 0x39
+    Utf8 "java/lang/ArithmeticException"; // #8     at 0x3C
+    Field #10 #11;               // #9     at 0x5C
+    class #12;                   // #10     at 0x61
+    NameAndType #13 #14;         // #11     at 0x64
+    Utf8 "java/lang/System";     // #12     at 0x69
+    Utf8 "out";                  // #13     at 0x7C
+    Utf8 "Ljava/io/PrintStream;"; // #14     at 0x82
+    String #16;                  // #15     at 0x9A
+    Utf8 "failed";               // #16     at 0x9D
+    Method #18 #19;              // #17     at 0xA6
+    class #20;                   // #18     at 0xAB
+    NameAndType #21 #22;         // #19     at 0xAE
+    Utf8 "java/io/PrintStream";  // #20     at 0xB3
+    Utf8 "print";                // #21     at 0xC9
+    Utf8 "(Ljava/lang/String;)V"; // #22     at 0xD1
+    String #24;                  // #23     at 0xE9
+    Utf8 "SourceDebugExtensionPositive01 passed"; // #24     at 0xEC
+    class #26;                   // #25     at 0xF5
+    Utf8 "org/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionPositive01"; // #26     at 0xF8
+    Utf8 "Code";                 // #27     at 0x0149
+    Utf8 "LineNumberTable";      // #28     at 0x0150
+    Utf8 "LocalVariableTable";   // #29     at 0x0162
+    Utf8 "this";                 // #30     at 0x0177
+    Utf8 "Lorg/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionPositive01;"; // #31     at 0x017E
+    Utf8 "calculate";            // #32     at 0x01D1
+    Utf8 "()I";                  // #33     at 0x01DD
+    Utf8 "i";                    // #34     at 0x01E3
+    Utf8 "I";                    // #35     at 0x01E7
+    Utf8 "e";                    // #36     at 0x01EB
+    Utf8 "Ljava/lang/ArithmeticException;"; // #37     at 0x01EF
+    Utf8 "a1";                   // #38     at 0x0211
+    Utf8 "a2";                   // #39     at 0x0216
+    Utf8 "a3";                   // #40     at 0x021B
+    Utf8 "StackMapTable";        // #41     at 0x0220
+    Utf8 "SourceDebugExtension"; // #42     at 0x0230
+    Utf8 "SourceFile";           // #43     at 0x0247
+    Utf8 "SourceDebugExtension.java"; // #44     at 0x0254
+  }                              // end of Constant Pool
+
+  0x0021;                        // access [ ACC_PUBLIC, ACC_SUPER  ]
+  #25;                           // this_cpx
+  #2;                            // super_cpx
+
+  [0] {                          // Interfaces
+  }                              // end of Interfaces
+
+  [0] {                          // Fields
+  }                              // end of Fields
+
+  [2] {                          // Methods
+    {                            // method at 0x027C
+      0x0001;                    // access
+      #5;                        // name_index       : <init>
+      #6;                        // descriptor_index : ()V
+      [1] {                      // Attributes
+        Attr(#27, 47) {          // Code at 0x0284
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[5]{
+            0x2AB70001B1;
+          }
+          [0] {                  // Traps
+          }                      // end of Traps
+          [2] {                  // Attributes
+            Attr(#28, 6) {       // LineNumberTable at 0x029B
+              [1] {              // line_number_table
+                0  25;           // at 0x02A7
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#29, 12) {      // LocalVariableTable at 0x02A7
+              [1] {              // LocalVariableTable
+                0 5 30 31 0;     // at 0x02B9
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method at 0x02B9
+      0x0001;                    // access
+      #32;                       // name_index       : calculate
+      #33;                       // descriptor_index : ()I
+      [1] {                      // Attributes
+        Attr(#27, 260) {         // Code at 0x02C1
+          3;                     // max_stack
+          5;                     // max_locals
+          Bytes[72]{
+            0x043C043D043E1B1C;
+            0x1D646C3604150408;
+            0xA2000C8401018404;
+            0x01A7FFF4053DA700;
+            0x073A04053E1B04A0;
+            0x000D1C04A000081D;
+            0x059F000DB2000912;
+            0x0FB6001105ACB200;
+            0x091217B6001103AC;
+          }
+          [1] {                  // Traps
+            6 30 33 7;           // at 0x0321
+          }                      // end of Traps
+          [3] {                  // Attributes
+            Attr(#28, 62) {      // LineNumberTable at 0x0323
+              [15] {             // line_number_table
+                0  28;           // at 0x032F
+                2  29;           // at 0x0333
+                4  30;           // at 0x0337
+                6  32;           // at 0x033B
+                19  33;          // at 0x033F
+                22  32;          // at 0x0343
+                28  35;          // at 0x0347
+                30  38;          // at 0x034B
+                33  36;          // at 0x034F
+                35  37;          // at 0x0353
+                37  39;          // at 0x0357
+                52  40;          // at 0x035B
+                60  41;          // at 0x035F
+                62  43;          // at 0x0363
+                70  44;          // at 0x0367
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#29, 62) {      // LocalVariableTable at 0x0367
+              [6] {              // LocalVariableTable
+                13 15 34 35 4;   // at 0x0379
+                35 2 36 37 4;    // at 0x0383
+                0 72 30 31 0;    // at 0x038D
+                2 70 38 35 1;    // at 0x0397
+                4 68 39 35 2;    // at 0x03A1
+                6 66 40 35 3;    // at 0x03AB
+              }
+            }                    // end of LocalVariableTable
+            ;
+            Attr(#41, 26) {      // StackMapTable at 0x03AB
+              [6] {              //
+                255b, 13, [5]{7b,25; 1b; 1b; 1b; 1b}, [0]{}; // full_frame
+                250b, 14;        // chop_frame 1
+                68b, [1]z{7b,7}; // same_locals_1_stack_item_frame
+                3b;              // same_frame
+                14b;             // same_frame
+                9b;              // same_frame
+              }
+            }                    // end of StackMapTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+  }                              // end of Methods
+
+  [2] {                          // Attributes
+    Attr(#43, 2) {               // SourceFile at 0x03CD
+      #44;
+    }                            // end of SourceFile
+    ;
+    Attr(#42) {                 // SourceDebugExtension at 0x03D5
+      "\tThe Memory Model determines what values can be read at every point in the program.\n";
+      "The actions of each thread in isolation must behave as governed by the semantics of ";
+      "that thread, with the exception that the values seen by each read are determined by ";
+      "the memory model.\nWhen we refer to this, we say that the program obeys intra-thread ";
+      "semantics.\n\tIntra-thread semantics are the semantics for single-threaded programs, ";
+      "and allow the complete prediction of the behavior of a thread based on the values ";
+      "seen by read actions within the thread.\n\tTo determine if the actions of thread \'t\' in ";
+      "an execution are legal, we simply evaluate the implementation of thread \"t\" as it would ";
+      "be performed in a single-threaded context, as defined in the rest of this specification.";
+    }                            // end of SourceDebugExtension
+  }                              // end of Attributes
+}                                // end of class org/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionPositive01

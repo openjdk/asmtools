@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -246,15 +246,12 @@ public class ParserCP extends ParseBase {
                     scanner.inBits = true;
                 }
                 switch (scanner.token) {
-                    case INTVAL:
-                        v = scanner.intValue;
-                        break;
-                    case LONGVAL:
-                        v = scanner.longValue;
-                        break;
-                    default:
+                    case INTVAL -> v = scanner.intValue;
+                    case LONGVAL -> v = scanner.longValue;
+                    default -> {
                         environment.error(scanner.prevPos, "err.token.expected", "Integer");
                         throw new SyntaxError();
+                    }
                 }
                 valueLong = new ConstValue_Long(v * scanner.sign);
                 scanner.scan();
@@ -279,30 +276,23 @@ public class ParserCP extends ParseBase {
                 i2f:
                 {
                     switch (scanner.token) {
-                        case INTVAL:
+                        case INTVAL -> {
                             if (scanner.inBits) {
                                 v = scanner.intValue;
                                 break i2f;
                             } else {
                                 f = (float) scanner.intValue;
-                                break;
                             }
-                        case FLOATVAL:
-                            f = scanner.floatValue;
-                            break;
-                        case DOUBLEVAL:
-                            f = (float) scanner.doubleValue; // to be excluded?
-                            break;
-                        case INF:
-                            f = Float.POSITIVE_INFINITY;
-                            break;
-                        case NAN:
-                            f = Float.NaN;
-                            break;
-                        default:
+                        }
+                        case FLOATVAL -> f = scanner.floatValue;
+                        case DOUBLEVAL -> f = (float) scanner.doubleValue; // to be excluded?
+                        case INF -> f = Float.POSITIVE_INFINITY;
+                        case NAN -> f = Float.NaN;
+                        default -> {
                             environment.traceln("token=" + scanner.token);
                             environment.error(scanner.pos, "err.token.expected", "<Float>");
                             throw new SyntaxError();
+                        }
                     }
                     v = Float.floatToIntBits(f);
                 }
@@ -331,37 +321,30 @@ public class ParserCP extends ParseBase {
                 d2l:
                 {
                     switch (scanner.token) {
-                        case INTVAL:
+                        case INTVAL -> {
                             if (scanner.inBits) {
                                 v = scanner.intValue;
                                 break d2l;
                             } else {
                                 d = scanner.intValue;
-                                break;
                             }
-                        case LONGVAL:
+                        }
+                        case LONGVAL -> {
                             if (scanner.inBits) {
                                 v = scanner.longValue;
                                 break d2l;
                             } else {
                                 d = (double) scanner.longValue;
-                                break;
                             }
-                        case FLOATVAL:
-                            d = scanner.floatValue;
-                            break;
-                        case DOUBLEVAL:
-                            d = scanner.doubleValue;
-                            break;
-                        case INF:
-                            d = Double.POSITIVE_INFINITY;
-                            break;
-                        case NAN:
-                            d = Double.NaN;
-                            break;
-                        default:
+                        }
+                        case FLOATVAL -> d = scanner.floatValue;
+                        case DOUBLEVAL -> d = scanner.doubleValue;
+                        case INF -> d = Double.POSITIVE_INFINITY;
+                        case NAN -> d = Double.NaN;
+                        default -> {
                             environment.error(scanner.pos, "err.token.expected", "Double");
                             throw new SyntaxError();
+                        }
                     }
                     v = Double.doubleToLongBits(d);
                 }
@@ -378,7 +361,7 @@ public class ParserCP extends ParseBase {
 
         private ConstCell<?> visitName() {
             traceMethodInfoLn();
-            ConstCell obj = null;
+            ConstCell<?> obj = null;
             try {
                 // Parse an external name: CPINDEX, string, or identifier.
                 obj = parser.parseName();
@@ -392,7 +375,7 @@ public class ParserCP extends ParseBase {
         public ConstValue<?> visitMethodType() {
             traceMethodInfoLn();
             ConstValue_MethodType obj = null;
-            ConstCell cell = visitName();
+            ConstCell<ConstValue_UTF8> cell = (ConstCell<ConstValue_UTF8>) visitName();
             if (syntaxError == null) {
                 obj = new ConstValue_MethodType(cell);
             }
@@ -423,7 +406,6 @@ public class ParserCP extends ParseBase {
             return obj;
         }
 
-        //TODO: UPDATE
         @Override
         public ConstValue<?> visitPackage() {
             traceMethodInfoLn();
@@ -519,7 +501,7 @@ public class ParserCP extends ParseBase {
                 } else {
                     // no class provided - assume current class
                     if (parser.classData.this_class.isSet() || parser.classData.this_class.ref == null) {
-                        ClassCell = parser.classData.this_class;
+                        ClassCell = (ConstCell<ConstValue_Class>) parser.classData.this_class;
                     } else {
                         ClassCell = parser.pool.findCell((ConstValue_Class) parser.classData.this_class.ref);
                     }
@@ -550,32 +532,32 @@ public class ParserCP extends ParseBase {
         }
 
         @Override
-        public ConstValue visitField() {
+        public ConstValue<?> visitField() {
             traceMethodInfoLn();
             return visitMember(ConstType.CONSTANT_FIELDREF);
         }
 
         @Override
-        public ConstValue visitMethod() {
+        public ConstValue<?> visitMethod() {
             traceMethodInfoLn();
             return visitMember(ConstType.CONSTANT_METHODREF);
         }
 
         @Override
-        public ConstValue visitInterfaceMethod() {
+        public ConstValue<?> visitInterfaceMethod() {
             traceMethodInfoLn();
             return visitMember(ConstType.CONSTANT_INTERFACEMETHODREF);
         }
 
         @Override
-        public ConstValue visitNameAndType() {
+        public ConstValue<?> visitNameAndType() {
             traceMethodInfoLn();
             ConstValue_NameAndType obj = null;
             try {
-                ConstCell NameCell = parser.parseName(), TypeCell;
+                ConstCell<?> NameCell = parser.parseName(), TypeCell;
                 scanner.expect(Token.COLON);
                 TypeCell = parser.parseName();
-                obj = new ConstValue_NameAndType(NameCell, TypeCell);
+                obj = new ConstValue_NameAndType((ConstCell<ConstValue_UTF8>) NameCell, (ConstCell<ConstValue_UTF8>) TypeCell);
             } catch (SyntaxError se) {
                 syntaxError = se;
             }
@@ -585,20 +567,20 @@ public class ParserCP extends ParseBase {
         @Override
         public ConstValue_InvokeDynamic visitInvokeDynamic() {
             traceMethodInfoLn();
-            final BiFunction<BootstrapMethodData, ConstCell, ConstValue_InvokeDynamic> ctor =
-                    (bsmData, napeCell) -> new ConstValue_InvokeDynamic(bsmData, napeCell);
+            final BiFunction<BootstrapMethodData, ConstCell<?>, ConstValue_InvokeDynamic> ctor =
+                    ConstValue_InvokeDynamic::new;
             return visitBsm(ctor);
         }
 
         @Override
         public ConstValue_Dynamic visitDynamic() {
             traceMethodInfoLn();
-            final BiFunction<BootstrapMethodData, ConstCell, ConstValue_Dynamic> ctor =
-                    (bsmData, napeCell) -> new ConstValue_Dynamic(bsmData, napeCell);
+            final BiFunction<BootstrapMethodData, ConstCell<?>, ConstValue_Dynamic> ctor =
+                    ConstValue_Dynamic::new;
             return visitBsm(ctor);
         }
 
-        private <E extends ConstValue_BootstrapMethod> E visitBsm(BiFunction<BootstrapMethodData, ConstCell, E> ctor) {
+        private <E extends ConstValue_BootstrapMethod> E visitBsm(BiFunction<BootstrapMethodData, ConstCell<?>, E> ctor) {
             E obj = null;
             try {
                 if (scanner.token == Token.INTVAL) {
@@ -621,9 +603,9 @@ public class ParserCP extends ParseBase {
                     obj = ctor.apply(bsmData, parser.pool.getCell(cpx));
                 } else {
                     // Handle full form
-                    ConstCell MHCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
+                    ConstCell<?> MHCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
                     scanner.expect(Token.COLON);
-                    ConstCell NapeCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
+                    ConstCell<?> NapeCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
                     if (scanner.token == Token.LBRACE) {
                         ParserCP.this.lbrace++;
                         scanner.scan();
