@@ -33,17 +33,28 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class CompileAction {
-
+    private static CompileAction entry;
     private final File destDir;
+    private List<String> toolArgs = new ArrayList<>();
 
     public CompileAction() throws IOException {
         destDir = Files.createTempDirectory("compile").toFile();
         destDir.deleteOnExit();
+    }
+
+    public static InputOutputTests.LogAndReturn JAsm(List<String> files, String... args) {
+        return getEntry().setToolArgs().setToolArgs(args).jasm(files);
+    }
+
+    public static InputOutputTests.LogAndReturn JCoder(List<String> files, String... args) {
+        return getEntry().setToolArgs().setToolArgs(args).jcoder(files);
     }
 
     public CompileAction(File destDir) {
@@ -69,13 +80,13 @@ public class CompileAction {
     /**
      * Moderator method based on reflection API to call tools
      */
-    private void reflectionAction(String toolName, List<String> files) {
+    public void reflectionAction(String toolName, List<String> files) {
         if (files.isEmpty())
             fail(toolName + ": no files");
-        List<String> toolArgs = new ArrayList<>();
-        toolArgs.add("-d");
-        toolArgs.add(destDir.getPath());
-        toolArgs.addAll(files);
+        List<String> args = toolArgs.stream().collect(Collectors.toList());
+        args.add("-d");
+        args.add(destDir.getPath());
+        args.addAll(files);
         try {
             String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
             Class<?> toolClass = Class.forName(toolClassName);
@@ -83,7 +94,7 @@ public class CompileAction {
             PrintStream ps = new PrintStream(System.out);
             Object tool = constr.newInstance(ps, toolName);
             Method m = toolClass.getMethod("compile", String[].class);
-            Object r = m.invoke(tool, new Object[]{toolArgs.toArray(new String[0])});
+            Object r = m.invoke(tool, new Object[]{args.toArray(new String[0])});
             if (r instanceof Boolean) {
                 boolean ok = (Boolean) r;
                 if (!ok) {
@@ -102,21 +113,23 @@ public class CompileAction {
     /**
      * @return InputOutputTests.LogAndReturn wrapping both a log stream as a string and return code
      */
-    private InputOutputTests.LogAndReturn action(String toolName, List<String> files) {
-        int rc = 0;
+    public InputOutputTests.LogAndReturn action(String toolName, List<String> files) {
         if (files.isEmpty())
             fail(toolName + ": no files");
-        List<String> toolArgs = new ArrayList<>();
-        toolArgs.add("-d");
-        toolArgs.add(destDir.getPath());
-        toolArgs.addAll(files);
+        List<String> args = toolArgs.stream().collect(Collectors.toList());
+        args.add("-d");
+        args.add(destDir.getPath());
+        args.addAll(files);
+        int rc = 0;
         ByteOutput encodedFiles = new ByteOutput();
         StringLog encodeLog = new StringLog();
-        if( toolName.equals("jcoder") ) {
-            org.openjdk.asmtools.jcoder.Main jcod = new org.openjdk.asmtools.jcoder.Main(encodedFiles, encodeLog, toolArgs.toArray(new String[0]));
+        if (toolName.equals("jcoder")) {
+            org.openjdk.asmtools.jcoder.Main jcod = new org.openjdk.asmtools.jcoder.Main(encodedFiles, encodeLog,
+                    args.toArray(new String[0]));
             rc = jcod.compile();
         } else if (toolName.equals("jasm")) {
-            org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(encodedFiles, encodeLog, toolArgs.toArray(new String[0]));
+            org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(encodedFiles, encodeLog,
+                    args.toArray(new String[0]));
             rc = jasm.compile();
         } else {
             fail(new IllegalArgumentException("Unknown tools name: " + toolName));
@@ -124,4 +137,24 @@ public class CompileAction {
         return new InputOutputTests.LogAndReturn(encodeLog, rc);
     }
 
+    public CompileAction setToolArgs(String... args) {
+        if (args != null && args.length > 0) {
+            Collections.addAll(this.toolArgs, args);
+        } else {
+            this.toolArgs.clear();
+        }
+        return this;
+    }
+
+    private static CompileAction getEntry() {
+        if (CompileAction.entry == null) {
+            try {
+                entry = new CompileAction();
+            } catch (IOException e) {
+                fail(e.toString());
+                throw new RuntimeException(e); // // appeasing the compiler: this line will never be executed.
+            }
+        }
+        return entry;
+    }
 }

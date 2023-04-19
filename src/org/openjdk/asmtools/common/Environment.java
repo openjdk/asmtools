@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,9 +32,6 @@ import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * TODO: Replacement for Environment that will replace it.
- */
 public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     // Results
@@ -66,8 +63,8 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         toolLogger.setInputFileName(inputFileName);
     }
 
-    public void setTraceFlag(boolean traceFlag) {
-        this.traceFlag = traceFlag;
+    public void setTraceFlag(boolean flag) {
+        this.traceFlag = flag;
     }
 
     public void setIgnoreWarnings(boolean ignoreWarnings) {
@@ -79,6 +76,19 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     }
 
     public String getSimpleInputFileName() { return toolLogger.getSimpleInputFileName(); }
+
+    /**
+     * Returns the name of the source file that is used by the tool to assemble the SourceFile attribute
+     *
+     * @return the name of the source file
+     */
+    public String getSourceName() {
+        String sourceFileName = getSimpleInputFileName();
+        String sourceName = sourceFileName.contains(".") ?
+                sourceFileName.substring(0, sourceFileName.indexOf('.')) :
+                sourceFileName;
+        return sourceName;
+    }
 
     public ToolInput getInputFile() { return inputFileName; }
 
@@ -127,7 +137,6 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     public void setOutputs(DualStreamToolOutput nw) {
         getLogger().setOutputs(nw);
     }
-
 
     @Override
     public ToolOutput getToolOutput() {

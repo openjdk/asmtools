@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -82,11 +82,11 @@ public final class ClassFileConst {
         return NameToConstantType.get(parseKey);
     }
 
-    private static void registerConstantType(ConstType tt) {
-        NameToConstantType.put(tt.parseKey, tt);
-        if ( !ConstantTypes.containsKey(tt.value) ) {
+    private static void registerConstantType(ConstType constType) {
+        NameToConstantType.put(constType.parseKey, constType);
+        if ( !ConstantTypes.containsKey(constType.tag) ) {
             // only first CONSTANT_INTEGER(3, "CONSTANT_INTEGER", "int", AnnotationElementType.AE_INT)
-            ConstantTypes.put(tt.value, tt);
+            ConstantTypes.put(constType.tag, constType);
         }
     }
 
@@ -145,7 +145,8 @@ public final class ClassFileConst {
         CONSTANT_UNKNOWN(-1, "CONSTANT_UNKNOWN", "", AnnotationElementType.AE_NOT_APPLICABLE),
         //
         CONSTANT_ZERO(0, "CONSTANT_ZERO", "", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_UTF8(1, "CONSTANT_UTF8", "Asciz", AnnotationElementType.AE_STRING),
+        CONSTANT_UTF8(1, "CONSTANT_UTF8", "Utf8", AnnotationElementType.AE_STRING),
+        CONSTANT_ASCIZ(1, "CONSTANT_UTF8", "Asciz", AnnotationElementType.AE_STRING),   // supports previous version
         // Constant 2 reserved
         CONSTANT_INTEGER(3, "CONSTANT_INTEGER",  AnnotationElementType.AE_INT.printValue, AnnotationElementType.AE_INT),
         CONSTANT_INTEGER_BYTE(3, "CONSTANT_INTEGER", AnnotationElementType.AE_BYTE.printValue, AnnotationElementType.AE_BYTE),
@@ -173,13 +174,13 @@ public final class ClassFileConst {
 
         static final public int maxTag = 20;
 
-        private final int value;
+        private final int tag;
         private final String printVal;
         private final String parseKey;
         private final AnnotationElementType annotationElementType;
 
         ConstType(int val, String printVal, String parseKey, AnnotationElementType annotationElementType) {
-            this.value = val;
+            this.tag = val;
             this.printVal = printVal;
             this.parseKey = parseKey;
             this.annotationElementType = annotationElementType;
@@ -187,7 +188,7 @@ public final class ClassFileConst {
 
         public boolean oneOf(ConstType... constTypes) {
             for (ConstType constType : constTypes) {
-                if (this.value == constType.value) {
+                if (this.tag == constType.tag) {
                     return true;
                 }
             }
@@ -205,8 +206,8 @@ public final class ClassFileConst {
             return annotationElementType.tag();
         }
 
-        public int value() {
-            return value;
+        public byte getTag() {
+            return (byte)tag;
         }
 
         public String parseKey() {
@@ -221,10 +222,9 @@ public final class ClassFileConst {
             out.print(parseKey);
         }
 
-
         @Override
         public String toString() {
-            return printVal + "." + value;
+            return printVal + "." + tag;
         }
     }
 

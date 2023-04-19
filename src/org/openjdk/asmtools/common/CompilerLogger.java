@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.asmutils.StringUtils.repeat;
-import static org.openjdk.asmtools.common.CompilerConstants.OFFSETBITS;
+import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
 import static org.openjdk.asmtools.common.EMessageKind.ERROR;
 import static org.openjdk.asmtools.common.EMessageKind.WARNING;
 import static org.openjdk.asmtools.common.Environment.OK;
@@ -113,14 +113,14 @@ public class CompilerLogger extends ToolLogger implements ILogger {
         if (where == NOWHERE || fileContent.isEmpty()) {
             return null;
         } else {
-            final int lineNumber = lineNumber(where), absPos = where & ((1 << OFFSETBITS) - 1);
+            final int lineNumber = lineNumber(where), absPos = where & ((1 << OFFSET_BITS) - 1);
             int lineOffset = absPos - (fileContent.subList(0, lineNumber - 1).stream().mapToInt(String::length).sum() + lineNumber - 1);
             return new Pair<>(lineNumber, lineOffset);
         }
     }
 
     public int lineNumber(int where) {
-        return where >>> OFFSETBITS;
+        return where >>> OFFSET_BITS;
     }
 
     public long getCount(EMessageKind kind) {

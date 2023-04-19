@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,15 +25,13 @@ package org.openjdk.asmtools.common;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 public class uEscWriter extends Writer {
-    /*-------------------------------------------------------- */
-    /* uEscWriter Fields */
 
     static final char[] hexTable = "0123456789ABCDEF".toCharArray();
     OutputStream out;
     byte[] tmpl;
-    /*-------------------------------------------------------- */
 
     public uEscWriter(OutputStream out) {
         this.out = out;
@@ -42,25 +40,11 @@ public class uEscWriter extends Writer {
         tmpl[1] = (byte) 'u';
     }
 
-    @Override
-    public synchronized void write(int c) throws IOException {
-        if (c < 128) {
-            out.write(c);
-            return;
-        }
-        // write \udddd
-        byte[] tmpll = tmpl;
-        for (int k = 3; k >= 0; k--) {
-            tmpll[5 - k] = (byte) hexTable[(c >> 4 * k) & 0xF];
-        }
-        out.write(tmpll, 0, 6);
-    }
 
     @Override
     public synchronized void write(char[] cc, int ofs, int len) throws IOException {
-        for (int k = ofs; k < len; k++) {
-            write(cc[k]);
-        }
+        byte[] b = String.copyValueOf(cc, ofs, len).getBytes(StandardCharsets.UTF_8);
+        out.write(b, ofs, b.length);
     }
 
     @Override
@@ -70,5 +54,4 @@ public class uEscWriter extends Writer {
     @Override
     public void close() {
     }
-} // end uEscWriter
-
+}

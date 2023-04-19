@@ -23,13 +23,14 @@
 package org.openjdk.asmtools.jasm;
 
 
+import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.common.SyntaxError;
 
 import java.util.function.Predicate;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.common.CompilerConstants.EOF;
-import static org.openjdk.asmtools.common.CompilerConstants.OFFSETBITS;
+import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.JasmTokens.keyword_token_ident;
 
@@ -158,7 +159,7 @@ public class Scanner extends ParseBase {
                 if (t == Token.IDENT) {
                     environment.error(pos, "err.identifier.expected");
                 } else {
-                    environment.error(pos, "err.token.expected", "<" + t.printValue() + ">");
+                    environment.error(pos, "err.token.expected", "<" + t.parseKey() + ">");
                 }
                 environment.traceln("<<<<<PROBLEM>>>>>>>: ");
                 throw new SyntaxError();
@@ -255,7 +256,7 @@ public class Scanner extends ParseBase {
                     } else {
                         seenstar = true;
                         count = c;
-                        while ((ch = environment.read()) == '*');
+                        while ((ch = environment.read()) == '*') ;
                         switch (ch) {
                             case ' ' -> ch = environment.read();
                             case '/' -> {
@@ -709,103 +710,32 @@ public class Scanner extends ParseBase {
                 token = Token.ANNOTATION;
                 return;
             }
-
             firstIteration = false;
-            switch (ch) {
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'g':
-                case 'h':
-                case 'i':
-                case 'j':
-                case 'k':
-                case 'l':
-                case 'm':
-                case 'n':
-                case 'o':
-                case 'p':
-                case 'q':
-                case 'r':
-                case 's':
-                case 't':
-                case 'u':
-                case 'v':
-                case 'w':
-                case 'x':
-                case 'y':
-                case 'z':
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '$':
-                case '_':
-                case '-':
-                case '[':
-                case ']':
-                case '(':
-                case ')':
-                case '<':
-                case '>':
-                    break;
-                case '/': {// may be comment right after identifier
-                    int c = environment.lookForward();
-                    if ((c == '*') || (c == '/')) {
-                        break scanloop; // yes, comment
+            if (!Character.isJavaIdentifierPart(ch) && !StringUtils.isOneOf(ch, '-', '[', ']', '(', ')', '<', '>')) {
+                switch (ch) {
+                    case '/': {// may be comment right after identifier
+                        int c = environment.lookForward();
+                        if ((c == '*') || (c == '/')) {
+                            break scanloop; // yes, comment
+                        }
+                        break; // no, continue to parse identifier
                     }
-                    break; // no, continue to parse identifier
-                }
-                case '\\':
-                    ch = environment.read();
-                    if (ch == 'u') {
-                        ch = environment.convertUnicode();
-                        if (!Character.isLetterOrDigit(ch)) {
+                    case '\\':
+                        ch = environment.read();
+                        if (ch == 'u') {
+                            ch = environment.convertUnicode();
+                            if (!Character.isLetterOrDigit(ch)) {
+                                break;
+                            }
+                        } else if (escapingAllowed.test(ch)) {
                             break;
                         }
-                    } else if (escapingAllowed.test(ch)) {
-                        break;
-                    }
-                    int p = environment.getPosition();
-                    environment.error(p, "err.invalid.escape.char");
-                default:
-                    break scanloop;
-            } // end switch
+                        int p = environment.getPosition();
+                        environment.error(p, "err.invalid.escape.char");
+                    default:
+                        break scanloop;
+                } // end switch
+            }
         } // end scanloop
         idValue = bufferString();
         stringValue = idValue;
@@ -820,194 +750,117 @@ public class Scanner extends ParseBase {
         loop:
         for (; ; ) {
             pos = environment.getPosition();
-            switch (ch) {
-                case EOF:
+            if (Character.isLetter(ch) || StringUtils.isOneOf(ch, '$', '_', '@', '[', ']', '(', ')', '<', '>')) {
+                scanIdentifier(null);
+                break;
+            } else if (ch == EOF) {
+                token = Token.EOF;
+                break;
+            } else if (ch == '\n' || ch == '\r' || ch == ' ' || ch == '\t' || ch == '\f') {
+                ch = environment.read();
+            } else if (ch == '/') {
+                switch (ch = environment.read()) {
+                    case '/':
+                        // Parse a // comment
+                        while (((ch = environment.read()) != EOF) && (ch != '\n')) ;
+                        break;
+                    case '*':
+                        ch = environment.read();
+                        if (ch == '*') {
+                            docComment = scanDocComment();
+                        } else {
+                            skipComment();
+                        }
+                        break;
+                    default:
+                        token = Token.DIV;
+                        break loop;
+                }
+            } else if (ch == '"') {
+                scanString();
+                break;
+            } else if (ch == '-') {
+                intValue = -1;
+                token = Token.SIGN;
+                ch = environment.read();
+                break;
+            } else if (ch == '+') {
+                intValue = 1;
+                ch = environment.read();
+                token = Token.SIGN;
+                break;
+            } else if (ch == '0' || ch == '1' || ch == '2' || ch == '3' || ch == '4' || ch == '5' ||
+                    ch == '6' || ch == '7' || ch == '8' || ch == '9') {
+                scanNumber();
+                break;
+            } else if (ch == '.') {
+                switch (ch = environment.read()) {
+                    case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                        count = 0;
+                        putCh('.');
+                        scanReal();
+                    }
+                    default -> token = Token.FIELD;
+                }
+                break;
+            } else if (ch == '{') {
+                ch = environment.read();
+                token = Token.LBRACE;
+                break;
+            } else if (ch == '}') {
+                ch = environment.read();
+                token = Token.RBRACE;
+                break;
+            } else if (ch == ',') {
+                ch = environment.read();
+                token = Token.COMMA;
+                break;
+            } else if (ch == ';') {
+                ch = environment.read();
+                token = Token.SEMICOLON;
+                break;
+            } else if (ch == ':') {
+                ch = environment.read();
+                token = Token.COLON;
+                break;
+            } else if (ch == '=') {
+                if ((ch = environment.read()) == '=') {
+                    ch = environment.read();
+                    token = Token.EQ;
+                    break;
+                }
+                token = Token.ASSIGN;
+                break;
+            } else if (ch == '\u001a') {// Our one concession to DOS.
+                if ((ch = environment.read()) == EOF) {
                     token = Token.EOF;
-                    break loop;
-                case '\n':
-                case '\r':
-                case ' ':
-                case '\t':
-                case '\f':
-                    ch = environment.read();
                     break;
-                case '/':
-                    switch (ch = environment.read()) {
-                        case '/':
-                            // Parse a // comment
-                            while (((ch = environment.read()) != EOF) && (ch != '\n'));
-                            break;
-                        case '*':
-                            ch = environment.read();
-                            if (ch == '*') {
-                                docComment = scanDocComment();
-                            } else {
-                                skipComment();
-                            }
-                            break;
-                        default:
-                            token = Token.DIV;
-                            break loop;
+                }
+                environment.warning(prevPos, "warn.funny.char", ch);
+                ch = environment.read();
+            } else if (ch == '#') {
+                int c = environment.lookForward();
+                if (c == '{') {
+                    // '#' char denotes a "paramMethod name" token
+                    ch = environment.read();
+                    token = Token.PARAM_NAME;
+                    break loop;
+                }
+                // otherwise, it is a normal cpref
+                scanCPRef();
+                break loop;
+            } else if (ch == '\\') {
+                ch = environment.read();
+                if (ch == 'u') {
+                    ch = environment.convertUnicode();
+                    if (Character.isLetterOrDigit(ch) && !Character.isDigit(ch)) {
+                        scanIdentifier(null);
+                        break;
                     }
+                } else if (escapingAllowed.test(ch)) {
+                    scanIdentifier(new char[]{'\\', (char) ch});
                     break;
-                case '"':
-                    scanString();
-                    break loop;
-                case '-':
-                    intValue = -1;
-                    token = Token.SIGN;
-                    ch = environment.read();
-                    break loop;
-                case '+':
-                    intValue = 1;
-                    ch = environment.read();
-                    token = Token.SIGN;
-                    break loop;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    scanNumber();
-                    break loop;
-                case '.':
-                    switch (ch = environment.read()) {
-                        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
-                            count = 0;
-                            putCh('.');
-                            scanReal();
-                        }
-                        default -> token = Token.FIELD;
-                    }
-                    break loop;
-                case '{':
-                    ch = environment.read();
-                    token = Token.LBRACE;
-                    break loop;
-                case '}':
-                    ch = environment.read();
-                    token = Token.RBRACE;
-                    break loop;
-                case ',':
-                    ch = environment.read();
-                    token = Token.COMMA;
-                    break loop;
-                case ';':
-                    ch = environment.read();
-                    token = Token.SEMICOLON;
-                    break loop;
-                case ':':
-                    ch = environment.read();
-                    token = Token.COLON;
-                    break loop;
-                case '=':
-                    if ((ch = environment.read()) == '=') {
-                        ch = environment.read();
-                        token = Token.EQ;
-                        break loop;
-                    }
-                    token = Token.ASSIGN;
-                    break loop;
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'g':
-                case 'h':
-                case 'i':
-                case 'j':
-                case 'k':
-                case 'l':
-                case 'm':
-                case 'n':
-                case 'o':
-                case 'p':
-                case 'q':
-                case 'r':
-                case 's':
-                case 't':
-                case 'u':
-                case 'v':
-                case 'w':
-                case 'x':
-                case 'y':
-                case 'z':
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case '$':
-                case '_':
-                case '@':
-                case '[':
-                case ']':
-                case '(':
-                case ')':
-                case '<':
-                case '>':
-                    scanIdentifier(null);
-                    break loop;
-                case '\u001a':
-                    // Our one concession to DOS.
-                    if ((ch = environment.read()) == EOF) {
-                        token = Token.EOF;
-                        break loop;
-                    }
-                    environment.warning(prevPos, "warn.funny.char", ch);
-                    ch = environment.read();
-                    break;
-                case '#':
-                    int c = environment.lookForward();
-                    if (c == '{') {
-                        // '#' char denotes a "paramMethod name" token
-                        ch = environment.read();
-                        token = Token.PARAM_NAME;
-                        break loop;
-                    }
-                    // otherwise, it is a normal cpref
-                    scanCPRef();
-                    break loop;
-                case '\\':
-                    ch = environment.read();
-                    if (ch == 'u') {
-                        ch = environment.convertUnicode();
-                        if (Character.isLetterOrDigit(ch) && !Character.isDigit(ch)) {
-                            scanIdentifier(null);
-                            break loop;
-                        }
-                    } else if (escapingAllowed.test(ch)) {
-                        scanIdentifier(new char[]{'\\', (char) ch});
-                        break loop;
-                    }
+                }
 //                    if ((ch = in.read()) == 'u') {
 //                        ch = in.convertUnicode();
 //                        if (isUCLetter(ch)) {
@@ -1015,11 +868,16 @@ public class Scanner extends ParseBase {
 //                            break loop;
 //                        }
 //                    }
-                default:
-                    environment.traceln("Funny char with code=" + ch +" at: " +
-                            environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSETBITS) - 1)));
-                    environment.warning(pos, "warn.funny.char", ch);
-                    ch = environment.read();
+
+                environment.traceln("Funny char with code=" + ch + " at: " +
+                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                environment.warning(pos, "warn.funny.char", ch);
+                ch = environment.read();
+            } else {
+                environment.traceln("Funny char with code=" + ch + " at: " +
+                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                environment.warning(pos, "warn.funny.char", ch);
+                ch = environment.read();
             }
         }
     }

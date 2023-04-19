@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -105,7 +105,7 @@ public class Scanner {
     }
 
     void addConstDebug(ConstType ct) {
-        numCPentrs += 1;
+        numCPentrs++;
         environment.traceln("\n Const[" + numCPentrs + "] = " + ct.printval());
     }
 
@@ -126,7 +126,7 @@ public class Scanner {
             ch = prevCh;
             prevCh = -1;
         } else {
-            ch = inputFile.read();
+            ch = inputFile.readUTF();
         }
     }
 
@@ -153,7 +153,7 @@ public class Scanner {
         while (true) {
             switch (ch) {
                 case EOF -> {
-                    environment.error(pos, "eof.in.comment");
+                    environment.error(pos, "err.eof.in.comment");
                     return;
                 }
                 case '*' -> {
@@ -194,7 +194,7 @@ public class Scanner {
         while (true) {
             switch (ch) {
                 case EOF:
-                    environment.error(pos, "eof.in.comment");
+                    environment.error(pos, "err.eof.in.comment");
                     return bufferString();
 
                 case '\n':
@@ -302,7 +302,7 @@ public class Scanner {
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            environment.error(inputFile.pos, "err.invalid.number", Character.toString((char) ch));
+            environment.error(inputFile.position, "err.invalid.number", Character.toString((char) ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
@@ -368,7 +368,7 @@ public class Scanner {
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            environment.error(inputFile.pos, "invalid.number", Character.toString((char) ch));
+            environment.error(inputFile.position, "err.invalid.number", Character.toString((char) ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
@@ -376,7 +376,7 @@ public class Scanner {
 //        } else if ( overflow || (intValue - 1 < -1) ) {
         } else if (overflow) {
             intValue = 0;   // so we don't get second overflow in Parser
-            environment.error(pos, "overflow");
+            environment.error(pos, "err.overflow");
         }
     } // scanNumber()
 
@@ -386,7 +386,7 @@ public class Scanner {
      * @return the character or -1 if it escaped an end-of-line.
      */
     private int scanEscapeChar() throws IOException {
-        int p = inputFile.pos;
+        int p = inputFile.position;
 
         readCh();
         switch (ch) {
@@ -398,7 +398,7 @@ public class Scanner {
                         case '0', '1', '2', '3', '4', '5', '6', '7' -> n = (n << 3) + ch - '0';
                         default -> {
                             if (n > 0xFF) {
-                                environment.error(p, "invalid.escape.char");
+                                environment.error(p, "err.invalid.escape.char");
                             }
                             return n;
                         }
@@ -406,7 +406,7 @@ public class Scanner {
                 }
                 readCh();
                 if (n > 0xFF) {
-                    environment.error(p, "invalid.escape.char");
+                    environment.error(p, "err.invalid.escape.char");
                 }
                 return n;
             }
@@ -444,7 +444,7 @@ public class Scanner {
             }
         }
 
-        environment.error(p, "invalid.escape.char");
+        environment.error(p, "err.invalid.escape.char");
         readCh();
         return -1;
     }
@@ -461,12 +461,12 @@ public class Scanner {
         for (; ; ) {
             switch (ch) {
                 case EOF:
-                    environment.error(pos, "eof.in.string");
+                    environment.error(pos, "err.eof.in.string");
                     break loop;
 
                 case '\n':
                     readCh();
-                    environment.error(pos, "newline.in.string");
+                    environment.error(pos, "err.newline.in.string");
                     break loop;
 
                 case '"':
@@ -504,12 +504,12 @@ public class Scanner {
             int c = ch;
             switch (ch) {
                 case EOF:
-                    environment.error(pos, "eof.in.string");
+                    environment.error(pos, "err.eof.in.string");
                     break loop;
 
                 case '\n':
                     readCh();
-                    environment.error(pos, "newline.in.string");
+                    environment.error(pos, "err.newline.in.string");
                     break loop;
 
                 case '\'':
@@ -583,7 +583,7 @@ public class Scanner {
     protected void skipTill(int sym) throws IOException {
         while (true) {
             if (ch == EOF) {
-                environment.error(pos, "eof.in.comment");
+                environment.error(pos, "err.eof.in.comment");
                 return;
             } else if (ch == sym) {
                 return;
@@ -594,11 +594,11 @@ public class Scanner {
 
     protected int xscan() throws IOException {
         int retPos = pos;
-        prevPos = inputFile.pos;
+        prevPos = inputFile.position;
         docComment = null;
         sign = 1;
         for (; ; ) {
-            pos = inputFile.pos;
+            pos = inputFile.position;
 
             switch (ch) {
                 case EOF:
@@ -752,7 +752,7 @@ public class Scanner {
                         token = Token.EOF;
                         return retPos;
                     }
-                    environment.error(pos, "funny.char");
+                    environment.error(pos, "err.funny.char");
                     readCh();
                     break;
 
@@ -765,7 +765,7 @@ public class Scanner {
                     readCh();
                     retPos = pos;
                     if (!Character.isJavaIdentifierStart((char) ch)) {
-                        environment.error(pos, "identifier.expected");
+                        environment.error(pos, "err.identifier.expected");
                     }
                     scanIdentifier();
                     String macroId = stringValue;
@@ -784,7 +784,7 @@ public class Scanner {
                         scanIdentifier();
                         return retPos;
                     }
-                    environment.error(pos, "funny.char");
+                    environment.error(pos, "err.funny.char");
                     readCh();
                     break;
             }
@@ -806,7 +806,7 @@ public class Scanner {
                     return;
                 }
             } else if (token == Token.EOF) {
-                environment.error(pos, "unbalanced.paren");
+                environment.error(pos, "err.unbalanced.paren");
                 return;
             }
         }

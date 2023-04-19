@@ -1,0 +1,51 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+package org/openjdk/asmtools/transform/case8302260/data;
+
+public interface #1 /* ITestInterfaceA */ version 60:0
+{
+  const #1  = class  #2;             // ITestInterfaceA
+  const #2  = Asciz  "org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA";
+  const #3  = class  #4;             // java/lang/Object
+  const #4  = Asciz  "java/lang/Object";
+  const #5  = Asciz  "stringField";
+  const #6  = Asciz  "Ljava/lang/String;";
+  const #7  = Asciz  "ConstantValue";
+  const #8  = String #9;             // "ITestInterfaceA"
+  const #9  = Asciz  "ITestInterfaceA";
+  const #10 = Asciz  "longField";
+  const #11 = Asciz  "J";
+  const #12 = long   10l;
+  const #14 = Asciz  "stringField3";
+  const #15 = String #16;            // "ITestInterfaceA3"
+  const #16 = Asciz  "ITestInterfaceA3";
+  const #17 = Asciz  "longField3";
+  const #18 = long   13l;
+  const #20 = Asciz  "SourceFile";
+  const #21 = Asciz  "ITestInterfaceA.java";
+
+  public static final Field #5:#6 = #8; // stringField:"Ljava/lang/String;" = String "ITestInterfaceA"
+  public static final Field #10:#11 = #12; // longField:J = long 10l
+  public static final Field #14:#6 = #15; // stringField3:"Ljava/lang/String;" = String "ITestInterfaceA3"
+  public static final Field #17:#11 = #18; // longField3:J = long 13l
+} // end Class ITestInterfaceA compiled from "ITestInterfaceA.java"

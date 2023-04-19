@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License version
  * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110EOF301 USA.
  *
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
@@ -22,18 +22,19 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.*;
+import org.openjdk.asmtools.common.CompilerLogger;
+import org.openjdk.asmtools.common.EMessageKind;
+import org.openjdk.asmtools.common.Environment;
+import org.openjdk.asmtools.common.inputs.TextInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 
-import static org.openjdk.asmtools.common.CompilerConstants.OFFSETBITS;
+import static org.openjdk.asmtools.common.CompilerConstants.*;
 
 public class JcoderEnvironment extends Environment<CompilerLogger> {
 
@@ -97,19 +98,11 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
     }
 
     public int getPosition() {
-        return inputFile == null ? 0 : inputFile.pos;
+        return inputFile == null ? 0 : inputFile.position;
     }
 
     public int read() throws IOException {
-        return inputFile.read();
-    }
-
-    public void close() {
-        try {
-            inputFile.close();
-        } catch (IOException ioe) {
-            printException(ioe);
-        }
+        return inputFile.readUTF();
     }
 
     static class JcoderBuilder extends Builder<JcoderEnvironment, CompilerLogger> {
@@ -124,63 +117,63 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
         }
     }
 
-    class InputFile {
-        // The increment for each character.
-        static final int OFFSETINC = 1;
-        // The increment for each line.
-        static final int LINEINC = 1 << OFFSETBITS;
-        InputStream in;
-        int pos;
-        private int chPos;
-        private int pushBack = -1;
+    class InputFile extends TextInput {
+
+        private int pushBack = EOF;
+        //
+        private int strPos = 0;
 
         InputFile(DataInputStream dataInputStream) throws IOException {
-            this.in = new BufferedInputStream(dataInputStream);
-            chPos = LINEINC;
+            super(dataInputStream);
+            charPos = LINE_INC;
         }
 
-        public void close() throws IOException {
-            in.close();
+        private int getChar() {
+            try {
+                return strData.charAt(strPos++);
+            } catch (StringIndexOutOfBoundsException e) {
+                return EOF;
+            }
         }
 
-        public int read() throws IOException {
-            pos = chPos;
-            chPos += OFFSETINC;
-
+        @Override
+        public int readUTF() {
+            position = charPos;
+            charPos += OFFSET_INC;
             int c = pushBack;
-            if (c == -1) {
-                c = in.read();
+            if (c == EOF) {
+                c = getChar();
             } else {
-                pushBack = -1;
+                pushBack = EOF;
             }
 
             // parse special characters
             switch (c) {
-                case -2:
-                    // -2 is a special code indicating a pushback of a backslash that
+                case BACKSLASH -> {
+                    // BACKSLASH is a special code indicating a pushback of a backslash that
                     // definitely isn't the start of a unicode sequence.
                     return '\\';
-
-                case '\\':
-                    if ((c = in.read()) != 'u') {
-                        pushBack = (c == '\\' ? -2 : c);
+                }
+                case '\\' -> {
+                    if ((c = getChar()) != 'u') {
+                        pushBack = (c == '\\' ? BACKSLASH : c);
                         return '\\';
                     }
                     // we have a unicode sequence
-                    chPos += OFFSETINC;
-                    while ((c = in.read()) == 'u') {
-                        chPos += OFFSETINC;
+                    charPos += OFFSET_INC;
+                    while ((c = getChar()) == 'u') {
+                        charPos += OFFSET_INC;
                     }
 
                     // unicode escape sequence
                     int d = 0;
-                    for (int i = 0; i < 4; i++, chPos += OFFSETINC, c = in.read()) {
+                    for (int i = 0; i < 4; i++, charPos += OFFSET_INC, c = getChar()) {
                         switch (c) {
                             case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> d = (d << 4) + c - '0';
                             case 'a', 'b', 'c', 'd', 'e', 'f' -> d = (d << 4) + 10 + c - 'a';
                             case 'A', 'B', 'C', 'D', 'E', 'F' -> d = (d << 4) + 10 + c - 'A';
                             default -> {
-                                error(pos, "invalid.escape.char");
+                                error(position, "err.invalid.escape.char");
                                 pushBack = c;
                                 return d;
                             }
@@ -188,22 +181,23 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
                     }
                     pushBack = c;
                     return d;
-
-                case '\n':
-                    chPos += LINEINC;
+                }
+                case '\n' -> {
+                    charPos += LINE_INC;
                     return '\n';
-
-                case '\r':
-                    if ((c = in.read()) != '\n') {
+                }
+                case '\r' -> {
+                    if ((c = getChar()) != '\n') {
                         pushBack = c;
                     } else {
-                        chPos += OFFSETINC;
+                        charPos += OFFSET_INC;
                     }
-                    chPos += LINEINC;
+                    charPos += LINE_INC;
                     return '\n';
-
-                default:
+                }
+                default -> {
                     return c;
+                }
             }
         }
     }

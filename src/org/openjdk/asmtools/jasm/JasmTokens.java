@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -314,7 +314,7 @@ public class JasmTokens {
     /*
      * Punctuation
      */
-        AT_SIGN             (133, "AT",         ";",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
+        AT_SIGN             (133, "AT",         "@",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
         SEMICOLON           (134, "SEMICOLON",  ";",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
         COLON               (135, "COLON",      ":",       EnumSet.of(TokenType.PUNCTUATION), KeywordType.VALUE),
         QUESTIONMARK        (136, "QUESTIONMARK", "?",     EnumSet.of(TokenType.PUNCTUATION)),
@@ -377,15 +377,17 @@ public class JasmTokens {
         COMPONENT           (178, "COMPONENT", "Component",             EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
         //
         PERMITTEDSUBCLASSES (179, "PERMITTEDSUBCLASSES", "PermittedSubclasses", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        SOURCEFILE          (180, "SOURCEFILE", "SourceFile", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        SOURCEDEBUGEXTENSION(181, "SOURCEDEBUGEXTENSION", "SourceDebugExtension", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
 
         //Module statements
-        REQUIRES            (180, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        EXPORTS             (181, "EXPORTS",  "exports",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        TO                  (182, "TO",       "to",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        USES                (183, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        PROVIDES            (184, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        WITH                (185, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
-        OPENS               (186, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        REQUIRES            (182, "REQUIRES", "requires", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        EXPORTS             (183, "EXPORTS",  "exports",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        TO                  (184, "TO",       "to",       EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        USES                (185, "USES",     "uses",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        PROVIDES            (186, "PROVIDES", "provides", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        WITH                (187, "WITH",     "with",     EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
+        OPENS               (188, "OPENS",    "opens",    EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME), KeywordType.KEYWORD),
 
         // Table 4.7.20.2-1 type_path_kind
         ARRAY_TYPEPATH      (190, TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),  TypeAnnotationTypes.EPathKind.ARRAY.parseKey(),
