@@ -78,23 +78,23 @@ public class ClassData extends MemberData<ClassData> {
 
     /**
      * Attributes:
-     * SourceFile	        	                    45.3
-     * InnerClasses	        	                    45.3
-     * EnclosingMethod	    	                    49.0
-     * SourceDebugExtension		                    49.0
-     * BootstrapMethods	    	                    51.0
+     * SourceFile                                   45.3
+     * InnerClasses                                 45.3
+     * EnclosingMethod                              49.0
+     * SourceDebugExtension                         49.0
+     * BootstrapMethods                             51.0
      * Module,   ModulePackages, ModuleMainClass    53.0
      * NestHost, NestMembers                        55.0
      * Record                                       60.0
      * PermittedSubclasses                          61.0
      * -------------------------------------------------
-     * Synthetic	                            	45.3
+     * Synthetic                                    45.3
      * Deprecated                                   45.3
      * Signature                                    49.0
      * RuntimeVisibleAnnotations                    49.0
-     * RuntimeInvisibleAnnotations	                49.0
+     * RuntimeInvisibleAnnotations                  49.0
      * RuntimeVisibleTypeAnnotations                52.0
-     * RuntimeInvisibleTypeAnnotations	            52.0
+     * RuntimeInvisibleTypeAnnotations              52.0
      */
 
     // The SourceFile Attribute
