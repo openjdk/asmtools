@@ -1,0 +1,926 @@
+/*
+ * Copyright (c) 2023 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+module #6 /* java.base */ version 65:0
+{
+  const #1   = class   #2;             // module-info
+  const #2   = Utf8    "module-info";
+  const #3   = Utf8    "SourceFile";
+  const #4   = Utf8    "module-info.java";
+  const #5   = Utf8    "Module";
+  const #6   = Module  #7;             // java.base
+  const #7   = Utf8    "java.base";
+  const #8   = Package #9;             // java/io
+  const #9   = Utf8    "java/io";
+  const #10  = Package #11;            // java/lang
+  const #11  = Utf8    "java/lang";
+  const #12  = Package #13;            // java/lang/annotation
+  const #13  = Utf8    "java/lang/annotation";
+  const #14  = Package #15;            // java/lang/constant
+  const #15  = Utf8    "java/lang/constant";
+  const #16  = Package #17;            // java/lang/foreign
+  const #17  = Utf8    "java/lang/foreign";
+  const #18  = Package #19;            // java/lang/invoke
+  const #19  = Utf8    "java/lang/invoke";
+  const #20  = Package #21;            // java/lang/module
+  const #21  = Utf8    "java/lang/module";
+  const #22  = Package #23;            // java/lang/ref
+  const #23  = Utf8    "java/lang/ref";
+  const #24  = Package #25;            // java/lang/reflect
+  const #25  = Utf8    "java/lang/reflect";
+  const #26  = Package #27;            // java/lang/runtime
+  const #27  = Utf8    "java/lang/runtime";
+  const #28  = Package #29;            // java/math
+  const #29  = Utf8    "java/math";
+  const #30  = Package #31;            // java/net
+  const #31  = Utf8    "java/net";
+  const #32  = Package #33;            // java/net/spi
+  const #33  = Utf8    "java/net/spi";
+  const #34  = Package #35;            // java/nio
+  const #35  = Utf8    "java/nio";
+  const #36  = Package #37;            // java/nio/channels
+  const #37  = Utf8    "java/nio/channels";
+  const #38  = Package #39;            // java/nio/channels/spi
+  const #39  = Utf8    "java/nio/channels/spi";
+  const #40  = Package #41;            // java/nio/charset
+  const #41  = Utf8    "java/nio/charset";
+  const #42  = Package #43;            // java/nio/charset/spi
+  const #43  = Utf8    "java/nio/charset/spi";
+  const #44  = Package #45;            // java/nio/file
+  const #45  = Utf8    "java/nio/file";
+  const #46  = Package #47;            // java/nio/file/attribute
+  const #47  = Utf8    "java/nio/file/attribute";
+  const #48  = Package #49;            // java/nio/file/spi
+  const #49  = Utf8    "java/nio/file/spi";
+  const #50  = Package #51;            // java/security
+  const #51  = Utf8    "java/security";
+  const #52  = Package #53;            // java/security/cert
+  const #53  = Utf8    "java/security/cert";
+  const #54  = Package #55;            // java/security/interfaces
+  const #55  = Utf8    "java/security/interfaces";
+  const #56  = Package #57;            // java/security/spec
+  const #57  = Utf8    "java/security/spec";
+  const #58  = Package #59;            // java/text
+  const #59  = Utf8    "java/text";
+  const #60  = Package #61;            // java/text/spi
+  const #61  = Utf8    "java/text/spi";
+  const #62  = Package #63;            // java/time
+  const #63  = Utf8    "java/time";
+  const #64  = Package #65;            // java/time/chrono
+  const #65  = Utf8    "java/time/chrono";
+  const #66  = Package #67;            // java/time/format
+  const #67  = Utf8    "java/time/format";
+  const #68  = Package #69;            // java/time/temporal
+  const #69  = Utf8    "java/time/temporal";
+  const #70  = Package #71;            // java/time/zone
+  const #71  = Utf8    "java/time/zone";
+  const #72  = Package #73;            // java/util
+  const #73  = Utf8    "java/util";
+  const #74  = Package #75;            // java/util/concurrent
+  const #75  = Utf8    "java/util/concurrent";
+  const #76  = Package #77;            // java/util/concurrent/atomic
+  const #77  = Utf8    "java/util/concurrent/atomic";
+  const #78  = Package #79;            // java/util/concurrent/locks
+  const #79  = Utf8    "java/util/concurrent/locks";
+  const #80  = Package #81;            // java/util/function
+  const #81  = Utf8    "java/util/function";
+  const #82  = Package #83;            // java/util/jar
+  const #83  = Utf8    "java/util/jar";
+  const #84  = Package #85;            // java/util/random
+  const #85  = Utf8    "java/util/random";
+  const #86  = Package #87;            // java/util/regex
+  const #87  = Utf8    "java/util/regex";
+  const #88  = Package #89;            // java/util/spi
+  const #89  = Utf8    "java/util/spi";
+  const #90  = Package #91;            // java/util/stream
+  const #91  = Utf8    "java/util/stream";
+  const #92  = Package #93;            // java/util/zip
+  const #93  = Utf8    "java/util/zip";
+  const #94  = Package #95;            // javax/crypto
+  const #95  = Utf8    "javax/crypto";
+  const #96  = Package #97;            // javax/crypto/interfaces
+  const #97  = Utf8    "javax/crypto/interfaces";
+  const #98  = Package #99;            // javax/crypto/spec
+  const #99  = Utf8    "javax/crypto/spec";
+  const #100 = Package #101;           // javax/net
+  const #101 = Utf8    "javax/net";
+  const #102 = Package #103;           // javax/net/ssl
+  const #103 = Utf8    "javax/net/ssl";
+  const #104 = Package #105;           // javax/security/auth
+  const #105 = Utf8    "javax/security/auth";
+  const #106 = Package #107;           // javax/security/auth/callback
+  const #107 = Utf8    "javax/security/auth/callback";
+  const #108 = Package #109;           // javax/security/auth/login
+  const #109 = Utf8    "javax/security/auth/login";
+  const #110 = Package #111;           // javax/security/auth/spi
+  const #111 = Utf8    "javax/security/auth/spi";
+  const #112 = Package #113;           // javax/security/auth/x500
+  const #113 = Utf8    "javax/security/auth/x500";
+  const #114 = Package #115;           // javax/security/cert
+  const #115 = Utf8    "javax/security/cert";
+  const #116 = Package #117;           // com/sun/crypto/provider
+  const #117 = Utf8    "com/sun/crypto/provider";
+  const #118 = Module  #119;           // jdk.crypto.cryptoki
+  const #119 = Utf8    "jdk.crypto.cryptoki";
+  const #120 = Package #121;           // com/sun/security/ntlm
+  const #121 = Utf8    "com/sun/security/ntlm";
+  const #122 = Module  #123;           // java.security.sasl
+  const #123 = Utf8    "java.security.sasl";
+  const #124 = Package #125;           // jdk/internal/access
+  const #125 = Utf8    "jdk/internal/access";
+  const #126 = Module  #127;           // java.desktop
+  const #127 = Utf8    "java.desktop";
+  const #128 = Module  #129;           // java.logging
+  const #129 = Utf8    "java.logging";
+  const #130 = Module  #131;           // java.management
+  const #131 = Utf8    "java.management";
+  const #132 = Module  #133;           // java.naming
+  const #133 = Utf8    "java.naming";
+  const #134 = Module  #135;           // java.rmi
+  const #135 = Utf8    "java.rmi";
+  const #136 = Module  #137;           // jdk.charsets
+  const #137 = Utf8    "jdk.charsets";
+  const #138 = Module  #139;           // jdk.incubator.concurrent
+  const #139 = Utf8    "jdk.incubator.concurrent";
+  const #140 = Module  #141;           // jdk.jartool
+  const #141 = Utf8    "jdk.jartool";
+  const #142 = Module  #143;           // jdk.jfr
+  const #143 = Utf8    "jdk.jfr";
+  const #144 = Module  #145;           // jdk.jlink
+  const #145 = Utf8    "jdk.jlink";
+  const #146 = Module  #147;           // jdk.net
+  const #147 = Utf8    "jdk.net";
+  const #148 = Module  #149;           // jdk.sctp
+  const #149 = Utf8    "jdk.sctp";
+  const #150 = Package #151;           // jdk/internal/classfile
+  const #151 = Utf8    "jdk/internal/classfile";
+  const #152 = Module  #153;           // jdk.jshell
+  const #153 = Utf8    "jdk.jshell";
+  const #154 = Package #155;           // jdk/internal/classfile/attribute
+  const #155 = Utf8    "jdk/internal/classfile/attribute";
+  const #156 = Package #157;           // jdk/internal/classfile/constantpool
+  const #157 = Utf8    "jdk/internal/classfile/constantpool";
+  const #158 = Package #159;           // jdk/internal/classfile/instruction
+  const #159 = Utf8    "jdk/internal/classfile/instruction";
+  const #160 = Package #161;           // jdk/internal/event
+  const #161 = Utf8    "jdk/internal/event";
+  const #162 = Package #163;           // jdk/internal/foreign
+  const #163 = Utf8    "jdk/internal/foreign";
+  const #164 = Module  #165;           // jdk.incubator.vector
+  const #165 = Utf8    "jdk.incubator.vector";
+  const #166 = Package #167;           // jdk/internal/io
+  const #167 = Utf8    "jdk/internal/io";
+  const #168 = Module  #169;           // jdk.internal.le
+  const #169 = Utf8    "jdk.internal.le";
+  const #170 = Package #171;           // jdk/internal/javac
+  const #171 = Utf8    "jdk/internal/javac";
+  const #172 = Module  #173;           // java.compiler
+  const #173 = Utf8    "java.compiler";
+  const #174 = Module  #175;           // jdk.compiler
+  const #175 = Utf8    "jdk.compiler";
+  const #176 = Module  #177;           // jdk.jdi
+  const #177 = Utf8    "jdk.jdi";
+  const #178 = Module  #179;           // jdk.management
+  const #179 = Utf8    "jdk.management";
+  const #180 = Package #181;           // jdk/internal/jimage
+  const #181 = Utf8    "jdk/internal/jimage";
+  const #182 = Package #183;           // jdk/internal/jimage/decompressor
+  const #183 = Utf8    "jdk/internal/jimage/decompressor";
+  const #184 = Package #185;           // jdk/internal/jmod
+  const #185 = Utf8    "jdk/internal/jmod";
+  const #186 = Package #187;           // jdk/internal/loader
+  const #187 = Utf8    "jdk/internal/loader";
+  const #188 = Module  #189;           // java.instrument
+  const #189 = Utf8    "java.instrument";
+  const #190 = Package #191;           // jdk/internal/logger
+  const #191 = Utf8    "jdk/internal/logger";
+  const #192 = Package #193;           // jdk/internal/misc
+  const #193 = Utf8    "jdk/internal/misc";
+  const #194 = Module  #195;           // java.net.http
+  const #195 = Utf8    "java.net.http";
+  const #196 = Module  #197;           // java.security.jgss
+  const #197 = Utf8    "java.security.jgss";
+  const #198 = Module  #199;           // jdk.attach
+  const #199 = Utf8    "jdk.attach";
+  const #200 = Module  #201;           // jdk.internal.vm.ci
+  const #201 = Utf8    "jdk.internal.vm.ci";
+  const #202 = Module  #203;           // jdk.nio.mapmode
+  const #203 = Utf8    "jdk.nio.mapmode";
+  const #204 = Module  #205;           // jdk.unsupported
+  const #205 = Utf8    "jdk.unsupported";
+  const #206 = Package #207;           // jdk/internal/module
+  const #207 = Utf8    "jdk/internal/module";
+  const #208 = Module  #209;           // java.management.rmi
+  const #209 = Utf8    "java.management.rmi";
+  const #210 = Module  #211;           // jdk.jpackage
+  const #211 = Utf8    "jdk.jpackage";
+  const #212 = Package #213;           // jdk/internal/org/objectweb/asm
+  const #213 = Utf8    "jdk/internal/org/objectweb/asm";
+  const #214 = Package #215;           // jdk/internal/org/objectweb/asm/commons
+  const #215 = Utf8    "jdk/internal/org/objectweb/asm/commons";
+  const #216 = Package #217;           // jdk/internal/org/objectweb/asm/tree
+  const #217 = Utf8    "jdk/internal/org/objectweb/asm/tree";
+  const #218 = Package #219;           // jdk/internal/org/objectweb/asm/util
+  const #219 = Utf8    "jdk/internal/org/objectweb/asm/util";
+  const #220 = Package #221;           // jdk/internal/org/xml/sax
+  const #221 = Utf8    "jdk/internal/org/xml/sax";
+  const #222 = Package #223;           // jdk/internal/org/xml/sax/helpers
+  const #223 = Utf8    "jdk/internal/org/xml/sax/helpers";
+  const #224 = Package #225;           // jdk/internal/perf
+  const #225 = Utf8    "jdk/internal/perf";
+  const #226 = Module  #227;           // jdk.internal.jvmstat
+  const #227 = Utf8    "jdk.internal.jvmstat";
+  const #228 = Module  #229;           // jdk.management.agent
+  const #229 = Utf8    "jdk.management.agent";
+  const #230 = Package #231;           // jdk/internal/platform
+  const #231 = Utf8    "jdk/internal/platform";
+  const #232 = Package #233;           // jdk/internal/ref
+  const #233 = Utf8    "jdk/internal/ref";
+  const #234 = Package #235;           // jdk/internal/reflect
+  const #235 = Utf8    "jdk/internal/reflect";
+  const #236 = Module  #237;           // java.sql
+  const #237 = Utf8    "java.sql";
+  const #238 = Module  #239;           // java.sql.rowset
+  const #239 = Utf8    "java.sql.rowset";
+  const #240 = Module  #241;           // jdk.dynalink
+  const #241 = Utf8    "jdk.dynalink";
+  const #242 = Package #243;           // jdk/internal/util
+  const #243 = Utf8    "jdk/internal/util";
+  const #244 = Package #245;           // jdk/internal/util/jar
+  const #245 = Utf8    "jdk/internal/util/jar";
+  const #246 = Package #247;           // jdk/internal/util/random
+  const #247 = Utf8    "jdk/internal/util/random";
+  const #248 = Module  #249;           // jdk.random
+  const #249 = Utf8    "jdk.random";
+  const #250 = Package #251;           // jdk/internal/util/xml
+  const #251 = Utf8    "jdk/internal/util/xml";
+  const #252 = Package #253;           // jdk/internal/util/xml/impl
+  const #253 = Utf8    "jdk/internal/util/xml/impl";
+  const #254 = Package #255;           // jdk/internal/vm
+  const #255 = Utf8    "jdk/internal/vm";
+  const #256 = Package #257;           // jdk/internal/vm/annotation
+  const #257 = Utf8    "jdk/internal/vm/annotation";
+  const #258 = Package #259;           // jdk/internal/vm/vector
+  const #259 = Utf8    "jdk/internal/vm/vector";
+  const #260 = Package #261;           // sun/invoke/util
+  const #261 = Utf8    "sun/invoke/util";
+  const #262 = Package #263;           // sun/net
+  const #263 = Utf8    "sun/net";
+  const #264 = Module  #265;           // jdk.naming.dns
+  const #265 = Utf8    "jdk.naming.dns";
+  const #266 = Package #267;           // sun/net/dns
+  const #267 = Utf8    "sun/net/dns";
+  const #268 = Package #269;           // sun/net/ext
+  const #269 = Utf8    "sun/net/ext";
+  const #270 = Package #271;           // sun/net/util
+  const #271 = Utf8    "sun/net/util";
+  const #272 = Module  #273;           // jdk.jconsole
+  const #273 = Utf8    "jdk.jconsole";
+  const #274 = Package #275;           // sun/net/www
+  const #275 = Utf8    "sun/net/www";
+  const #276 = Package #277;           // sun/net/www/protocol/http
+  const #277 = Utf8    "sun/net/www/protocol/http";
+  const #278 = Package #279;           // sun/nio/ch
+  const #279 = Utf8    "sun/nio/ch";
+  const #280 = Package #281;           // sun/nio/cs
+  const #281 = Utf8    "sun/nio/cs";
+  const #282 = Package #283;           // sun/nio/fs
+  const #283 = Utf8    "sun/nio/fs";
+  const #284 = Package #285;           // sun/reflect/annotation
+  const #285 = Utf8    "sun/reflect/annotation";
+  const #286 = Package #287;           // sun/reflect/generics/reflectiveObjects
+  const #287 = Utf8    "sun/reflect/generics/reflectiveObjects";
+  const #288 = Package #289;           // sun/reflect/misc
+  const #289 = Utf8    "sun/reflect/misc";
+  const #290 = Module  #291;           // java.datatransfer
+  const #291 = Utf8    "java.datatransfer";
+  const #292 = Package #293;           // sun/security/action
+  const #293 = Utf8    "sun/security/action";
+  const #294 = Module  #295;           // jdk.crypto.ec
+  const #295 = Utf8    "jdk.crypto.ec";
+  const #296 = Package #297;           // sun/security/internal/interfaces
+  const #297 = Utf8    "sun/security/internal/interfaces";
+  const #298 = Package #299;           // sun/security/internal/spec
+  const #299 = Utf8    "sun/security/internal/spec";
+  const #300 = Package #301;           // sun/security/jca
+  const #301 = Utf8    "sun/security/jca";
+  const #302 = Module  #303;           // java.smartcardio
+  const #303 = Utf8    "java.smartcardio";
+  const #304 = Package #305;           // sun/security/pkcs
+  const #305 = Utf8    "sun/security/pkcs";
+  const #306 = Package #307;           // sun/security/provider
+  const #307 = Utf8    "sun/security/provider";
+  const #308 = Module  #309;           // jdk.security.auth
+  const #309 = Utf8    "jdk.security.auth";
+  const #310 = Package #311;           // sun/security/provider/certpath
+  const #311 = Utf8    "sun/security/provider/certpath";
+  const #312 = Package #313;           // sun/security/rsa
+  const #313 = Utf8    "sun/security/rsa";
+  const #314 = Package #315;           // sun/security/timestamp
+  const #315 = Utf8    "sun/security/timestamp";
+  const #316 = Package #317;           // sun/security/tools
+  const #317 = Utf8    "sun/security/tools";
+  const #318 = Package #319;           // sun/security/util
+  const #319 = Utf8    "sun/security/util";
+  const #320 = Module  #321;           // java.xml.crypto
+  const #321 = Utf8    "java.xml.crypto";
+  const #322 = Module  #323;           // jdk.security.jgss
+  const #323 = Utf8    "jdk.security.jgss";
+  const #324 = Package #325;           // sun/security/util/math
+  const #325 = Utf8    "sun/security/util/math";
+  const #326 = Package #327;           // sun/security/util/math/intpoly
+  const #327 = Utf8    "sun/security/util/math/intpoly";
+  const #328 = Package #329;           // sun/security/validator
+  const #329 = Utf8    "sun/security/validator";
+  const #330 = Package #331;           // sun/security/x509
+  const #331 = Utf8    "sun/security/x509";
+  const #332 = Package #333;           // sun/util/cldr
+  const #333 = Utf8    "sun/util/cldr";
+  const #334 = Package #335;           // sun/util/locale/provider
+  const #335 = Utf8    "sun/util/locale/provider";
+  const #336 = Module  #337;           // jdk.localedata
+  const #337 = Utf8    "jdk.localedata";
+  const #338 = Package #339;           // sun/util/logging
+  const #339 = Utf8    "sun/util/logging";
+  const #340 = Module  #341;           // java.prefs
+  const #341 = Utf8    "java.prefs";
+  const #342 = Package #343;           // sun/util/resources
+  const #343 = Utf8    "sun/util/resources";
+  const #344 = class   #345;           // java/lang/System$LoggerFinder
+  const #345 = Utf8    "java/lang/System$LoggerFinder";
+  const #346 = class   #347;           // java/net/ContentHandlerFactory
+  const #347 = Utf8    "java/net/ContentHandlerFactory";
+  const #348 = class   #349;           // java/net/spi/InetAddressResolverProvider
+  const #349 = Utf8    "java/net/spi/InetAddressResolverProvider";
+  const #350 = class   #351;           // java/net/spi/URLStreamHandlerProvider
+  const #351 = Utf8    "java/net/spi/URLStreamHandlerProvider";
+  const #352 = class   #353;           // java/nio/channels/spi/AsynchronousChannelProvider
+  const #353 = Utf8    "java/nio/channels/spi/AsynchronousChannelProvider";
+  const #354 = class   #355;           // java/nio/channels/spi/SelectorProvider
+  const #355 = Utf8    "java/nio/channels/spi/SelectorProvider";
+  const #356 = class   #357;           // java/nio/charset/spi/CharsetProvider
+  const #357 = Utf8    "java/nio/charset/spi/CharsetProvider";
+  const #358 = class   #359;           // java/nio/file/spi/FileSystemProvider
+  const #359 = Utf8    "java/nio/file/spi/FileSystemProvider";
+  const #360 = class   #361;           // java/nio/file/spi/FileTypeDetector
+  const #361 = Utf8    "java/nio/file/spi/FileTypeDetector";
+  const #362 = class   #363;           // java/security/Provider
+  const #363 = Utf8    "java/security/Provider";
+  const #364 = class   #365;           // java/text/spi/BreakIteratorProvider
+  const #365 = Utf8    "java/text/spi/BreakIteratorProvider";
+  const #366 = class   #367;           // java/text/spi/CollatorProvider
+  const #367 = Utf8    "java/text/spi/CollatorProvider";
+  const #368 = class   #369;           // java/text/spi/DateFormatProvider
+  const #369 = Utf8    "java/text/spi/DateFormatProvider";
+  const #370 = class   #371;           // java/text/spi/DateFormatSymbolsProvider
+  const #371 = Utf8    "java/text/spi/DateFormatSymbolsProvider";
+  const #372 = class   #373;           // java/text/spi/DecimalFormatSymbolsProvider
+  const #373 = Utf8    "java/text/spi/DecimalFormatSymbolsProvider";
+  const #374 = class   #375;           // java/text/spi/NumberFormatProvider
+  const #375 = Utf8    "java/text/spi/NumberFormatProvider";
+  const #376 = class   #377;           // java/time/chrono/AbstractChronology
+  const #377 = Utf8    "java/time/chrono/AbstractChronology";
+  const #378 = class   #379;           // java/time/chrono/Chronology
+  const #379 = Utf8    "java/time/chrono/Chronology";
+  const #380 = class   #381;           // java/time/zone/ZoneRulesProvider
+  const #381 = Utf8    "java/time/zone/ZoneRulesProvider";
+  const #382 = class   #383;           // java/util/random/RandomGenerator
+  const #383 = Utf8    "java/util/random/RandomGenerator";
+  const #384 = class   #385;           // java/util/spi/CalendarDataProvider
+  const #385 = Utf8    "java/util/spi/CalendarDataProvider";
+  const #386 = class   #387;           // java/util/spi/CalendarNameProvider
+  const #387 = Utf8    "java/util/spi/CalendarNameProvider";
+  const #388 = class   #389;           // java/util/spi/CurrencyNameProvider
+  const #389 = Utf8    "java/util/spi/CurrencyNameProvider";
+  const #390 = class   #391;           // java/util/spi/LocaleNameProvider
+  const #391 = Utf8    "java/util/spi/LocaleNameProvider";
+  const #392 = class   #393;           // java/util/spi/ResourceBundleControlProvider
+  const #393 = Utf8    "java/util/spi/ResourceBundleControlProvider";
+  const #394 = class   #395;           // java/util/spi/ResourceBundleProvider
+  const #395 = Utf8    "java/util/spi/ResourceBundleProvider";
+  const #396 = class   #397;           // java/util/spi/TimeZoneNameProvider
+  const #397 = Utf8    "java/util/spi/TimeZoneNameProvider";
+  const #398 = class   #399;           // java/util/spi/ToolProvider
+  const #399 = Utf8    "java/util/spi/ToolProvider";
+  const #400 = class   #401;           // javax/security/auth/spi/LoginModule
+  const #401 = Utf8    "javax/security/auth/spi/LoginModule";
+  const #402 = class   #403;           // jdk/internal/io/JdkConsoleProvider
+  const #403 = Utf8    "jdk/internal/io/JdkConsoleProvider";
+  const #404 = class   #405;           // jdk/internal/logger/DefaultLoggerFinder
+  const #405 = Utf8    "jdk/internal/logger/DefaultLoggerFinder";
+  const #406 = class   #407;           // sun/text/spi/JavaTimeDateTimePatternProvider
+  const #407 = Utf8    "sun/text/spi/JavaTimeDateTimePatternProvider";
+  const #408 = class   #409;           // sun/util/locale/provider/LocaleDataMetaInfo
+  const #409 = Utf8    "sun/util/locale/provider/LocaleDataMetaInfo";
+  const #410 = class   #411;           // sun/util/resources/LocaleData$CommonResourceBundleProvider
+  const #411 = Utf8    "sun/util/resources/LocaleData$CommonResourceBundleProvider";
+  const #412 = class   #413;           // sun/util/resources/LocaleData$SupplementaryResourceBundleProvider
+  const #413 = Utf8    "sun/util/resources/LocaleData$SupplementaryResourceBundleProvider";
+  const #414 = class   #415;           // sun/util/spi/CalendarProvider
+  const #415 = Utf8    "sun/util/spi/CalendarProvider";
+  const #416 = class   #417;           // jdk/internal/jrtfs/JrtFileSystemProvider
+  const #417 = Utf8    "jdk/internal/jrtfs/JrtFileSystemProvider";
+  const #418 = class   #419;           // java/security/SecureRandom
+  const #419 = Utf8    "java/security/SecureRandom";
+  const #420 = class   #421;           // java/util/Random
+  const #421 = Utf8    "java/util/Random";
+  const #422 = class   #423;           // java/util/SplittableRandom
+  const #423 = Utf8    "java/util/SplittableRandom";
+  const #424 = Utf8    "InnerClasses";
+  const #425 = class   #426;           // java/lang/System
+  const #426 = Utf8    "java/lang/System";
+  const #427 = Utf8    "LoggerFinder";
+  const #428 = class   #429;           // sun/util/resources/LocaleData
+  const #429 = Utf8    "sun/util/resources/LocaleData";
+  const #430 = Utf8    "CommonResourceBundleProvider";
+  const #431 = Utf8    "SupplementaryResourceBundleProvider";
+  const #432 = Utf8    "ModulePackages";
+  const #433 = Utf8    "apple/security";
+  const #434 = Package #433;           // apple/security
+  const #435 = Utf8    "jdk/internal";
+  const #436 = Package #435;           // jdk/internal
+  const #437 = Utf8    "jdk/internal/access/foreign";
+  const #438 = Package #437;           // jdk/internal/access/foreign
+  const #439 = Utf8    "jdk/internal/classfile/components";
+  const #440 = Package #439;           // jdk/internal/classfile/components
+  const #441 = Utf8    "jdk/internal/classfile/impl";
+  const #442 = Package #441;           // jdk/internal/classfile/impl
+  const #443 = Utf8    "jdk/internal/classfile/impl/verifier";
+  const #444 = Package #443;           // jdk/internal/classfile/impl/verifier
+  const #445 = Utf8    "jdk/internal/classfile/java/lang/constant";
+  const #446 = Package #445;           // jdk/internal/classfile/java/lang/constant
+  const #447 = Utf8    "jdk/internal/foreign/abi";
+  const #448 = Package #447;           // jdk/internal/foreign/abi
+  const #449 = Utf8    "jdk/internal/foreign/abi/aarch64";
+  const #450 = Package #449;           // jdk/internal/foreign/abi/aarch64
+  const #451 = Utf8    "jdk/internal/foreign/abi/aarch64/linux";
+  const #452 = Package #451;           // jdk/internal/foreign/abi/aarch64/linux
+  const #453 = Utf8    "jdk/internal/foreign/abi/aarch64/macos";
+  const #454 = Package #453;           // jdk/internal/foreign/abi/aarch64/macos
+  const #455 = Utf8    "jdk/internal/foreign/abi/aarch64/windows";
+  const #456 = Package #455;           // jdk/internal/foreign/abi/aarch64/windows
+  const #457 = Utf8    "jdk/internal/foreign/abi/fallback";
+  const #458 = Package #457;           // jdk/internal/foreign/abi/fallback
+  const #459 = Utf8    "jdk/internal/foreign/abi/riscv64";
+  const #460 = Package #459;           // jdk/internal/foreign/abi/riscv64
+  const #461 = Utf8    "jdk/internal/foreign/abi/riscv64/linux";
+  const #462 = Package #461;           // jdk/internal/foreign/abi/riscv64/linux
+  const #463 = Utf8    "jdk/internal/foreign/abi/x64";
+  const #464 = Package #463;           // jdk/internal/foreign/abi/x64
+  const #465 = Utf8    "jdk/internal/foreign/abi/x64/sysv";
+  const #466 = Package #465;           // jdk/internal/foreign/abi/x64/sysv
+  const #467 = Utf8    "jdk/internal/foreign/abi/x64/windows";
+  const #468 = Package #467;           // jdk/internal/foreign/abi/x64/windows
+  const #469 = Utf8    "jdk/internal/foreign/layout";
+  const #470 = Package #469;           // jdk/internal/foreign/layout
+  const #471 = Utf8    "jdk/internal/icu/impl";
+  const #472 = Package #471;           // jdk/internal/icu/impl
+  const #473 = Utf8    "jdk/internal/icu/impl/data/icudt72b";
+  const #474 = Package #473;           // jdk/internal/icu/impl/data/icudt72b
+  const #475 = Utf8    "jdk/internal/icu/lang";
+  const #476 = Package #475;           // jdk/internal/icu/lang
+  const #477 = Utf8    "jdk/internal/icu/text";
+  const #478 = Package #477;           // jdk/internal/icu/text
+  const #479 = Utf8    "jdk/internal/icu/util";
+  const #480 = Package #479;           // jdk/internal/icu/util
+  const #481 = Utf8    "jdk/internal/jrtfs";
+  const #482 = Package #481;           // jdk/internal/jrtfs
+  const #483 = Utf8    "jdk/internal/math";
+  const #484 = Package #483;           // jdk/internal/math
+  const #485 = Utf8    "jdk/internal/org/objectweb/asm/signature";
+  const #486 = Package #485;           // jdk/internal/org/objectweb/asm/signature
+  const #487 = Utf8    "jdk/internal/org/objectweb/asm/tree/analysis";
+  const #488 = Package #487;           // jdk/internal/org/objectweb/asm/tree/analysis
+  const #489 = Utf8    "jdk/internal/util/regex";
+  const #490 = Package #489;           // jdk/internal/util/regex
+  const #491 = Utf8    "sun/invoke";
+  const #492 = Package #491;           // sun/invoke
+  const #493 = Utf8    "sun/invoke/empty";
+  const #494 = Package #493;           // sun/invoke/empty
+  const #495 = Utf8    "sun/launcher";
+  const #496 = Package #495;           // sun/launcher
+  const #497 = Utf8    "sun/launcher/resources";
+  const #498 = Package #497;           // sun/launcher/resources
+  const #499 = Utf8    "sun/net/ftp";
+  const #500 = Package #499;           // sun/net/ftp
+  const #501 = Utf8    "sun/net/ftp/impl";
+  const #502 = Package #501;           // sun/net/ftp/impl
+  const #503 = Utf8    "sun/net/idn";
+  const #504 = Package #503;           // sun/net/idn
+  const #505 = Utf8    "sun/net/sdp";
+  const #506 = Package #505;           // sun/net/sdp
+  const #507 = Utf8    "sun/net/smtp";
+  const #508 = Package #507;           // sun/net/smtp
+  const #509 = Utf8    "sun/net/spi";
+  const #510 = Package #509;           // sun/net/spi
+  const #511 = Utf8    "sun/net/www/content/text";
+  const #512 = Package #511;           // sun/net/www/content/text
+  const #513 = Utf8    "sun/net/www/http";
+  const #514 = Package #513;           // sun/net/www/http
+  const #515 = Utf8    "sun/net/www/protocol/file";
+  const #516 = Package #515;           // sun/net/www/protocol/file
+  const #517 = Utf8    "sun/net/www/protocol/ftp";
+  const #518 = Package #517;           // sun/net/www/protocol/ftp
+  const #519 = Utf8    "sun/net/www/protocol/http/ntlm";
+  const #520 = Package #519;           // sun/net/www/protocol/http/ntlm
+  const #521 = Utf8    "sun/net/www/protocol/https";
+  const #522 = Package #521;           // sun/net/www/protocol/https
+  const #523 = Utf8    "sun/net/www/protocol/jar";
+  const #524 = Package #523;           // sun/net/www/protocol/jar
+  const #525 = Utf8    "sun/net/www/protocol/jmod";
+  const #526 = Package #525;           // sun/net/www/protocol/jmod
+  const #527 = Utf8    "sun/net/www/protocol/jrt";
+  const #528 = Package #527;           // sun/net/www/protocol/jrt
+  const #529 = Utf8    "sun/net/www/protocol/mailto";
+  const #530 = Package #529;           // sun/net/www/protocol/mailto
+  const #531 = Utf8    "sun/nio";
+  const #532 = Package #531;           // sun/nio
+  const #533 = Utf8    "sun/reflect/generics/factory";
+  const #534 = Package #533;           // sun/reflect/generics/factory
+  const #535 = Utf8    "sun/reflect/generics/parser";
+  const #536 = Package #535;           // sun/reflect/generics/parser
+  const #537 = Utf8    "sun/reflect/generics/repository";
+  const #538 = Package #537;           // sun/reflect/generics/repository
+  const #539 = Utf8    "sun/reflect/generics/scope";
+  const #540 = Package #539;           // sun/reflect/generics/scope
+  const #541 = Utf8    "sun/reflect/generics/tree";
+  const #542 = Package #541;           // sun/reflect/generics/tree
+  const #543 = Utf8    "sun/reflect/generics/visitor";
+  const #544 = Package #543;           // sun/reflect/generics/visitor
+  const #545 = Utf8    "sun/security/pkcs10";
+  const #546 = Package #545;           // sun/security/pkcs10
+  const #547 = Utf8    "sun/security/pkcs12";
+  const #548 = Package #547;           // sun/security/pkcs12
+  const #549 = Utf8    "sun/security/provider/certpath/ssl";
+  const #550 = Package #549;           // sun/security/provider/certpath/ssl
+  const #551 = Utf8    "sun/security/ssl";
+  const #552 = Package #551;           // sun/security/ssl
+  const #553 = Utf8    "sun/security/tools/keytool";
+  const #554 = Package #553;           // sun/security/tools/keytool
+  const #555 = Utf8    "sun/text";
+  const #556 = Package #555;           // sun/text
+  const #557 = Utf8    "sun/text/resources";
+  const #558 = Package #557;           // sun/text/resources
+  const #559 = Utf8    "sun/text/resources/cldr";
+  const #560 = Package #559;           // sun/text/resources/cldr
+  const #561 = Utf8    "sun/text/spi";
+  const #562 = Package #561;           // sun/text/spi
+  const #563 = Utf8    "sun/util";
+  const #564 = Package #563;           // sun/util
+  const #565 = Utf8    "sun/util/calendar";
+  const #566 = Package #565;           // sun/util/calendar
+  const #567 = Utf8    "sun/util/locale";
+  const #568 = Package #567;           // sun/util/locale
+  const #569 = Utf8    "sun/util/resources/cldr";
+  const #570 = Package #569;           // sun/util/resources/cldr
+  const #571 = Utf8    "sun/util/spi";
+  const #572 = Package #571;           // sun/util/spi
+
+  exports  #88   /* java/util/spi */;
+  exports  #104  /* javax/security/auth */;
+  exports  #72   /* java/util */;
+  exports  #22   /* java/lang/ref */;
+  exports  #48   /* java/nio/file/spi */;
+  exports  #102  /* javax/net/ssl */;
+  exports  #50   /* java/security */;
+  exports  #20   /* java/lang/module */;
+  exports  #98   /* javax/crypto/spec */;
+  exports  #82   /* java/util/jar */;
+  exports  #112  /* javax/security/auth/x500 */;
+  exports  #68   /* java/time/temporal */;
+  exports  #38   /* java/nio/channels/spi */;
+  exports  #110  /* javax/security/auth/spi */;
+  exports  #60   /* java/text/spi */;
+  exports  #54   /* java/security/interfaces */;
+  exports  #90   /* java/util/stream */;
+  exports  #46   /* java/nio/file/attribute */;
+  exports  #24   /* java/lang/reflect */;
+  exports  #100  /* javax/net */;
+  exports  #94   /* javax/crypto */;
+  exports  #96   /* javax/crypto/interfaces */;
+  exports  #74   /* java/util/concurrent */;
+  exports  #34   /* java/nio */;
+  exports  #32   /* java/net/spi */;
+  exports  #108  /* javax/security/auth/login */;
+  exports  #16   /* java/lang/foreign */;
+  exports  #66   /* java/time/format */;
+  exports  #40   /* java/nio/charset */;
+  exports  #56   /* java/security/spec */;
+  exports  #76   /* java/util/concurrent/atomic */;
+  exports  #114  /* javax/security/cert */;
+  exports  #26   /* java/lang/runtime */;
+  exports  #28   /* java/math */;
+  exports  #80   /* java/util/function */;
+  exports  #62   /* java/time */;
+  exports  #78   /* java/util/concurrent/locks */;
+  exports  #52   /* java/security/cert */;
+  exports  #106  /* javax/security/auth/callback */;
+  exports  #44   /* java/nio/file */;
+  exports  #18   /* java/lang/invoke */;
+  exports  #42   /* java/nio/charset/spi */;
+  exports  #70   /* java/time/zone */;
+  exports  #12   /* java/lang/annotation */;
+  exports  #14   /* java/lang/constant */;
+  exports  #84   /* java/util/random */;
+  exports  #58   /* java/text */;
+  exports  #10   /* java/lang */;
+  exports  #30   /* java/net */;
+  exports  #92   /* java/util/zip */;
+  exports  #86   /* java/util/regex */;
+  exports  #8    /* java/io */;
+  exports  #36   /* java/nio/channels */;
+  exports  #64   /* java/time/chrono */;
+  exports  #310  /* sun/security/provider/certpath */ to
+           #140  /* jdk.jartool */,
+           #132  /* java.naming */;
+  exports  #326  /* sun/security/util/math/intpoly */ to
+           #294  /* jdk.crypto.ec */;
+  exports  #316  /* sun/security/tools */ to
+           #140  /* jdk.jartool */;
+  exports  #218  /* jdk/internal/org/objectweb/asm/util */ to
+           #142  /* jdk.jfr */;
+  exports  #270  /* sun/net/util */ to
+           #126  /* java.desktop */,
+           #194  /* java.net.http */,
+           #148  /* jdk.sctp */,
+           #272  /* jdk.jconsole */;
+  exports  #246  /* jdk/internal/util/random */ to
+           #248  /* jdk.random */;
+  exports  #280  /* sun/nio/cs */ to
+           #126  /* java.desktop */,
+           #136  /* jdk.charsets */;
+  exports  #282  /* sun/nio/fs */ to
+           #146  /* jdk.net */;
+  exports  #328  /* sun/security/validator */ to
+           #140  /* jdk.jartool */;
+  exports  #244  /* jdk/internal/util/jar */ to
+           #140  /* jdk.jartool */;
+  exports  #156  /* jdk/internal/classfile/constantpool */ to
+           #140  /* jdk.jartool */,
+           #144  /* jdk.jlink */;
+  exports  #158  /* jdk/internal/classfile/instruction */ to
+           #144  /* jdk.jlink */,
+           #152  /* jdk.jshell */;
+  exports  #220  /* jdk/internal/org/xml/sax */ to
+           #142  /* jdk.jfr */;
+  exports  #212  /* jdk/internal/org/objectweb/asm */ to
+           #142  /* jdk.jfr */;
+  exports  #296  /* sun/security/internal/interfaces */ to
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #338  /* sun/util/logging */ to
+           #126  /* java.desktop */,
+           #128  /* java.logging */,
+           #340  /* java.prefs */;
+  exports  #182  /* jdk/internal/jimage/decompressor */ to
+           #144  /* jdk.jlink */;
+  exports  #162  /* jdk/internal/foreign */ to
+           #164  /* jdk.incubator.vector */;
+  exports  #242  /* jdk/internal/util */ to
+           #126  /* java.desktop */;
+  exports  #266  /* sun/net/dns */ to
+           #264  /* jdk.naming.dns */,
+           #196  /* java.security.jgss */;
+  exports  #306  /* sun/security/provider */ to
+           #294  /* jdk.crypto.ec */,
+           #134  /* java.rmi */,
+           #196  /* java.security.jgss */,
+           #118  /* jdk.crypto.cryptoki */,
+           #308  /* jdk.security.auth */;
+  exports  #334  /* sun/util/locale/provider */ to
+           #126  /* java.desktop */,
+           #336  /* jdk.localedata */,
+           #144  /* jdk.jlink */;
+  exports  #300  /* sun/security/jca */ to
+           #294  /* jdk.crypto.ec */,
+           #264  /* jdk.naming.dns */,
+           #302  /* java.smartcardio */,
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #214  /* jdk/internal/org/objectweb/asm/commons */ to
+           #142  /* jdk.jfr */;
+  exports  #154  /* jdk/internal/classfile/attribute */ to
+           #140  /* jdk.jartool */,
+           #144  /* jdk.jlink */;
+  exports  #288  /* sun/reflect/misc */ to
+           #290  /* java.datatransfer */,
+           #126  /* java.desktop */,
+           #238  /* java.sql.rowset */,
+           #134  /* java.rmi */,
+           #208  /* java.management.rmi */,
+           #130  /* java.management */;
+  exports  #216  /* jdk/internal/org/objectweb/asm/tree */ to
+           #142  /* jdk.jfr */;
+  exports  #252  /* jdk/internal/util/xml/impl */ to
+           #142  /* jdk.jfr */;
+  exports  #298  /* sun/security/internal/spec */ to
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #232  /* jdk/internal/ref */ to
+           #126  /* java.desktop */,
+           #194  /* java.net.http */;
+  exports  #234  /* jdk/internal/reflect */ to
+           #238  /* java.sql.rowset */,
+           #240  /* jdk.dynalink */,
+           #200  /* jdk.internal.vm.ci */,
+           #236  /* java.sql */,
+           #128  /* java.logging */,
+           #204  /* jdk.unsupported */;
+  exports  #254  /* jdk/internal/vm */ to
+           #228  /* jdk.management.agent */,
+           #226  /* jdk.internal.jvmstat */,
+           #138  /* jdk.incubator.concurrent */,
+           #178  /* jdk.management */,
+           #130  /* java.management */;
+  exports  #184  /* jdk/internal/jmod */ to
+           #174  /* jdk.compiler */,
+           #144  /* jdk.jlink */;
+  exports  #206  /* jdk/internal/module */ to
+           #140  /* jdk.jartool */,
+           #142  /* jdk.jfr */,
+           #188  /* java.instrument */,
+           #144  /* jdk.jlink */,
+           #208  /* java.management.rmi */,
+           #210  /* jdk.jpackage */;
+  exports  #120  /* com/sun/security/ntlm */ to
+           #122  /* java.security.sasl */;
+  exports  #314  /* sun/security/timestamp */ to
+           #140  /* jdk.jartool */;
+  exports  #304  /* sun/security/pkcs */ to
+           #140  /* jdk.jartool */,
+           #294  /* jdk.crypto.ec */;
+  exports  #276  /* sun/net/www/protocol/http */ to
+           #196  /* java.security.jgss */;
+  exports  #274  /* sun/net/www */ to
+           #140  /* jdk.jartool */,
+           #194  /* java.net.http */;
+  exports  #150  /* jdk/internal/classfile */ to
+           #140  /* jdk.jartool */,
+           #144  /* jdk.jlink */,
+           #152  /* jdk.jshell */;
+  exports  #318  /* sun/security/util */ to
+           #122  /* java.security.sasl */,
+           #140  /* jdk.jartool */,
+           #126  /* java.desktop */,
+           #320  /* java.xml.crypto */,
+           #294  /* jdk.crypto.ec */,
+           #134  /* java.rmi */,
+           #196  /* java.security.jgss */,
+           #302  /* java.smartcardio */,
+           #132  /* java.naming */,
+           #118  /* jdk.crypto.cryptoki */,
+           #322  /* jdk.security.jgss */,
+           #308  /* jdk.security.auth */;
+  exports  #256  /* jdk/internal/vm/annotation */ to
+           #200  /* jdk.internal.vm.ci */,
+           #142  /* jdk.jfr */,
+           #188  /* java.instrument */,
+           #138  /* jdk.incubator.concurrent */,
+           #164  /* jdk.incubator.vector */,
+           #204  /* jdk.unsupported */;
+  exports  #332  /* sun/util/cldr */ to
+           #144  /* jdk.jlink */;
+  exports  #278  /* sun/nio/ch */ to
+           #148  /* jdk.sctp */,
+           #146  /* jdk.net */,
+           #130  /* java.management */,
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #262  /* sun/net */ to
+           #194  /* java.net.http */,
+           #264  /* jdk.naming.dns */;
+  exports  #222  /* jdk/internal/org/xml/sax/helpers */ to
+           #142  /* jdk.jfr */;
+  exports  #284  /* sun/reflect/annotation */ to
+           #174  /* jdk.compiler */;
+  exports  #190  /* jdk/internal/logger */ to
+           #128  /* java.logging */;
+  exports  #312  /* sun/security/rsa */ to
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #186  /* jdk/internal/loader */ to
+           #188  /* java.instrument */,
+           #132  /* java.naming */,
+           #128  /* java.logging */;
+  exports  #160  /* jdk/internal/event */ to
+           #142  /* jdk.jfr */;
+  exports  #124  /* jdk/internal/access */ to
+           #126  /* java.desktop */,
+           #146  /* jdk.net */,
+           #134  /* java.rmi */,
+           #144  /* jdk.jlink */,
+           #132  /* java.naming */,
+           #130  /* java.management */,
+           #140  /* jdk.jartool */,
+           #148  /* jdk.sctp */,
+           #142  /* jdk.jfr */,
+           #138  /* jdk.incubator.concurrent */,
+           #128  /* java.logging */,
+           #136  /* jdk.charsets */,
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #170  /* jdk/internal/javac */ to
+           #176  /* jdk.jdi */,
+           #140  /* jdk.jartool */,
+           #174  /* jdk.compiler */,
+           #142  /* jdk.jfr */,
+           #138  /* jdk.incubator.concurrent */,
+           #172  /* java.compiler */,
+           #164  /* jdk.incubator.vector */,
+           #178  /* jdk.management */,
+           #152  /* jdk.jshell */,
+           #130  /* java.management */;
+  exports  #230  /* jdk/internal/platform */ to
+           #142  /* jdk.jfr */,
+           #178  /* jdk.management */;
+  exports  #192  /* jdk/internal/misc */ to
+           #202  /* jdk.nio.mapmode */,
+           #126  /* java.desktop */,
+           #194  /* java.net.http */,
+           #174  /* jdk.compiler */,
+           #200  /* jdk.internal.vm.ci */,
+           #134  /* java.rmi */,
+           #196  /* java.security.jgss */,
+           #198  /* jdk.attach */,
+           #132  /* java.naming */,
+           #164  /* jdk.incubator.vector */,
+           #152  /* jdk.jshell */,
+           #130  /* java.management */,
+           #142  /* jdk.jfr */,
+           #138  /* jdk.incubator.concurrent */,
+           #128  /* java.logging */,
+           #136  /* jdk.charsets */,
+           #204  /* jdk.unsupported */,
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #250  /* jdk/internal/util/xml */ to
+           #142  /* jdk.jfr */;
+  exports  #330  /* sun/security/x509 */ to
+           #140  /* jdk.jartool */,
+           #294  /* jdk.crypto.ec */,
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #286  /* sun/reflect/generics/reflectiveObjects */ to
+           #126  /* java.desktop */;
+  exports  #116  /* com/sun/crypto/provider */ to
+           #118  /* jdk.crypto.cryptoki */;
+  exports  #258  /* jdk/internal/vm/vector */ to
+           #164  /* jdk.incubator.vector */;
+  exports  #292  /* sun/security/action */ to
+           #126  /* java.desktop */,
+           #294  /* jdk.crypto.ec */,
+           #196  /* java.security.jgss */,
+           #138  /* jdk.incubator.concurrent */;
+  exports  #224  /* jdk/internal/perf */ to
+           #228  /* jdk.management.agent */,
+           #226  /* jdk.internal.jvmstat */,
+           #130  /* java.management */;
+  exports  #180  /* jdk/internal/jimage */ to
+           #144  /* jdk.jlink */;
+  exports  #260  /* sun/invoke/util */ to
+           #174  /* jdk.compiler */;
+  exports  #166  /* jdk/internal/io */ to
+           #168  /* jdk.internal.le */,
+           #152  /* jdk.jshell */;
+  exports  #268  /* sun/net/ext */ to
+           #146  /* jdk.net */;
+  exports  #324  /* sun/security/util/math */ to
+           #294  /* jdk.crypto.ec */;
+  exports  #342  /* sun/util/resources */ to
+           #336  /* jdk.localedata */;
+  uses     #346  /* java/net/ContentHandlerFactory */;
+  uses     #372  /* java/text/spi/DecimalFormatSymbolsProvider */;
+  uses     #392  /* java/util/spi/ResourceBundleControlProvider */;
+  uses     #410  /* sun/util/resources/LocaleData$CommonResourceBundleProvider */;
+  uses     #362  /* java/security/Provider */;
+  uses     #396  /* java/util/spi/TimeZoneNameProvider */;
+  uses     #344  /* java/lang/System$LoggerFinder */;
+  uses     #350  /* java/net/spi/URLStreamHandlerProvider */;
+  uses     #414  /* sun/util/spi/CalendarProvider */;
+  uses     #364  /* java/text/spi/BreakIteratorProvider */;
+  uses     #358  /* java/nio/file/spi/FileSystemProvider */;
+  uses     #394  /* java/util/spi/ResourceBundleProvider */;
+  uses     #370  /* java/text/spi/DateFormatSymbolsProvider */;
+  uses     #400  /* javax/security/auth/spi/LoginModule */;
+  uses     #360  /* java/nio/file/spi/FileTypeDetector */;
+  uses     #374  /* java/text/spi/NumberFormatProvider */;
+  uses     #412  /* sun/util/resources/LocaleData$SupplementaryResourceBundleProvider */;
+  uses     #352  /* java/nio/channels/spi/AsynchronousChannelProvider */;
+  uses     #402  /* jdk/internal/io/JdkConsoleProvider */;
+  uses     #354  /* java/nio/channels/spi/SelectorProvider */;
+  uses     #386  /* java/util/spi/CalendarNameProvider */;
+  uses     #368  /* java/text/spi/DateFormatProvider */;
+  uses     #366  /* java/text/spi/CollatorProvider */;
+  uses     #380  /* java/time/zone/ZoneRulesProvider */;
+  uses     #408  /* sun/util/locale/provider/LocaleDataMetaInfo */;
+  uses     #348  /* java/net/spi/InetAddressResolverProvider */;
+  uses     #376  /* java/time/chrono/AbstractChronology */;
+  uses     #390  /* java/util/spi/LocaleNameProvider */;
+  uses     #398  /* java/util/spi/ToolProvider */;
+  uses     #406  /* sun/text/spi/JavaTimeDateTimePatternProvider */;
+  uses     #378  /* java/time/chrono/Chronology */;
+  uses     #388  /* java/util/spi/CurrencyNameProvider */;
+  uses     #404  /* jdk/internal/logger/DefaultLoggerFinder */;
+  uses     #382  /* java/util/random/RandomGenerator */;
+  uses     #384  /* java/util/spi/CalendarDataProvider */;
+  uses     #356  /* java/nio/charset/spi/CharsetProvider */;
+  provides #358  /* java/nio/file/spi/FileSystemProvider */ with
+           #416  /* jdk/internal/jrtfs/JrtFileSystemProvider */;
+  provides #382  /* java/util/random/RandomGenerator */ with
+           #418  /* java/security/SecureRandom */,
+           #422  /* java/util/SplittableRandom */,
+           #420  /* java/util/Random */;
+} // end of module java.base

@@ -46,7 +46,7 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public DataOutputStream getDataOutputStream() throws FileNotFoundException {
-        return null; //If you are here, you probbaly wanted ToolOutput.ByteOutput for assmbled binary output
+        return null; //If you are here, you probably wanted ToolOutput.ByteOutput for assmbled binary output
     }
 
     @Override

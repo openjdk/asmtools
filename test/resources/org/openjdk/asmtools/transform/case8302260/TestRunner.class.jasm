@@ -22,7 +22,7 @@
 //
 package org/openjdk/asmtools/transform/case8302260;
 
-public super class #7 /* TestRunner */ implements #157 /* org/openjdk/asmtools/transform/lib/ITestRunner */ version 60:0
+public super class #7 /* TestRunner */ implements #157 /* org/openjdk/asmtools/lib/transform/ITestRunner */ version 60:0
 {
   const #1   = Method          #2.#3;          // java/lang/Object."<init>":"()V"
   const #2   = class           #4;             // java/lang/Object
@@ -180,8 +180,8 @@ public super class #7 /* TestRunner */ implements #157 /* org/openjdk/asmtools/t
   const #154 = Method          #155.#102;      // java/lang/ReflectiveOperationException.printStackTrace:"(Ljava/io/PrintStream;)V"
   const #155 = class           #156;           // java/lang/ReflectiveOperationException
   const #156 = Asciz           "java/lang/ReflectiveOperationException";
-  const #157 = class           #158;           // org/openjdk/asmtools/transform/lib/ITestRunner
-  const #158 = Asciz           "org/openjdk/asmtools/transform/lib/ITestRunner";
+  const #157 = class           #158;           // org/openjdk/asmtools/lib/transform/ITestRunner
+  const #158 = Asciz           "org/openjdk/asmtools/lib/transform/ITestRunner";
   const #159 = Asciz           "Code";
   const #160 = Asciz           "LineNumberTable";
   const #161 = Asciz           "LocalVariableTable";

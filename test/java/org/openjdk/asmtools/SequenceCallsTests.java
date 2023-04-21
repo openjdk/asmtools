@@ -26,7 +26,7 @@ package org.openjdk.asmtools;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.openjdk.asmtools.common.CompileAction;
+import org.openjdk.asmtools.lib.action.CompileAction;
 import org.openjdk.asmtools.ext.CaptureSystemOutput;
 import org.opentest4j.MultipleFailuresError;
 

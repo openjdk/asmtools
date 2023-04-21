@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.transform.case8302260;
 
-import org.openjdk.asmtools.transform.lib.ITestRunner;
+import org.openjdk.asmtools.lib.transform.ITestRunner;
 import org.openjdk.asmtools.transform.case8302260.data.CTestClass;
 
 import java.lang.constant.ClassDesc;

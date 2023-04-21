@@ -25,8 +25,8 @@ package org.openjdk.asmtools.transform;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.openjdk.asmtools.InputOutputTests;
-import org.openjdk.asmtools.common.EAsmTools;
+import org.openjdk.asmtools.lib.LogAndReturn;
+import org.openjdk.asmtools.lib.action.EAsmTools;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +60,7 @@ public class case7903259Tests {
         for (String fileName : files) {
             tool = EAsmTools.getTool(fileName);
             if (tool != null) {
-                InputOutputTests.LogAndReturn ret = tool.call(List.of(resourceDir + File.separator + fileName));
+                LogAndReturn ret = tool.call(List.of(resourceDir + File.separator + fileName));
                 assertTrue(ret.log.toString().isEmpty());
                 assertEquals(0, ret.result);
                 testedToolsCount++;
