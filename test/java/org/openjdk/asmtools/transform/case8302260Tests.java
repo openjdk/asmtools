@@ -25,8 +25,8 @@ package org.openjdk.asmtools.transform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openjdk.asmtools.ext.CaptureSystemOutput;
-import org.openjdk.asmtools.transform.lib.ResultChecker;
-import org.openjdk.asmtools.transform.lib.TransformLoader;
+import org.openjdk.asmtools.lib.transform.ResultChecker;
+import org.openjdk.asmtools.lib.transform.TransformLoader;
 
 import java.util.List;
 
@@ -34,10 +34,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.openjdk.asmtools.common.EAsmTools.JDEC;
-import static org.openjdk.asmtools.common.EAsmTools.JDIS;
+import static org.openjdk.asmtools.lib.action.EAsmTools.JDEC;
+import static org.openjdk.asmtools.lib.action.EAsmTools.JDIS;
 import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.*;
-import static org.openjdk.asmtools.transform.lib.TransformLoader.TransformRules.*;
+import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.*;
 
 /**
  * Tests JDK-8302260 VarHandle.describeConstable() fails to return a nominal descriptor for static public fields

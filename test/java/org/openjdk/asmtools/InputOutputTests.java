@@ -3,8 +3,6 @@ package org.openjdk.asmtools;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import org.openjdk.asmtools.common.StringUtils;
-
 import org.openjdk.asmtools.common.inputs.ByteInput;
 import org.openjdk.asmtools.common.inputs.StringInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
@@ -12,47 +10,14 @@ import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.TextOutput;
 import org.openjdk.asmtools.common.outputs.log.StringLog;
 import org.openjdk.asmtools.jdis.Options;
+import org.openjdk.asmtools.lib.LogAndBinResults;
+import org.openjdk.asmtools.lib.LogAndTextResults;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 
 public class InputOutputTests extends ClassPathClassWork {
-
-    public static class LogAndReturn {
-
-        public final StringLog log;
-        public final int result;
-
-
-        public LogAndReturn(StringLog log, int result) {
-            this.log = log;
-            this.result = result;
-        }
-
-        public List<String> getStringsByPrefix(String prefix) {
-            return StringUtils.substrBetween(log.toString(), prefix, System.lineSeparator());
-        }
-    }
-
-    public static class LogAndTextResults extends LogAndReturn {
-        final TextOutput output;
-
-        public LogAndTextResults(TextOutput output, StringLog log, int result) {
-            super(log, result);
-            this.output = output;
-        }
-    }
-
-    public static class LogAndBinResults extends LogAndReturn {
-        final ByteOutput output;
-
-        public LogAndBinResults(ByteOutput output, StringLog log, int result) {
-            super(log, result);
-            this.output = output;
-        }
-    }
 
     public LogAndTextResults jdec(boolean g, byte[]... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];

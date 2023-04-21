@@ -20,26 +20,22 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.transform.case7902820;
+package org.openjdk.asmtools.lib;
 
-import org.openjdk.asmtools.lib.transform.ITestRunner;
+import org.openjdk.asmtools.common.inputs.ByteInput;
+import org.openjdk.asmtools.common.outputs.ByteOutput;
+import org.openjdk.asmtools.common.outputs.log.StringLog;
 
-import java.util.List;
+public class LogAndBinResults extends LogAndReturn {
 
-public class TestRunnerNegative implements ITestRunner {
+    public final ByteOutput output;
 
-    private final List<String> classNames = List.of("SourceDebugExtensionNegative01", "SourceDebugExtensionNegative02");
+    public ByteInput[] getAsByteInput() {
+       return output.getOutputs().stream().map(out->new ByteInput(out.getBody())).toArray(ByteInput[]::new);
+    }
 
-    final String dataPackage = TestRunnerNegative.class.getPackageName() + ".data.";
-
-    @Override
-    public void run() {
-        for (String name : classNames) {
-            try {
-                this.getClass().getClassLoader().loadClass(dataPackage + name).getDeclaredConstructor().newInstance();
-            } catch (Throwable ignored) {
-                /* ignore to be able to analyze stderr */
-            }
-        }
+    public LogAndBinResults(ByteOutput output, StringLog log, int result) {
+        super(log, result);
+        this.output = output;
     }
 }

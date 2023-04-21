@@ -139,8 +139,14 @@ public class Main extends JdecTool {
         environment.setPrintDetailsFlag(true);
     }
 
+    // Runs the decoder with args
+    public synchronized boolean decode(String... argv) {
+        parseArgs(argv);
+        return this.decode() == OK;
+    }
+
     /**
-     * Run the decoder
+     * Runs the decoder
      */
     public synchronized int decode() {
         for (ToolInput inputFileName : fileList) {

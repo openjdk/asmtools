@@ -183,7 +183,7 @@ class org/openjdk/asmtools/transform/case8302260/TestRunner {
     class #156;                  // #155     at 0x08C6
     Utf8 "java/lang/ReflectiveOperationException"; // #156     at 0x08C9
     class #158;                  // #157     at 0x08F2
-    Utf8 "org/openjdk/asmtools/transform/lib/ITestRunner"; // #158     at 0x08F5
+    Utf8 "org/openjdk/asmtools/lib/transform/ITestRunner"; // #158     at 0x08F5
     Utf8 "Code";                 // #159     at 0x0926
     Utf8 "LineNumberTable";      // #160     at 0x092D
     Utf8 "LocalVariableTable";   // #161     at 0x093F
@@ -242,7 +242,7 @@ class org/openjdk/asmtools/transform/case8302260/TestRunner {
   #2;                            // super_cpx
 
   [1] {                          // Interfaces
-    #157;                        // org/openjdk/asmtools/transform/lib/ITestRunner at 0x0C94
+    #157;                        // org/openjdk/asmtools/lib/transform/ITestRunner at 0x0C94
   }                              // end of Interfaces
 
   [1] {                          // Fields

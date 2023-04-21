@@ -20,10 +20,10 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.transform.lib;
+package org.openjdk.asmtools.lib.transform;
 
 import org.junit.jupiter.api.Assertions;
-import org.openjdk.asmtools.common.EAsmTools;
+import org.openjdk.asmtools.lib.action.EAsmTools;
 import org.openjdk.asmtools.common.FileUtils;
 import org.openjdk.asmtools.common.inputs.ByteInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
@@ -41,9 +41,8 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.nio.file.StandardOpenOption.*;
-import static org.openjdk.asmtools.common.EAsmTools.*;
+import static org.openjdk.asmtools.lib.action.EAsmTools.*;
 import static org.openjdk.asmtools.common.FileUtils.findFile;
-import static org.openjdk.asmtools.transform.lib.ResultChecker.OUT_LINE_PREFIXES_TO_IGNORE;
 
 public class TransformLoader extends ClassLoader {
 
@@ -74,7 +73,7 @@ public class TransformLoader extends ClassLoader {
 
     Map<EAsmTools,String[]> toolsOptions = new HashMap<>();
 
-    static String MSG_PREFIX = OUT_LINE_PREFIXES_TO_IGNORE[0];
+    static String MSG_PREFIX = ResultChecker.OUT_LINE_PREFIXES_TO_IGNORE[0];
     private TransformRules transformRule = TransformRules.CLASS_LOAD;
 
     // List of class names that should be loaded in a general way without transformation

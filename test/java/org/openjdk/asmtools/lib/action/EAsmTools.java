@@ -20,24 +20,34 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.common;
+package org.openjdk.asmtools.lib.action;
 
-import org.openjdk.asmtools.InputOutputTests;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.lib.LogAndBinResults;
+import org.openjdk.asmtools.lib.LogAndReturn;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 public enum EAsmTools {
-    JASM(".jasm", (files, args) -> CompileAction.JAsm(files, args)),
-    JCODER(".jcod", (files, args) -> CompileAction.JCoder(files, args)),
-    JDEC(".class", (files, args) -> GenerateAction.JDec(files, args)),
-    JDIS(".class", (files, args) -> GenerateAction.JDis(files, args));
+    JASM(".jasm",
+            (files, args) -> CompileAction.JAsm(files, args),
+            (inputs, args) ->  CompileAction.JAsm(inputs, args)),
+    JCODER(".jcod",
+            (files, args) -> CompileAction.JCoder(files, args),
+            (inputs, args) ->  CompileAction.JCoder(inputs, args)),
+    JDEC(".class", (files, args) -> GenerateAction.JDec(files, args),
+            (inputs, args) ->  CompileAction.JAsm(inputs, args)),
+    JDIS(".class", (files, args) -> GenerateAction.JDis(files, args),
+            (inputs, args) ->  CompileAction.JAsm(inputs, args));
     private final String fileExtension;
     private final Tool tool;
+    private final ToolResult toolResult;
 
-    EAsmTools(String fileExtension, Tool tool) {
+    EAsmTools(String fileExtension, Tool tool, ToolResult toolResult) {
         this.fileExtension = fileExtension;
+        this.toolResult = toolResult;
         this.tool = tool;
     }
 
@@ -56,8 +66,11 @@ public enum EAsmTools {
 
     @FunctionalInterface
     public interface Tool {
-        InputOutputTests.LogAndReturn call(List<String> files, String... args);
+        LogAndReturn call(List<String> files, String... args);
     }
 
-
+    @FunctionalInterface
+    public interface ToolResult<T extends LogAndReturn> {
+        T call(ToolInput[] toolInputs, String... args);
+    }
 }

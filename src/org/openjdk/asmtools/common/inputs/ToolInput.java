@@ -33,9 +33,9 @@ import java.util.Optional;
 /**
  * This class is a generic interface, symbolising any input for jdis/jasm/jdec/jcoder.
  * Asmtools as application internally uses FileInput and StdinInput.
- * UnitTests for asmtools uses mainly StringInput for assemblers  and ByteInput for disasemblers.
+ * UnitTests for asmtools uses mainly StringInput for assemblers  and ByteInput for disassemblers.
  *
- * String/Byte/Stream inputs can be used as any 3rd part code which do not need files, aka IDE, instrumetations or similar.
+ * String/Byte/Stream inputs can be used as any 3rd part code which do not need files, aka IDE, instrumentation or similar.
  *
  * The interface methods goes in favor of asmtools, and for details and help see individual implementations
  */
