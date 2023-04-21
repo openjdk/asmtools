@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.transform.lib;
+package org.openjdk.asmtools.lib.transform;
 
 
 import java.lang.reflect.InvocationTargetException;

@@ -1,6 +1,4 @@
 /*
- * Ident: @(#)clfacc00610m10p.jasm generated from:%Z%%M% %I% %E%
- *
  * Copyright (c) 1996, 2018 Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
@@ -21,7 +19,7 @@ public Method <init>:"()V"
 
        	return;
 }
-} 
+}
 
 private class clfacc00610m10p_ {
 

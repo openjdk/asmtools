@@ -82,7 +82,13 @@ public class Main extends JdisTool {
         System.exit(disassembler.disasm());
     }
 
-    // Run disassembler when args already parsed
+    // Runs disassembler with args
+    public synchronized boolean disasm(String... argv) {
+        parseArgs(argv);
+        return this.disasm() == OK;
+    }
+
+    // Runs disassembler when args already parsed
     public synchronized int disasm() {
         for (ToolInput inputFileName : fileList) {
             try {

@@ -25,14 +25,14 @@ package org.openjdk.asmtools.transform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openjdk.asmtools.ext.CaptureSystemOutput;
-import org.openjdk.asmtools.transform.lib.ResultChecker;
-import org.openjdk.asmtools.transform.lib.TransformLoader;
+import org.openjdk.asmtools.lib.transform.ResultChecker;
+import org.openjdk.asmtools.lib.transform.TransformLoader;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.ERROR;
 import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.OUTPUT;
-import static org.openjdk.asmtools.transform.lib.TransformLoader.TransformRules.JCOD_TO_CLASS_LOAD;
+import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.JCOD_TO_CLASS_LOAD;
 
 /**
  * Tests stdout for error messages

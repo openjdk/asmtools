@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.transform.case7902820;
 
-import org.openjdk.asmtools.transform.lib.ITestRunner;
+import org.openjdk.asmtools.lib.transform.ITestRunner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

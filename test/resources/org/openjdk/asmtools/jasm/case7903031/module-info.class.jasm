@@ -1,0 +1,361 @@
+/*
+ * Copyright (c) 2023 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+// Partial ConstantPool
+module #6 /* java.base */ version 65:0
+{
+  const #1   = class   #2;             // module-info
+  const #2   = Utf8    "module-info";
+  const #3   = Utf8    "SourceFile";
+  const #4   = Utf8    "module-info.java";
+  const #5   = Utf8    "Module";
+  const #6   = Module  #7;             // java.base
+  const #7   = Utf8    "java.base";
+  exports  java/util/spi;
+  exports  javax/security/auth;
+  exports  java/util;
+  exports  java/lang/ref;
+  exports  java/nio/file/spi;
+  exports  javax/net/ssl;
+  exports  java/security;
+  exports  java/lang/module;
+  exports  javax/crypto/spec;
+  exports  java/util/jar;
+  exports  javax/security/auth/x500;
+  exports  java/time/temporal;
+  exports  java/nio/channels/spi;
+  exports  javax/security/auth/spi;
+  exports  java/text/spi;
+  exports  java/security/interfaces;
+  exports  java/util/stream;
+  exports  java/nio/file/attribute;
+  exports  java/lang/reflect;
+  exports  javax/net;
+  exports  javax/crypto;
+  exports  javax/crypto/interfaces;
+  exports  java/util/concurrent;
+  exports  java/nio;
+  exports  java/net/spi;
+  exports  javax/security/auth/login;
+  exports  java/lang/foreign;
+  exports  java/time/format;
+  exports  java/nio/charset;
+  exports  java/security/spec;
+  exports  java/util/concurrent/atomic;
+  exports  javax/security/cert;
+  exports  java/lang/runtime;
+  exports  java/math;
+  exports  java/util/function;
+  exports  java/time;
+  exports  java/util/concurrent/locks;
+  exports  java/security/cert;
+  exports  javax/security/auth/callback;
+  exports  java/nio/file;
+  exports  java/lang/invoke;
+  exports  java/nio/charset/spi;
+  exports  java/time/zone;
+  exports  java/lang/annotation;
+  exports  java/lang/constant;
+  exports  java/util/random;
+  exports  java/text;
+  exports  java/lang;
+  exports  java/net;
+  exports  java/util/zip;
+  exports  java/util/regex;
+  exports  java/io;
+  exports  java/nio/channels;
+  exports  java/time/chrono;
+  exports  sun/security/provider/certpath to
+           jdk.jartool,
+           java.naming;
+  exports  sun/security/util/math/intpoly to
+           jdk.crypto.ec;
+  exports  sun/security/tools to
+           jdk.jartool;
+  exports  jdk/internal/org/objectweb/asm/util to
+           jdk.jfr;
+  exports  sun/net/util to
+           java.desktop,
+           java.net.http,
+           jdk.sctp,
+           jdk.jconsole;
+  exports  jdk/internal/util/random to
+           jdk.random;
+  exports  sun/nio/cs to
+           java.desktop,
+           jdk.charsets;
+  exports  sun/nio/fs to
+           jdk.net;
+  exports  sun/security/validator to
+           jdk.jartool;
+  exports  jdk/internal/util/jar to
+           jdk.jartool;
+  exports  jdk/internal/classfile/constantpool to
+           jdk.jartool,
+           jdk.jlink;
+  exports  jdk/internal/classfile/instruction to
+           jdk.jlink,
+           jdk.jshell;
+  exports  jdk/internal/org/xml/sax to
+           jdk.jfr;
+  exports  jdk/internal/org/objectweb/asm to
+           jdk.jfr;
+  exports  sun/security/internal/interfaces to
+           jdk.crypto.cryptoki;
+  exports  sun/util/logging to
+           java.desktop,
+           java.logging,
+           java.prefs;
+  exports  jdk/internal/jimage/decompressor to
+           jdk.jlink;
+  exports  jdk/internal/foreign to
+           jdk.incubator.vector;
+  exports  jdk/internal/util to
+           java.desktop;
+  exports  sun/net/dns to
+           jdk.naming.dns,
+           java.security.jgss;
+  exports  sun/security/provider to
+           jdk.crypto.ec,
+           java.rmi,
+           java.security.jgss,
+           jdk.crypto.cryptoki,
+           jdk.security.auth;
+  exports  sun/util/locale/provider to
+           java.desktop,
+           jdk.localedata,
+           jdk.jlink;
+  exports  sun/security/jca to
+           jdk.crypto.ec,
+           jdk.naming.dns,
+           java.smartcardio,
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/org/objectweb/asm/commons to
+           jdk.jfr;
+  exports  jdk/internal/classfile/attribute to
+           jdk.jartool,
+           jdk.jlink;
+  exports  sun/reflect/misc to
+           java.datatransfer,
+           java.desktop,
+           java.sql.rowset,
+           java.rmi,
+           java.management.rmi,
+           java.management;
+  exports  jdk/internal/org/objectweb/asm/tree to
+           jdk.jfr;
+  exports  jdk/internal/util/xml/impl to
+           jdk.jfr;
+  exports  sun/security/internal/spec to
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/ref to
+           java.desktop,
+           java.net.http;
+  exports  jdk/internal/reflect to
+           java.sql.rowset,
+           jdk.dynalink,
+           jdk.internal.vm.ci,
+           java.sql,
+           java.logging,
+           jdk.unsupported;
+  exports  jdk/internal/vm to
+           jdk.management.agent,
+           jdk.internal.jvmstat,
+           jdk.incubator.concurrent,
+           jdk.management,
+           java.management;
+  exports  jdk/internal/jmod to
+           jdk.compiler,
+           jdk.jlink;
+  exports  jdk/internal/module to
+           jdk.jartool,
+           jdk.jfr,
+           java.instrument,
+           jdk.jlink,
+           java.management.rmi,
+           jdk.jpackage;
+  exports  com/sun/security/ntlm to
+           java.security.sasl;
+  exports  sun/security/timestamp to
+           jdk.jartool;
+  exports  sun/security/pkcs to
+           jdk.jartool,
+           jdk.crypto.ec;
+  exports  sun/net/www/protocol/http to
+           java.security.jgss;
+  exports  sun/net/www to
+           jdk.jartool,
+           java.net.http;
+  exports  jdk/internal/classfile to
+           jdk.jartool,
+           jdk.jlink,
+           jdk.jshell;
+  exports  sun/security/util to
+           java.security.sasl,
+           jdk.jartool,
+           java.desktop,
+           java.xml.crypto,
+           jdk.crypto.ec,
+           java.rmi,
+           java.security.jgss,
+           java.smartcardio,
+           java.naming,
+           jdk.crypto.cryptoki,
+           jdk.security.jgss,
+           jdk.security.auth;
+  exports  jdk/internal/vm/annotation to
+           jdk.internal.vm.ci,
+           jdk.jfr,
+           java.instrument,
+           jdk.incubator.concurrent,
+           jdk.incubator.vector,
+           jdk.unsupported;
+  exports  sun/util/cldr to
+           jdk.jlink;
+  exports  sun/nio/ch to
+           jdk.sctp,
+           jdk.net,
+           java.management,
+           jdk.crypto.cryptoki;
+  exports  sun/net to
+           java.net.http,
+           jdk.naming.dns;
+  exports  jdk/internal/org/xml/sax/helpers to
+           jdk.jfr;
+  exports  sun/reflect/annotation to
+           jdk.compiler;
+  exports  jdk/internal/logger to
+           java.logging;
+  exports  sun/security/rsa to
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/loader to
+           java.instrument,
+           java.naming,
+           java.logging;
+  exports  jdk/internal/event to
+           jdk.jfr;
+  exports  jdk/internal/access to
+           java.desktop,
+           jdk.net,
+           java.rmi,
+           jdk.jlink,
+           java.naming,
+           java.management,
+           jdk.jartool,
+           jdk.sctp,
+           jdk.jfr,
+           jdk.incubator.concurrent,
+           java.logging,
+           jdk.charsets,
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/javac to
+           jdk.jdi,
+           jdk.jartool,
+           jdk.compiler,
+           jdk.jfr,
+           jdk.incubator.concurrent,
+           java.compiler,
+           jdk.incubator.vector,
+           jdk.management,
+           jdk.jshell,
+           java.management;
+  exports  jdk/internal/platform to
+           jdk.jfr,
+           jdk.management;
+  exports  jdk/internal/misc to
+           jdk.nio.mapmode,
+           java.desktop,
+           java.net.http,
+           jdk.compiler,
+           jdk.internal.vm.ci,
+           java.rmi,
+           java.security.jgss,
+           jdk.attach,
+           java.naming,
+           jdk.incubator.vector,
+           jdk.jshell,
+           java.management,
+           jdk.jfr,
+           jdk.incubator.concurrent,
+           java.logging,
+           jdk.charsets,
+           jdk.unsupported,
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/util/xml to
+           jdk.jfr;
+  exports  sun/security/x509 to
+           jdk.jartool,
+           jdk.crypto.ec,
+           jdk.crypto.cryptoki;
+  exports  sun/reflect/generics/reflectiveObjects to
+           java.desktop;
+  exports  com/sun/crypto/provider to
+           jdk.crypto.cryptoki;
+  exports  jdk/internal/vm/vector to
+           jdk.incubator.vector;
+  exports  sun/security/action to
+           java.desktop,
+           jdk.crypto.ec,
+           java.security.jgss,
+           jdk.incubator.concurrent;
+  exports  jdk/internal/perf to
+           jdk.management.agent,
+           jdk.internal.jvmstat,
+           java.management;
+  exports  jdk/internal/jimage to
+           jdk.jlink;
+  exports  sun/invoke/util to
+           jdk.compiler;
+  exports  jdk/internal/io to
+           jdk.internal.le,
+           jdk.jshell;
+  exports  sun/net/ext to
+           jdk.net;
+  exports  sun/security/util/math to
+           jdk.crypto.ec;
+  exports  sun/util/resources to
+           jdk.localedata;
+  uses     java/net/ContentHandlerFactory;
+  uses     java/text/spi/DecimalFormatSymbolsProvider;
+  uses     java/util/spi/ResourceBundleControlProvider;
+  uses     sun/util/resources/LocaleData$CommonResourceBundleProvider;
+  uses     java/security/Provider;
+  uses     java/util/spi/TimeZoneNameProvider;
+  uses     java/lang/System$LoggerFinder;
+  uses     java/net/spi/URLStreamHandlerProvider;
+  uses     sun/util/spi/CalendarProvider;
+  uses     java/text/spi/BreakIteratorProvider;
+  uses     java/nio/file/spi/FileSystemProvider;
+  uses     java/util/spi/ResourceBundleProvider;
+  uses     java/text/spi/DateFormatSymbolsProvider;
+  uses     javax/security/auth/spi/LoginModule;
+  uses     java/nio/file/spi/FileTypeDetector;
+  uses     java/text/spi/NumberFormatProvider;
+  uses     sun/util/resources/LocaleData$SupplementaryResourceBundleProvider;
+  uses     java/nio/channels/spi/AsynchronousChannelProvider;
+  uses     jdk/internal/io/JdkConsoleProvider;
+  uses     java/nio/channels/spi/SelectorProvider;
+  uses     java/util/spi/CalendarNameProvider;
+  uses     java/text/spi/DateFormatProvider;
+  uses     java/text/spi/CollatorProvider;
+  uses     java/time/zone/ZoneRulesProvider;
+  uses     sun/util/locale/provider/LocaleDataMetaInfo;
+  uses     java/net/spi/InetAddressResolverProvider;
+  uses     java/time/chrono/AbstractChronology;
+  uses     java/util/spi/LocaleNameProvider;
+  uses     java/util/spi/ToolProvider;
+  uses     sun/text/spi/JavaTimeDateTimePatternProvider;
+  uses     java/time/chrono/Chronology;
+  uses     java/util/spi/CurrencyNameProvider;
+  uses     jdk/internal/logger/DefaultLoggerFinder;
+  uses     java/util/random/RandomGenerator;
+  uses     java/util/spi/CalendarDataProvider;
+  uses     java/nio/charset/spi/CharsetProvider;
+  provides java/nio/file/spi/FileSystemProvider with
+           jdk/internal/jrtfs/JrtFileSystemProvider;
+  provides java/util/random/RandomGenerator with
+           java/security/SecureRandom,
+           java/util/SplittableRandom,
+           java/util/Random;
+} // end of module java.base

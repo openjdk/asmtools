@@ -20,26 +20,25 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.transform.case7902820;
+package org.openjdk.asmtools.lib;
 
-import org.openjdk.asmtools.lib.transform.ITestRunner;
+import org.openjdk.asmtools.common.outputs.TextOutput;
+import org.openjdk.asmtools.common.outputs.log.StringLog;
 
-import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class TestRunnerNegative implements ITestRunner {
+public class LogAndTextResults extends LogAndReturn {
 
-    private final List<String> classNames = List.of("SourceDebugExtensionNegative01", "SourceDebugExtensionNegative02");
+    public final TextOutput output;
 
-    final String dataPackage = TestRunnerNegative.class.getPackageName() + ".data.";
-
-    @Override
-    public void run() {
-        for (String name : classNames) {
-            try {
-                this.getClass().getClassLoader().loadClass(dataPackage + name).getDeclaredConstructor().newInstance();
-            } catch (Throwable ignored) {
-                /* ignore to be able to analyze stderr */
-            }
-        }
+    public LogAndTextResults(TextOutput output, StringLog log, int result) {
+        super(log, result);
+        this.output = output;
     }
+
+    public String getResultAsString(Function<String,String> stringTransform) {
+        return stringTransform.apply(this.output.getOutputs().stream().map(out->out.getBody()).collect(Collectors.joining()));
+    }
+
 }

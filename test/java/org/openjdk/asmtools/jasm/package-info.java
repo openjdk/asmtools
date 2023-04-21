@@ -20,26 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.transform.case7902820;
-
-import org.openjdk.asmtools.lib.transform.ITestRunner;
-
-import java.util.List;
-
-public class TestRunnerNegative implements ITestRunner {
-
-    private final List<String> classNames = List.of("SourceDebugExtensionNegative01", "SourceDebugExtensionNegative02");
-
-    final String dataPackage = TestRunnerNegative.class.getPackageName() + ".data.";
-
-    @Override
-    public void run() {
-        for (String name : classNames) {
-            try {
-                this.getClass().getClassLoader().loadClass(dataPackage + name).getDeclaredConstructor().newInstance();
-            } catch (Throwable ignored) {
-                /* ignore to be able to analyze stderr */
-            }
-        }
-    }
-}
+/**
+ * jasm oriented tests
+ */
+package org.openjdk.asmtools.jasm;
