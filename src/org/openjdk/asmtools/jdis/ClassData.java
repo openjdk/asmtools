@@ -242,7 +242,7 @@ public class ClassData extends MemberData<ClassData> {
             case ATT_BootstrapMethods -> {
                 // Read BootstrapMethods Attr
                 int count = in.readUnsignedShort();
-                bootstrapMethods = new Container<>(count);
+                bootstrapMethods = new Container<BootstrapMethodData>(count).setPrintable(printCPIndex);
                 for (int j = 0; j < count; j++) {
                     BootstrapMethodData bsmData = new BootstrapMethodData(this);
                     bsmData.read(in);
@@ -387,7 +387,7 @@ public class ClassData extends MemberData<ClassData> {
     public void print() throws IOException {
         // Number of read corrupted attributes if any
         int numCorruptedAttributes = 0;
-        if (className.endsWith("module-info") ||  EModifier.isModule(access)) {          // module-info compilation unit
+        if (className.endsWith("module-info") || EModifier.isModule(access)) {          // module-info compilation unit
             // Print the Annotations
             printAnnotations(visibleAnnotations, invisibleAnnotations);
             // Print Module Header
@@ -546,15 +546,27 @@ public class ClassData extends MemberData<ClassData> {
     // Utility methods to check whether cottages of data would be printed
     private <P extends Printable> boolean isPrintable(P... attributes) {
         for (P attribute : attributes)
-            if (attribute != null && attribute.isPrintable())
-                return true;
+            if (attribute != null) {
+                if (attribute.isPrintable()) {
+                    if (attribute instanceof Container<?>) {
+                        Container<P> container = (Container<P>) attribute;
+                        for (P item : container) {
+                            if (item.isPrintable())
+                                return true;
+                        }
+                        return false;
+                    }
+                    return true;
+                }
+            }
         return false;
     }
 
     /**
      * Returns number of corrupted attributes if any
      */
-    private <P extends Printable> int printAttributes(int commentOffset, List<P> attributeList) throws IOException {
+    private <P extends Printable> int printAttributes(int commentOffset, List<P> attributeList) throws
+            IOException {
         int len = attributeList.size();
         boolean printed = false;
         for (int i = 0; i < len; i++) {

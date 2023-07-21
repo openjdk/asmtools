@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Container<T extends Printable> extends ArrayList<T> implements Printable  {
+
+    protected boolean printable = true;
+
     public Container(int initialCapacity) {
         super(initialCapacity);
     }
@@ -40,6 +43,17 @@ public class Container<T extends Printable> extends ArrayList<T> implements Prin
 
     @Override
     public boolean isPrintable() {
-        return !super.isEmpty();
+        return !super.isEmpty() && printable;
+    }
+
+    /**
+     * Set up print-ability of cartage
+     *
+     * @param printable print-ability
+     * @return the instance
+     */
+    public Container<T> setPrintable(boolean printable) {
+        this.printable = printable;
+        return this;
     }
 }
