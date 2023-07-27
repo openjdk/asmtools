@@ -29,6 +29,7 @@ import org.openjdk.asmtools.common.outputs.ToolOutput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -120,6 +121,15 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     @Override
     public void info(String id, Object... args) {
         toolLogger.info(id, args);
+    }
+
+    public String getInfo(String id, Object... args) {
+        return toolLogger.getInfo(id, args);
+    }
+
+    public void usage(List<String> ids) {
+        toolLogger.usage(ids);
+
     }
 
     @Override

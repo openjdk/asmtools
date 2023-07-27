@@ -426,6 +426,9 @@ class Jcoder {
      * Parse a structure.
      */
     private int parseStruct() throws IOException {
+        int scanedCFV = 0;
+        int minor = 0;
+        int major = 0;
         adjustDepth(true);
         environment.traceln(" ");
         environment.traceln(tabStr + "MapStruct { <" + context + "> ");
@@ -450,6 +453,30 @@ class Jcoder {
                         scanner.intSize = 1;
                     case INTVAL:
                         environment.trace("int [" + scanner.longValue + "] ");
+                        if (scanner.longValue == 0xCAFEBABEl && environment.cfv.isSetByParameter() ) {
+                            scanedCFV++;
+                        } else {
+                            if (scanedCFV > 0) {
+                                if (scanedCFV == 1) {
+                                    scanedCFV++;
+                                    minor = scanner.intValue;
+                                    // skip writing until major analysis
+                                    scanner.scan();
+                                    break;
+                                } else {
+                                    scanedCFV = 0;
+                                    major = scanner.intValue;
+                                    environment.trace(" Got file version: " + major + ":" + minor);
+                                    // check version update if needed and go on
+                                    environment.cfv.setFileVersion((short)major, (short)minor);
+                                    buf.append(environment.cfv.minor_version(), scanner.intSize);
+                                    buf.append(environment.cfv.major_version(), scanner.intSize);
+                                    scanner.scan();
+                                    addElem = 1;
+                                    break;
+                                }
+                            }
+                        }
                         buf.append(scanner.longValue, scanner.intSize);
                         scanner.scan();
                         addElem = 1;

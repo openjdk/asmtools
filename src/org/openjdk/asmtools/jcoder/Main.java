@@ -24,11 +24,11 @@ package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
-import org.openjdk.asmtools.common.outputs.StdoutOutput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
-import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -36,6 +36,7 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -49,6 +50,7 @@ import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
  * Main entry point of the JCoder assembler :: jcod to class
  */
 public class Main extends JcoderTool {
+
 
     HashMap<String, String> macros = new HashMap<>(1);
     // tool options
@@ -66,7 +68,7 @@ public class Main extends JcoderTool {
 
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
-        if (toolInput!=null){
+        if (toolInput != null) {
             fileList.add(toolInput);
         }
         parseArgs(argv);
@@ -113,13 +115,17 @@ public class Main extends JcoderTool {
     @Override
     public void usage() {
         environment.flush(false);
-        environment.info("info.usage");
-        environment.info("info.opt.nowrite");
-        environment.info("info.opt.ignore");
-        environment.info("info.opt.d");
-        environment.info("info.opt.v");
-        environment.info("info.opt.t");
-        environment.info("info.opt.version");
+        environment.usage(List.of(
+                "info.usage",
+                "info.opt.nowrite",
+                "info.opt.ignore",
+                "info.opt.d",
+                "info.opt.v",
+                "info.opt.t",
+                "info.opt.fixcv",
+                "info.opt.fixcv.full",
+                "info.opt.version"
+        ));
     }
 
     // Run jcoder compiler with args
@@ -169,7 +175,8 @@ public class Main extends JcoderTool {
                         setTraceFlag(true);
                     }
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
-                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH -> environment.setOutputs(new DualOutputStreamOutput());
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
+                            environment.setOutputs(new DualOutputStreamOutput());
                     case "-m" -> {
                         if ((i + 1) >= argv.length) {
                             environment.error("err.m_requires_macro");
@@ -195,13 +202,48 @@ public class Main extends JcoderTool {
                         environment.println(FULL_VERSION);
                         System.exit(OK);
                     }
-                    case "-h", "-help" -> {
+                    case "-h", "-help", "-?" -> {
                         usage();
                         System.exit((OK));
                     }
                     case org.openjdk.asmtools.Main.STDIN_SWITCH -> {
                         addStdIn();
-                        break;
+                    }
+                    // overrides cf version even if it's defined in the source file.
+                    case "-fixcv" -> {
+                        if ((i + 1) >= argv.length) {
+                            environment.error("err.fix_cv_requires_arg");
+                            usage();
+                            throw new IllegalArgumentException();
+                        }
+                        try {
+
+                            String cfvArg = argv[++i];
+                            if (cfvArg.contains("-")) {
+                                String[] versions = cfvArg.split("-", 2);
+                                String[] versionsThreshold = versions[0].split("[.:]+", 2);
+                                String[] versionsUpdate = versions[1].split("[.:]+", 2);
+                                if (versionsThreshold.length != 2 || versionsUpdate.length != 2) {
+                                    throw new NumberFormatException();
+                                }
+                                environment.cfv.setThreshold(Short.parseShort(versionsThreshold[0]), Short.parseShort(versionsThreshold[1])).
+                                        setVersion(Short.parseShort(versionsUpdate[0]), Short.parseShort(versionsUpdate[1])).
+                                        setByParameter(true).setFrozen(true);
+
+                            } else {
+                                String[] versions = cfvArg.split("[.:]+", 2);
+                                if (versions.length == 2) {
+                                    environment.cfv.setVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1])).
+                                            setByParameter(true).setFrozen(true);
+                                } else {
+                                    throw new NumberFormatException();
+                                }
+                            }
+                        } catch (PatternSyntaxException | NumberFormatException exception) {
+                            environment.error("err.invalid_threshold_major_minor_param");
+                            usage();
+                            throw new IllegalArgumentException();
+                        }
                     }
                     default -> {
                         if (arg.startsWith("-")) {

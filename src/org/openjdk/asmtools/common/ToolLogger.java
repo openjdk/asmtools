@@ -29,6 +29,7 @@ import org.openjdk.asmtools.util.I18NResourceBundle;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -36,7 +37,7 @@ import static org.openjdk.asmtools.Main.sharedI18n;
 import static org.openjdk.asmtools.common.EMessageKind.ERROR;
 import static org.openjdk.asmtools.common.EMessageKind.INFO;
 
-public class ToolLogger implements ILogger {
+public abstract class ToolLogger implements ILogger {
 
     class ToolResources {
         private final static HashMap<String, I18NResourceBundle> resources = new HashMap<>();
@@ -145,6 +146,7 @@ public class ToolLogger implements ILogger {
         return programName;
     }
 
+    public abstract void usage(List<String> ids);
 
     @FunctionalInterface
     private interface TriFunction<A, B, C, R> {

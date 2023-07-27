@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,9 +22,12 @@
  */
 package org.openjdk.asmtools.common;
 
-import static java.lang.String.format;
-
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+
+import java.util.List;
+import java.util.regex.Matcher;
+
+import static java.lang.String.format;
 
 public class DecompilerLogger extends ToolLogger implements ILogger {
 
@@ -35,6 +38,21 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
      */
     public DecompilerLogger(String programName, Class cls, DualStreamToolOutput outerLog) {
         super(programName, cls, outerLog);
+    }
+
+    @Override
+    public void usage(List<String> usageIDs) {
+        for (String id : usageIDs) {
+            String s = getInfo(id);
+            if (s != null) {
+                Matcher m = usagePattern.matcher(s);
+                if (m.find()) {
+                    println(format("  %-21s %s", m.group(1).trim(), m.group(2).trim()));
+                } else {
+                    println(s);
+                }
+            }
+        }
     }
 
     @Override
@@ -80,7 +98,7 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
     }
 
     @Override
-    public void info(String id, Object... args) {
+    public String getInfo(String id, Object... args) {
         String message = getResourceString(id, args);
         if (message == null) {
             if (EMessageKind.isFromResourceBundle(id)) {
@@ -89,8 +107,7 @@ public class DecompilerLogger extends ToolLogger implements ILogger {
             } else {
                 println(id, args);
             }
-        } else {
-            println(message);
         }
+        return message;
     }
 }

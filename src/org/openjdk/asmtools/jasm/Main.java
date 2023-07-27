@@ -23,27 +23,26 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.inputs.FileInput;
-import org.openjdk.asmtools.common.outputs.StdoutOutput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
-import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.common.structure.CFVersion;
-import org.openjdk.asmtools.common.inputs.ToolInput;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
-import static org.openjdk.asmtools.common.structure.CFVersion.DEFAULT_MAJOR_VERSION;
-import static org.openjdk.asmtools.common.structure.CFVersion.DEFAULT_MINOR_VERSION;
 import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
@@ -81,7 +80,7 @@ public class Main extends JasmTool {
 
     public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
         super(toolOutput, log);
-        if (toolInput!=null){
+        if (toolInput != null) {
             fileList.add(toolInput);
         }
         parseArgs(argv);
@@ -96,6 +95,7 @@ public class Main extends JasmTool {
         super(toolOutput, log);
         fileList.add(toolInput);
     }
+
     /**
      * Deprecated method to support external tools having it
      *
@@ -170,16 +170,19 @@ public class Main extends JasmTool {
     @Override
     public void usage() {
         environment.flush(false);
-        environment.info("info.usage");
-        environment.info("info.opt.d");
-        environment.info("info.opt.t");
-        environment.info("info.opt.v");
-        environment.info("info.opt.nowrite");
-        environment.info("info.opt.nowarn");
-        environment.info("info.opt.strict");
-        environment.info("info.opt.cv", DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION);
-        environment.info("info.opt.fixcv");
-        environment.info("info.opt.version");
+        environment.usage(List.of(
+                "info.usage",
+                "info.opt.d",
+                "info.opt.t",
+                "info.opt.v",
+                "info.opt.nowrite",
+                "info.opt.nowarn",
+                "info.opt.strict",
+                "info.opt.cv",
+                "info.opt.fixcv",
+                "info.opt.fixcv.full",
+                "info.opt.version"
+        ));
     }
 
     @Override
@@ -205,7 +208,7 @@ public class Main extends JasmTool {
                     case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
                     case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
                             this.environment.setOutputs(new DualOutputStreamOutput());
-                    case "-h", "-help" -> {
+                    case "-h", "-help", "-?" -> {
                         usage();
                         System.exit(OK);
                     }
@@ -213,21 +216,45 @@ public class Main extends JasmTool {
                     case "-fixcv", "-cv" -> {
                         boolean frozenCFV = (arg.startsWith("-fix"));
                         if ((i + 1) >= argv.length) {
-                            environment.error("err.cv_requires_arg");
+                            if (frozenCFV) {
+                                environment.error("err.fix_cv_requires_arg");
+                            } else {
+                                environment.error("err.cv_requires_arg");
+                            }
                             usage();
                             throw new IllegalArgumentException();
                         }
                         try {
-                            String[] versions = argv[++i].split("[.:]+", 2);
-                            if (versions.length == 2) {
-                                cfv.setMajorVersion(Short.parseShort(versions[0])).
-                                        setMinorVersion(Short.parseShort(versions[1])).
-                                        setByParameter(true).setFrozen(frozenCFV);
+                            String cfvArg = argv[++i];
+                            if (cfvArg.contains("-")) {
+                                if (!frozenCFV) {
+                                    throw new NumberFormatException();
+                                }
+                                String[] versions = cfvArg.split("-", 2);
+                                String[] versionsThreshold = versions[0].split("[.:]+", 2);
+                                String[] versionsUpdate = versions[1].split("[.:]+", 2);
+                                if (versionsThreshold.length != 2 || versionsUpdate.length != 2) {
+                                    throw new NumberFormatException();
+                                }
+                                cfv.setThreshold(Short.parseShort(versionsThreshold[0]), Short.parseShort(versionsThreshold[1])).
+                                        setVersion(Short.parseShort(versionsUpdate[0]), Short.parseShort(versionsUpdate[1])).
+                                        setByParameter(true).setFrozen(true);
                             } else {
-                                throw new NumberFormatException();
+                                String[] versions = cfvArg.split("[.:]+", 2);
+                                if (versions.length == 2) {
+                                    cfv.setVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1])).
+                                            setByParameter(true).setFrozen(frozenCFV);
+                                } else {
+                                    throw new NumberFormatException();
+                                }
                             }
                         } catch (PatternSyntaxException | NumberFormatException exception) {
-                            environment.error("err.invalid_major_minor_param");
+                            if (frozenCFV) {
+                                environment.error("err.invalid_threshold_major_minor_param");
+                            } else {
+                                environment.error("err.invalid_major_minor_param");
+
+                            }
                             usage();
                             throw new IllegalArgumentException();
                         }

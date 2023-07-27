@@ -24,11 +24,12 @@ package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.inputs.ToolInput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.asmutils.StringUtils.repeat;
@@ -36,6 +37,8 @@ import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
 import static org.openjdk.asmtools.common.EMessageKind.ERROR;
 import static org.openjdk.asmtools.common.EMessageKind.WARNING;
 import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.common.structure.CFVersion.DEFAULT_MAJOR_VERSION;
+import static org.openjdk.asmtools.common.structure.CFVersion.DEFAULT_MINOR_VERSION;
 
 // error,warning and info message is general and attached to a position of a scanned file.
 public class CompilerLogger extends ToolLogger implements ILogger {
@@ -82,7 +85,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     }
 
     @Override
-    public void info(String id, Object... args) {
+    public String getInfo(String id, Object... args) {
         String message = getResourceString(id, args);
         if (message == null) {
             if (EMessageKind.isFromResourceBundle(id)) {
@@ -90,8 +93,24 @@ public class CompilerLogger extends ToolLogger implements ILogger {
             } else {
                 println(id, args);
             }
-        } else {
-            println(message);
+        }
+        return message;
+    }
+
+    @Override
+    public void usage(List<String> usageIDs) {
+        for (String id : usageIDs) {
+            String s = id.equals("info.opt.cv") ? getInfo(id, DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION) :
+                    getInfo(id);
+            if (s == null) {
+                return;
+            }
+            Matcher m = usagePattern.matcher(s);
+            if (m.find()) {
+                println(format("  %-35s %s", m.group(1).trim(), m.group(2).trim()));
+            } else {
+                println(s);
+            }
         }
     }
 
@@ -145,7 +164,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
             int where = entry.getKey();
             Pair<Integer, Integer> filePosition = filePosition(where);
             for (Message msg : entry.getValue()) {
-                if( msg.kind() == ERROR ) {
+                if (msg.kind() == ERROR) {
                     output = getOutputs().getEToolObject();
                     nErrors++;
                 }
@@ -171,7 +190,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
 
         synchronized (output) {
             output.flush();
-            if( totalOutput != null ) {
+            if (totalOutput != null) {
                 totalOutput.flush();
             }
             container.clear();

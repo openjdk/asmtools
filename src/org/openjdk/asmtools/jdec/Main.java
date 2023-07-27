@@ -34,6 +34,7 @@ import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
@@ -81,11 +82,12 @@ public class Main extends JdecTool {
 
     @Override
     public void usage() {
-        environment.info("info.usage");
-        environment.info("info.opt.g");
-        environment.info("info.opt.d");
-        environment.info("info.opt.v");
-        environment.info("info.opt.version");
+        environment.usage(List.of(
+                "info.usage",
+                "info.opt.g",
+                "info.opt.d",
+                "info.opt.v",
+                "info.opt.version"));
     }
 
     @Override
