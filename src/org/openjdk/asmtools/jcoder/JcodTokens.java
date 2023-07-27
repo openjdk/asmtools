@@ -185,7 +185,7 @@ public class JcodTokens {
 
     static {
 
-        // register all of the tokens
+        // register all the tokens
         for (Token tk : Token.values()) {
             registerToken(tk);
         }

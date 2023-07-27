@@ -135,6 +135,11 @@ public class ConstantPool extends Indenter {
         for (int i = 1; i < constant_pool_count; i += tagSize) {
             byte tagByte = in.readByte();
             TAG tag = tagHash.get(tagByte);
+            if( tag == null ) {
+                throw new ClassFormatError(
+                        format("Error while reading constant pool for %s: unexpected tag at #%d: %d",
+                                environment.getInputFile(),i,tagByte));
+            }
             tagSize = tag.size();
             environment.traceln("\tCP entry #" + i + " tag[" + tagByte + "]\t=\t" + tag);
             switch (tag) {

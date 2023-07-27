@@ -27,7 +27,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Base class for JasmEnvironment.InputFile && JcoderEnvironment.InputFile that read the jasm/jcod text files
+ * Base class for JasmEnvironment.InputFile and
+ * JcoderEnvironment.InputFile that read the jasm, jcod text files
  */
 public abstract class TextInput {
 

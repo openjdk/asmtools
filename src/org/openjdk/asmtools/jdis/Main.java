@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.openjdk.asmtools.common.Environment.FAILED;
@@ -124,16 +125,17 @@ public class Main extends JdisTool {
 
     @Override
     public void usage() {
-        environment.info("info.usage");
-        environment.info("info.opt.g");
-        environment.info("info.opt.sl");
-        environment.info("info.opt.lt");
-        environment.info("info.opt.lv");
-        environment.info("info.opt.hx");
-        environment.info("info.opt.d");
-        environment.info("info.opt.v");
-        environment.info("info.opt.t");
-        environment.info("info.opt.version");
+        environment.usage(List.of(
+        "info.usage",
+        "info.opt.g",
+        "info.opt.sl",
+        "info.opt.lt",
+        "info.opt.lv",
+        "info.opt.hx",
+        "info.opt.d",
+        "info.opt.v",
+        "info.opt.t",
+        "info.opt.version"));
     }
 
     @Override
