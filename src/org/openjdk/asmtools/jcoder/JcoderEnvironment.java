@@ -29,6 +29,7 @@ import org.openjdk.asmtools.common.inputs.TextInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.structure.CFVersion;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import static org.openjdk.asmtools.common.CompilerConstants.*;
 
 public class JcoderEnvironment extends Environment<CompilerLogger> {
 
+    final CFVersion cfv;
     InputFile inputFile;
 
     /**
@@ -45,6 +47,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
      */
     private JcoderEnvironment(Builder<JcoderEnvironment, CompilerLogger> builder) {
         super(builder);
+        cfv = new CFVersion();
     }
 
     @Override

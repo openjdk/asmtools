@@ -120,15 +120,17 @@ class Parser extends ParseBase {
     }
 
     private void parseVersion() {
+        short majorVersion, minorVersion;
         if (scanner.token == Token.VERSION) {
             scanner.scan();
             if (scanner.token == Token.INTVAL) {
-                classData.cfv.setMajorVersion((short) scanner.intValue);
+                majorVersion = (short) scanner.intValue;
                 scanner.scan();
                 if (scanner.token == Token.COLON) {
                     scanner.scan();
                     if (scanner.token == Token.INTVAL) {
-                        classData.cfv.setMinorVersion((short) scanner.intValue);
+                        minorVersion = (short) scanner.intValue;
+                        classData.cfv.setFileVersion(majorVersion, minorVersion);
                         scanner.scan();
                         traceMethodInfoLn("parseVersion: " + classData.cfv.asString());
                         return;
@@ -1519,17 +1521,22 @@ class Parser extends ParseBase {
 
         // parse version
         if (scanner.token == LBRACE) {
-            if (!classData.cfv.isSet() && classData.cfv.isSetByParameter()) {
+            // no version info in the source
+            if (!classData.cfv.isSet() && !classData.cfv.isSetByParameter()) {
+                // the version isn't set by params
                 classData.cfv.initClassDefaultVersion();
-                environment.warning(scanner.pos, "warn.default.cfv", classData.cfv.asString());
+                environment.warning(scanner.prevPos, "warn.default.cfv", classData.cfv.asString());
             }
         } else {
             if (classData.cfv.isSet() && classData.cfv.isSetByParameter() && classData.cfv.isFrozen()) {
-                CFVersion version = CFVersion.copyOf(classData.cfv).setFrozen(true);
-                classData.cfv.setFrozen(false);
+                short minor = classData.cfv.minor_version();
+                short major = classData.cfv.major_version();
+                String version =  classData.cfv.asString();
+                String option = classData.cfv.isThresholdSet() ? classData.cfv.asThresholdString() : classData.cfv.asString();
                 parseVersion();
-                environment.warning(scanner.prevPos, "warn.isset.cfv", classData.cfv.asString(), version.asString());
-                classData.cfv = CFVersion.copyOf(version);
+                if (classData.cfv.isSetByParameter() &&
+                        (major == classData.cfv.major_version() || minor == classData.cfv.minor_version()))
+                    environment.warning(scanner.prevPos, "warn.isset.cfv", version, option);
             } else {
                 parseVersion();
             }

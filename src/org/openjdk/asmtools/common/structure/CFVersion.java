@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,6 +39,10 @@ public class CFVersion {
 
     private short major_version;
     private short minor_version;
+
+    private short threshold_major_version;
+    private short threshold_minor_version;
+
     private boolean frozen;
 
     // Whether is the CVF set as a tool parameter -cv?
@@ -49,6 +53,8 @@ public class CFVersion {
         isSetByParameter = false;
         major_version = UNDEFINED_VERSION;
         minor_version = UNDEFINED_VERSION;
+        threshold_major_version = UNDEFINED_VERSION;
+        threshold_minor_version = UNDEFINED_VERSION;
     }
 
     public CFVersion(short major_version, short minor_version) {
@@ -62,8 +68,38 @@ public class CFVersion {
         return this;
     }
 
+    public CFVersion setThreshold(short major_version, short minor_version) {
+        this.threshold_major_version = major_version;
+        this.threshold_minor_version = minor_version;
+        return this;
+    }
+
+    public CFVersion setVersion(short major_version, short minor_version) {
+        this.major_version = major_version;
+        this.minor_version = minor_version;
+        return this;
+    }
+
+    public CFVersion setFileVersion(short major_version, short minor_version) {
+        if (isSet() && isFrozen()) {
+            if (isThresholdSet()) {
+                if ((major_version < threshold_major_version) ||
+                        (major_version == threshold_major_version && minor_version < threshold_minor_version)) {
+                    return this;
+                }
+            } else {
+                return this;
+            }
+        }
+        this.major_version = major_version;
+        this.minor_version = minor_version;
+        return this;
+    }
+
+
     public CFVersion setMajorVersion(short major_version) {
-        if (!frozen) this.major_version = major_version;
+        if (!frozen)
+            this.major_version = major_version;
         return this;
     }
 
@@ -81,6 +117,10 @@ public class CFVersion {
         return major_version != UNDEFINED_VERSION && minor_version != UNDEFINED_VERSION;
     }
 
+    public boolean isThresholdSet() {
+        return threshold_major_version != UNDEFINED_VERSION && threshold_minor_version != UNDEFINED_VERSION;
+    }
+
     public boolean isSetByParameter() {
         return this.isSetByParameter;
     }
@@ -92,6 +132,15 @@ public class CFVersion {
     public String asString() {
         return String.format("%s:%s", major_version == UNDEFINED_VERSION ? "(undef)" : major_version,
                 minor_version == UNDEFINED_VERSION ? "(undef)" : minor_version);
+    }
+
+    public String asThresholdString() {
+        return String.format("%s:%s-%s:%s",
+                threshold_major_version == UNDEFINED_VERSION ? "(undef)" : threshold_major_version,
+                threshold_minor_version == UNDEFINED_VERSION ? "(undef)" : threshold_minor_version,
+                major_version == UNDEFINED_VERSION ? "(undef)" : major_version,
+                minor_version == UNDEFINED_VERSION ? "(undef)" : minor_version
+        );
     }
 
     // A class file whose version number is 50.0 or above (§4.1) must be verified using the type checking rules given
@@ -116,6 +165,8 @@ public class CFVersion {
         CFVersion cfVersion = new CFVersion();
         cfVersion.major_version = cfv.major_version;
         cfVersion.minor_version = cfv.minor_version;
+        cfVersion.threshold_major_version = cfv.threshold_major_version;
+        cfVersion.threshold_minor_version = cfv.threshold_minor_version;
         cfVersion.isSetByParameter = cfv.isSetByParameter;
         cfVersion.frozen = cfv.frozen;
         return cfVersion;

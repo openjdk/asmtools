@@ -5,12 +5,16 @@ import static java.lang.String.format;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 
+import java.util.regex.Pattern;
+
 public interface ILogger {
 
     // A logged message isn't attached to a position of a parsed file
     int NOWHERE = Integer.MAX_VALUE;
     // Replacement for the tab found in an input
     CharSequence TAB_REPLACEMENT = "    ";
+
+    Pattern usagePattern = Pattern.compile("(-.*)\s([PGSDCSOIU]+.*)");
 
     default String getResourceString(String id, Object... args) {
         throw new NotImplementedException();
@@ -22,6 +26,13 @@ public interface ILogger {
     }
 
     default void info(String id, Object... args) {
+        String message = getInfo(id, args);
+        if (message != null) {
+            println(message);
+        }
+    }
+
+    default String getInfo(String id, Object... args) {
         throw new NotImplementedException();
     }
 
