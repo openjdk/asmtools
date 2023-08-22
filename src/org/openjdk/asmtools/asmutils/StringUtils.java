@@ -47,6 +47,44 @@ public class StringUtils {
     };
 
     /**
+     * Removes Java comments from String
+     * Spaces ahead of comments will be removed; alternatively, if no spaces precede the comment,
+     * the space after it will be deleted.
+     *
+     * @param str string that contains comments
+     * @return string without comments
+     */
+    public static String removeCommentFrom(String str) {
+        // firstly delete // comment if exists
+        int idx = str.indexOf("//");
+        if(idx != -1) {
+            str = str.substring(0, idx--);
+            if( str.charAt(idx) == ' ') {
+                str = str.substring(0,idx);
+            }
+        }
+        // remove /* some comment */ comments
+        String[] list = str.split("\\/\\*.*?\\*\\/");
+        if( list.length > 1 ) {
+            // comments found
+            str = "";
+            for (int i = 0; i < list.length; i++) {
+                idx = list[i].length()-1;
+                if( list[i].charAt(idx) == ' ' ) {
+                    str += list[i].substring(0,idx);
+                } else {
+                    str += list[i];
+                    idx = i+1;
+                    if( idx < list.length && list[idx].charAt(0) == ' ' ) {
+                        list[idx] = list[idx].substring(1);
+                    }
+                }
+            }
+        }
+        return str;
+    }
+
+    /**
      * Converts CONSTANT_Utf8_info string to a printable string for jdis/jdes.
      *
      * @param utf8            UTF8 string taken from within ConstantPool of a class file

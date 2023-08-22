@@ -14,7 +14,7 @@ public interface ILogger {
     // Replacement for the tab found in an input
     CharSequence TAB_REPLACEMENT = "    ";
 
-    Pattern usagePattern = Pattern.compile("(-.*)\s([PGSDCSOIU]+.*)");
+    Pattern usagePattern = Pattern.compile("(-.*?)\s([PGSDCSOIU]+.*)");
 
     default String getResourceString(String id, Object... args) {
         throw new NotImplementedException();

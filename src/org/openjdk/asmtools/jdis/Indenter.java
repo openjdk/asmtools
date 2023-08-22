@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,6 +52,7 @@ public class Indenter implements Printable {
 
     // internal references
     protected final boolean printCPIndex = Options.contains(CPX);
+    protected final boolean skipComments = Options.contains(NC);
     protected final boolean printLabelAsIdentifiers = Options.contains(LABS);
     protected final boolean printConstantPool = Options.contains(CP);
     protected final boolean printProgramCounter = Options.contains(PC);

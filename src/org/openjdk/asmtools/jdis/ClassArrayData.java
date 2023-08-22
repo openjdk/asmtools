@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -79,7 +79,11 @@ public class ClassArrayData extends MemberData {
             names.append((names.length() == 0) ? "" : ", ").append(pool.StringValue(classIndex));
         }
         if (printCPIndex) {
-            printIndent(PadRight(format("%s %s;", name, indexes), getCommentOffset() - 1)).println(" // " + names);
+            if( skipComments ) {
+                printIndentLn("%s %s;", name, indexes);
+            }  else {
+                printIndent(PadRight(format("%s %s;", name, indexes), getCommentOffset() - 1)).println(" // " + names);
+            }
         } else {
             printIndentLn("%s %s;", name, names.toString());
         }

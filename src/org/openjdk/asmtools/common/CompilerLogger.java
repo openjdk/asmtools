@@ -102,14 +102,13 @@ public class CompilerLogger extends ToolLogger implements ILogger {
         for (String id : usageIDs) {
             String s = id.equals("info.opt.cv") ? getInfo(id, DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION) :
                     getInfo(id);
-            if (s == null) {
-                return;
-            }
-            Matcher m = usagePattern.matcher(s);
-            if (m.find()) {
-                println(format("  %-35s %s", m.group(1).trim(), m.group(2).trim()));
-            } else {
-                println(s);
+            if (s != null) {
+                Matcher m = usagePattern.matcher(s);
+                if (m.find()) {
+                    println(format("  %-35s %s", m.group(1).trim(), m.group(2).trim()));
+                } else {
+                    println(s);
+                }
             }
         }
     }

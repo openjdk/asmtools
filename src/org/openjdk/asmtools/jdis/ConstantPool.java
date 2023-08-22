@@ -135,10 +135,10 @@ public class ConstantPool extends Indenter {
         for (int i = 1; i < constant_pool_count; i += tagSize) {
             byte tagByte = in.readByte();
             TAG tag = tagHash.get(tagByte);
-            if( tag == null ) {
+            if (tag == null) {
                 throw new ClassFormatError(
                         format("Error while reading constant pool for %s: unexpected tag at #%d: %d",
-                                environment.getInputFile(),i,tagByte));
+                                environment.getInputFile(), i, tagByte));
             }
             tagSize = tag.size();
             environment.traceln("\tCP entry #" + i + " tag[" + tagByte + "]\t=\t" + tag);
@@ -775,8 +775,13 @@ public class ConstantPool extends Indenter {
         public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
             switch (tag) {
-                case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHODTYPE, CONSTANT_PACKAGE, CONSTANT_MODULE ->
+                case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHODTYPE, CONSTANT_PACKAGE, CONSTANT_MODULE -> {
+                    if (skipComments) {
+                        println("#" + value + ";");
+                    } else {
                         printPadRight("#" + value + ";", commentPadding).println("// " + stringVal());
+                    }
+                }
                 default -> {
                 }
             }
@@ -897,17 +902,21 @@ public class ConstantPool extends Indenter {
         @Override
         public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
-            switch (tag) {
-                case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD ->
-                        printPadRight(format("#%d.#%d;", value, value2), commentPadding).println("// " + stringVal());
-                case CONSTANT_METHODHANDLE ->
-                        printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
-                case CONSTANT_NAMEANDTYPE ->
-                        printPadRight(format("#%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
-                case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
-                        printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// #%d:%s", value, StringValue(value2));
-                default ->
-                        printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// unknown tag: " + tag.tagName);
+            if (skipComments) {
+                println("#%d.#%d;", value, value2);
+            } else {
+                switch (tag) {
+                    case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD ->
+                            printPadRight(format("#%d.#%d;", value, value2), commentPadding).println("// " + stringVal());
+                    case CONSTANT_METHODHANDLE ->
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
+                    case CONSTANT_NAMEANDTYPE ->
+                            printPadRight(format("#%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
+                    case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// #%d:%s", value, StringValue(value2));
+                    default ->
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// unknown tag: " + tag.tagName);
+                }
             }
         }
 

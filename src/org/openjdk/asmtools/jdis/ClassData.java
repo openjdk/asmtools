@@ -439,26 +439,39 @@ public class ClassData extends MemberData<ClassData> {
             if (EModifier.isInterface(access)) {       // interface compilation unit
                 print(EModifier.asKeywords(access & ~ACC_ABSTRACT.getFlag(), CLASS));
                 print(printCPIndex ?
-                        format("interface #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second) :
+                        (skipComments ?
+                                format("interface #%d%s", this_cpx, signInfo.first) :
+                                format("interface #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second)
+                        ) :
                         format("interface %s", name, signInfo.second)
                 );
             } else {                                    // class compilation unit
                 // add synthetic, deprecated if necessary
                 print(EModifier.asKeywords(access, CLASS) + getPseudoFlagsAsString());
                 print(printCPIndex ?
-                        format("class #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second) :
+                        (skipComments ?
+                                format("class #%d%s", this_cpx, signInfo.first) :
+                                format("class #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second)
+                        ) :
                         format("class %s%s", name, signInfo.second)
                 );
                 // if base class is not j.l.Object prints the "extends" statement
                 if (this_cpx < pool.size() && this_cpx > 0) {
                     if (!pool.getClassName(super_cpx).equals("java/lang/Object")) {
                         print(printCPIndex ?
-                                format(" extends #%d /* %s */", super_cpx, pool.getShortClassName(super_cpx, this.packageName)) :
+                                (skipComments ?
+                                        format(" extends #%d", super_cpx) :
+                                        format(" extends #%d /* %s */", super_cpx, pool.getShortClassName(super_cpx, this.packageName))
+                                ) :
                                 format(" extends %s", pool.getShortClassName(super_cpx, this.packageName))
                         );
                     }
                 } else {
-                    print(printCPIndex ? format(" extends #%d /* ?? invalid index */", super_cpx) : " extends ??");
+                    print(printCPIndex ?
+                            (skipComments ?
+                                    format(" extends #%d", super_cpx) :
+                                    format(" extends #%d /* ?? invalid index */", super_cpx)
+                            ) : " extends ??");
                 }
             }
             // print the "implements" statement
@@ -472,7 +485,11 @@ public class ClassData extends MemberData<ClassData> {
                     String sIndexes = Arrays.stream(interfaces).
                             mapToObj(cpx -> format("#%d", cpx)).
                             collect(Collectors.joining(", "));
-                    statement = format("%simplements %s /* %s */", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sIndexes, sNames);
+                    if( skipComments ) {
+                        statement = format("%simplements %s", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sIndexes);
+                    } else {
+                        statement = format("%simplements %s /* %s */", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sIndexes, sNames);
+                    }
                 } else {
                     statement = format("%simplements %s", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sNames);
                 }
@@ -518,10 +535,13 @@ public class ClassData extends MemberData<ClassData> {
 
             // Print the attributes
             numCorruptedAttributes = printAttributes(getCommentOffset() - getIndentSize(), printableAttributes);
-
-            println(format("} // end Class %s%s",
-                    name,
-                    sourceFileData != null ? " compiled from \"" + sourceFileData.getSourceName() + "\"" : ""));
+            if( skipComments ) {
+                println("}");
+            } else {
+                println(format("} // end Class %s%s",
+                        name,
+                        sourceFileData != null ? " compiled from \"" + sourceFileData.getSourceName() + "\"" : ""));
+            }
         }
 
         // TODO: This isn't necessary. The warning info is already inlined into the jasm code.
@@ -574,7 +594,7 @@ public class ClassData extends MemberData<ClassData> {
             if (isPrintable(attribute)) {
                 if (Container.class.isAssignableFrom(attribute.getClass())) {
                     for (P item : (Container<P>) attribute) {
-                        if (item.getClass().isAssignableFrom(Indenter.class)) {
+                        if (Indenter.class.isAssignableFrom(item.getClass())) {
                             ((Indenter) item).setCommentOffset(commentOffset);
                         }
                         item.print();

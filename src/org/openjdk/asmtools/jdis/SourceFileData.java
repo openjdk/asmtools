@@ -61,8 +61,12 @@ public class SourceFileData extends Indenter {
     @Override
     public void print() {
         if (printCPIndex) {
-            printIndent(PadRight(format("%s #%d;", SOURCEFILE.parseKey(), source_cpx),getCommentOffset() - 1)).
-                    println(( sourceName != null ) ? " // " + sourceName : "");
+            if(skipComments ) {
+                printIndentLn(format("%s #%d;", SOURCEFILE.parseKey(), source_cpx));
+            } else {
+                printIndent(PadRight(format("%s #%d;", SOURCEFILE.parseKey(), source_cpx), getCommentOffset() - 1)).
+                        println((sourceName != null) ? " // " + sourceName : "");
+            }
         } else {
             printIndent(PadRight(SOURCEFILE.parseKey(),OPERAND_PLACEHOLDER_LENGTH + INSTR_PREFIX_LENGTH + 1)).
                     println( "\"" + (sourceName != null ? sourceName : "???") + "\";");

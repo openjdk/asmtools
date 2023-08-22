@@ -28,6 +28,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.NESTHOST;
 
 /**
  * The NestHost attribute data
@@ -54,10 +55,14 @@ public class NestHostData extends Indenter {
     @Override
     public void print() {
         if (printCPIndex) {
-            printIndent(PadRight(format("%s #%d;", JasmTokens.Token.NESTHOST.parseKey(), host_class_index),
-                    getCommentOffset() - 1)).println(" // " + cls.pool.ConstantStrValue(host_class_index));
+            if( skipComments ) {
+                printIndent("%s #%d;", NESTHOST.parseKey(), host_class_index);
+            } else {
+                printIndent(PadRight(format("%s #%d;", NESTHOST.parseKey(), host_class_index),
+                        getCommentOffset() - 1)).println(" // " + cls.pool.ConstantStrValue(host_class_index));
+            }
         } else {
-            printIndent("%s %s;", JasmTokens.Token.NESTHOST.parseKey(), cls.pool.StringValue(host_class_index));
+            printIndent("%s %s;", NESTHOST.parseKey(), cls.pool.StringValue(host_class_index));
         }
     }
 }

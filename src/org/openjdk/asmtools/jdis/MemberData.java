@@ -190,11 +190,15 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
                 prefix.append(" = #").append(value_cpx);
             }
             prefix.append(';');
-            printPadRight(prefix.toString(), getCommentOffset()-1).print(" // ");
-            print( data.pool.getName(name_cpx) + ":" +
-                    data.pool.getName(type_cpx) +
-                    signInfo.second +
-                    (postfix != null ? postfix : "")) ;
+            if( skipComments ) {
+               print(prefix.toString());
+            } else {
+                printPadRight(prefix.toString(), getCommentOffset() - 1).print(" // ");
+                print(data.pool.getName(name_cpx) + ":" +
+                        data.pool.getName(type_cpx) +
+                        signInfo.second +
+                        (postfix != null ? postfix : ""));
+            }
         } else {
             prefix.append(data.pool.getName(name_cpx)).append(':').
                     append(data.pool.getName(type_cpx)).
