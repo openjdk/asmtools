@@ -58,7 +58,7 @@ class InnerClassData extends Indenter {
     public void print() throws IOException {
         String prefix = EModifier.asKeywords(access, ClassFileContext.INNER_CLASS).
                 concat(JasmTokens.Token.INNERCLASS.parseKey()).concat(" ");
-        if (cls.printCPIndex) {
+        if (printCPIndex) {
             if (inner_name_index != 0)
                 prefix = prefix.concat("#" + inner_name_index + " = ");
             if (inner_class_info_index != 0)
@@ -67,17 +67,24 @@ class InnerClassData extends Indenter {
                 prefix = prefix.concat(" of #" + outer_class_info_index);
             }
             prefix = prefix.concat(";");
-            printIndentPadRight(prefix, getCommentOffset() - 1).print(" // ");
+            if( skipComments ) {
+                printIndent(prefix);
+            } else {
+                printIndentPadRight(prefix, getCommentOffset() - 1).print(" // ");
+            }
         } else {
             printIndent(prefix);
         }
-        if (inner_name_index != 0)
-            print(cls.pool.getName(inner_name_index) + " = ");
-        if (inner_class_info_index != 0)
-            print(cls.pool.ConstantStrValue(inner_class_info_index));
-        if (outer_class_info_index != 0)
-            print(format(" of %s", cls.pool.ConstantStrValue(outer_class_info_index)));
-        println(cls.printCPIndex ? "" : ";");
+        if( !printCPIndex || (printCPIndex && !skipComments) ) {
+            if (inner_name_index != 0)
+                print(cls.pool.getName(inner_name_index) + " = ");
+            if (inner_class_info_index != 0)
+                print(cls.pool.ConstantStrValue(inner_class_info_index));
+            if (outer_class_info_index != 0)
+                print(format(" of %s", cls.pool.ConstantStrValue(outer_class_info_index)));
+            println(cls.printCPIndex && !skipComments ? "" : ";");
+        } else {
+            println();
+        }
     }
 } // end InnerClassData
-

@@ -105,7 +105,10 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
 
     public String stringVal() {
         String name = pool.getName(name_cpx);
-        return (printCPIndex) ? format("#%d /* %s */", name_cpx, name) : name;
+        if( printCPIndex ) {
+            return (skipComments) ? format("#%d", name_cpx) : format("#%d /* %s */", name_cpx, name);
+        }
+        return name;
     }
 
     @Override
@@ -200,8 +203,17 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         }
 
         private String valueAsString(String prefix, Supplier<String> supplier) {
-            return (prefix.isEmpty() ? "" : prefix + " ") +
-                    (printCPIndex ? format("#%d /* %s */", cpx, supplier.get()) : supplier.get());
+            String str = prefix.isEmpty() ? "" : prefix + " ";
+            if (printCPIndex) {
+                if( skipComments ) {
+                    str += format("#%d", cpx);
+                } else {
+                    str += format("#%d /* %s */", cpx, supplier.get());
+                }
+            } else {
+                str += supplier.get();
+            }
+            return str;
         }
 
         @Override
@@ -242,7 +254,11 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
                 String name = pool.getName(cpx2);
                 sb.append(elementType.printValue()).append(' ');
                 if (printCPIndex) {
-                    sb.append(format("#%d /* %s */", cpx1, className)).append(format(" #%d /* %s */", cpx2, name));
+                    if( skipComments ) {
+                        sb.append(format("#%d", cpx1)).append(format(" #%d", cpx2));
+                    } else {
+                        sb.append(format("#%d /* %s */", cpx1, className)).append(format(" #%d /* %s */", cpx2, name));
+                    }
                 } else {
                     sb.append(className).append(" ").append(name);
                 }
@@ -345,7 +361,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
             println("{");
             for (AnnotationValue<T> annotationValue : annotationValues) {
                 annotationValue.setTheSame(this);
-                if (annotationValue instanceof CPX_AnnotationValue) {
+                if (annotationValue instanceof CPX_AnnotationValue || annotationValue instanceof CPX2_AnnotationValue) {
                     print(annotationValue.getIndentString());
                 }
                 annotationValue.print(); // entry

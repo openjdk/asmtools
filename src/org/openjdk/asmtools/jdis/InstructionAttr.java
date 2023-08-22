@@ -128,9 +128,13 @@ class InstructionAttr extends MemberData<MethodData> {
             for (TrapData line : handlers) {
                 print(this.enlargedIndent(PadRight(Opcode.opc_catch.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
                 if (printCPIndex) {
-                    print(PadRight(format("%s #%d;", line.id(), line.catch_cpx),
-                            getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
-                    println(" // " + (line.catch_cpx == 0 ? "any" : data.pool.getClassName(line.catch_cpx)));
+                    if( skipComments ) {
+                        println("%s #%d;", line.id(), line.catch_cpx);
+                    } else {
+                        print(PadRight(format("%s #%d;", line.id(), line.catch_cpx),
+                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
+                        println(" // " + (line.catch_cpx == 0 ? "any" : data.pool.getClassName(line.catch_cpx)));
+                    }
                 } else {
                     println("%s %s;", line.id(), data.pool.getClassName(line.catch_cpx));
                 }
@@ -146,9 +150,13 @@ class InstructionAttr extends MemberData<MethodData> {
             for (CodeData.LocVarData line : vars) {
                 print(this.enlargedIndent(PadRight(Opcode.opc_var.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
                 if (printCPIndex) {
-                    print(PadRight(format("%d #%d:#%d;", line.slot, line.name_cpx, line.sig_cpx),
-                            getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
-                    println(" // %s:%s", data.pool.getName(line.name_cpx), data.pool.getName(line.sig_cpx));
+                    if( skipComments ) {
+                        println("%d #%d:#%d;", line.slot, line.name_cpx, line.sig_cpx);
+                    } else {
+                        print(PadRight(format("%d #%d:#%d;", line.slot, line.name_cpx, line.sig_cpx),
+                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
+                        println(" // %s:%s", data.pool.getName(line.name_cpx), data.pool.getName(line.sig_cpx));
+                    }
                 } else {
                     println("%d %s:%s;", line.slot, data.pool.getName(line.name_cpx), data.pool.getName(line.sig_cpx));
                 }
@@ -220,11 +228,17 @@ class InstructionAttr extends MemberData<MethodData> {
                 print(PadRight(Opcode.opc_locals_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1));
             }
             if (printCPIndex) {
-                print(PadRight(line.first, mapShift));
-                mapShift = max(mapShift, line.first.length());
-                print(" // ");
+                if( skipComments ) {
+                    println(line.first);
+                } else {
+                    print(PadRight(line.first, mapShift));
+                    mapShift = max(mapShift, line.first.length());
+                    print(" // ");
+                }
             }
-            println(line.second);
+            if( !printCPIndex || (printCPIndex && !skipComments) ) {
+                println(line.second);
+            }
             printed = true;
         }
         map = stackMapEntry.stackMap;
@@ -237,10 +251,16 @@ class InstructionAttr extends MemberData<MethodData> {
                 print(PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1));
             }
             if (printCPIndex) {
-                print(PadRight(line.first, mapShift));
-                print(" // ");
+                if( skipComments ) {
+                    println(line.first);
+                } else {
+                    print(PadRight(line.first, mapShift));
+                    print(" // ");
+                }
             }
-            println(line.second);
+            if( !printCPIndex || (printCPIndex && !skipComments) ) {
+                println(line.second);
+            }
             printed = true;
         }
         if (!printed) {

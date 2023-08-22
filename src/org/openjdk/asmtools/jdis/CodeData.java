@@ -392,7 +392,7 @@ public class CodeData extends MemberData<MethodData> {
                 int count = high - low;
 
                 printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset() - 1);
-                println(printCPIndex ? " // " + low + " to " + high : "");
+                println(printCPIndex && !skipComments ? " // " + low + " to " + high : "");
                 for (int i = 0; i <= count; i++) {
                     // 9 == "default: ".length()
                     print(enlargedIndent(PadRight(format("%2d: ", i + low), 9), shift)).
@@ -409,7 +409,7 @@ public class CodeData extends MemberData<MethodData> {
                 int nPairs = getInt(tb + 4);
 
                 printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset() - 1);
-                println(printCPIndex ? " // " + nPairs : "");
+                println(printCPIndex && !skipComments ? " // " + nPairs : "");
                 Pair<Integer,Integer>[] lookupswitchPairs = getLookupswitchPairs(tb,nPairs);
                 // 9 == "default: ".length()
                 int caseLength = Math.max(9, Arrays.stream(lookupswitchPairs).
@@ -456,11 +456,15 @@ public class CodeData extends MemberData<MethodData> {
                 }
                 pool.setPrintTAG(true);
                 if (printCPIndex) {
-                    printPadRight(
-                            format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index), getCommentOffset() - 1).
-                            print(" // ");
-                    println(
-                            formatOperandLine(pool.ConstantStrValue(index), getCommentOffset() + shift - 1, " // ", breakPositions));
+                    if( skipComments ) {
+                        println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
+                    } else {
+                        printPadRight(
+                                format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index), getCommentOffset() - 1).
+                                print(" // ");
+                        println(
+                                formatOperandLine(pool.ConstantStrValue(index), getCommentOffset() + shift - 1, " // ", breakPositions));
+                    }
                 } else {
                     print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
                     println(formatOperandLine(pool.ConstantStrValue(index), OPERAND_PLACEHOLDER_LENGTH + shift + 1, "", breakPositions) + ";");
@@ -475,8 +479,12 @@ public class CodeData extends MemberData<MethodData> {
                     {
                         int index = getUShort(pc + 1);
                         if (printCPIndex) {
-                            printPadRight(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index),
-                                    getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                            if( skipComments ) {
+                                println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
+                            } else {
+                                printPadRight(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index),
+                                        getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                            }
                         } else {
                             print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
                             println(pool.ConstantStrValue(index) + ";");
@@ -487,8 +495,12 @@ public class CodeData extends MemberData<MethodData> {
                 int index = getUShort(pc + 1);
                 int dimensions = getUByte(pc + 3);  // nargs in case of opc_invokeinterface
                 if (printCPIndex) {
-                    printPadRight(format("%s #%d, %d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index, dimensions),
-                            getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                    if( skipComments ) {
+                        println(format("%s #%d, %d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index, dimensions));
+                    } else {
+                        printPadRight(format("%s #%d, %d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index, dimensions),
+                                getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                    }
                 } else {
                     print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
                     println("%s, %d;", pool.ConstantStrValue(index), dimensions);

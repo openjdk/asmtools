@@ -272,8 +272,8 @@ public class MethodData extends MemberData<ClassData> {
         methSignature = methSignature.concat(getPseudoFlagsAsString());
         methSignature = methSignature.concat(Token.METHODREF.parseKey() + " ");
 
-        Pair<String, String> signInfo = ( signature != null) ?
-                signature.getPrintInfo((i)->pool.inRange(i)) :
+        Pair<String, String> signInfo = (signature != null) ?
+                signature.getPrintInfo((i) -> pool.inRange(i)) :
                 new Pair<>("", "");
 
         boolean extraMethodInfo = code != null || exc_table != null || defaultAnnotation != null;
@@ -281,13 +281,22 @@ public class MethodData extends MemberData<ClassData> {
         if (printCPIndex) {
             // print the CPX method descriptor
             methSignature = methSignature.concat("#" + name_cpx + ":#" + sig_cpx + signInfo.first + (extraMethodInfo ? "" : ";"));
-            printIndent(PadRight(methSignature, getCommentOffset() - 1));
-            String comment = (defaultAnnotation != null ? " /* " : " // ").
-//                    concat(String.format("0x%04X ", access)).
+            if (skipComments) {
+                if (defaultAnnotation != null) {
+                    printIndent(PadRight(methSignature, getCommentOffset() - 1));
+                } else {
+                    printIndent(methSignature);
+                }
+                newLineIdent = methSignature.length();
+            } else {
+                printIndent(PadRight(methSignature, getCommentOffset() - 1));
+                String comment = (defaultAnnotation != null ? " /* " : " // ").
+//                  concat(String.format("0x%04X ", access)).
                     concat(data.pool.getName(name_cpx) + ":" + data.pool.getName(sig_cpx) + signInfo.second).
                     concat(defaultAnnotation != null ? " */ " : " ");
-            newLineIdent = getCommentOffset() + comment.length() - 1;
-            print(comment);
+                newLineIdent = getCommentOffset() + comment.length() - 1;
+                print(comment);
+            }
         } else {
             methSignature = methSignature.concat(data.pool.getName(name_cpx) + ":").
                     concat(data.pool.getName(sig_cpx) + signInfo.second + (extraMethodInfo ? " " : ";"));
@@ -329,10 +338,14 @@ public class MethodData extends MemberData<ClassData> {
         }
         println().incIndent();
         if (printCPIndex) {
-            printIndent(PadRight(throwsClause +
-                    indexes +
-                    (abstractMethod ? ";" : ""), getCommentOffset() - getIndentStep() - 1)).
-                    print(" // " + names);
+            if (skipComments) {
+                printIndent(throwsClause + indexes + (abstractMethod ? ";" : ""));
+            } else {
+                printIndent(PadRight(throwsClause +
+                        indexes +
+                        (abstractMethod ? ";" : ""), getCommentOffset() - getIndentStep() - 1)).
+                        print(" // " + names);
+            }
         } else {
             printIndent(throwsClause + names);
         }

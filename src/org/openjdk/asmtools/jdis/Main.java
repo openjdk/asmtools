@@ -131,6 +131,8 @@ public class Main extends JdisTool {
         "info.opt.sl",
         "info.opt.lt",
         "info.opt.lv",
+        "info.opt.nc",
+// TODO "info.opt.table",
         "info.opt.hx",
         "info.opt.d",
         "info.opt.v",
@@ -162,6 +164,9 @@ public class Main extends JdisTool {
                     break;
                 case "-lt":
                     Options.set(Options.PR.LNT);
+                    break;
+                case "-nc":
+                    Options.set(Options.PR.NC);
                     break;
                 case "-lv":
                     Options.set(Options.PR.VAR);
