@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,12 +22,12 @@
  */
 package org.openjdk.asmtools.asmutils;
 
+import java.util.List;
+
 /**
- *
+ * Utility class for Hex strings, bytes manipulations
  */
 public class HexUtils {
-    /*======================================================== Hex */
-
     private static final String hexString = "0123456789ABCDEF";
     private static final char hexTable[] = hexString.toCharArray();
 
@@ -58,6 +58,18 @@ public class HexUtils {
             }
         }
         return toHex(val, width);
+    }
+
+    /**
+     * Converts bytes' list ot array
+     */
+    public static byte[] toByteArray(List<Byte> byteList) {
+        int length = byteList.size();
+        byte[] array = new byte[length];
+        for (int i = 0; i < length; i++) {
+            array[i] = byteList.get(i);
+        }
+        return array;
     }
 
 }

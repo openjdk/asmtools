@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
 
-  Copyright (c) 2008, 2020, Oracle and/or its affiliates. All rights reserved.
+  Copyright (c) 2008, 2023, Oracle and/or its affiliates. All rights reserved.
   DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
   This code is free software; you can redistribute it and/or modify it
@@ -23,15 +23,12 @@
   Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
   or visit www.oracle.com if you need additional information or have any
   questions.
-
 -->
-
-
 <html>
     <head>
   <meta http-equiv="content-type"
  content="text/html; charset=ISO-8859-1">
-  <title>README - AsmTools - Version 7.0</title>
+  <title>README - AsmTools - Version 8.0</title>
   <style>
 body, tr {
  font-family: Arial, Helvetica, sans-serif;
@@ -42,13 +39,13 @@ table { font-family: Arial, Helvetica, sans-serif;
         margin-top: 0px; padding-top: 0px;
         border-top-width: 0px; border-right-width: 0px;
         border-bottom-width: 0px; border-left-width: 0px;
-        margin-bottom: 10px; margin-left: 0px; 
-        padding-bottom: 5px; padding-left: 5px 
+        margin-bottom: 10px; margin-left: 0px;
+        padding-bottom: 5px; padding-left: 5px
 }
 th
 { font-family: Arial, Helvetica, sans-serif;
   text-align: left; vertical-align: bottom;
-  padding-top: 5px; padding-right: 10px; 
+  padding-top: 5px; padding-right: 10px;
   padding-left: 10px; white-space: nowrap
   border-top-width: 0px; border-right-width: 0px;
   border-bottom-width: 0px; border-left-width: 0px;
@@ -62,26 +59,26 @@ td
   border-right-width: 0px; vertical-align: top;
   font-size: 12px;
 }
-td p 
+td p
 { font-family: Arial, Helvetica, sans-serif;
   padding-right:10px; padding-left: 10px; padding-top: 10px
  border-top-width: 0px; border-right-width: 0px;
  border-bottom-width: 0px; border-left-width: 0px;
  vertical-align: top; font-size: 12px;
 }
-td h1 {  text-align: center 
+td h1 {  text-align: center
 }
-td h2 {  text-align: center; padding-top: 0px 
+td h2 {  text-align: center; padding-top: 0px
 }
 td h3 {  text-align: center; padding-top: 0px
 }
-td h4 {  text-align: center; padding-top: 0px 
+td h4 {  text-align: center; padding-top: 0px
 }
-table.Code { margin-bottom: 0.5em; border: 0; 
+table.Code { margin-bottom: 0.5em; border: 0;
  margin-top: 0.5em;
 }
 table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
-               border: 1px solid  #1E475B; 
+               border: 1px solid  #1E475B;
 }
 .Untitled { margin-bottom: 1.0em; margin-top: 1.0em;
 }
@@ -102,12 +99,12 @@ table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
     </tr>
     <tr>
       <td class="sun-darkblue">
-      <center>
+      <div style="text-align: center;">
       <h1>Release Notes</h1>
       <h2>AsmTools</h2>
       </h2>
-      <h2>April 2020</h2>
-      </center>
+      <h2>September 2023</h2>
+      </div>
       </td>
     </tr>
     <tr>
@@ -132,20 +129,14 @@ table.Screen { margin-top: 0.5em; margin-bottom: 0.5em;
 </dl>
 <a name="introduction"></a><a name="_maincontent"></a>
 <h2>Introduction</h2>
-
 <p>
-AsmTools is a
-software package containing a collection of tools that you can use to
-encode and decode a Java class file, without using a Javac compiler.
-You can use AsmTools to create class files which can not normally be
-produced by a compiler. These class files can be used during the
-development process to test the compliance of a Virtual Machine (VM) to
-its specification.</p>
+AsmTools is a software package containing a collection of tools that you can use to encode and decode a Java class file, without using a Javac compiler.
+You can use AsmTools to create class files which can not normally be produced by a compiler. These class files can be used during the
+development process to test the compliance of a Virtual Machine (VM) to its specification.</p>
 <p>
-These
-release notes contain information about the ASM Tools version 7.0.
+These release notes contain information about the ASM Tools version 8.0.<br>
 See the (
-<a href="https://wiki.openjdk.java.net/display/CodeTools/Main">CodeTools</a> project) 
+<a href="https://wiki.openjdk.java.net/display/CodeTools/Main">CodeTools</a> project)
 <a href="https://wiki.openjdk.java.net/display/CodeTools/AsmTools">AsmTools</a> OpenJDK project page for more information about AsmTools.
 </p>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
@@ -156,8 +147,7 @@ See the (
 <h3>New Features</h3>
 <p>
 </p>
-<table summary="This table is a summary of New Features for Asm Tools"
- border="1" cellpadding="12">
+<table summary="This table is a summary of New Features for Asm Tools"  border="1" cellpadding="12">
   <tbody>
     <tr>
       <th class="sun-darkblue" scope="col"><b>Bug ID </b></th>
@@ -165,18 +155,10 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902525">CODETOOLS-7902525</a> 
+       <a href="https://bugs.openjdk.org/browse/CODETOOLS-7903531">CODETOOLS-7903531</a>
       </td>
       <td>
-        Asmtools support: JEP 360 Sealed Types(Preview)
-      </td>
-    </tr>
-    <tr>
-      <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902524">CODETOOLS-7902524</a> 
-      </td>
-      <td>
-        Asmtools support: JEP 359 Records(Preview)
+        jdis: Suppress printing comments by adding an option
       </td>
     </tr>
   </tbody>
@@ -196,59 +178,89 @@ See the (
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902618">CODETOOLS-7902618</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903141">CODETOOLS-7903141</a>
       </td>
       <td>
-        Asmtools does not support jasm output/input for TypeAnnotations.
+        jasm/jdis: implement support of The LocalVariableTable Attribute
       </td>
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902643">CODETOOLS-7902643</a> 
+       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903509">CODETOOLS-7903509</a>
       </td>
       <td>
-        Asmtools(jasm) does not support signature attributes in field_info, component_info
+        jcoder, jasm: add option to override class file version in source file(s)
       </td>
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902644">CODETOOLS-7902644</a> 
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903405">CODETOOLS-7903405</a>
       </td>
       <td>
-        Asmtools (jcoder) fails if an jcod file contains CONSTANT_Utf8_info with non-normative char sequences
+        compiler does not warn about instruction arguments that exceed allowed limits
       </td>
     </tr>
     <tr>
       <td>
-       <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7902648">CODETOOLS-7902648</a> 
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903402">CODETOOLS-7903402</a>
       </td>
       <td>
-        jasm has no clues about how to interpret CONSTANT_MethodHandle_info:reference_kind in an invokedynamic instruction
+        jdis: tool writes incorrect StackMapTable if the first same_frame has type 0
       </td>
     </tr>
- </tbody>
+    <tr>
+      <td>
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903401">CODETOOLS-7903401</a>
+      </td>
+      <td>
+        jtreg fails if set of jdk tests process jasm,jdis files with defects
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903259">CODETOOLS-7903259</a>
+      </td>
+      <td>
+        jasm: file names without extensions causes a tool crash
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903249">CODETOOLS-7903249</a>
+      </td>
+      <td>
+        asmtools build produces javadoc warning caused by invalid usage of tag &amp;
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href="https://bugs.openjdk.java.net/browse/CODETOOLS-7903248">CODETOOLS-7903248</a>
+      </td>
+      <td>
+        jasm: FieldData.ConstantValue holds undefined reference to CP while writing fields to a class
+      </td>
+    </tr>
+  </tbody>
 </table>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <p><a name="system_requirements"></a></p>
 <h2>System Requirements</h2>
 <p>
-Using ASM Tools requires a properly configured, certified Java
-Platform, Standard Edition (Java SE&#8482; platform) runtime environment
-version 1.8 or later, or a Java SE platform 8.0 runtime environment.
+Using ASM Tools requires a properly configured, certified ava Platform, Standard Edition version 17 or later
 </p>
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <a name="installation"></a>
 <h2>Installation</h2>
-To install the AsmTools, simply unzip the&nbsp; asmtools-7.0.zip
+To install the AsmTools, simply unzip the&nbsp; asmtools-8.0.zip
 distribution file in the directory of your choice. Optionally, you may
-wish to define an environment variable (ASMTOOLSHOME) to point to this
+wish to define an environment variable (ASMTOOLS_HOME) to point to this
 location for your convenience.
 <p class="nav-link">[<a href="#_top">Top</a>]</p>
 <a name="release_contents"></a>
 <h2>Release Contents</h2>
 <p>
 This section lists the components under the base subdirectory structure
-(<code>asmtools-7.0/</code>)
+(<code>asmtools-8.0/</code>)
 that is created when you unzip the AsmTools distribution archive during
 installation.
 </p>
@@ -282,28 +294,28 @@ location of this folder.
 <h2>Using AsmTools</h2>
 <p>AsmTools have the following synopsis:</p>
 <div style="margin-left: 40px;">
-<pre>java -jar ${ASMTOOLSHOME}/asmtools.jar TOOL FILE<br>   [TOOL="jasm" | "jdis" | "jcoder" | jdec | jcdec]<br>   [FILE=xxx.jasm (for jasm command) | xxx.jcod (for jcod command) | xxx.class for jdis, jdec, or jcdec command]<br><br></pre>
+<pre>java -jar ${ASMTOOLS_HOME}/asmtools.jar TOOL FILE<br>   [TOOL="jasm" | "jdis" | "jcoder" | "jdec"]<br>   [FILE=FILENAME.jasm (for jasm command) | FILENAME.jcod (for jcod command) | FILENAME.class for jdis, jdec command]<br><br></pre>
 </div>
 <p> Examples: </p>
 <div style="margin-left: 40px;">
 <br>
-% java -jar ${ASMTOOLSHOME}/asmtools.jar jasm MyClass.jasm <br>
-(produces MyClass.class)<br>
+% java -jar ${ASMTOOLS_HOME}/asmtools.jar jasm FILENAME.jasm <br>
+(produces FILENAME.class)<br>
 <br>
-% java -jar ${ASMTOOLSHOME}/asmtools.jar jdis MyClass.class &gt;
-MyClass.jasm <br>
-(produces MyClass.jasm)<br>
+% java -jar ${ASMTOOLS_HOME}/asmtools.jar jdis FILENAME.class &gt;
+FILENAME.jasm <br>
+(produces FILENAME.jasm)<br>
 <br>
-% java -jar ${ASMTOOLSHOME}/asmtools.jar jcoder MyClass.jcod <br>
-(produces MyClass.class)<br>
+% java -jar ${ASMTOOLS_HOME}/asmtools.jar jcoder FILENAME.jcod <br>
+(produces FILENAME.class)<br>
 <br>
-% java -jar ${ASMTOOLSHOME}/asmtools.jar jdec MyClass.class &gt;
-MyClass.jcod <br>
-(produces MyClass.jcod)
+% java -jar ${ASMTOOLS_HOME}/asmtools.jar jdec FILENAME.class &gt;
+FILENAME.jcod <br>
+(produces FILENAME.jcod)
 </div>
 
 <p>
-Assembler Syntax and tool usage is covered in the 
+Assembler Syntax and tool usage is covered in the
 <a href="https://wiki.openjdk.java.net/display/CodeTools/AsmTools">AsmTools project wiki</a>.
 </p>
 <br>
@@ -313,7 +325,7 @@ Assembler Syntax and tool usage is covered in the
 <p><a name="known_bugs_and_issues" id="known_bugs_and_issues"></a></p>
 <h2>Known Bugs and Issues</h2>
 <p>
-Many attributes (in the class file, as specified by the 
+Many attributes (in the class file, as specified by the
 
 <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html">Java VM Specification, Chapter 4)</a>
 
@@ -329,7 +341,7 @@ The AsmTools open source project was created in order to develop a community tha
 <p><a name="source" id="source"></a></p>
 <h2>Obtaining the Sources</h2>
 <p>
-The sources for <a href="">ASM Tools</a> 7.0 and later is available via the community
+The sources for <a href="">ASM Tools</a> 8.0 and later is available via the community
 <a href="http://www.openjdk.org/">OpenJDK</a> project.  The sources are stored
 and accessed through a Mercurial repository, which the public may access in a
 read-only fashion.  Committing to changes to the sources is accomplished by
@@ -341,28 +353,21 @@ the <a href="http://openjdk.java.net/projects/">OpenJDK Projects</a> landing pag
 <p>
     The general form for obtaining a copy of the current source tree is:</p>
 <pre>
-% hg clone http://hg.openjdk.java.net/code-tools/asmtools asmtools-ro
+% git clone https://github.com/openjdk/asmtools
 </pre>
-This places a copy of the entire source tree in the asmtools-ro directory.  From
+This places a copy of the entire source tree in the asmtools directory.  From
 that directory, you can then view and build the sources, as described in the next
 section.  Note that this copy is of the development version of the sources,
 you may need to extract a different revision if you want a copy from a specific
 period of time.
 
-
-<p>
-At the time of writing, the current version of Mercurial (<code>hg</code>)
-is 2.9.1.  See the <a href="https://wiki.openjdk.java.net/display/CodeTools/ASM+Tools">
-OpenJDK ASM Tools</a> main page for updated and more detailed information.
-</p>
-
 <p><span class="nav-link">[<a href="#_top">Top</a>]</span></p>
 <p><a name="building" id="building"></a></p>
 <h2>Building the Sources</h2>
 <p>
-Building the sources requires Ant version 1.8 or later (1.10.1 is current at the
+Building the sources requires Ant version 1.8 or later (1.10.13 is current at the
 time of writing), and the built-in build is compatible with using an IDE.
-The sources are designed for Java 8 and if you invoke <code>ant</code> with this
+The sources are designed for Java 17 and if you invoke <code>ant</code> with this
 runtime, your chance of encountering an abnormal conditions due to your runtime
 or compiler (or javadoc) version.
 </p>
@@ -372,7 +377,7 @@ General requirements:
 </p>
 <ul>
 <li>ant, version 1.8 or later
-<li>Java 8 runtime and compiler (minimum and recommended)
+<li>Java 17 runtime and compiler (minimum and recommended)
 <li>10MB free disk space (3MB for source tree, 7MB for build output)
 </ul>
 
@@ -384,7 +389,7 @@ The general steps to do a build from source from the command line:
 <li>Make your current directory <code>&lt;topdir&gt;/build/</code>
 <li>Invoke ant:<br><code>% ant</code>
 <li>Output appears in a directory above (one above &lt;topdir&gt;),
-    such as: <code>../../asmtools-7.0-build/</code>
+    such as: <code>../../asmtools-8.0-build/</code>
 </ol>
 
 <p>
@@ -392,13 +397,12 @@ A common variation of the build command to force <code>ant</code> to use a parti
 installation of Java on your machine:
 </p>
 <pre>
-# JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home ANTHOME=/usr/share/ant ant
+# JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home ANTHOME=/usr/share/ant ant
 </pre>
 This example for common *nix shells (<code>zsh, bash, sh</code>), alter it as needed for your
 command environment.  You can test your invocation of <code>ant</code> by running it with
 the <code>-diagnostics</code> flag, where it will indicate which Java it is
 using.
-
 
 <p>
 The build file itself is <code>build/build.xml</code>, this is the file you can
@@ -412,7 +416,7 @@ specify in your IDE for building.
 <hr>
 
 <hr noshade="noshade">
-<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2020, Oracle and/or its affiliates. All rights reserved.
+<p><a href="legal/copyright.txt">Copyright</a> &copy; 2008, 2023, Oracle and/or its affiliates. All rights reserved.
     Use is subject to license terms.The majority of the Assember Tools project is released under the <A
         HREF="http://openjdk.java.net/legal/gplv2+ce.html">GNU
         General Public License Version 2 (GPLv2)</A></p>

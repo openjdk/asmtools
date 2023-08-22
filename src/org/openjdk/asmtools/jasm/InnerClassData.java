@@ -27,12 +27,12 @@ import java.io.IOException;
 /**
  *
  */
-class InnerClassData implements Data {
+class InnerClassData implements DataWriter {
 
     int access;
-    ConstantPool.ConstCell name, innerClass, outerClass;
+    ConstCell name, innerClass, outerClass;
 
-    public InnerClassData(int access, ConstantPool.ConstCell name, ConstantPool.ConstCell innerClass, ConstantPool.ConstCell outerClass) {
+    public InnerClassData(int access, ConstCell name, ConstCell innerClass, ConstCell outerClass) {
         this.access = access;
         this.name = name;
         this.innerClass = innerClass;
@@ -46,14 +46,14 @@ class InnerClassData implements Data {
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        out.writeShort(innerClass.arg);
+        out.writeShort(innerClass.cpIndex);
         if (outerClass.isSet()) {
-            out.writeShort(outerClass.arg);
+            out.writeShort(outerClass.cpIndex);
         } else {
             out.writeShort(0);
         }
         if (name.isSet()) {
-            out.writeShort(name.arg);
+            out.writeShort(name.cpIndex);
         } else {
             out.writeShort(0);
         }

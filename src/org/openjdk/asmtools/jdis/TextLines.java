@@ -30,7 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * A container for the java sources tied to an jasm output when -sl in on
+ * A container for the java sources tied to an asm output when -sl in on
  */
 public class TextLines {
 

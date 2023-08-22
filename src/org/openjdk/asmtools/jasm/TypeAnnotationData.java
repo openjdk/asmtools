@@ -27,6 +27,9 @@ import org.openjdk.asmtools.jasm.TypeAnnotationTypes.TypePathEntry;
 
 import java.io.IOException;
 
+import static java.lang.String.format;
+import static org.openjdk.asmtools.asmutils.StringUtils.repeat;
+
 /**
  * JVMS 4.7.20.
  * type_annotation {
@@ -59,7 +62,7 @@ public class TypeAnnotationData extends AnnotationData {
     protected TypeAnnotationTargetInfoData targetInfo;
     protected TypeAnnotationTypePathData typePath;
 
-    public TypeAnnotationData(Argument typeCPX, boolean invisible) {
+    public TypeAnnotationData(Indexer typeCPX, boolean invisible) {
         super(typeCPX, invisible);
         typePath = new TypeAnnotationTypePathData();
     }
@@ -84,15 +87,6 @@ public class TypeAnnotationData extends AnnotationData {
 
     @Override
     public String toString() {
-        return toString(0);
-    }
-
-    public String toString(int tabLevel) {
-        StringBuilder sb = new StringBuilder(tabString(tabLevel));
-        sb.append(targetType.toString()).
-                append(' ').
-                append(targetInfo.toString(tabLevel)).
-                append(typePath.toString(tabLevel));
-        return sb.toString();
+        return format("%s %s %s", targetType.toString(), targetInfo.toString(), typePath.toString());
     }
 }

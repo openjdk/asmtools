@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,54 +22,119 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
- *
+ * Container for attributes having inline tables:
+ * InnerClasses, BootstrapMethods, LineNumberTable, Runtime(In)Visible(Type|Parameter)Annotations,
+ * LocalVariableTable, StackMapTable
  */
-// public class DataVectorAttr extends AttrData implements Constants {
-// }
-class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
+class DataVectorAttr<T extends DataWriter> extends AttrData implements Collection<T> {
 
     private ArrayList<T> elements;
-    private boolean byteIndex;
+    private boolean     byteIndex;
 
-    private DataVectorAttr(ClassData cls, String name, boolean byteIndex, ArrayList<T> initialData) {
-        super(cls, name);
+    /**
+     *
+     * @param pool Constant pool
+     * @param eAttribute the attribute name @see org.openjdk.asmtools.common.content.EAttribute
+     * @param byteIndex indicates 1 or two bytes is used to keep number of table elements:
+     *                  u2 StackMapTable_attribute.number_of_entries
+     *                  u1 RuntimeVisibleParameterAnnotations_attribute.num_parameters
+     * @param initialData initial elements of table
+     */
+    private DataVectorAttr(ConstantPool pool, EAttribute eAttribute, boolean byteIndex, ArrayList<T> initialData) {
+        super(pool, eAttribute);
         this.elements = initialData;
         this.byteIndex = byteIndex;
     }
 
-    DataVectorAttr(ClassData cls, String name, ArrayList<T> initialData) {
-        this(cls, name, false, initialData);
+    DataVectorAttr(ConstantPool pool, EAttribute attribute, ArrayList<T> initialData) {
+        this(pool, attribute, false, initialData);
     }
 
-    DataVectorAttr(ClassData cls, String name) {
-        this(cls, name, false, new ArrayList<>());
+    DataVectorAttr(ConstantPool pool, EAttribute attribute) {
+        this(pool, attribute, false, new ArrayList<>());
 
     }
 
-    DataVectorAttr(ClassData cls, String name, boolean byteIndex) {
-        this(cls, name, byteIndex, new ArrayList<>());
-
+    DataVectorAttr(ConstantPool pool, EAttribute attribute, boolean byteIndex) {
+        this(pool, attribute, byteIndex, new ArrayList<>());
     }
 
     public T get(int index) {
         return elements.get(index);
     }
 
-    public void add(T element) {
-        elements.add(element);
+    @Override
+    public boolean add(T element) {
+        return elements.add(element);
     }
 
-    public void put(int i, T element) {
-        elements.set(i, element);
+    @Override
+    public boolean remove(Object o) {
+        return elements.remove(o);
     }
 
-    public int size() {
-        return elements.size();
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return elements.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends T> c) {
+        return elements.addAll(c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return elements.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return elements.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+        elements.clear();
+    }
+
+    public DataVectorAttr<T> addAll(Stream<T> s) {
+        s.filter(e->e != null).forEach(elements::add);
+        return this;
+    }
+
+    public T set(int i, T element) {
+        return elements.set(i, element);
+    }
+
+    public int size() { return elements.size(); }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return false;
+    }
+
+    public void replaceAll(Collection<T> collection) {
+        elements.clear();
+        elements.addAll(collection);
+    }
+
+    public ArrayList<T> getElements() {
+        return elements;
     }
 
     @Override
@@ -78,27 +143,29 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
     }
 
     @Override
+    public Object[] toArray() {
+        return elements.toArray();
+    }
+
+    @Override
+    public <V> V[] toArray(V[] a) {
+        return elements.toArray(a);
+    }
+
+    public Stream<T> stream() { return elements.stream(); };
+
+    @Override
     public int attrLength() {
-        int length = 0;
-        // calculate overall size here rather than in add()
-        // because it may not be available at the time of invoking of add()
-        for (T elem : elements) {
-            length += elem.getLength();
-        }
-
+        // calculate overall size
+        int length = elements.stream().mapToInt(e->e.getLength()).sum();
         // add the length of number of elements
-        if (byteIndex) {
-            length += 1;
-        } else {
-            length += 2;
-        }
-
+        length += (byteIndex) ? 1 : 2;
         return length;
     }
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        super.write(out);  // attr name, attr len
+        super.write(out);  // attr name, attr length
         if (byteIndex) {
             out.writeByte(elements.size());
         } else {
@@ -108,5 +175,4 @@ class DataVectorAttr<T extends Data> extends AttrData implements Iterable<T> {
             elem.write(out);
         }
     }
-
 }

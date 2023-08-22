@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,48 +22,37 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.io.IOException;
+import org.openjdk.asmtools.common.SyntaxError;
+
 import java.util.ArrayList;
 import java.util.function.BiFunction;
 
+import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.ClassFileConst.*;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
+import static org.openjdk.asmtools.jasm.ConstantPool.*;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
-import static org.openjdk.asmtools.jasm.Tables.*;
 
 /**
  * ParserCP
- *
+ * <p>
  * ParseCP is a parser class owned by Parser.java. It is primarily responsible for parsing
  * the constant pool and constant declarations.
  */
 public class ParserCP extends ParseBase {
 
-    /**
-     * Stop parsing a source file immediately and interpret any issue as an error
-     */
+    // Visitor object
+    private final ParserCPVisitor pConstVstr;
+    // Stop parsing a source file immediately and interpret any issue as an error
     private boolean exitImmediately = false;
-
-    /**
-     * local handles on the scanner, main parser, and the error reporting env
-     */
-    /**
-     * Visitor object
-     */
-    private ParserCPVisitor pConstVstr;
-    /**
-     * counter of left braces
-     */
+    // counter of left braces
     private int lbrace = 0;
-
 
     /**
      * main constructor
-     *
-     * @param scanner
-     * @param parser
-     * @param env
      */
-    protected ParserCP(Scanner scanner, Parser parser, Environment env) {
-        super.init(scanner, parser, env);
+    protected ParserCP(Parser parentParser) {
+        super.init(parentParser);
         pConstVstr = new ParserCPVisitor();
     }
 
@@ -71,553 +60,85 @@ public class ParserCP extends ParseBase {
      * In particular cases it's necessary to interpret a warning issue as an error and
      * stop parsing a source file immediately
      * cpParser.setExitImmediately(true);
-     * çparseConstRef(...);
+     * parseConstRef(...);
      * cpParser.setExitImmediately(false);
      */
     public void setExitImmediately(boolean exitImmediately) {
         this.exitImmediately = exitImmediately;
     }
 
-    public boolean isExitImmediately() {
-        return exitImmediately;
-    }
-
-    /**
-     * ParserCPVisitor
-     *
-     * This inner class overrides a constant pool visitor to provide specific parsing
-     * instructions (per method) for each type of Constant.
-     *
-     * Note: since the generic visitor throws no exceptions, this derived class tunnels
-     * the exceptions, rethrown in the visitEcept method.
-     */
-    class ParserCPVisitor extends ConstantPool.CPTagVisitor<ConstantPool.ConstValue> {
-
-        private IOException IOProb;
-        private Scanner.SyntaxError SyProb;
-
-
-        public ParserCPVisitor() {
-            IOProb = null;
-            SyProb = null;
-        }
-
-        //This is the entry point for a visitor that tunnels exceptions
-        public ConstantPool.ConstValue visitExcept(ConstType tag) throws IOException, Scanner.SyntaxError {
-            IOProb = null;
-            SyProb = null;
-            debugStr("------- [ParserCPVisitor.visitExcept]: ");
-            ConstantPool.ConstValue ret = visit(tag);
-
-            if (IOProb != null) {
-                throw IOProb;
-            }
-
-            if (SyProb != null) {
-                throw SyProb;
-            }
-
-            return ret;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitUTF8(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitUTF8]: ");
-            try {
-                scanner.expect(Token.STRINGVAL);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            ConstantPool.ConstValue_String obj
-                    = new ConstantPool.ConstValue_String(scanner.stringValue);
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitInteger(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitInteger]: ");
-            ConstantPool.ConstValue_Integer obj;
-            int v = 0;
-            try {
-                if (scanner.token == Token.BITS) {
-                    scanner.scan();
-                    scanner.inBits = true;
-                }
-                v = scanner.intValue * scanner.sign;
-                scanner.expect(Token.INTVAL);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            obj = new ConstantPool.ConstValue_Integer(tag, v);
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitLong(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitLong]: ");
-            ConstantPool.ConstValue_Long obj = null;
-            try {
-                long v;
-                if (scanner.token == Token.BITS) {
-                    scanner.scan();
-                    scanner.inBits = true;
-                }
-                switch (scanner.token) {
-                    case INTVAL:
-                        v = scanner.intValue;
-                        break;
-                    case LONGVAL:
-                        v = scanner.longValue;
-                        break;
-                    default:
-                        env.error(scanner.prevPos, "token.expected", "Integer");
-                        throw new Scanner.SyntaxError();
-                }
-                obj = new ConstantPool.ConstValue_Long(tag, v * scanner.sign);
-                scanner.scan();
-            } catch (IOException e) {
-                IOProb = e;
-            } catch (Scanner.SyntaxError e) {
-                SyProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitFloat(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitFloat]: ");
-            ConstantPool.ConstValue_Integer obj = null;
-            try {
-                int v;
-                float f;
-                scanner.inBits = false;  // this needs to be initialized for each float!
-                if (scanner.token == Token.BITS) {
-                    scanner.scan();
-                    scanner.inBits = true;
-                }
-i2f:            {
-                    switch (scanner.token) {
-                        case INTVAL:
-                            if (scanner.inBits) {
-                                v = scanner.intValue;
-                                break i2f;
-                            } else {
-                                f = (float) scanner.intValue;
-                                break;
-                            }
-                        case FLOATVAL:
-                            f = scanner.floatValue;
-                            break;
-                        case DOUBLEVAL:
-                            f = (float) scanner.doubleValue; // to be excluded?
-                            break;
-                        case INF:
-                            f = Float.POSITIVE_INFINITY;
-                            break;
-                        case NAN:
-                            f = Float.NaN;
-                            break;
-                        default:
-                            env.traceln("token=" + scanner.token);
-                            env.error(scanner.pos, "token.expected", "<Float>");
-                            throw new Scanner.SyntaxError();
-                    }
-                    v = Float.floatToIntBits(f);
-                }
-                if (scanner.sign == -1) {
-                    v = v ^ 0x80000000;
-                }
-                obj = new ConstantPool.ConstValue_Integer(tag, v);
-                scanner.scan();
-            } catch (IOException e) {
-                IOProb = e;
-            } catch (Scanner.SyntaxError e) {
-                SyProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitDouble(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitDouble]: ");
-            ConstantPool.ConstValue_Long obj = null;
-            try {
-                long v;
-                double d;
-                if (scanner.token == Token.BITS) {
-                    scanner.scan();
-                    scanner.inBits = true;
-                }
-d2l:            {
-                    switch (scanner.token) {
-                        case INTVAL:
-                            if (scanner.inBits) {
-                                v = scanner.intValue;
-                                break d2l;
-                            } else {
-                                d = scanner.intValue;
-                                break;
-                            }
-                        case LONGVAL:
-                            if (scanner.inBits) {
-                                v = scanner.longValue;
-                                break d2l;
-                            } else {
-                                d = (double) scanner.longValue;
-                                break;
-                            }
-                        case FLOATVAL:
-                            d = scanner.floatValue;
-                            break;
-                        case DOUBLEVAL:
-                            d = scanner.doubleValue;
-                            break;
-                        case INF:
-                            d = Double.POSITIVE_INFINITY;
-                            break;
-                        case NAN:
-                            d = Double.NaN;
-                            break;
-                        default:
-                            env.error(scanner.pos, "token.expected", "Double");
-                            throw new Scanner.SyntaxError();
-                    }
-                    v = Double.doubleToLongBits(d);
-                }
-                if (scanner.sign == -1) {
-                    v = v ^ 0x8000000000000000L;
-                }
-                obj = new ConstantPool.ConstValue_Long(tag, v);
-                scanner.scan();
-            } catch (IOException e) {
-                IOProb = e;
-            } catch (Scanner.SyntaxError e) {
-                SyProb = e;
-            }
-            return obj;
-        }
-
-        private ConstantPool.ConstCell visitName(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitName]: ");
-            ConstantPool.ConstCell obj = null;
-            try {
-                obj = parser.parseName();
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitMethodtype(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitMethodtype]: ");
-            ConstantPool.ConstValue_Cell obj = null;
-            ConstantPool.ConstCell cell = visitName(tag);
-            if (IOProb == null) {
-                obj = new ConstantPool.ConstValue_Cell(tag, cell);
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitString(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitString]: ");
-            ConstantPool.ConstValue_Cell obj = null;
-            ConstantPool.ConstCell cell = visitName(tag);
-            if (IOProb == null) {
-                obj = new ConstantPool.ConstValue_Cell(tag, cell);
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitClass(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitClass]: ");
-            ConstantPool.ConstValue_Cell obj = null;
-            try {
-                ConstantPool.ConstCell cell = parser.parseClassName(true);
-                obj = new ConstantPool.ConstValue_Cell(tag, cell);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitMethodhandle(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitMethodHandle]: ");
-            ConstantPool.ConstValue_Pair obj = null;
-            try {
-                ConstantPool.ConstCell refCell;
-                ConstantPool.ConstCell subtagCell;
-                SubTag subtag;
-                // MethodHandle    [INVOKESUBTAG|INVOKESUBTAG_INDEX] :    CONSTANT_FIELD | [FIELDREF|METHODREF|INTERFACEMETHODREF]
-                if (scanner.token == Token.INTVAL) {
-                    // INVOKESUBTAG_INDEX
-                    // Handle explicit constant pool form
-                    subtag = subtag(scanner.intValue);
-                    subtagCell = new ConstantPool.ConstCell(subtag.value());
-                    scanner.scan();
-                    scanner.expect(Token.COLON);
-                    if (scanner.token == Token.CPINDEX) {
-                        // CONSTANT_FIELD
-                        int cpx = scanner.intValue;
-                        refCell = parser.pool.getCell(cpx);
-                        scanner.scan();
-                    } else {
-                        // [FIELDREF|METHODREF|INTERFACEMETHODREF]
-                        refCell = parser.parseMethodHandle(subtag);
-                    }
-                } else {
-                    // INVOKESUBTAG : REF_INVOKEINTERFACE, REF_NEWINVOKESPECIAL, ...
-                    // normal JASM
-                    subtag = parser.parseSubtag();
-                    subtagCell = new ConstantPool.ConstCell(subtag.value());
-                    scanner.expect(Token.COLON);
-                    if (scanner.token == Token.CPINDEX) {
-                        // CODETOOLS-7901522: Jasm doesn't allow to create REF_invoke* referring an InterfaceMethod
-                        // Parsing the case when refCell is CP index (#1)
-                        // const #1 = InterfaceMethod m:"()V";
-                        // const #2 = MethodHandle REF_invokeSpecial:#1;
-                        int cpx = scanner.intValue;
-                        refCell = parser.pool.getCell(cpx);
-                        scanner.scan();
-                    } else {
-                        refCell = parser.parseMethodHandle(subtag);
-                    }
-                }
-                obj = new ConstantPool.ConstValue_Pair(tag, subtagCell, refCell);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-
-        private ConstantPool.ConstValue_Pair visitMember(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitMember]: ");
-            ConstantPool.ConstValue_Pair obj = null;
-            try {
-                Token prevtoken = scanner.token;
-                ConstantPool.ConstCell firstName, ClassCell, NameCell, NapeCell;
-                firstName = parser.parseClassName(false);
-                if (scanner.token == Token.FIELD) { // DOT
-                    scanner.scan();
-                    if (prevtoken == Token.CPINDEX) {
-                        ClassCell = firstName;
-                    } else {
-                        ClassCell = parser.pool.FindCell(ConstType.CONSTANT_CLASS, firstName);
-                    }
-                    NameCell = parser.parseName();
-                } else {
-                    // no class provided - assume current class
-                    ClassCell = parser.cd.me;
-                    NameCell = firstName;
-                }
-                if (scanner.token == Token.COLON) {
-                    // name and type separately
-                    scanner.scan();
-                    NapeCell = parser.pool.FindCell(ConstType.CONSTANT_NAMEANDTYPE, NameCell, parser.parseName());
-                } else {
-                    // name and type as single name
-                    NapeCell = NameCell;
-                }
-                obj = new ConstantPool.ConstValue_Pair(tag, ClassCell, NapeCell);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitField(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitField]: ");
-            return visitMember(tag);
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitMethod(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitMethod]: ");
-            return visitMember(tag);
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitInterfacemethod(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitInterfacemethod]: ");
-            return visitMember(tag);
-        }
-
-        @Override
-        public ConstantPool.ConstValue visitNameandtype(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitNameandtype]: ");
-            ConstantPool.ConstValue_Pair obj = null;
-            try {
-                ConstantPool.ConstCell NameCell = parser.parseName(), TypeCell;
-                scanner.expect(Token.COLON);
-                TypeCell = parser.parseName();
-                obj = new ConstantPool.ConstValue_Pair(tag, NameCell, TypeCell);
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-
-        @Override
-        public ConstantPool.ConstValue_IndyPair visitInvokedynamic(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitInvokeDynamic]: ");
-            final BiFunction<BootstrapMethodData, ConstantPool.ConstCell, ConstantPool.ConstValue_IndyPair> ctor =
-                    (bsmData, napeCell) -> new ConstantPool.ConstValue_IndyPair(bsmData, napeCell);
-            return visitBsm(ctor);
-        }
-
-        @Override
-        public ConstantPool.ConstValue_CondyPair visitDynamic(ConstType tag) {
-            debugStr("------- [ParserCPVisitor.visitDynamic]: ");
-            final BiFunction<BootstrapMethodData, ConstantPool.ConstCell, ConstantPool.ConstValue_CondyPair> ctor =
-                    (bsmData, napeCell) -> new ConstantPool.ConstValue_CondyPair(bsmData, napeCell);
-            return visitBsm(ctor);
-        }
-
-        private <E extends ConstantPool.ConstValue_IndyOrCondyPair> E visitBsm(BiFunction<BootstrapMethodData, ConstantPool.ConstCell, E> ctor) {
-            E obj = null;
-            try {
-                if (scanner.token == Token.INTVAL) {
-                    // Handle explicit constant pool form
-                    int bsmIndex = scanner.intValue;
-                    scanner.scan();
-                    scanner.expect(Token.COLON);
-                    if (scanner.token != Token.CPINDEX) {
-                        env.traceln("token=" + scanner.token);
-                        env.error(scanner.pos, "token.expected", "<CPINDEX>");
-                        throw new Scanner.SyntaxError();
-                    }
-                    int cpx = scanner.intValue;
-                    scanner.scan();
-                    // Put a placeholder in place of BSM.
-                    // resolve placeholder after the attributes are scanned.
-                    BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
-                    obj =   ctor.apply(bsmData, parser.pool.getCell(cpx));
-                } else {
-                    // Handle full form
-                    ConstantPool.ConstCell MHCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
-                    scanner.expect(Token.COLON);
-                    ConstantPool.ConstCell NapeCell = parser.pool.FindCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
-                    if(scanner.token == Token.LBRACE) {
-                        ParserCP.this.lbrace++;
-                        scanner.scan();
-                    }
-                    ArrayList<ConstantPool.ConstCell> bsm_args = new ArrayList<>(256);
-                    while(true) {
-                        if( ParserCP.this.lbrace > 0 ) {
-                            if(scanner.token == Token.RBRACE ) {
-                                ParserCP.this.lbrace--;
-                                scanner.scan();
-                                break;
-                            } else if(scanner.token == Token.SEMICOLON) {
-                                scanner.expect(Token.RBRACE);
-                            }
-                        } else if(scanner.token == Token.SEMICOLON) {
-                            break;
-                        }
-                        if (scanner.token == Token.COMMA) {
-                            scanner.scan();
-                        }
-                        bsm_args.add(parseConstRef(null));
-                    }
-                    if( ParserCP.this.lbrace == 0 ) {
-                        scanner.check(Token.SEMICOLON);
-                    }
-                    BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
-                    parser.cd.addBootstrapMethod(bsmData);
-                    obj = ctor.apply(bsmData, NapeCell);
-                }
-            } catch (IOException e) {
-                IOProb = e;
-            }
-            return obj;
-        }
-    } // End Visitor
-
     /**
      * Parse CONSTVALUE
      */
-    protected ConstantPool.ConstValue parseConstValue(ConstType tag) throws IOException, Scanner.SyntaxError {
+    protected ConstValue<?> parseConstValue(ConstType tag) throws SyntaxError {
         return pConstVstr.visitExcept(tag);
     }
 
     /**
      * Parse [TAG] CONSTVALUE
      */
-    protected ConstantPool.ConstValue parseTagConstValue(ConstType defaultTag) throws Scanner.SyntaxError, IOException {
+    protected ConstValue<?> parseTagConstValue(ConstType defaultTag) throws SyntaxError {
         return parseTagConstValue(defaultTag, null, false);
     }
 
     private ConstType scanConstByID(boolean ignoreKeywords) {
         ConstType tag = null;
         if (!ignoreKeywords) {
-            ConstType tg = Tables.tag(scanner.idValue);
-            if (tg != null) {
-                tag = tg;
-            }
-            debugStr(" *^*^*^*^ [ParserCP.scanConst]: {TAG = " + (tg == null ? "null" : tg.toString()) + " ");
+            tag = ClassFileConst.tag(scanner.idValue);
         }
+        traceMethodInfoLn(format("\t\tTag: %s ", tag == null ? "<not found>" : tag));
         return tag;
     }
 
-    private ConstType scanConstPrimVal() throws Scanner.SyntaxError, IOException {
-        ConstType tag = null;
+    private ConstType scanConstPrimVal() throws SyntaxError {
+        ConstType tag;
         switch (scanner.token) {
-            case INTVAL:
-                tag = ConstType.CONSTANT_INTEGER;
-                break;
-            case LONGVAL:
-                tag = ConstType.CONSTANT_LONG;
-                break;
-            case FLOATVAL:
-                tag = ConstType.CONSTANT_FLOAT;
-                break;
-            case DOUBLEVAL:
-                tag = ConstType.CONSTANT_DOUBLE;
-                break;
-            case STRINGVAL:
-            case BITS:
-            case IDENT:
-                tag = ConstType.CONSTANT_STRING;
-                break;
-            default:
+            case BYTE -> tag = CONSTANT_INTEGER_BYTE;
+            case CHAR -> tag = CONSTANT_INTEGER_CHAR;
+            case DOUBLEVAL -> tag = ConstType.CONSTANT_DOUBLE;
+            case FLOATVAL -> tag = ConstType.CONSTANT_FLOAT;
+            case LONGVAL -> tag = ConstType.CONSTANT_LONG;
+            case INTVAL -> tag = ConstType.CONSTANT_INTEGER;
+            case SHORT -> tag = CONSTANT_INTEGER_SHORT;
+            case BOOLEAN -> tag = CONSTANT_INTEGER_BOOLEAN;
+            case STRINGVAL, BITS, IDENT -> tag = ConstType.CONSTANT_STRING;
+            default -> {
                 // problem - no constant value
-                System.err.println("NEAR: " + scanner.token.printValue());
-                env.error(scanner.pos, "value.expected");
-                throw new Scanner.SyntaxError();
+                environment.error(scanner.pos, "err.value.expected", scanner.token.printValue());
+                throw new SyntaxError();
+            }
         }
         return tag;
     }
 
-    private void checkWrongTag(ConstType tag, ConstType defaultTag, ConstType default2Tag) throws Scanner.SyntaxError, IOException {
+    private void checkWrongTag(ConstType tag, ConstType defaultTag, ConstType default2Tag) throws SyntaxError {
         if (defaultTag != null) {
             if (tag != defaultTag) {
                 if (default2Tag == null) {
-                    if( exitImmediately ) {
-                        env.error("wrong.tag", defaultTag.parseKey());
-                        throw new Scanner.SyntaxError().Fatal();
+                    if (exitImmediately) {
+                        environment.error(scanner.pos, "err.wrong.tag", defaultTag.parseKey());
+                        throw new SyntaxError().setFatal();
                     }
-                    env.error("warn.wrong.tag", defaultTag.parseKey());
+                    environment.warning(scanner.pos, "warn.wrong.tag", defaultTag.parseKey());
                 } else if (tag != default2Tag) {
-                    if( exitImmediately ) {
-                        env.error("wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
-                        throw new Scanner.SyntaxError().Fatal();
+                    if (exitImmediately) {
+                        environment.error(scanner.pos, "err.wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
+                        throw new SyntaxError().setFatal();
                     }
-                    env.error("warn.wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
+                    environment.warning(scanner.pos, "warn.wrong.tag2", defaultTag.parseKey(), default2Tag.parseKey());
                 }
             }
         }
     }
 
-    protected ConstantPool.ConstValue parseTagConstValue(ConstType defaultTag, ConstType default2Tag, boolean ignoreKeywords) throws Scanner.SyntaxError, IOException {
-        debugScan(" *^*^*^*^ [ParserCP.parseTagConstValue]: Begin default_tag:  ignoreKeywords: " + (ignoreKeywords ? "true" : "false"));
+    protected ConstValue<?> parseTagConstValue(ConstType defaultTag, ConstType default2Tag, boolean ignoreKeywords)
+            throws SyntaxError {
+        traceMethodInfoLn(format("\t<< DefaultTag: %s 2nd DefaultTag: %s IgnoreKeyword?: %b",
+                defaultTag == null ? "<none>" : defaultTag,
+                default2Tag == null ? "<none>" : default2Tag, ignoreKeywords));
         // Lookup the Tag from the scanner
         ConstType tag = scanConstByID(ignoreKeywords);
-        debugStr(" *^*^*^*^ [ParserCP.parseTagConstValue]: {tag = " + tag + ", defaulttag = " + defaultTag + "} ");
-
+        traceMethodInfoLn(format("\tResult Tag: %s >>", tag));
         // If the scanned tag is null
         if (tag == null) {
             // and, if the expected tag is null
@@ -638,28 +159,486 @@ d2l:            {
         return parseConstValue(tag);
     } // end parseTagConstValue
 
-    protected ConstantPool.ConstCell parseConstRef(ConstType defaultTag) throws Scanner.SyntaxError, IOException {
+    protected ConstCell<?> parseConstRef(ConstType defaultTag) throws SyntaxError {
         return parseConstRef(defaultTag, null, false);
     }
 
-    protected ConstantPool.ConstCell parseConstRef(ConstType defaultTag, ConstType default2Tag) throws Scanner.SyntaxError, IOException {
+    protected ConstCell<?> parseConstRef(ConstType defaultTag, ConstType default2Tag) throws SyntaxError {
         return parseConstRef(defaultTag, default2Tag, false);
     }
 
     /**
      * Parse an instruction argument, one of: * #NUMBER, #NAME, [TAG] CONSTVALUE
      */
-    protected ConstantPool.ConstCell parseConstRef(ConstType defaultTag,
-            ConstType default2Tag,
-            boolean ignoreKeywords) throws Scanner.SyntaxError, IOException {
+    protected ConstCell<?> parseConstRef(ConstType defaultTag,
+                                         ConstType default2Tag,
+                                         boolean ignoreKeywords) throws SyntaxError {
         if (scanner.token == Token.CPINDEX) {
             int cpx = scanner.intValue;
             scanner.scan();
             return parser.pool.getCell(cpx);
         } else {
-            ConstantPool.ConstValue ref = parseTagConstValue(defaultTag, default2Tag, ignoreKeywords);
-            return parser.pool.FindCell(ref);
+            ConstValue<?> ref = parseTagConstValue(defaultTag, default2Tag, ignoreKeywords);
+            return parser.pool.findCell(ref);
         }
     } // end parseConstRef
 
+    /**
+     * ParserCPVisitor
+     * <p>
+     * This inner class overrides a constant pool visitor to provide specific parsing
+     * instructions (per method) for each type of Constant.
+     * <p>
+     * Note: since the generic visitor throws no exceptions, this derived class tunnels
+     * the exceptions, rethrown in the visitExcept method.
+     */
+    class ParserCPVisitor extends CPTagVisitor<ConstValue<?>> {
+
+        private SyntaxError syntaxError;
+
+        //This is the entry point for a visitor that tunnels exceptions
+        public ConstValue<?> visitExcept(ConstType tag) throws SyntaxError {
+            syntaxError = null;
+            traceMethodInfoLn();
+            ConstValue<?> ret = visit(tag);
+            if (syntaxError != null) {
+                throw syntaxError;
+            }
+            return ret;
+        }
+
+        @Override
+        public ConstValue<?> visitUTF8() {
+            traceMethodInfoLn();
+            try {
+                scanner.expect(Token.STRINGVAL);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return new ConstValue_UTF8(scanner.stringValue);
+        }
+
+        @Override
+        public ConstValue<?> visitInteger(ClassFileConst.ConstType tag) {
+            traceMethodInfoLn();
+            int v = 0;
+            try {
+                if (scanner.token == Token.BITS) {
+                    scanner.scan();
+                    scanner.inBits = true;
+                }
+                v = scanner.intValue * scanner.sign;
+                scanner.expect(Token.INTVAL);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return new ConstValue_Integer(tag, v);
+        }
+
+        @Override
+        public ConstValue<?> visitLong() {
+            traceMethodInfoLn();
+            ConstValue_Long valueLong = null;
+            try {
+                long v;
+                if (scanner.token == Token.BITS) {
+                    scanner.scan();
+                    scanner.inBits = true;
+                }
+                switch (scanner.token) {
+                    case INTVAL -> v = scanner.intValue;
+                    case LONGVAL -> v = scanner.longValue;
+                    default -> {
+                        environment.error(scanner.prevPos, "err.token.expected", "Integer");
+                        throw new SyntaxError();
+                    }
+                }
+                valueLong = new ConstValue_Long(v * scanner.sign);
+                scanner.scan();
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return valueLong;
+        }
+
+        @Override
+        public ConstValue<?> visitFloat() {
+            traceMethodInfoLn();
+            ConstValue_Float valueFloat = null;
+            try {
+                int v;
+                float f;
+                scanner.inBits = false;  // this needs to be initialized for each float!
+                if (scanner.token == Token.BITS) {
+                    scanner.scan();
+                    scanner.inBits = true;
+                }
+                i2f:
+                {
+                    switch (scanner.token) {
+                        case INTVAL -> {
+                            if (scanner.inBits) {
+                                v = scanner.intValue;
+                                break i2f;
+                            } else {
+                                f = (float) scanner.intValue;
+                            }
+                        }
+                        case FLOATVAL -> f = scanner.floatValue;
+                        case DOUBLEVAL -> f = (float) scanner.doubleValue; // to be excluded?
+                        case INF -> f = Float.POSITIVE_INFINITY;
+                        case NAN -> f = Float.NaN;
+                        default -> {
+                            environment.traceln("token=" + scanner.token);
+                            environment.error(scanner.pos, "err.token.expected", "<Float>");
+                            throw new SyntaxError();
+                        }
+                    }
+                    v = Float.floatToIntBits(f);
+                }
+                if (scanner.sign == -1) {
+                    v = v ^ 0x80000000;
+                }
+                valueFloat = new ConstValue_Float(v);
+                scanner.scan();
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return valueFloat;
+        }
+
+        @Override
+        public ConstValue<?> visitDouble() {
+            traceMethodInfoLn();
+            ConstValue_Double valueDouble = null;
+            try {
+                long v;
+                double d;
+                if (scanner.token == Token.BITS) {
+                    scanner.scan();
+                    scanner.inBits = true;
+                }
+                d2l:
+                {
+                    switch (scanner.token) {
+                        case INTVAL -> {
+                            if (scanner.inBits) {
+                                v = scanner.intValue;
+                                break d2l;
+                            } else {
+                                d = scanner.intValue;
+                            }
+                        }
+                        case LONGVAL -> {
+                            if (scanner.inBits) {
+                                v = scanner.longValue;
+                                break d2l;
+                            } else {
+                                d = (double) scanner.longValue;
+                            }
+                        }
+                        case FLOATVAL -> d = scanner.floatValue;
+                        case DOUBLEVAL -> d = scanner.doubleValue;
+                        case INF -> d = Double.POSITIVE_INFINITY;
+                        case NAN -> d = Double.NaN;
+                        default -> {
+                            environment.error(scanner.pos, "err.token.expected", "Double");
+                            throw new SyntaxError();
+                        }
+                    }
+                    v = Double.doubleToLongBits(d);
+                }
+                if (scanner.sign == -1) {
+                    v = v ^ 0x8000000000000000L;
+                }
+                valueDouble = new ConstValue_Double(v);
+                scanner.scan();
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return valueDouble;
+        }
+
+        private ConstCell<?> visitName() {
+            traceMethodInfoLn();
+            ConstCell<?> obj = null;
+            try {
+                // Parse an external name: CPINDEX, string, or identifier.
+                obj = parser.parseName();
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue<?> visitMethodType() {
+            traceMethodInfoLn();
+            ConstValue_MethodType obj = null;
+            ConstCell<ConstValue_UTF8> cell = (ConstCell<ConstValue_UTF8>) visitName();
+            if (syntaxError == null) {
+                obj = new ConstValue_MethodType(cell);
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue<?> visitString() {
+            traceMethodInfoLn();
+            ConstValue_String obj = null;
+            ConstCell cell = visitName();
+            if (syntaxError == null) {
+                obj = new ConstValue_String(cell);
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue<?> visitClass() {
+            traceMethodInfoLn();
+            ConstValue_Class obj = null;
+            try {
+                ConstCell cell = parser.parseConstantClassInfo(true);
+                obj = new ConstValue_Class(cell);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue<?> visitPackage() {
+            traceMethodInfoLn();
+            ConstValue_Package obj = null;
+            try {
+                ConstCell cell = parser.parseConstantPackageInfo();
+                obj = new ConstValue_Package(cell);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue<?> visitModule() {
+            traceMethodInfoLn();
+            ConstValue_Module obj = null;
+            try {
+                ConstCell cell = parser.parseConstantModuleInfo();
+                obj = new ConstValue_Module(cell);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+
+        @Override
+        public ConstValue<?> visitMethodHandle() {
+            traceMethodInfoLn();
+            ConstValue_MethodHandle obj = null;
+            try {
+                ConstCell refCell;
+                SubTag subTag;
+                // MethodHandle    [INVOKESUBTAG|INVOKESUBTAG_INDEX] :    CONSTANT_FIELD | [FIELDREF|METHODREF|INTERFACEMETHODREF]
+                if (scanner.token == Token.INTVAL) {
+                    // INVOKESUBTAG_INDEX
+                    // Handle explicit constant pool form
+                    subTag = subTag(scanner.intValue);
+                    scanner.scan();
+                    scanner.expect(Token.COLON);
+                    if (scanner.token == Token.CPINDEX) {
+                        // CONSTANT_FIELD
+                        int cpx = scanner.intValue;
+                        refCell = parser.pool.getCell(cpx);
+                        scanner.scan();
+                    } else {
+                        // [FIELDREF|METHODREF|INTERFACEMETHODREF]
+                        refCell = parser.parseMethodHandle(subTag);
+                    }
+                } else {
+                    // INVOKESUBTAG : REF_INVOKEINTERFACE, REF_NEWINVOKESPECIAL, ...
+                    // normal JASM
+                    subTag = parser.parseSubtag();
+//                    subtagCell = new ConstCell(subtag.value());
+                    scanner.expect(Token.COLON);
+                    if (scanner.token == Token.CPINDEX) {
+                        // CODETOOLS-7901522: Jasm doesn't allow creating REF_invoke* referring an InterfaceMethod
+                        // Parsing the case when refCell is CP index (#1)
+                        // const #1 = InterfaceMethod m:"()V";
+                        // const #2 = MethodHandle REF_invokeSpecial:#1;
+                        int cpx = scanner.intValue;
+                        refCell = parser.pool.getCell(cpx);
+                        scanner.scan();
+                    } else {
+                        refCell = parser.parseMethodHandle(subTag);
+                    }
+                }
+                obj = new ConstValue_MethodHandle(subTag, refCell);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+        private <T extends ConstValue_Pair<ConstValue_Class, ConstValue_NameAndType>> T visitMember(ConstType tag) {
+            traceMethodInfoLn();
+            T constValue = null;
+            try {
+                Token prevToken = scanner.token;
+                ConstCell firstName;
+                ConstCell<ConstValue_Class> ClassCell;
+                ConstCell<ConstValue_NameAndType> NameCell, NapeCell;
+                firstName = parser.parseConstantClassInfo(false);
+                if (scanner.token == Token.FIELD) { // DOT
+                    scanner.scan();
+                    if (prevToken == Token.CPINDEX) {
+                        ClassCell = firstName;
+                    } else {
+                        ClassCell = parser.pool.findCell(ConstType.CONSTANT_CLASS, firstName);
+                    }
+                    NameCell = parser.parseName();
+                } else {
+                    // no class provided - assume current class
+                    if (parser.classData.this_class.isSet() || parser.classData.this_class.ref == null) {
+                        ClassCell = (ConstCell<ConstValue_Class>) parser.classData.this_class;
+                    } else {
+                        ClassCell = parser.pool.findCell((ConstValue_Class) parser.classData.this_class.ref);
+                    }
+                    NameCell = firstName;
+                }
+                if (scanner.token == Token.COLON) {
+                    // name and type separately
+                    scanner.scan();
+                    NapeCell = parser.pool.findCell(ConstType.CONSTANT_NAMEANDTYPE, NameCell, parser.parseName());
+                } else {
+                    // name and type as single name
+                    NapeCell = NameCell;
+                }
+                switch (tag) {
+                    case CONSTANT_INTERFACEMETHODREF -> constValue = (T) new ConstValue_InterfaceMethodRef(ClassCell, NapeCell);
+                    case CONSTANT_METHODREF -> constValue = (T) new ConstValue_MethodRef(ClassCell, NapeCell);
+                    case CONSTANT_FIELDREF -> constValue = (T) new ConstValue_FieldRef(ClassCell, NapeCell);
+                }
+                if (constValue == null) {
+                    environment.error("err.invalid.type", tag.printVal());
+                    throw new SyntaxError().setFatal();
+                }
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+
+            return constValue;
+        }
+
+        @Override
+        public ConstValue<?> visitField() {
+            traceMethodInfoLn();
+            return visitMember(ConstType.CONSTANT_FIELDREF);
+        }
+
+        @Override
+        public ConstValue<?> visitMethod() {
+            traceMethodInfoLn();
+            return visitMember(ConstType.CONSTANT_METHODREF);
+        }
+
+        @Override
+        public ConstValue<?> visitInterfaceMethod() {
+            traceMethodInfoLn();
+            return visitMember(ConstType.CONSTANT_INTERFACEMETHODREF);
+        }
+
+        @Override
+        public ConstValue<?> visitNameAndType() {
+            traceMethodInfoLn();
+            ConstValue_NameAndType obj = null;
+            try {
+                ConstCell<?> NameCell = parser.parseName(), TypeCell;
+                scanner.expect(Token.COLON);
+                TypeCell = parser.parseName();
+                obj = new ConstValue_NameAndType((ConstCell<ConstValue_UTF8>) NameCell, (ConstCell<ConstValue_UTF8>) TypeCell);
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+
+        @Override
+        public ConstValue_InvokeDynamic visitInvokeDynamic() {
+            traceMethodInfoLn();
+            final BiFunction<BootstrapMethodData, ConstCell<?>, ConstValue_InvokeDynamic> ctor =
+                    ConstValue_InvokeDynamic::new;
+            return visitBsm(ctor);
+        }
+
+        @Override
+        public ConstValue_Dynamic visitDynamic() {
+            traceMethodInfoLn();
+            final BiFunction<BootstrapMethodData, ConstCell<?>, ConstValue_Dynamic> ctor =
+                    ConstValue_Dynamic::new;
+            return visitBsm(ctor);
+        }
+
+        private <E extends ConstValue_BootstrapMethod> E visitBsm(BiFunction<BootstrapMethodData, ConstCell<?>, E> ctor) {
+            E obj = null;
+            try {
+                if (scanner.token == Token.INTVAL) {
+                    // Handle explicit constant pool form
+                    int bsmIndex = scanner.intValue;
+                    scanner.scan();
+
+                    scanner.expect(Token.COLON);
+
+                    if (scanner.token != Token.CPINDEX) {
+                        environment.traceln("token=" + scanner.token);
+                        environment.error(scanner.pos, "err.token.expected", "<CPINDEX>");
+                        throw new SyntaxError();
+                    }
+                    int cpx = scanner.intValue;
+                    scanner.scan();
+                    // Put a placeholder in place of BSM.
+                    // resolve placeholder after the attributes are scanned.
+                    BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
+                    obj = ctor.apply(bsmData, parser.pool.getCell(cpx));
+                } else {
+                    // Handle full form
+                    ConstCell<?> MHCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_METHODHANDLE));
+                    scanner.expect(Token.COLON);
+                    ConstCell<?> NapeCell = parser.pool.findCell(parseConstValue(ConstType.CONSTANT_NAMEANDTYPE));
+                    if (scanner.token == Token.LBRACE) {
+                        ParserCP.this.lbrace++;
+                        scanner.scan();
+                    }
+                    ArrayList<ConstCell<?>> bsm_args = new ArrayList<>(256);
+                    while (true) {
+                        if (ParserCP.this.lbrace > 0) {
+                            if (scanner.token == Token.RBRACE) {
+                                ParserCP.this.lbrace--;
+                                scanner.scan();
+                                break;
+                            } else if (scanner.token == Token.SEMICOLON) {
+                                scanner.expect(Token.RBRACE);
+                            }
+                        } else if (scanner.token == Token.SEMICOLON) {
+                            break;
+                        }
+                        if (scanner.token == Token.COMMA) {
+                            scanner.scan();
+                        }
+                        bsm_args.add(parseConstRef(null));
+                    }
+                    if (ParserCP.this.lbrace == 0) {
+                        scanner.check(Token.SEMICOLON);
+                    }
+                    BootstrapMethodData bsmData = new BootstrapMethodData(MHCell, bsm_args);
+                    parser.classData.addBootstrapMethod(bsmData);
+                    obj = ctor.apply(bsmData, NapeCell);
+                }
+            } catch (SyntaxError se) {
+                syntaxError = se;
+            }
+            return obj;
+        }
+    } // End Visitor
 }

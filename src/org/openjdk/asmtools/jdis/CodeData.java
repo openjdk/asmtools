@@ -22,51 +22,43 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.jasm.Tables;
+import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.jasm.JasmTokens;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
+import static java.lang.String.format;
+import static java.lang.System.lineSeparator;
+import static org.openjdk.asmtools.asmutils.HexUtils.toHex;
+import static org.openjdk.asmtools.common.structure.EAttribute.ATT_RuntimeInvisibleTypeAnnotations;
+import static org.openjdk.asmtools.common.structure.EAttribute.get;
+import static org.openjdk.asmtools.jasm.ClassFileConst.BasicType;
+import static org.openjdk.asmtools.jasm.ClassFileConst.getBasicType;
 import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
 import static org.openjdk.asmtools.jasm.OpcodeTables.opcode;
-import static org.openjdk.asmtools.jasm.Tables.*;
-import static org.openjdk.asmtools.jasm.Tables.AttrTag.ATT_RuntimeInvisibleTypeAnnotations;
-import static org.openjdk.asmtools.jasm.Tables.AttrTag.ATT_RuntimeVisibleTypeAnnotations;
-import static org.openjdk.asmtools.jdis.Utils.commentString;
 
 /**
  * Code data for a code attribute in method members in a class of the Java Disassembler
  */
-public class CodeData extends Indenter {
+public class CodeData extends MemberData<MethodData> {
 
     /**
-     * Raw byte array for the byte codes
+     * (parsed) reversed bytecode index hash, associates labels with ByteCode indexes
      */
+    private final HashMap<Integer, InstructionAttr> instructionAttrs = new HashMap<>();
+    // Raw byte array for the byte codes
     protected byte[] code;
-    /**
-     * Limit for the stack size
-     */
+    // Limit for the stack size
     protected int max_stack;
-
-    /* CodeData Fields */
-    /**
-     * Limit for the number of local vars
-     */
+    // Limit for the number of local vars
     protected int max_locals;
-    /**
-     * The remaining attributes of this class
-     */
+    // The remaining attributes of this class
     protected ArrayList<AttrData> attrs = new ArrayList<>(0);        // AttrData
 
-    // internal references
-    protected ClassData cls;
-    protected MethodData meth;
-    /**
-     * (parsed) Trap table, describes exceptions caught
-     */
+    // (parsed) Trap table, describes exceptions caught
     private ArrayList<TrapData> trap_table = new ArrayList<>(0);   // TrapData
     /**
      * (parsed) Line Number table, describes source lines associated with ByteCode indexes
@@ -78,11 +70,6 @@ public class CodeData extends Indenter {
      */
     private ArrayList<LocVarData> loc_var_tb = new ArrayList<>(0);   // LocVarData
     /**
-     * (parsed) Local Variable type table, describes generic variable scopes
-     * associated with ByteCode indexes
-     */
-    private ArrayList<LocVarData> loc_var_type_tb = new ArrayList<>(0);   // LocVarTypeData
-    /**
      * (parsed) stack map table, describes compiler hints for stack rep, associated with
      * ByteCode indexes
      */
@@ -90,33 +77,25 @@ public class CodeData extends Indenter {
     /**
      * The visible type annotations for this method
      */
-    private ArrayList<TypeAnnotationData> visibleTypeAnnotations;
+    private ArrayList<TypeAnnotationData<MethodData>> visibleTypeAnnotations;
     /**
      * The invisible type annotations for this method
      */
-    private ArrayList<TypeAnnotationData> invisibleTypeAnnotations;
+    private ArrayList<TypeAnnotationData<MethodData>> invisibleTypeAnnotations;
 
-    /**
-     * (parsed) reversed bytecode index hash, associates labels with ByteCode indexes
-     */
-    private HashMap<Integer, iAtt> iattrs = new HashMap<>();
-    private PrintWriter out;
-    public CodeData(MethodData meth) {
-        this.meth = meth;
-        this.cls = meth.cls;
-        this.out = cls.out;
+    public CodeData(MethodData data) {
+        super(data);
     }
 
     private static int align(int n) {
         return (n + 3) & ~3;
     }
-    /*-------------------------------------------------------- */
 
-    private int getbyte(int pc) {
+    private int getByte(int pc) {
         return code[pc];
     }
 
-    private int getUbyte(int pc) {
+    private int getUByte(int pc) {
         return code[pc] & 0xFF;
     }
 
@@ -132,91 +111,69 @@ public class CodeData extends Indenter {
         return (getShort(pc) << 16) | (getShort(pc + 2) & 0xFFFF);
     }
 
-    protected iAtt get_iAtt(int pc) {
+    protected InstructionAttr getInstructionAttribute(int pc) {
         Integer PC = pc;
-        iAtt res = iattrs.get(PC);
+        InstructionAttr res = instructionAttrs.get(PC);
         if (res == null) {
-            res = new iAtt(this);
-            iattrs.put(PC, res);
+            res = new InstructionAttr(this.data);
+            res.setTheSame(this).incIndent();
+            instructionAttrs.put(PC, res);
         }
         return res;
     }
 
-    /*========================================================*/
     /* Read Methods */
     private void readLineNumTable(DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
-        int numlines = in.readUnsignedShort();
-        lin_num_tb = new ArrayList<>(numlines);
-        TraceUtils.traceln(3,  "CodeAttr:  LineNumTable[" + numlines + "] len=" + len);
-        for (int l = 0; l < numlines; l++) {
+        int nLines = in.readUnsignedShort();
+        lin_num_tb = new ArrayList<>(nLines);
+        environment.traceln("CodeAttr:  LineNumTable[%d] length=%d", nLines, len);
+        for (int l = 0; l < nLines; l++) {
             lin_num_tb.add(new LineNumData(in));
         }
     }
 
     private void readLocVarTable(DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
-        int numlines = in.readUnsignedShort();
-        loc_var_tb = new ArrayList<>(numlines);
-        TraceUtils.traceln(3,  "CodeAttr:  LocalVariableTable[" + numlines + "] len=" + len);
-        for (int l = 0; l < numlines; l++) {
-            loc_var_tb.add(new LocVarData(in, /* isForTypeTable: */ false));
-        }
-    }
-
-    private void readLocVarTypeTable(DataInputStream in) throws IOException {
-        int len = in.readInt(); // attr_length
-        int numlines = in.readUnsignedShort();
-        loc_var_type_tb = new ArrayList<>(numlines);
-        TraceUtils.traceln(3,  "CodeAttr:  LocalVariableTypeTable[" + numlines + "] len=" + len);
-        for (int l = 0; l < numlines; l++) {
-            loc_var_type_tb.add(new LocVarData(in, /* isForTypeTable: */ true));
+        int nLines = in.readUnsignedShort();
+        loc_var_tb = new ArrayList<>(nLines);
+        environment.traceln("CodeAttr:  LocalVariableTable[%d] length=%d", nLines, len);
+        for (int l = 0; l < nLines; l++) {
+            loc_var_tb.add(new LocVarData(in));
         }
     }
 
     private void readTrapTable(DataInputStream in) throws IOException {
         int trap_table_len = in.readUnsignedShort();
-        TraceUtils.traceln(3,  "CodeAttr:  TrapTable[" + trap_table_len + "]");
+        environment.traceln("CodeAttr:  TrapTable[%d]", trap_table_len);
         trap_table = new ArrayList<>(trap_table_len);
         for (int l = 0; l < trap_table_len; l++) {
             trap_table.add(new TrapData(in, l));
         }
     }
 
-    private void readStackMap(DataInputStream in) throws IOException {
+    private void readStackMapEntity(StackMapData.EAttributeType type, DataInputStream in) throws IOException {
         int len = in.readInt(); // attr_length
         int stack_map_len = in.readUnsignedShort();
-        TraceUtils.traceln(3,  "CodeAttr:  Stack_Map: attrlen=" + len + " num=" + stack_map_len);
         stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
+        environment.traceln("CodeAttr:  %s: attrLength=%d num=%d", type.getName(), len, stack_map_len);
+        int prevFrame_pc = 0;
         for (int k = 0; k < stack_map_len; k++) {
-            stack_map.add(new StackMapData(this, in));
+            StackMapData stackMapData =  new StackMapData(type, k == 0, prevFrame_pc, this, in);
+            prevFrame_pc = stackMapData.getFramePC();
+            stack_map.add(stackMapData);
         }
     }
 
-    private void readStackMapTable(DataInputStream in) throws IOException {
-        int len = in.readInt(); // attr_length
-        int stack_map_len = in.readUnsignedShort();
-        TraceUtils.traceln(3,  "CodeAttr:  Stack_Map_Table: attrlen=" + len + " num=" + stack_map_len);
-        stack_map = new ArrayList<>(stack_map_len);
-        StackMapData.prevFramePC = 0;
-        for (int k = 0; k < stack_map_len; k++) {
-            stack_map.add(new StackMapData(this, in, true));
-        }
-    }
-
-    private void readTypeAnnotations(DataInputStream in, boolean isInvisible) throws IOException  {
+    private void readTypeAnnotations(DataInputStream in, boolean isInvisible) throws IOException {
         int attrLength = in.readInt();
         // Read Type Annotations Attr
         int count = in.readShort();
-        ArrayList<TypeAnnotationData> tannots = new ArrayList<>(count);
-        TraceUtils.traceln(3,  "CodeAttr:   Runtime" +
-                (isInvisible ? "Inv" : "V") +
-                "isibleTypeAnnotation: attrlen=" +
-                attrLength + " num=" + count);
+        ArrayList<TypeAnnotationData<MethodData>> tannots = new ArrayList<>(count);
+        environment.traceln("CodeAttr:   Runtime%sisibleTypeAnnotation: attrLength=%d num= %d",
+                (isInvisible ? "Inv" : "V"), attrLength, count);
         for (int index = 0; index < count; index++) {
-            TraceUtils.traceln("\t\t\t[" + index +"]:");
-            TypeAnnotationData tannot = new TypeAnnotationData(isInvisible, cls);
+            TypeAnnotationData<MethodData> tannot = new TypeAnnotationData<>(this.data, isInvisible);
             tannot.read(in);
             tannots.add(tannot);
         }
@@ -228,21 +185,16 @@ public class CodeData extends Indenter {
     }
 
     /**
-     * read
-     * <p>
-     * read and resolve the code attribute data called from MethodData. precondition:
+     * Read and resolve the code attribute data called from MethodData. precondition:
      * NumFields has already been read from the stream.
      */
-    public void read(DataInputStream in, int codeattrlen) throws IOException {
-
+    public void read(DataInputStream in, int codeAttrLength) throws IOException {
         // Read the code in the Code Attribute
         max_stack = in.readUnsignedShort();
         max_locals = in.readUnsignedShort();
         int codelen = in.readInt();
-        TraceUtils.traceln(3,  "CodeAttr:  Codelen=" + codelen +
-                " fulllen=" + codeattrlen +
-                " max_stack=" + max_stack +
-                " max_locals=" + max_locals);
+        environment.traceln("CodeAttr:  CodeLength=%d FullLength=%d max_stack=%d max_locals=%d",
+                codelen, codeAttrLength, max_stack, max_locals);
 
         // read the raw code bytes
         code = new byte[codelen];
@@ -253,55 +205,40 @@ public class CodeData extends Indenter {
 
         // Read any attributes of the Code Attribute
         int nattr = in.readUnsignedShort();
-        TraceUtils.traceln(3,  "CodeAttr: add.attr:" + nattr);
+        environment.traceln("CodeAttr: add.attr: %d", nattr);
         for (int k = 0; k < nattr; k++) {
             int name_cpx = in.readUnsignedShort();
             // verify the Attrs name
-            ConstantPool.Constant name_const = cls.pool.getConst(name_cpx);
+            ConstantPool.Constant name_const = pool.getConst(name_cpx);
             if (name_const != null && name_const.tag == ConstantPool.TAG.CONSTANT_UTF8) {
-                String attrname = cls.pool.getString(name_cpx);
-                TraceUtils.traceln(3,  "CodeAttr:  attr: " + attrname);
+                String attrName = pool.getString(name_cpx, index -> "#" + index);
+                environment.traceln("CodeAttr:  attr: " + attrName);
                 // process the attr
-                AttrTag attrtag = attrtag(attrname);
-                switch (attrtag) {
-                    case ATT_LineNumberTable:
-                        readLineNumTable(in);
-                        break;
-                    case ATT_LocalVariableTable:
-                        readLocVarTable(in);
-                        break;
-                    case ATT_LocalVariableTypeTable:
-                        readLocVarTypeTable(in);
-                        break;
-                    case ATT_StackMap:
-                        readStackMap(in);
-                        break;
-                    case ATT_StackMapTable:
-                        readStackMapTable(in);
-                        break;
-                    case ATT_RuntimeVisibleTypeAnnotations:
-                    case ATT_RuntimeInvisibleTypeAnnotations:
-                        readTypeAnnotations(in, attrtag == ATT_RuntimeInvisibleTypeAnnotations);
-                        break;
-                    default:
-                        AttrData attr = new AttrData(cls);
-                        int attrlen = in.readInt(); // attr_length
-                        attr.read(name_cpx, attrlen, in);
+                EAttribute attrTag = get(attrName);
+                switch (attrTag) {
+                    case ATT_LineNumberTable -> readLineNumTable(in);
+                    case ATT_LocalVariableTable -> readLocVarTable(in);
+                    case ATT_StackMap -> readStackMapEntity(StackMapData.EAttributeType.STACKMAP, in);
+                    case ATT_StackMapTable -> readStackMapEntity(StackMapData.EAttributeType.STACKMAPTABLE, in);
+                    case ATT_RuntimeVisibleTypeAnnotations, ATT_RuntimeInvisibleTypeAnnotations ->
+                            readTypeAnnotations(in, attrTag == ATT_RuntimeInvisibleTypeAnnotations);
+                    default -> {
+                        AttrData attr = new AttrData(environment);
+                        int attrLen = in.readInt(); // attr_length
+                        attr.read(name_cpx, attrLen, in);
                         attrs.add(attr);
-                        break;
+                    }
                 }
             }
         }
     }
 
-    /*========================================================*/
     /* Code Resolution Methods */
     private int checkForLabelRef(int pc) {
-        //         throws IOException {
-        int opc = getUbyte(pc);
+        int opc = getUByte(pc);
         Opcode opcode = opcode(opc);
         switch (opcode) {
-            case opc_tableswitch: {
+            case opc_tableswitch -> {
                 int tb = align(pc + 1);
                 int default_skip = getInt(tb); /* default skip pamount */
 
@@ -309,51 +246,36 @@ public class CodeData extends Indenter {
                 int high = getInt(tb + 8);
                 int count = high - low;
                 for (int i = 0; i <= count; i++) {
-                    get_iAtt(pc + getInt(tb + 12 + 4 * i)).referred = true;
+                    getInstructionAttribute(pc + getInt(tb + 12 + 4 * i)).referred = true;
                 }
-                get_iAtt(default_skip + pc).referred = true;
+                getInstructionAttribute(default_skip + pc).referred = true;
                 return tb - pc + 16 + count * 4;
             }
-            case opc_lookupswitch: {
+            case opc_lookupswitch -> {
                 int tb = align(pc + 1);
                 int default_skip = getInt(tb); /* default skip pamount */
 
                 int npairs = getInt(tb + 4);
                 for (int i = 1; i <= npairs; i++) {
-                    get_iAtt(pc + getInt(tb + 4 + i * 8)).referred = true;
+                    getInstructionAttribute(pc + getInt(tb + 4 + i * 8)).referred = true;
                 }
-                get_iAtt(default_skip + pc).referred = true;
+                getInstructionAttribute(default_skip + pc).referred = true;
                 return tb - pc + (npairs + 1) * 8;
             }
-            case opc_jsr:
-            case opc_goto:
-            case opc_ifeq:
-            case opc_ifge:
-            case opc_ifgt:
-            case opc_ifle:
-            case opc_iflt:
-            case opc_ifne:
-            case opc_if_icmpeq:
-            case opc_if_icmpne:
-            case opc_if_icmpge:
-            case opc_if_icmpgt:
-            case opc_if_icmple:
-            case opc_if_icmplt:
-            case opc_if_acmpeq:
-            case opc_if_acmpne:
-            case opc_ifnull:
-            case opc_ifnonnull:
-                get_iAtt(pc + getShort(pc + 1)).referred = true;
+            case opc_jsr, opc_goto, opc_ifeq, opc_ifge, opc_ifgt, opc_ifle, opc_iflt, opc_ifne, opc_if_icmpeq,
+                    opc_if_icmpne, opc_if_icmpge, opc_if_icmpgt, opc_if_icmple, opc_if_icmplt, opc_if_acmpeq,
+                    opc_if_acmpne, opc_ifnull, opc_ifnonnull -> {
+                getInstructionAttribute(pc + getShort(pc + 1)).referred = true;
                 return 3;
-            case opc_jsr_w:
-            case opc_goto_w:
-                get_iAtt(pc + getInt(pc + 1)).referred = true;
+            }
+            case opc_jsr_w, opc_goto_w -> {
+                getInstructionAttribute(pc + getInt(pc + 1)).referred = true;
                 return 5;
-            case opc_wide:
-            case opc_nonpriv:
-            case opc_priv:
-                int opc2 = (opcode.value() << 8) + getUbyte(pc + 1);
+            }
+            case opc_wide, opc_nonpriv, opc_priv -> {
+                int opc2 = (opcode.value() << 8) + getUByte(pc + 1);
                 opcode = opcode(opc2);
+            }
         }
         try {
             int opclen = opcode.length();
@@ -371,306 +293,341 @@ public class CodeData extends Indenter {
 
     private void loadLineNumTable() {
         for (LineNumData entry : lin_num_tb) {
-            get_iAtt(entry.start_pc).lnum = entry.line_number;
+            getInstructionAttribute(entry.start_pc).lineNum = entry.line_number;
         }
     }
 
     private void loadStackMap() {
         for (StackMapData entry : stack_map) {
-            get_iAtt(entry.start_pc).stackMapEntry = entry;
+            getInstructionAttribute(entry.frame_pc).stackMapEntry = entry;
         }
     }
 
     private void loadLocVarTable() {
         for (LocVarData entry : loc_var_tb) {
-            get_iAtt(entry.start_pc).add_var(entry);
-            get_iAtt(entry.start_pc + entry.length).add_endvar(entry);
-        }
-        for (LocVarData entry : loc_var_type_tb) {
-            get_iAtt(entry.start_pc).add_var(entry);
-            get_iAtt(entry.start_pc + entry.length).add_endvar(entry);
+            getInstructionAttribute(entry.start_pc).addVar(entry);
+            getInstructionAttribute(entry.start_pc + entry.length).addEndVar(entry);
         }
     }
 
     private void loadTrapTable() {
         for (TrapData entry : trap_table) {
-            get_iAtt(entry.start_pc).add_trap(entry);
-            get_iAtt(entry.end_pc).add_endtrap(entry);
-            get_iAtt(entry.handler_pc).add_handler(entry);
+            getInstructionAttribute(entry.start_pc).addTrap(entry);
+            getInstructionAttribute(entry.end_pc).addEndTrap(entry);
+            getInstructionAttribute(entry.handler_pc).add_handler(entry);
         }
     }
 
-    /*========================================================*/
     /* Print Methods */
-    private void PrintConstant(int cpx) {
-        out.print("\t");
-        cls.pool.PrintConstant(out, cpx);
-    }
-
-    private void PrintCommentedConstant(int cpx) {
-        out.print(commentString(cls.pool.ConstantStrValue(cpx)));
-    }
-
-    private int printInstr(int pc) {
-        boolean pr_cpx = meth.options.contains(Options.PR.CPX);
-        int opc = getUbyte(pc);
+    private int printInstrLn(int pc, int shift) {
+        int opc = getUByte(pc);
         int opc2;
         Opcode opcode = opcode(opc);
         Opcode opcode2;
         String mnem;
         switch (opcode) {
-            case opc_nonpriv:
-            case opc_priv:
-                opc2 = getUbyte(pc + 1);
+            case opc_nonpriv, opc_priv -> {
+                opc2 = getUByte(pc + 1);
                 int finalopc = (opc << 8) + opc2;
                 opcode2 = opcode(finalopc);
                 if (opcode2 == null) {
-// assume all (even nonexistent) priv and nonpriv instructions
-// are 2 bytes long
-                    mnem = opcode.parsekey() + " " + opc2;
+                    // assume all (even nonexistent) priv and nonpriv instructions
+                    // are 2 bytes long
+                    mnem = opcode.parseKey() + " " + opc2;
                 } else {
-                    mnem = opcode2.parsekey();
+                    mnem = opcode2.parseKey();
                 }
-                out.print(mnem);
+                println(mnem);
                 return 2;
-            case opc_wide: {
-                opc2 = getUbyte(pc + 1);
+            }
+            case opc_wide -> {
+                opc2 = getUByte(pc + 1);
                 int finalopcwide = (opc << 8) + opc2;
                 opcode2 = opcode(finalopcwide);
                 if (opcode2 == null) {
-// nonexistent opcode - but we have to print something
-                    out.print("bytecode " + opcode);
+                    // nonexistent opcode - but we have to print something
+                    print(PadRight("bytecode", OPERAND_PLACEHOLDER_LENGTH + 1)).println(opcode + ";");
                     return 1;
                 } else {
-                    mnem = opcode2.parsekey();
+                    mnem = opcode2.parseKey();
                 }
-                out.print(mnem + " " + getUShort(pc + 2));
                 if (opcode2 == Opcode.opc_iinc_w) {
-                    out.print(", " + getShort(pc + 4));
+                    print(PadRight(mnem, OPERAND_PLACEHOLDER_LENGTH + 1));
+                    println("%d, %d;", getUShort(pc + 2), getUShort(pc + 4));
                     return 6;
+                } else {
+                    print(PadRight(mnem, OPERAND_PLACEHOLDER_LENGTH + 1)).println("%d;", getUShort(pc + 2));
+                    return 4;
                 }
-                return 4;
             }
         }
-        mnem = opcode.parsekey();
+        mnem = opcode.parseKey();
         if (mnem == null) {
-// nonexistent opcode - but we have to print something
-            out.print("bytecode " + opcode);
+            // nonexistent opcode - but we have to print something
+            print(PadRight("bytecode", OPERAND_PLACEHOLDER_LENGTH + 1)).println(opcode + ";");
             return 1;
         }
-        if (opcode.value() > Opcode.opc_jsr_w.value()) {
-// pseudo opcodes should be printed as bytecodes
-            out.print("bytecode " + opcode);
+        if (!opcode.isReservedOpcode()) { // == opcode.value() >= Opcode.opc_bytecode.value();
+            // pseudo opcodes should be printed as bytecodes
+            print(PadRight("bytecode", OPERAND_PLACEHOLDER_LENGTH + 1)).println(opcode + ";");
             return 1;
         }
-        out.print(opcode.parsekey());
-// TraceUtils.traceln("****** [CodeData.printInstr]: got an '" + opcode.parseKey() + "' [" + opc + "] instruction ****** ");
+        String operand = opcode.parseKey();
         switch (opcode) {
-            case opc_aload:
-            case opc_astore:
-            case opc_fload:
-            case opc_fstore:
-            case opc_iload:
-            case opc_istore:
-            case opc_lload:
-            case opc_lstore:
-            case opc_dload:
-            case opc_dstore:
-            case opc_ret:
-                out.print("\t" + getUbyte(pc + 1));
+            case opc_aload, opc_astore, opc_fload, opc_fstore, opc_iload, opc_istore, opc_lload, opc_lstore, opc_dload, opc_dstore, opc_ret -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).println(getUByte(pc + 1) + ";");
                 return 2;
-            case opc_iinc:
-                out.print("\t" + getUbyte(pc + 1) + ", " + getbyte(pc + 2));
+            }
+            case opc_iinc -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                        println("%d, %d;", getUByte(pc + 1), getByte(pc + 2));
                 return 3;
-            case opc_tableswitch: {
+            }
+            case opc_tableswitch -> {
                 int tb = align(pc + 1);
                 int default_skip = getInt(tb); /* default skip pamount */
 
                 int low = getInt(tb + 4);
                 int high = getInt(tb + 8);
                 int count = high - low;
-                out.print("{ //" + low + " to " + high);
+
+                printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset() - 1);
+                println(printCPIndex && !skipComments ? " // " + low + " to " + high : "");
                 for (int i = 0; i <= count; i++) {
-                    out.print("\n\t\t" + (i + low) + ": " + meth.lP + (pc + getInt(tb + 12 + 4 * i)) + ";");
+                    // 9 == "default: ".length()
+                    print(enlargedIndent(PadRight(format("%2d: ", i + low), 9), shift)).
+                            println(data.lP + (pc + getInt(tb + 12 + 4 * i)) + ";");
                 }
-                out.print("\n\t\tdefault: " + meth.lP + (default_skip + pc) + " }");
+                print(enlargedIndent(
+                        PadRight("default: " + data.lP + (default_skip + pc), OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)
+                ).println(" };");
                 return tb - pc + 16 + count * 4;
             }
-            case opc_lookupswitch: {
+            case opc_lookupswitch -> {
                 int tb = align(pc + 1);
                 int default_skip = getInt(tb);
-                int npairs = getInt(tb + 4);
-                out.print("{ //" + npairs);
-                for (int i = 1; i <= npairs; i++) {
-                    out.print("\n\t\t" + getInt(tb + i * 8) + ": " + meth.lP + (pc + getInt(tb + 4 + i * 8)) + ";");
+                int nPairs = getInt(tb + 4);
+
+                printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset() - 1);
+                println(printCPIndex && !skipComments ? " // " + nPairs : "");
+                Pair<Integer,Integer>[] lookupswitchPairs = getLookupswitchPairs(tb,nPairs);
+                // 9 == "default: ".length()
+                int caseLength = Math.max(9, Arrays.stream(lookupswitchPairs).
+                        mapToInt(p->String.valueOf(p.first).length()).max().orElse(0) + 2);
+                for (int i = 0; i < nPairs; i++) {
+                    print(enlargedIndent(PadRight(format("%2d:", lookupswitchPairs[i].first), caseLength), shift)).
+                            println(data.lP + (pc + lookupswitchPairs[i].second) + ";");
                 }
-                out.print("\n\t\tdefault: " + meth.lP + (default_skip + pc) + " }");
-                return tb - pc + (npairs + 1) * 8;
+                print(enlargedIndent(
+                        PadRight(PadRight("default: ", caseLength) + data.lP + (default_skip + pc),
+                                OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)).println(" };");
+                return tb - pc + (nPairs + 1) * 8;
             }
-            case opc_newarray:
-                int tp = getUbyte(pc + 1);
-                BasicType type = basictype(tp);
-                switch (type) {
-                    case T_BOOLEAN:
-                        out.print(" boolean");
-                        break;
-                    case T_BYTE:
-                        out.print(" byte");
-                        break;
-                    case T_CHAR:
-                        out.print(" char");
-                        break;
-                    case T_SHORT:
-                        out.print(" short");
-                        break;
-                    case T_INT:
-                        out.print(" int");
-                        break;
-                    case T_LONG:
-                        out.print(" long");
-                        break;
-                    case T_FLOAT:
-                        out.print(" float");
-                        break;
-                    case T_DOUBLE:
-                        out.print(" double");
-                        break;
-                    case T_CLASS:
-                        out.print(" class");
-                        break;
-                    default:
-                        out.print(" BOGUS TYPE:" + type);
+            case opc_newarray -> {
+                int tp = getUByte(pc + 1);
+                BasicType basicType = getBasicType(tp);
+                if (basicType == null) {
+                    print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                            println("BOGUS TYPE: " + toHex(tp, 8) + ";");
+                } else {
+                    print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                            println(basicType.printValue() + ";");
                 }
                 return 2;
-            case opc_ldc_w:
-            case opc_ldc2_w: {
+            }
+            case opc_ldc, opc_ldc_w, opc_ldc2_w, opc_invokedynamic -> {
                 // added printing of the tag: Method/Interface to clarify
                 // interpreting CONSTANT_MethodHandle_info:reference_kind
                 // Example: ldc_w Dynamic REF_invokeStatic:Method CondyIndy.condy_bsm
-                cls.pool.setPrintTAG(true);
-                int index = getUShort(pc + 1);
-                if (pr_cpx) {
-                    out.print("\t#" + index + "; //");
+                int index, opLength;
+                List<Integer> breakPositions = new ArrayList<>();
+                if (opcode == Opcode.opc_ldc) {
+                    opLength = 2;
+                    breakPositions.add(3);
+                    index = getUByte(pc + 1);
+                } else if (opcode == Opcode.opc_invokedynamic) {
+                    opLength = 5;
+                    breakPositions.addAll(Set.of(2, 3));
+                    index = getUShort(pc + 1); // getUbyte(pc + 3); // getUbyte(pc + 4); // reserved bytes
+                } else {    // opc_ldc*_w
+                    opLength = 3;
+                    breakPositions.add(3);
+                    index = getUShort(pc + 1);
                 }
-                PrintConstant(index);
-                cls.pool.setPrintTAG(false);
+                pool.setPrintTAG(true);
+                if (printCPIndex) {
+                    if( skipComments ) {
+                        println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
+                    } else {
+                        printPadRight(
+                                format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index), getCommentOffset() - 1).
+                                print(" // ");
+                        println(
+                                formatOperandLine(pool.ConstantStrValue(index), getCommentOffset() + shift - 1, " // ", breakPositions));
+                    }
+                } else {
+                    print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
+                    println(formatOperandLine(pool.ConstantStrValue(index), OPERAND_PLACEHOLDER_LENGTH + shift + 1, "", breakPositions) + ";");
+                }
+                pool.setPrintTAG(false);
+                return opLength;
+            }
+            // Valhalla
+            case opc_anewarray, opc_instanceof, opc_checkcast, opc_new, opc_putstatic, opc_getstatic, opc_putfield,
+                    opc_getfield, opc_invokevirtual, opc_invokespecial, opc_invokestatic, opc_withfield,
+                    opc_aconst_init ->   // Valhalla
+                    {
+                        int index = getUShort(pc + 1);
+                        if (printCPIndex) {
+                            if( skipComments ) {
+                                println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
+                            } else {
+                                printPadRight(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index),
+                                        getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                            }
+                        } else {
+                            print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
+                            println(pool.ConstantStrValue(index) + ";");
+                        }
+                        return 3;
+                    }
+            case opc_multianewarray, opc_invokeinterface -> {
+                int index = getUShort(pc + 1);
+                int dimensions = getUByte(pc + 3);  // nargs in case of opc_invokeinterface
+                if (printCPIndex) {
+                    if( skipComments ) {
+                        println(format("%s #%d, %d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index, dimensions));
+                    } else {
+                        printPadRight(format("%s #%d, %d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index, dimensions),
+                                getCommentOffset() - 1).println(" // " + pool.ConstantStrValue(index));
+                    }
+                } else {
+                    print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
+                    println("%s, %d;", pool.ConstantStrValue(index), dimensions);
+                }
+                return opcode == Opcode.opc_multianewarray ? 4 : 5;
+            }
+            case opc_sipush -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                        println(getShort(pc + 1) + ";");
                 return 3;
             }
-            case opc_anewarray:
-            case opc_instanceof:
-            case opc_checkcast:
-            case opc_new:
-            case opc_putstatic:
-            case opc_getstatic:
-            case opc_putfield:
-            case opc_getfield:
-            case opc_invokevirtual:
-            case opc_invokespecial:
-            case opc_invokestatic: {
-                int index = getUShort(pc + 1);
-                if (pr_cpx) {
-                    out.print("\t#" + index + "; //");
-                }
-                PrintConstant(index);
-                return 3;
-            }
-            case opc_sipush:
-                out.print("\t" + getShort(pc + 1));
-                return 3;
-            case opc_bipush:
-                out.print("\t" + getbyte(pc + 1));
+            case opc_bipush -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                        println(getByte(pc + 1) + ";");
                 return 2;
-            case opc_ldc: {
-                // added printing of the tag: Method/Interface to clarify
-                // interpreting CONSTANT_MethodHandle_info:reference_kind
-                // Example: ldc Dynamic REF_invokeStatic:Method CondyIndy.condy_bsm
-                cls.pool.setPrintTAG(true);
-                int index = getUbyte(pc + 1);
-                if (pr_cpx) {
-                    out.print("\t#" + index + "; //");
-                }
-                PrintConstant(index);
-                cls.pool.setPrintTAG(false);
-                return 2;
             }
-            case opc_invokeinterface: {
-                int index = getUShort(pc + 1), nargs = getUbyte(pc + 3);
-                if (pr_cpx) {
-                    out.print("\t#" + index + ",  " + nargs + "; //");
-                    PrintConstant(index);
-                } else {
-                    PrintConstant(index);
-                    out.print(",  " + nargs); // args count
-                }
-                return 5;
-            }
-            case opc_invokedynamic: { // JSR-292
-                cls.pool.setPrintTAG(true);
-                int index = getUShort(pc + 1);
-                // getUbyte(pc + 3); // reserved byte
-                // getUbyte(pc + 4); // reserved byte
-                if (pr_cpx) {
-                    out.print("\t#" + index + ";\t");
-                    PrintCommentedConstant(index);
-                } else {
-                    PrintConstant(index);
-                }
-                cls.pool.setPrintTAG(false);
-                return 5;
-            }
-            case opc_multianewarray: {
-                int index = getUShort(pc + 1), dimensions = getUbyte(pc + 3);
-                if (pr_cpx) {
-                    out.print("\t#" + index + ",  " + dimensions + "; //");
-                    PrintConstant(index);
-                } else {
-                    PrintConstant(index);
-                    out.print(",  " + dimensions); // dimensions count
-                }
-                return 4;
-            }
-            case opc_jsr:
-            case opc_goto:
-            case opc_ifeq:
-            case opc_ifge:
-            case opc_ifgt:
-            case opc_ifle:
-            case opc_iflt:
-            case opc_ifne:
-            case opc_if_icmpeq:
-            case opc_if_icmpne:
-            case opc_if_icmpge:
-            case opc_if_icmpgt:
-            case opc_if_icmple:
-            case opc_if_icmplt:
-            case opc_if_acmpeq:
-            case opc_if_acmpne:
-            case opc_ifnull:
-            case opc_ifnonnull:
-                out.print("\t" + meth.lP + (pc + getShort(pc + 1)));
+            case opc_jsr, opc_goto, opc_ifeq, opc_ifge, opc_ifgt, opc_ifle, opc_iflt, opc_ifne, opc_if_icmpeq,
+                    opc_if_icmpne, opc_if_icmpge, opc_if_icmpgt, opc_if_icmple, opc_if_icmplt, opc_if_acmpeq,
+                    opc_if_acmpne, opc_ifnull, opc_ifnonnull -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                        println(data.lP + (pc + getShort(pc + 1)) + ";");
                 return 3;
-            case opc_jsr_w:
-            case opc_goto_w:
-                out.print("\t" + meth.lP + (pc + getInt(pc + 1)));
+            }
+            case opc_jsr_w, opc_goto_w -> {
+                print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).
+                        println(data.lP + (pc + getInt(pc + 1)) + ";");
                 return 5;
-            default:
+            }
+            default -> {
+                println(operand + ";");
                 return 1;
+            }
         }
     } // end printInstr
 
+    private Pair<Integer,Integer>[] getLookupswitchPairs(int pad, int count) {
+        Pair<Integer,Integer>[] pairs = new Pair[count];
+        for (int i = 1; i <= count; i++) {
+            pairs[i-1] = new Pair<>(getInt(pad + i * 8), getInt(pad + 4 + i * 8) );
+        }
+        return pairs;
+    }
+
     /**
-     * print
-     * <p>
-     * prints the code data to the current output stream. called from MethodData.
+     * Formats invokedynamic/ldc dynamic operand line
+     *
+     * @param str            non-formatted operand line
+     * @param offset         indent for new lines
+     * @param prefix         prefix placed upfront new lines
+     * @param breakPositions numbers where after ":" a lineSeparator is added to wrap a very long operand lines
+     * @return formatted operand line
+     */
+    private String formatOperandLine(String str, int offset, String prefix, List<Integer> breakPositions) {
+        StringTokenizer st = new StringTokenizer(str, ":\"{}\\" + ARGUMENT_DELIMITER + LINE_SPLITTER, true);
+        StringBuilder sb = new StringBuilder(80);
+        boolean processTokens = true;
+        String prevToken = "";
+        int nItems = 0, nLevel = 0;
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken();
+            switch (token) {
+                case ":":
+                    sb.append(token);
+                    if (processTokens) {
+                        nItems++;
+                        if (breakPositions.contains(nItems) && nLevel == 0) {
+                            sb.append(lineSeparator()).append(nCopies(offset)).append(prefix);
+                        }
+                    }
+                    break;
+                case "}":
+                    if (processTokens) {
+                        nLevel--;
+                        sb.append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel)).append(token);
+                    } else
+                        sb.append(token);
+                    break;
+                case "{":
+                    if (processTokens) {
+                        nLevel++;
+                        sb.append(" {").append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                    } else {
+                        sb.append(token);
+                    }
+                    break;
+                case "\"":
+                    if (!prevToken.equals("\\"))
+                        processTokens = !processTokens;
+                    sb.append(token);
+                    break;
+                case ARGUMENT_DELIMITER:
+                    if (processTokens)
+                        sb.append(',').append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                    else
+                        sb.append(ARGUMENT_DELIMITER);
+                    break;
+                case LINE_SPLITTER:
+                    if (processTokens)
+                        sb.append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                    else
+                        sb.append(ARGUMENT_DELIMITER);
+                    break;
+                default:
+                    sb.append(token);
+                    break;
+            }
+            prevToken = token;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Prints the code data to the current output stream. called from MethodData.
      */
     public void print() throws IOException {
+
         if (!lin_num_tb.isEmpty()) {
             loadLineNumTable();
         }
         if (stack_map != null) {
             loadStackMap();
         }
-        if (!meth.options.contains(Options.PR.PC)) {
+        if (!data.printProgramCounter) {
             loadLabelTable();
         }
         loadTrapTable();
@@ -678,92 +635,109 @@ public class CodeData extends Indenter {
             loadLocVarTable();
         }
 
-        out.println();
-        out.println("\tstack " + max_stack + " locals " + max_locals);
+        println().incIndent().printIndentPadRight(JasmTokens.Token.STACK.parseKey(), PROGRAM_COUNTER_PLACEHOLDER_LENGTH);
+        println("%d locals  %d", max_stack, max_locals).decIndent();
 
         // Need to print ParamAnnotations here.
-        meth.printPAnnotations();
+        data.incIndent();
+        data.printPAnnotations();
+        data.decIndent();
 
-        out.println(getIndentString() + "{");
+        printIndentLn("{");
 
-        iAtt iatt = iattrs.get(0);
-        for (int pc = 0; pc < code.length; ) {
-            if (iatt != null) {
-                iatt.printBegins(); // equ. print("\t");
-            } else {
-                out.print("\t");
-            }
-            if (meth.options.contains(Options.PR.PC)) {
-                out.print(pc + ":\t");
-            } else if ((iatt != null) && iatt.referred) {
-                out.print(meth.lP + pc + ":\t");
-            } else {
-                out.print("\t");
-            }
-            if (iatt != null) {
-                iatt.printStackMap();
-            }
-            pc = pc + printInstr(pc);
-            out.println(";");
-            iatt = iattrs.get(pc);
-            if (iatt != null) {
-                iatt.printEnds();
-            }
+        InstructionAttr insAttr = instructionAttrs.get(0);
+        int instructionOffset, attributeOffset;
+
+        if (data.printProgramCounter) {
+            instructionOffset = PROGRAM_COUNTER_PLACEHOLDER_LENGTH;
+            attributeOffset = instructionOffset;
+        } else {
+            instructionOffset = INSTR_PREFIX_LENGTH;
+            attributeOffset = instructionOffset - getIndentStep();
         }
-        // the right brace can be labelled:
-        if (iatt != null) {
-            iatt.printBegins(); // equ. print("\t");
-            if (iatt.referred) {
-                out.print(meth.lP + code.length + ":\t");
+
+        setCommentOffset(getCommentOffset() - instructionOffset - getIndentSize());
+
+        for (int pc = 0; pc < code.length; ) {
+
+            if (insAttr != null) {
+                incIndent();
+                insAttr.setCommentOffset(this.getCommentOffset());
+                insAttr.printBegins(attributeOffset);
+                decIndent();
             }
-            iatt.printStackMap();
-            out.println();
+
+            if (data.printProgramCounter) {
+                incIndent();
+                printIndent(PadRight(format("%2d:", pc), instructionOffset));
+            } else {
+                printIndent(PadRight(((insAttr != null) && insAttr.referred) ? data.lP + pc + ":" : " ", instructionOffset));
+                incIndent();
+            }
+
+            if (insAttr != null) {
+                if (insAttr.printStackMap(attributeOffset)) {
+                    print(enlargedIndent(attributeOffset));
+                }
+            }
+
+            pc = pc + printInstrLn(pc, attributeOffset + getIndentSize());
+            insAttr = instructionAttrs.get(pc);
+            if (insAttr != null) {
+                insAttr.printEnds(attributeOffset);
+                decIndent();
+            }
+            decIndent();
+        }
+
+        // the right brace can be labelled:
+        if (insAttr != null && insAttr.stackMapEntry != null) {
+            if (data.printProgramCounter) {
+                incIndent();
+                printIndent(PadRight(format("%2d:", code.length), instructionOffset));
+            } else {
+                printIndent((PadRight((insAttr.referred) ? data.lP + code.length + ":" : "?", instructionOffset)));
+                incIndent();
+            }
+            decIndent();
         }
         // print TypeAnnotations
         if (visibleTypeAnnotations != null) {
-            out.println();
-            for (TypeAnnotationData visad : visibleTypeAnnotations) {
-                visad.print(out, getIndentString());
-                out.println();
+            println();
+            for (TypeAnnotationData<MethodData> vta : visibleTypeAnnotations) {
+                vta.print();
+                println();
             }
         }
         if (invisibleTypeAnnotations != null) {
-            for (TypeAnnotationData invisad : invisibleTypeAnnotations) {
-                invisad.print(out, getIndentString());
-                out.println();
+            println(() -> visibleTypeAnnotations == null);
+            for (TypeAnnotationData<MethodData> ita : invisibleTypeAnnotations) {
+                ita.print();
+                println();
             }
         }
         // end of code
-        out.println(getIndentString() + "}");
+        printIndentLn("}");
     }
 
+    public JdisEnvironment getEnvironment() {
+        return environment;
+    }
 
     public static class LocVarData {
-
         short start_pc, length, name_cpx, sig_cpx, slot;
-        final Integer generic_cpx;
 
         public LocVarData(DataInputStream in) throws IOException {
-            this(in, false);
-        }
-
-        public LocVarData(DataInputStream in, boolean isForTypeTable) throws IOException {
             start_pc = in.readShort();
             length = in.readShort();
             name_cpx = in.readShort();
-            if (isForTypeTable) {
-                generic_cpx = in.readUnsignedShort();
-            } else {
-                generic_cpx = null;
-                sig_cpx = in.readShort();
-            }
+            sig_cpx = in.readShort();
             slot = in.readShort();
         }
     }
 
     /* Code Data inner classes */
-    class LineNumData {
-
+    static class LineNumData {
         short start_pc, line_number;
 
         public LineNumData(DataInputStream in) throws IOException {
@@ -771,5 +745,4 @@ public class CodeData extends Indenter {
             line_number = in.readShort();
         }
     }
-
 }

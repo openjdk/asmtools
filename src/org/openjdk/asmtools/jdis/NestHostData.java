@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,23 +22,25 @@
  */
 package org.openjdk.asmtools.jdis;
 
-
 import org.openjdk.asmtools.jasm.JasmTokens;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.NESTHOST;
 
 /**
  * The NestHost attribute data
  * <p>
  * since class file 55.0 (JEP 181)
  */
-public class NestHostData extends Indenter{
+public class NestHostData extends Indenter {
     ClassData cls;
     int host_class_index;
-    private Options options = Options.OptionObject();
 
     public NestHostData(ClassData cls) {
+        super(cls.toolOutput);
         this.cls = cls;
     }
 
@@ -50,17 +52,17 @@ public class NestHostData extends Indenter{
         return this;
     }
 
+    @Override
     public void print() {
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(getIndentString() + JasmTokens.Token.NESTHOST.parseKey() + " ");
-        if (pr_cpx) {
-            cls.out.print("#" + host_class_index + "; //");
-        }
-        if (pr_cpx) {
-            cls.pool.PrintConstant(cls.out, host_class_index);
-            cls.out.println();
+        if (printCPIndex) {
+            if( skipComments ) {
+                printIndent("%s #%d;", NESTHOST.parseKey(), host_class_index);
+            } else {
+                printIndent(PadRight(format("%s #%d;", NESTHOST.parseKey(), host_class_index),
+                        getCommentOffset() - 1)).println(" // " + cls.pool.ConstantStrValue(host_class_index));
+            }
         } else {
-            cls.out.println(cls.pool.StringValue(host_class_index) + ";");
+            printIndent("%s %s;", NESTHOST.parseKey(), cls.pool.StringValue(host_class_index));
         }
     }
 }

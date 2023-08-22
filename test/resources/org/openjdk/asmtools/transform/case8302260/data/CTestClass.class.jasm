@@ -1,0 +1,77 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+package org/openjdk/asmtools/transform/case8302260/data;
+
+public super class #10 /* CTestClass */ extends #2 /* org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass */ implements #19 /* ITestInterfaceA */ version 60:0
+{
+  const #1  = Method      #2.#3;          // org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass."<init>":"()V"
+  const #2  = class       #4;             // org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass
+  const #3  = NameAndType #5:#6;          // "<init>":"()V"
+  const #4  = Asciz       "org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass";
+  const #5  = Asciz       "<init>";
+  const #6  = Asciz       "()V";
+  const #7  = String      #8;             // "CTestClass"
+  const #8  = Asciz       "CTestClass";
+  const #9  = Field       #10.#11;        // CTestClass.ctestString:"Ljava/lang/String;"
+  const #10 = class       #12;            // CTestClass
+  const #11 = NameAndType #13:#14;        // ctestString:"Ljava/lang/String;"
+  const #12 = Asciz       "org/openjdk/asmtools/transform/case8302260/data/CTestClass";
+  const #13 = Asciz       "ctestString";
+  const #14 = Asciz       "Ljava/lang/String;";
+  const #15 = Field       #10.#16;        // CTestClass.ctestLong:"J"
+  const #16 = NameAndType #17:#18;        // ctestLong:"J"
+  const #17 = Asciz       "ctestLong";
+  const #18 = Asciz       "J";
+  const #19 = class       #20;            // ITestInterfaceA
+  const #20 = Asciz       "org/openjdk/asmtools/transform/case8302260/data/ITestInterfaceA";
+  const #21 = Asciz       "Code";
+  const #22 = Asciz       "LineNumberTable";
+  const #23 = Asciz       "LocalVariableTable";
+  const #24 = Asciz       "this";
+  const #25 = Asciz       "Lorg/openjdk/asmtools/transform/case8302260/data/CTestClass;";
+  const #26 = Asciz       "<clinit>";
+  const #27 = Asciz       "SourceFile";
+  const #28 = Asciz       "CTestClass.java";
+
+  public static Field #13:#14;            // ctestString:"Ljava/lang/String;"
+  public static Field #17:#18;            // ctestLong:J
+
+  public Method #5:#6                     // "<init>":"()V"
+    stack  1 locals  1
+  {
+           var               0 #24:#25;   // this:"Lorg/openjdk/asmtools/transform/case8302260/data/CTestClass;"
+     0:    aload_0;
+     1:    invokespecial     #1;          // Method org/openjdk/asmtools/transform/case8302260/data/pkg/CTestSuperClass."<init>":"()V"
+     4:    return;
+           endvar            0;
+  }
+  static Method #26:#6                    // "<clinit>":"()V"
+    stack  2 locals  0
+  {
+     0:    ldc               #7;          // String "CTestClass"
+     2:    putstatic         #9;          // Field ctestString:"Ljava/lang/String;"
+     5:    lconst_1;
+     6:    putstatic         #15;         // Field ctestLong:"J"
+     9:    return;
+  }
+} // end Class CTestClass compiled from "CTestClass.java"

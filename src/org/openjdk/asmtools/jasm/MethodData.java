@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,27 +22,23 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.jasm.Tables.AttrTag;
-import org.openjdk.asmtools.jasm.ConstantPool.ConstCell;
+import org.openjdk.asmtools.common.CompilerConstants;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeMap;
 
-/**
- *
- */
-class MethodData extends MemberData {
+class MethodData extends MemberData<JasmEnvironment> {
 
-    /**
-     * MethodParamData
-     */
-    class ParamNameData implements Data {
+    // MethodParameterData Attribute
+    static class MethodParameterData implements DataWriter {
 
         int access;
         ConstCell name;
 
-        public ParamNameData(int access, ConstCell name) {
+        public MethodParameterData(int access, ConstCell name) {
             this.access = access;
             this.name = name;
         }
@@ -54,33 +50,27 @@ class MethodData extends MemberData {
 
         @Override
         public void write(CheckedDataOutputStream out) throws IOException {
-            int nm = 0;
-            int ac = 0;
-            if (name != null) {
-                nm = name.arg;
-                ac = access;
-            }
-            out.writeShort(nm);
-            out.writeShort(ac);
+            out.writeShort((name == null) ? 0 : name.cpIndex);
+            out.writeShort(access);
         }
-    }// end class MethodParamData
+    }// end class MethodParameterData
 
     /**
      * Used to store Parameter Arrays (as attributes)
      */
-    static public class DataPArrayAttr<T extends Data> extends AttrData implements Constants {
+    static public class DataPArrayAttr<T extends DataWriter> extends AttrData implements CompilerConstants {
 
         TreeMap<Integer, ArrayList<T>> elements; // Data
         int paramsTotal;
 
-        public DataPArrayAttr(ClassData cls, String name, int paramsTotal, TreeMap<Integer, ArrayList<T>> elements) {
-            super(cls, name);
+        public DataPArrayAttr(ConstantPool pool, EAttribute attribute, int paramsTotal, TreeMap<Integer, ArrayList<T>> elements) {
+            super(pool, attribute);
             this.paramsTotal = paramsTotal;
             this.elements = elements;
         }
 
-        public DataPArrayAttr(ClassData cls, String name, int paramsTotal) {
-            this(cls, name, paramsTotal, new TreeMap<Integer, ArrayList<T>>());
+        public DataPArrayAttr(ConstantPool pool, EAttribute attribute, int paramsTotal) {
+            this(pool, attribute, paramsTotal, new TreeMap<>());
         }
 
         public void put(int paramNum, T element) {
@@ -106,7 +96,7 @@ class MethodData extends MemberData {
             for (int i = 0; i < paramsTotal; i++) {
                 ArrayList<T> attrarray = get(i);
                 if (attrarray != null) {
-                    for (Data item : attrarray) {
+                    for (DataWriter item : attrarray) {
                         length += item.getLength();
                     }
                 }
@@ -137,48 +127,44 @@ class MethodData extends MemberData {
         }
     }// end class DataPArrayAttr
 
-
     /* Method Data Fields */
-    protected Environment env;
-    protected ConstCell nameCell, sigCell;
+    protected ClassData classData;
+    protected ConstCell<?> nameCell, sigCell;
     protected CodeAttr code;
-    protected DataVectorAttr<ConstCell> exceptions = null;
-    protected DataVectorAttr<ParamNameData> paramNames = null;
+    protected DataVectorAttr<ConstCell<?>> exceptions = null;
+    protected DataVectorAttr<MethodParameterData> methodParameters = null;
     protected DataPArrayAttr<AnnotationData> pannotAttrVis = null;
     protected DataPArrayAttr<AnnotationData> pannotAttrInv = null;
     protected DefaultAnnotationAttr defaultAnnot = null;
 
-    public MethodData(ClassData cls, int acc,
-            ConstCell name, ConstCell sig, ArrayList<ConstCell> exc_table) {
-        super(cls, acc);
-        this.env = cls.env;
+    public MethodData(ClassData classData, int access, ConstCell<?> name, ConstCell<?> signature, ArrayList<ConstCell<?>> exc_table) {
+        super(classData.pool, classData.getEnvironment(), access);
+        this.classData = classData;
         nameCell = name;
-        sigCell = sig;
+        sigCell = signature;
         if ((exc_table != null) && (!exc_table.isEmpty())) {
-            exceptions = new DataVectorAttr<>(cls,
-                    AttrTag.ATT_Exceptions.parsekey(),
-                    exc_table);
+            exceptions = new DataVectorAttr<>(classData.pool, EAttribute.ATT_Exceptions, exc_table);
         }
         // Normalize the modifiers to access flags
-        if (Modifiers.hasPseudoMod(acc)) {
+        if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
     }
 
-    public void addMethodParameter(int totalParams, int paramNum, ConstCell name, int access) {
-        env.traceln("addMethodParameter Param[" + paramNum + "] (name: " + name.toString() + ", Flags (" + access + ").");
-        if (paramNames == null) {
-            paramNames = new DataVectorAttr<>(cls, AttrTag.ATT_MethodParameters.parsekey(), true);
+    public void addMethodParameter(int totalParams, int paramNum, ConstCell<?> name, int access) {
+        getEnvironment().traceln("addMethodParameter Param[" + paramNum + "] (name: " + name.toString() + ", Flags (" + access + ").");
+        if (methodParameters == null) {
+            methodParameters = new DataVectorAttr<>(classData.pool, EAttribute.ATT_MethodParameters, true);
             for (int i = 0; i < totalParams; i++) {
                 // initialize the paramName array (in case the name is not given in Jasm syntax)
-                paramNames.add(new ParamNameData(0, null));
+                methodParameters.add(new MethodParameterData(0, null));
             }
         }
-        paramNames.put(paramNum, new ParamNameData(access, name));
+        methodParameters.set(paramNum, new MethodParameterData(access, name));
     }
 
-    public CodeAttr startCode(int pos, int paramcnt, Argument max_stack, Argument max_locals) {
-        code = new CodeAttr(this, pos, paramcnt, max_stack, max_locals);
+    public CodeAttr startCode(int paramCount, Indexer max_stack, Indexer max_locals) {
+        code = new CodeAttr(this, paramCount, max_stack, max_locals);
         return code;
     }
 
@@ -189,17 +175,15 @@ class MethodData extends MemberData {
     public void addParamAnnotation(int totalParams, int paramNum, AnnotationData data) {
         if (!data.invisible) {
             if (pannotAttrVis == null) {
-                pannotAttrVis = new DataPArrayAttr<>(cls,
-                        AttrTag.ATT_RuntimeVisibleParameterAnnotations.parsekey(),
-                        totalParams);
+                pannotAttrVis = new DataPArrayAttr<>(classData.pool,
+                        EAttribute.ATT_RuntimeVisibleParameterAnnotations,totalParams);
             }
             pannotAttrVis.put(paramNum, data);
 
         } else {
             if (pannotAttrInv == null) {
-                pannotAttrInv = new DataPArrayAttr<>(cls,
-                        AttrTag.ATT_RuntimeInvisibleParameterAnnotations.parsekey(),
-                        totalParams);
+                pannotAttrInv = new DataPArrayAttr<>(classData.pool,
+                        EAttribute.ATT_RuntimeInvisibleParameterAnnotations, totalParams);
             }
             pannotAttrInv.put(paramNum, data);
         }
@@ -207,7 +191,7 @@ class MethodData extends MemberData {
 
     @Override
     protected DataVector getAttrVector() {
-        DataVector dv = getDataVector(exceptions, syntheticAttr, deprecatedAttr, signatureAttr, paramNames, code, defaultAnnot);
+        DataVector dv = getDataVector( exceptions, syntheticAttr, deprecatedAttr, signatureAttr, methodParameters, code, defaultAnnot);
         if (pannotAttrVis != null) {
             dv.add(pannotAttrVis);
         }
@@ -217,12 +201,10 @@ class MethodData extends MemberData {
         return dv;
     }
 
-    /*====================================================== Write */
     public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
         out.writeShort(access);
-        out.writeShort(nameCell.arg);
-        out.writeShort(sigCell.arg);
+        out.writeShort(nameCell.cpIndex);
+        out.writeShort(sigCell.cpIndex);
         getAttrVector().write(out);
     }
 } // end MethodData
-

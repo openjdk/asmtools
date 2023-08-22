@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,21 +22,19 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.structure.ClassFileContext;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
 import org.openjdk.asmtools.jasm.JasmTokens;
-import org.openjdk.asmtools.jasm.Modifiers;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import static java.lang.String.format;
-import static org.openjdk.asmtools.jasm.Tables.AttrTag;
-import static org.openjdk.asmtools.jasm.Tables.CF_Context;
-import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
-
 /**
  * Field data for field members in a class of the Java Disassembler
  */
-public class FieldData extends MemberData {
+public class FieldData extends MemberData<ClassData> {
 
     // CP index to the field name
     protected int name_cpx;
@@ -45,32 +43,31 @@ public class FieldData extends MemberData {
     // CP index to the field value
     protected int value_cpx = 0;
 
-    public FieldData(ClassData cls) {
-        super(cls);
+    public FieldData(ClassData classData) {
+        super(classData);
         memberType = "FieldData";
     }
 
     @Override
-    protected boolean handleAttributes(DataInputStream in, AttrTag attrtag, int attrlen) throws IOException {
+    protected boolean handleAttributes(DataInputStream in, EAttribute attributeTag, int attributeLength) throws IOException {
         // Read the Attributes
         boolean handled = true;
-        switch (attrtag) {
-            case ATT_Signature:
-                if( signature != null ) {
-                    traceln("Field attribute:  more than one attribute Signature are in field_info.attribute_info_attributes[attribute_count]");
-                    traceln("Last one will be used.");
+        switch (attributeTag) {
+            case ATT_Signature -> {
+                if (signature != null) {
+                    environment.warning("warn.one.attribute.required", "Signature", "field_info");
                 }
-                signature = new SignatureData(cls).read(in, attrlen);
-                break;
-            case ATT_ConstantValue:
-                if (attrlen != 2) {
-                    throw new ClassFormatError(format("%s: Invalid attribute length #%d", AttrTag.ATT_ConstantValue.printval(), attrlen));
+                signature = new SignatureData(data).read(in, attributeLength);
+            }
+            case ATT_ConstantValue -> {
+                if (attributeLength != 2) {
+                    throw new FormatError(environment.getLogger(),
+                            "err.invalid.attribute.length",
+                            EAttribute.ATT_ConstantValue.printValue(), attributeLength);
                 }
                 value_cpx = in.readUnsignedShort();
-                break;
-            default:
-                handled = false;
-                break;
+            }
+            default -> handled = false;
         }
         return handled;
     }
@@ -87,13 +84,11 @@ public class FieldData extends MemberData {
         // Read the attributes
         readAttributes(in);
         //
-        TraceUtils.traceln(2,
-                format("FieldData: name[%d]=%s type[%d]=%s%s",
-                        name_cpx, cls.pool.getString(name_cpx),
-                        type_cpx, cls.pool.getString(type_cpx),
-                        signature != null ? signature : ""));
+        environment.traceln("FieldData: name[%d]=%s type[%d]=%s%s",
+                name_cpx, data.pool.getString(name_cpx, index -> "#" + index + "?"),
+                type_cpx, data.pool.getString(type_cpx, index -> "#" + index + "?"),
+                signature != null ? signature : "");
     }
-
 
     /**
      * Prints the field data to the current output stream. called from ClassData.
@@ -101,26 +96,15 @@ public class FieldData extends MemberData {
     @Override
     public void print() throws IOException {
         // Print annotations first
-        super.printAnnotations(getIndentString());
-
-        StringBuilder bodyPrefix = new StringBuilder(getIndentString()).append(Modifiers.accessString(access, CF_Context.CTX_FIELD));
-        StringBuilder tailPrefix = new StringBuilder();
-
-        if (isSynthetic) {
-            bodyPrefix.append(JasmTokens.Token.SYNTHETIC.parseKey()).append(' ');
-        }
-        if (isDeprecated) {
-            bodyPrefix.append(JasmTokens.Token.DEPRECATED.parseKey()).append(' ');
-        }
-
+        super.printAnnotations();
+        // print field
+        StringBuilder prefix = new StringBuilder(getIndentString()).
+                append(EModifier.asKeywords(access, ClassFileContext.FIELD));
+        // add synthetic, deprecated if necessary
+        prefix.append(getPseudoFlagsAsString());
         // field
-        bodyPrefix.append(JasmTokens.Token.FIELDREF.parseKey()).append(' ');
-
-        if (value_cpx != 0) {
-            tailPrefix.append("\t= ").append(cls.pool.ConstantStrValue(value_cpx));
-        }
-
-        printVar(bodyPrefix, tailPrefix,name_cpx, type_cpx);
+        prefix.append(JasmTokens.Token.FIELDREF.parseKey()).append(' ');
+        printVar(prefix, (value_cpx != 0) ? (" = ").concat(data.pool.ConstantStrValue(value_cpx)) : null,
+                name_cpx, type_cpx, value_cpx);
     }
 } // end FieldData
-

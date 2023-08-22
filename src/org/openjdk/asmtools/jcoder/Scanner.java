@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,114 +22,76 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import static org.openjdk.asmtools.jcoder.JcodTokens.*;
+import org.openjdk.asmtools.common.SyntaxError;
 
 import java.io.IOException;
 import java.util.HashMap;
 
+import static org.openjdk.asmtools.jcoder.JcodTokens.*;
+
 /**
  * A Scanner for Jcoder tokens. Errors are reported to the environment object.<p>
- *
+ * <p>
  * The scanner keeps track of the current token, the value of the current token (if any),
  * and the start position of the current token.<p>
- *
+ * <p>
  * The scan() method advances the scanner to the next token in the input.<p>
- *
+ * <p>
  * The match() method is used to quickly match opening brackets (ie: '(', '{', or '[')
  * with their closing counter part. This is useful during error recovery.<p>
- *
+ * <p>
  * The compiler treats either "\n", "\r" or "\r\n" as the end of a line.<p>
  */
 public class Scanner {
-    /*-------------------------------------------------------- */
-    /* Scanner Fields */
-
-    /**
-     * End of input
-     */
+    // End of input
     public static final int EOF = -1;
     public static final int LBRACE = 123; // "{"
-    private boolean debugCP = false;
-    private int numCPentrs = 0;
-
-    /**
-     * Where errors are reported
-     */
-    protected SourceFile env;
-
-    /**
-     * Input stream
-     */
-    protected SourceFile in;
-    HashMap<String, String> macros;
-
-    /**
-     * The current character
-     */
+    // Where errors are reported
+    protected JcoderEnvironment environment;
+    // Input stream
+    protected JcoderEnvironment.InputFile inputFile;
+    // The current character
     protected int ch, prevCh = -1;
     protected String macro;
     protected int indexMacro;
-
-    /**
-     * Current token
-     */
+    // Current token
     protected Token token;
-
-    /**
-     * The position of the current token
-     */
+    // The position of the current token
     protected int pos;
-
-    /**
-     * The position of the previous token
-     */
+    // The position of the previous token
     protected int prevPos;
-
-    /*  Token values. */
+    //  Token values.
     protected long longValue;
     protected int intValue;
     protected int intSize;
     protected String stringValue;
     protected ByteBuffer longStringValue;
     protected int sign; // sign, when reading number
-
     /*  A doc comment preceding the most recent token */
     protected String docComment;
-
+    HashMap<String, String> macros = new HashMap<>();
+    private boolean debugCP = false;
+    private int numCPentrs = 0;
     /**
      * A growable character buffer.
      */
     private int count;
     private char[] buffer = new char[32];
 
-    /*-------------------------------------------------------- */
-    /**
-     * Create a scanner to scan an input stream.
-     */
-    protected Scanner(SourceFile sf, HashMap<String, String> macros)
+    // Create a scanner to scan an input stream.
+    protected Scanner(JcoderEnvironment environment, HashMap<String, String> macros)
             throws IOException {
-        this.env = sf;
-        this.in = sf;
+        this(environment);
         this.macros = macros;
-
-        ch = sf.read();
-        prevPos = sf.pos;
-
-        scan();
     }
 
-    /**
-     * for use in jcfront.
-     */
-    protected Scanner(SourceFile sf)
+    // for use in jcfront.
+    protected Scanner(JcoderEnvironment environment)
             throws IOException {
-        this.env = sf;
-        this.in = sf;
-        this.macros = new HashMap<>();
-
-        ch = sf.read();
-        prevPos = sf.pos;
-
+        this.environment = environment;
+        this.inputFile = environment.inputFile;
+        ch = environment.read();
+        prevPos = environment.getPosition();
         scan();
     }
 
@@ -143,8 +105,8 @@ public class Scanner {
     }
 
     void addConstDebug(ConstType ct) {
-        numCPentrs += 1;
-        env.traceln("\n Const[" + numCPentrs + "] = " + ct.printval());
+        numCPentrs++;
+        environment.traceln("\n Const[" + numCPentrs + "] = " + ct.printval());
     }
 
     void setMacro(String macro) {
@@ -164,7 +126,7 @@ public class Scanner {
             ch = prevCh;
             prevCh = -1;
         } else {
-            ch = in.read();
+            ch = inputFile.readUTF();
         }
     }
 
@@ -190,21 +152,18 @@ public class Scanner {
     private void skipComment() throws IOException {
         while (true) {
             switch (ch) {
-                case EOF:
-                    env.error(pos, "eof.in.comment");
+                case EOF -> {
+                    environment.error(pos, "err.eof.in.comment");
                     return;
-
-                case '*':
+                }
+                case '*' -> {
                     readCh();
                     if (ch == '/') {
                         readCh();
                         return;
                     }
-                    break;
-
-                default:
-                    readCh();
-                    break;
+                }
+                default -> readCh();
             }
         }
     }
@@ -227,10 +186,7 @@ public class Scanner {
             }
         }
         switch (ch) {
-            case '\n':
-            case ' ':
-                readCh();
-                break;
+            case '\n', ' ' -> readCh();
         }
 
         boolean seenstar = false;
@@ -238,7 +194,7 @@ public class Scanner {
         while (true) {
             switch (ch) {
                 case EOF:
-                    env.error(pos, "eof.in.comment");
+                    environment.error(pos, "err.eof.in.comment");
                     return bufferString();
 
                 case '\n':
@@ -270,14 +226,12 @@ public class Scanner {
                             readCh();
                         } while (ch == '*');
                         switch (ch) {
-                            case ' ':
-                                readCh();
-                                break;
-
-                            case '/':
+                            case ' ' -> readCh();
+                            case '/' -> {
                                 readCh();
                                 count = c;
                                 return bufferString();
+                            }
                         }
                     }
                     break;
@@ -304,8 +258,8 @@ public class Scanner {
         token = Token.INTVAL;
         intSize = 2; // default
         putc(ch);    // save character in buffer
-numberLoop:
-        for (;;) {
+        numberLoop:
+        for (; ; ) {
             readCh();
             switch (ch) {
                 case '8':
@@ -348,14 +302,14 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", Character.toString((char)ch));
+            environment.error(inputFile.position, "err.invalid.number", Character.toString((char) ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
             return;
         }
         if (overflow) {
-            env.error(pos, "overflow");
+            environment.error(pos, "err.overflow");
         }
     } // scanNumber()
 
@@ -370,8 +324,8 @@ numberLoop:
         token = Token.INTVAL;
         intSize = 2; // default
         putc(ch);    // save character in buffer
-numberLoop:
-        for (int k = 0;; k++) {
+        numberLoop:
+        for (int k = 0; ; k++) {
             readCh();
             switch (ch) {
                 case '8':
@@ -414,7 +368,7 @@ numberLoop:
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
         if (Character.isJavaIdentifierPart((char) ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", Character.toString((char)ch));
+            environment.error(inputFile.position, "err.invalid.number", Character.toString((char) ch));
             do {
                 readCh();
             } while (Character.isJavaIdentifierPart((char) ch) || ch == '.');
@@ -422,7 +376,7 @@ numberLoop:
 //        } else if ( overflow || (intValue - 1 < -1) ) {
         } else if (overflow) {
             intValue = 0;   // so we don't get second overflow in Parser
-            env.error(pos, "overflow");
+            environment.error(pos, "err.overflow");
         }
     } // scanNumber()
 
@@ -432,73 +386,65 @@ numberLoop:
      * @return the character or -1 if it escaped an end-of-line.
      */
     private int scanEscapeChar() throws IOException {
-        int p = in.pos;
+        int p = inputFile.position;
 
         readCh();
         switch (ch) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7': {
+            case '0', '1', '2', '3', '4', '5', '6', '7' -> {
                 int n = ch - '0';
                 for (int i = 2; i > 0; i--) {
                     readCh();
                     switch (ch) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                            n = (n << 3) + ch - '0';
-                            break;
-
-                        default:
+                        case '0', '1', '2', '3', '4', '5', '6', '7' -> n = (n << 3) + ch - '0';
+                        default -> {
                             if (n > 0xFF) {
-                                env.error(p, "invalid.escape.char");
+                                environment.error(p, "err.invalid.escape.char");
                             }
                             return n;
+                        }
                     }
                 }
                 readCh();
                 if (n > 0xFF) {
-                    env.error(p, "invalid.escape.char");
+                    environment.error(p, "err.invalid.escape.char");
                 }
                 return n;
             }
-            case 'r':
+            case 'r' -> {
                 readCh();
                 return '\r';
-            case 'n':
+            }
+            case 'n' -> {
                 readCh();
                 return '\n';
-            case 'f':
+            }
+            case 'f' -> {
                 readCh();
                 return '\f';
-            case 'b':
+            }
+            case 'b' -> {
                 readCh();
                 return '\b';
-            case 't':
+            }
+            case 't' -> {
                 readCh();
                 return '\t';
-            case '\\':
+            }
+            case '\\' -> {
                 readCh();
                 return '\\';
-            case '\"':
+            }
+            case '\"' -> {
                 readCh();
                 return '\"';
-            case '\'':
+            }
+            case '\'' -> {
                 readCh();
                 return '\'';
+            }
         }
 
-        env.error(p, "invalid.escape.char");
+        environment.error(p, "err.invalid.escape.char");
         readCh();
         return -1;
     }
@@ -511,16 +457,16 @@ numberLoop:
         count = 0;
         readCh();
 
-loop:
-        for (;;) {
+        loop:
+        for (; ; ) {
             switch (ch) {
                 case EOF:
-                    env.error(pos, "eof.in.string");
+                    environment.error(pos, "err.eof.in.string");
                     break loop;
 
                 case '\n':
                     readCh();
-                    env.error(pos, "newline.in.string");
+                    environment.error(pos, "err.newline.in.string");
                     break loop;
 
                 case '"':
@@ -530,7 +476,7 @@ loop:
                 case '\\': {
                     int c = scanEscapeChar();
                     if (c >= 0) {
-                        putc((char)c);
+                        putc((char) c);
                     }
                     break;
                 }
@@ -553,17 +499,17 @@ loop:
         count = 0;
         readCh();
 
-loop:
-        for (;;) {
+        loop:
+        for (; ; ) {
             int c = ch;
             switch (ch) {
                 case EOF:
-                    env.error(pos, "eof.in.string");
+                    environment.error(pos, "err.eof.in.string");
                     break loop;
 
                 case '\n':
                     readCh();
-                    env.error(pos, "newline.in.string");
+                    environment.error(pos, "err.newline.in.string");
                     break loop;
 
                 case '\'':
@@ -575,7 +521,7 @@ loop:
                     if (c < 0) {
                         break;
                     }
-                // no break - continue
+                    // no break - continue
                 default:
                     // see  description of java.io.DataOutput.writeUTF()
                     if ((c > 0) && (c <= 0x7F)) {
@@ -601,7 +547,7 @@ loop:
     private void scanIdentifier() throws IOException {
         count = 0;
         boolean compound = false;
-        for (;;) {
+        for (; ; ) {
             putc(ch);
             readCh();
             if ((ch == '/') || (ch == '.') || (ch == '-')) {
@@ -636,8 +582,8 @@ loop:
     // skip till symbol
     protected void skipTill(int sym) throws IOException {
         while (true) {
-            if( ch == EOF ) {
-                env.error(pos, "eof.in.comment");
+            if (ch == EOF) {
+                environment.error(pos, "err.eof.in.comment");
                 return;
             } else if (ch == sym) {
                 return;
@@ -648,11 +594,11 @@ loop:
 
     protected int xscan() throws IOException {
         int retPos = pos;
-        prevPos = in.pos;
+        prevPos = inputFile.position;
         docComment = null;
         sign = 1;
-        for (;;) {
-            pos = in.pos;
+        for (; ; ) {
+            pos = inputFile.position;
 
             switch (ch) {
                 case EOF:
@@ -710,40 +656,25 @@ loop:
                     token = Token.INTVAL;
                     longValue = intValue = 0;
                     switch (ch) {
-                        case 'x':
-                        case 'X':
-                            scanHexNumber();
-                            break;
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            scanDecNumber();
-                            break;
-                        case 'b':
+                        case 'x', 'X' -> scanHexNumber();
+                        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> scanDecNumber();
+                        case 'b' -> {
                             readCh();
                             intSize = 1;
-                            break;
-                        case 's':
+                        }
+                        case 's' -> {
                             readCh();
                             intSize = 2;
-                            break;
-                        case 'i':
+                        }
+                        case 'i' -> {
                             readCh();
                             intSize = 4;
-                            break;
-                        case 'l':
+                        }
+                        case 'l' -> {
                             readCh();
                             intSize = 8;
-                            break;
-                        default:
-                            intSize = 2;
+                        }
+                        default -> intSize = 2;
                     }
                     return retPos;
 
@@ -821,7 +752,7 @@ loop:
                         token = Token.EOF;
                         return retPos;
                     }
-                    env.error(pos, "funny.char");
+                    environment.error(pos, "err.funny.char");
                     readCh();
                     break;
 
@@ -834,13 +765,13 @@ loop:
                     readCh();
                     retPos = pos;
                     if (!Character.isJavaIdentifierStart((char) ch)) {
-                        env.error(pos, "identifier.expected");
+                        environment.error(pos, "err.identifier.expected");
                     }
                     scanIdentifier();
                     String macroId = stringValue;
-                    String macro = (String) macros.get(macroId);
+                    String macro = macros.get(macroId);
                     if (macro == null) {
-                        env.error(pos, "macro.undecl", macroId);
+                        environment.error(pos, "err.macro.undecl", macroId);
                         throw new SyntaxError();
                     }
                     setMacro(macro);
@@ -853,7 +784,7 @@ loop:
                         scanIdentifier();
                         return retPos;
                     }
-                    env.error(pos, "funny.char");
+                    environment.error(pos, "err.funny.char");
                     readCh();
                     break;
             }
@@ -875,7 +806,7 @@ loop:
                     return;
                 }
             } else if (token == Token.EOF) {
-                env.error(pos, "unbalanced.paren");
+                environment.error(pos, "err.unbalanced.paren");
                 return;
             }
         }
@@ -888,7 +819,6 @@ loop:
      */
     protected int scan() throws IOException {
         int retPos = xscan();
-//env.traceln("scanned:"+token+" ("+keywordName(token)+")");
         return retPos;
     }
 
@@ -899,7 +829,6 @@ loop:
      */
     protected int scanMacro() throws IOException {
         int retPos = xscan();
-//env.traceln("scanned:"+token+" ("+keywordName(token)+")");
         return retPos;
     }
 }

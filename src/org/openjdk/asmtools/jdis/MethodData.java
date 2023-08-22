@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,112 +22,98 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.jasm.Modifiers;
+import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.structure.ClassFileContext;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static java.lang.Math.max;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
-import static org.openjdk.asmtools.jasm.Tables.AttrTag;
-import static org.openjdk.asmtools.jasm.Tables.CF_Context;
-import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
+import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.HAS_DEFAULT_VALUE;
+import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.PARAMETER_ANNOTATION;
 
 /**
  * Method data for method members in a class of the Java Disassembler
  */
-public class MethodData extends MemberData {
+public class MethodData extends MemberData<ClassData> {
 
-    /**
-     * CP index to the method name
-     */
+    //ConstantPool index to the method name
     protected int name_cpx;
 
-    /**
-     * CP index to the method type
-     */
+    //ConstantPool index to the method type
     protected int sig_cpx;
-    protected String lP;        // labelPrefix
-    /**
-     * The parameter names for this method
-     */
-    protected ArrayList<ParamNameData> paramNames;
-    /**
-     * The visible parameter annotations for this method
-     */
+
+    // labelPrefix
+    protected String lP;
+
+    //The parameter names for this method
+    protected ArrayList<ParamNameData> paramNameDates;
+
+    //The visible parameter annotations for this method
     protected ParameterAnnotationData visibleParameterAnnotations;
-    /**
-     * The invisible parameter annotations for this method
-     */
+
+    //The invisible parameter annotations for this method
     protected ParameterAnnotationData invisibleParameterAnnotations;
-    /**
-     * The invisible parameter annotations for this method
-     */
-    protected AnnotationElement.AnnotValue defaultAnnotation;
-    /**
-     * The code data for this method. May be null
-     */
+
+    // The invisible parameter annotations for this method
+    protected AnnotationElement.AnnotationValue defaultAnnotation;
+
+    // The code data for this method. May be null
     private CodeData code;
-    /**
-     * The exception table (thrown exceptions) for this method. May be null
-     */
+
+    // The exception table (thrown exceptions) for this method. May be null
     private int[] exc_table = null;
 
-    public MethodData(ClassData cls) {
-        super(cls);
-        memberType = "MethodData";
-        lP = (options.contains(Options.PR.LABS)) ? "L" : "";
-        paramNames = null;
+    public MethodData(ClassData classData) {
+        super(classData);
+        super.memberType = "MethodData";
+        setCommentOffset(classData.pool.getCommentOffset());
+        lP = printLabelAsIdentifiers ? "L" : "";
+        paramNameDates = null;
     }
 
-    /*========================================================*/
     /* Read Methods */
     @Override
-    protected boolean handleAttributes(DataInputStream in, AttrTag attrtag, int attrlen) throws IOException {
+    protected boolean handleAttributes(DataInputStream in, EAttribute attributeTag, int attributeLength) throws IOException {
         // Read the Attributes
         boolean handled = true;
-        switch (attrtag) {
-            case ATT_Code:
+        switch (attributeTag) {
+            case ATT_Code -> {
                 code = new CodeData(this);
-                code.read(in, attrlen);
-                break;
-            case ATT_Exceptions:
-                readExceptions(in);
-                break;
-            case ATT_Signature:
-                if( signature != null ) {
-                    traceln("Method attribute:  more than one attribute Signature are in method_info.attribute_info_attributes[attribute_count]");
-                    traceln("Last one will be used.");
+                code.read(in, attributeLength);
+            }
+            case ATT_Signature -> {
+                if (signature != null) {
+                    environment.warning("warn.one.attribute.required", "Signature", "method_info");
                 }
-                signature = new SignatureData(cls).read(in, attrlen);
-                break;
-            case ATT_MethodParameters:
-                readMethodParameters(in);
-                break;
-            case ATT_RuntimeVisibleParameterAnnotations:
-            case ATT_RuntimeInvisibleParameterAnnotations:
-                boolean invisible = (attrtag == AttrTag.ATT_RuntimeInvisibleParameterAnnotations);
-                ParameterAnnotationData pannots = new ParameterAnnotationData(cls, invisible);
-                pannots.read(in);
+                signature = new SignatureData(data).read(in, attributeLength);
+            }
+            case ATT_Exceptions -> readExceptions(in);
+            case ATT_MethodParameters -> readMethodParameters(in);
+            case ATT_RuntimeVisibleParameterAnnotations, ATT_RuntimeInvisibleParameterAnnotations -> {
+                boolean invisible = (attributeTag == EAttribute.ATT_RuntimeInvisibleParameterAnnotations);
+                ParameterAnnotationData parameterAnnotationData = new ParameterAnnotationData(this, invisible);
+                parameterAnnotationData.read(in);
                 if (invisible) {
-                    invisibleParameterAnnotations = pannots;
+                    invisibleParameterAnnotations = parameterAnnotationData;
                 } else {
-                    visibleParameterAnnotations = pannots;
+                    visibleParameterAnnotations = parameterAnnotationData;
                 }
-                break;
-            case ATT_AnnotationDefault:
-                defaultAnnotation = AnnotationElement.readValue(in, cls, false);
-                break;
-            default:
-                handled = false;
-                break;
+            }
+            case ATT_AnnotationDefault -> defaultAnnotation = AnnotationElement.readValue(in, data, false);
+            default -> handled = false;
         }
         return handled;
     }
 
     /**
-     * read
-     * read and resolve the method data called from ClassData.
+     * Read and resolve the method data called from ClassData.
      * Precondition: NumFields has already been read from the stream.
      */
     public void read(DataInputStream in) throws IOException {
@@ -135,8 +121,12 @@ public class MethodData extends MemberData {
         access = in.readUnsignedShort(); // & MM_METHOD; // Q
         name_cpx = in.readUnsignedShort();
         sig_cpx = in.readUnsignedShort();
-        TraceUtils.traceln(2,"MethodData: {modifiers}: " + Modifiers.toString(access, CF_Context.CTX_METHOD),
-                            "      MethodData: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx) + " sig[" + sig_cpx + "]=" + cls.pool.getString(sig_cpx));
+        environment.traceln("MethodData: {modifiers[%d]}:%s name[%d]=%s signature[%d]=%s",
+                access,
+                EModifier.asNames(access, ClassFileContext.METHOD).isEmpty() ? "<none>" :
+                        EModifier.asNames(access, ClassFileContext.METHOD).isEmpty(),
+                name_cpx, data.pool.getString(name_cpx, index -> "???"),
+                sig_cpx, data.pool.getString(sig_cpx, index -> "???"));
         // Read the attributes
         readAttributes(in);
     }
@@ -144,11 +134,11 @@ public class MethodData extends MemberData {
     private void readExceptions(DataInputStream in) throws IOException {
         // this is not really a CodeAttr attribute, it's part of the CodeAttr
         int exc_table_len = in.readUnsignedShort();
-        TraceUtils.traceln(3,"ExceptionsAttr[" + exc_table_len + "]");
+        environment.traceln("ExceptionsAttr[%d]", exc_table_len);
         exc_table = new int[exc_table_len];
         for (int l = 0; l < exc_table_len; l++) {
             int exc = in.readShort();
-            TraceUtils.traceln(4,"throws:#" + exc);
+            environment.traceln("throws: #" + exc);
             exc_table[l] = exc;
         }
     }
@@ -156,24 +146,22 @@ public class MethodData extends MemberData {
     private void readMethodParameters(DataInputStream in) throws IOException {
         // this is not really a CodeAttr attribute, it's part of the CodeAttr
         int num_params = in.readUnsignedByte();
-        TraceUtils.traceln(3,"MethodParametersAttr[" + num_params + "]");
-        paramNames = new ArrayList<>(num_params);
-        for (int l = 0; l < num_params; l++) {
-            short pname_cpx = (short) in.readUnsignedShort();
-            int paccess = in.readUnsignedShort();
-            TraceUtils.traceln(4,"P[" + l + "] ={ name[" + pname_cpx + "]: " + cls.pool.getString(pname_cpx)
-                    + " modifiers [" + paccess + "]: " + Modifiers.toString(paccess, CF_Context.CTX_METHOD) + "}");
-            paramNames.add(l, new ParamNameData(pname_cpx, paccess));
+        environment.traceln("MethodParametersAttr[%d]", num_params);
+        paramNameDates = new ArrayList<>(num_params);
+        for (int i = 0; i < num_params; i++) {
+            short paramNameCpx = (short) in.readUnsignedShort();
+            int paramAccess = in.readUnsignedShort();
+            environment.traceln("Param[%d] = { name[%d]: \"%s\" modifiers[%d]: %s}", i, paramNameCpx,
+                    pool.getString(paramNameCpx, index -> "???"),
+                    paramAccess, EModifier.asNames(paramAccess, ClassFileContext.METHOD));
+            paramNameDates.add(i, new ParamNameData(paramNameCpx, paramAccess));
         }
     }
 
     /**
-     * printPAnnotations
-     * <p>
      * prints the parameter annotations for this method. called from CodeAttr (since JASM
      * code integrates the PAnnotation Syntax inside the method body).
      */
-    // This is called from the CodeAttr
     public void printPAnnotations() throws IOException {
         int visSize = 0;
         int invisSize = 0;
@@ -185,81 +173,90 @@ public class MethodData extends MemberData {
         if (invisibleParameterAnnotations != null) {
             invisSize = invisibleParameterAnnotations.numParams();
         }
-        if (paramNames != null) {
-            pNumSize = paramNames.size();
+        if (paramNameDates != null) {
+            pNumSize = paramNameDates.size();
         }
 
         int maxParams;
-        maxParams = (pNumSize > invisSize) ? pNumSize : invisSize;
-        maxParams = (visSize > maxParams) ? visSize : maxParams;
+        maxParams = max(pNumSize, invisSize);
+        maxParams = max(visSize, maxParams);
+
+        String[] paramNames = getPrintableParameterNames(maxParams);
+        int annotOffset = Arrays.stream(paramNames).mapToInt(name -> name == null ? 0 : name.length()).max().orElse(0) + 1;
 
         for (int paramNum = 0; paramNum < maxParams; paramNum++) {
-            ArrayList<AnnotationData> visAnnots = null;
-            if (visibleParameterAnnotations != null && paramNum < visSize) {
-                visAnnots = visibleParameterAnnotations.get(paramNum);
-            }
-            ArrayList<AnnotationData> invisAnnots = null;
-            if (invisibleParameterAnnotations != null && paramNum < invisSize) {
-                invisAnnots = invisibleParameterAnnotations.get(paramNum);
-            }
-            ParamNameData pname = (paramNames == null) ? null : paramNames.get(paramNum);
+            ArrayList<AnnotationData> visAnnotationDataList = (visibleParameterAnnotations != null && paramNum < visSize) ?
+                    visibleParameterAnnotations.get(paramNum) : null;
 
-            boolean nullAnnots = ((visAnnots == null) && (invisAnnots == null));
-            if (pname != null && pname.name_cpx == 0) {
-                pname = null;
+            ArrayList<AnnotationData> invisAnnotationDataList = (invisibleParameterAnnotations != null && paramNum < invisSize) ?
+                    invisibleParameterAnnotations.get(paramNum) : null;
+
+            ParamNameData paramNameData = (paramNameDates != null) ? paramNameDates.get(paramNum) : null;
+            boolean hasAnnotations = ((visAnnotationDataList != null) || (invisAnnotationDataList != null));
+
+            if (paramNameData != null && paramNameData.name_cpx == 0) {
+                paramNameData = null;
             }
 
-            // Print the Param number (header)
-            if ((pname != null) || !nullAnnots) {
-                out.print("\t" + paramNum + ": ");
-            } else {
-                continue;
-            }
+            if ((paramNameData != null) || hasAnnotations) {
 
-            boolean firstTime = true;
+                // Print the Param number (header)
+                printIndent(PadRight(paramNum + ": ", 5));
 
-            // Print the Parameter name
-            if (pname != null) {
-                out.print(Token.PARAM_NAME.parseKey());
-                out.print(Token.LBRACE.parseKey());
-                out.print(cls.pool.getString(pname.name_cpx));
-                out.print(" ");
-                out.print(Modifiers.toString(pname.access, CF_Context.CTX_METHOD));
-                out.print(Token.RBRACE.parseKey());
-                out.print(" ");
-            }
-
-            // Print any visible param annotations
-            if (visAnnots != null) {
-                for (AnnotationData annot : visAnnots) {
-                    if (!firstTime) {
-                        out.print("\t   ");
-                    }
-                    annot.print(out, getIndentString());
-//                    out.println();
-                    firstTime = false;
+                int offset = annotOffset + 4;
+                // Print the Parameter name
+                if (paramNameData != null) {
+                    printPadRight(paramNames[paramNum], annotOffset);
+                    offset++;
                 }
-            }
 
-            // Print any invisible param annotations
-            if (invisAnnots != null) {
-                for (AnnotationData annot : invisAnnots) {
-                    if (!firstTime) {
-                        out.print("\t   ");
-                    }
-                    annot.print(out, getIndentString());
-//                    out.println();
-                    firstTime = false;
-                }
-            }
+                // Print any visible param annotations
+                boolean firstTime = printAnnotationDataList(visAnnotationDataList, true, offset);
 
-            // Reset the line, if there were parameters
-            if ((pname != null) || !nullAnnots) {
-                out.println();
-            }
+                // Print any invisible param annotations
+                printAnnotationDataList(invisAnnotationDataList, firstTime, annotOffset);
 
+                // Reset the line, if there were parameters
+                println();
+            }
         }
+    }
 
+    /**
+     * Prints a list of Visible/Invisible parameter annotations
+     */
+    private boolean printAnnotationDataList(List<AnnotationData> annotationDataList, boolean firstTime, int offset)
+            throws IOException {
+        if (annotationDataList != null) {
+            for (AnnotationData annot : annotationDataList) {
+                if (!firstTime) {
+                    println().print(enlargedIndent(offset));
+                } else {
+                    firstTime = false;
+                }
+                annot.setElementState(PARAMETER_ANNOTATION).setOffset(offset + getIndentSize()).print();
+            }
+        }
+        return firstTime;
+    }
+
+    private String[] getPrintableParameterNames(int maxParams) {
+        String[] names = new String[maxParams];
+        if (paramNameDates != null) {
+            for (int paramNum = 0; paramNum < maxParams; paramNum++) {
+                ParamNameData paramNameData = paramNameDates.get(paramNum);
+                if (paramNameData == null || paramNameData.name_cpx == 0) {
+                    names[paramNum] = "";
+                    continue;
+                }
+                // get printable parameter name
+                names[paramNum] = Token.PARAM_NAME.parseKey() + "{ " +
+                        data.pool.getString(paramNameData.name_cpx, index -> "#" + index) + ' ' +
+                        EModifier.asKeywords(paramNameData.access, ClassFileContext.METHOD_PARAMETERS) +
+                        "}";
+            }
+        }
+        return names;
     }
 
     /**
@@ -268,78 +265,97 @@ public class MethodData extends MemberData {
     @Override
     public void print() throws IOException {
 
-        printAnnotations(getIndentString());
+        printAnnotations();
 
-        out.print(getIndentString() + Modifiers.accessString(access, CF_Context.CTX_METHOD));
+        String methSignature = EModifier.asKeywords(access, ClassFileContext.METHOD);
+        // add synthetic, deprecated if necessary
+        methSignature = methSignature.concat(getPseudoFlagsAsString());
+        methSignature = methSignature.concat(Token.METHODREF.parseKey() + " ");
 
-        if (isSynthetic) {
-            out.print(Token.SYNTHETIC.parseKey() + " ");
-        }
-        if (isDeprecated) {
-            out.print(Token.DEPRECATED.parseKey() + " ");
-        }
-        out.print(Token.METHODREF.parseKey() + " ");
+        Pair<String, String> signInfo = (signature != null) ?
+                signature.getPrintInfo((i) -> pool.inRange(i)) :
+                new Pair<>("", "");
 
-        StringBuilder bodyPrefix = new StringBuilder();
-        StringBuilder tailPrefix = new StringBuilder();
-
-        if (pr_cpx) {
+        boolean extraMethodInfo = code != null || exc_table != null || defaultAnnotation != null;
+        int newLineIdent;
+        if (printCPIndex) {
             // print the CPX method descriptor
-            bodyPrefix.append('#').append(name_cpx).append(":#").append(sig_cpx);
-            if (code == null && exc_table == null && defaultAnnotation == null) {
-                tailPrefix.append(';');
+            methSignature = methSignature.concat("#" + name_cpx + ":#" + sig_cpx + signInfo.first + (extraMethodInfo ? "" : ";"));
+            if (skipComments) {
+                if (defaultAnnotation != null) {
+                    printIndent(PadRight(methSignature, getCommentOffset() - 1));
+                } else {
+                    printIndent(methSignature);
+                }
+                newLineIdent = methSignature.length();
+            } else {
+                printIndent(PadRight(methSignature, getCommentOffset() - 1));
+                String comment = (defaultAnnotation != null ? " /* " : " // ").
+//                  concat(String.format("0x%04X ", access)).
+                    concat(data.pool.getName(name_cpx) + ":" + data.pool.getName(sig_cpx) + signInfo.second).
+                    concat(defaultAnnotation != null ? " */ " : " ");
+                newLineIdent = getCommentOffset() + comment.length() - 1;
+                print(comment);
             }
-            tailPrefix.append("\t // ").append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(sig_cpx));
         } else {
-            bodyPrefix.append(cls.pool.getName(name_cpx)).append(':').append(cls.pool.getName(sig_cpx));
-            if (code == null && exc_table == null && defaultAnnotation == null) {
-                tailPrefix.append(';');
-            }
-        }
-
-        if (signature != null) {
-            signature.print(bodyPrefix.append(':').toString(), tailPrefix.append(pr_cpx ? ":" : "").toString());
-        } else {
-            out.print(bodyPrefix.toString());
-            out.print(tailPrefix.toString());
+            methSignature = methSignature.concat(data.pool.getName(name_cpx) + ":").
+                    concat(data.pool.getName(sig_cpx) + signInfo.second + (extraMethodInfo ? " " : ";"));
+            printIndent(methSignature);
+            newLineIdent = methSignature.length();
         }
 
         // followed by default annotation
         if (defaultAnnotation != null) {
-            out.print(" default { ");
-            defaultAnnotation.print(out, getIndentString());
-            out.print(" }" + ((code == null && exc_table == null) ? ";" : " "));
+            defaultAnnotation.setCommentOffset(newLineIdent);
+            defaultAnnotation.setElementState(HAS_DEFAULT_VALUE);
+            defaultAnnotation.print();
+            print(((code == null && exc_table == null) ? ";" : " "));
         }
         // followed by exception table
-        printExceptionTable();
+        if (exc_table != null) {
+            printExceptionTable(code == null);
+        }
 
         if (code != null) {
+            code.setCommentOffset(this.getCommentOffset());
             code.print();
         } else {
-            if( exc_table != null ) {
-                out.print(';');
+            if (exc_table != null) {
+                print(";");
             }
-            out.println();
+            println();
         }
     }
 
-    private void printExceptionTable() {
-        if (exc_table != null) {
-            out.print("\n\tthrows ");
-            int len = exc_table.length;
-            for (int exceptNum = 0; exceptNum < len; exceptNum++) {
-                out.print(cls.pool.getClassName(exc_table[exceptNum]));
-                if (exceptNum < len - 1) {
-                    out.print(", ");
-                }
-            }
+    private void printExceptionTable(boolean abstractMethod) {
+        String indexes = "",
+                names = "",
+                throwsClause = PadRight(Token.THROWS.parseKey(), PROGRAM_COUNTER_PLACEHOLDER_LENGTH);
+        for (int i : exc_table) {
+            if (printCPIndex)
+                indexes = indexes.concat(indexes.isEmpty() ? "" : ", ").concat("#" + i);
+            names = names.concat(names.isEmpty() ? "" : ", ").concat(data.pool.getClassName(i));
         }
+        println().incIndent();
+        if (printCPIndex) {
+            if (skipComments) {
+                printIndent(throwsClause + indexes + (abstractMethod ? ";" : ""));
+            } else {
+                printIndent(PadRight(throwsClause +
+                        indexes +
+                        (abstractMethod ? ";" : ""), getCommentOffset() - getIndentStep() - 1)).
+                        print(" // " + names);
+            }
+        } else {
+            printIndent(throwsClause + names);
+        }
+        decIndent();
     }
 
     /**
      * MethodParamData
      */
-    class ParamNameData {
+    static class ParamNameData {
 
         public int access;
         public int name_cpx;

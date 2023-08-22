@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,8 +21,6 @@
  * questions.
  */
 package org.openjdk.asmtools.jasm;
-
-import java.io.PrintWriter;
 
 /**
  * Type annotation types: target_type, target_info and target_path
@@ -96,9 +94,7 @@ public class TypeAnnotationTypes {
             // Chapter 4.7.20.2 The type_path structure
             // if the value of the type_path_kind is 0,1, or 2, then the value of the
             // type_argument_index item is 0.
-            return kind.parseKey() +  ( kind.tag == 3 ?
-                    JasmTokens.Token.LBRACE.parseKey() + typeArgumentIndex + JasmTokens.Token.RBRACE.parseKey() :
-                    "");
+            return kind.parseKey() +  ( kind.tag == 3 ? "{" + typeArgumentIndex +"}" : "");
         }
     }
 
@@ -191,17 +187,11 @@ public class TypeAnnotationTypes {
             return parseKey;
         }
 
-        public String infoKey() {
-            return targetInfo.parseKey();
-        }
-
         public ETargetInfo targetInfo() {
             return targetInfo;
         }
 
-        public void print(PrintWriter out) {
-            out.print(parseKey);
-        }
+        public String _toPrintString() { return this.parseKey; }
 
         @Override
         public String toString() {

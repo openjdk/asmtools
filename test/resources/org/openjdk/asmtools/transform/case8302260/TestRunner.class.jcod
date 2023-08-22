@@ -1,0 +1,601 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+class org/openjdk/asmtools/transform/case8302260/TestRunner {
+  0xCAFEBABE;
+  0;                             // minor version
+  60;                            // version
+  [210] {                        // Constant Pool
+    ;                            // first element is empty
+    Method #2 #3;                // #1     at 0x0A
+    class #4;                    // #2     at 0x0F
+    NameAndType #5 #6;           // #3     at 0x12
+    Utf8 "java/lang/Object";     // #4     at 0x17
+    Utf8 "<init>";               // #5     at 0x2A
+    Utf8 "()V";                  // #6     at 0x33
+    class #8;                    // #7     at 0x39
+    Utf8 "org/openjdk/asmtools/transform/case8302260/TestRunner"; // #8     at 0x3C
+    Method #10 #11;              // #9     at 0x74
+    class #12;                   // #10     at 0x79
+    NameAndType #13 #14;         // #11     at 0x7C
+    Utf8 "java/lang/Class";      // #12     at 0x81
+    Utf8 "getPackageName";       // #13     at 0x93
+    Utf8 "()Ljava/lang/String;"; // #14     at 0xA4
+    InvokeDynamic 0s #16;        // #15     at 0xBB
+    NameAndType #17 #18;         // #16     at 0xC0
+    Utf8 "makeConcatWithConstants"; // #17     at 0xC5
+    Utf8 "(Ljava/lang/String;)Ljava/lang/String;"; // #18     at 0xDF
+    Field #7 #20;                // #19     at 0x0108
+    NameAndType #21 #22;         // #20     at 0x010D
+    Utf8 "superPackage";         // #21     at 0x0112
+    Utf8 "Ljava/lang/String;";   // #22     at 0x0121
+    class #24;                   // #23     at 0x0136
+    Utf8 "org/openjdk/asmtools/transform/case8302260/data/CTestClass"; // #24     at 0x0139
+    String #26;                  // #25     at 0x0176
+    Utf8 "stringField";          // #26     at 0x0179
+    class #28;                   // #27     at 0x0187
+    Utf8 "java/lang/String";     // #28     at 0x018A
+    Method #7 #30;               // #29     at 0x019D
+    NameAndType #31 #32;         // #30     at 0x01A2
+    Utf8 "testFieldRef";         // #31     at 0x01A7
+    Utf8 "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"; // #32     at 0x01B6
+    String #34;                  // #33     at 0x020B
+    Utf8 "CTestClass";           // #34     at 0x020E
+    InterfaceMethod #36 #37;     // #35     at 0x021B
+    class #38;                   // #36     at 0x0220
+    NameAndType #39 #40;         // #37     at 0x0223
+    Utf8 "java/lang/constant/ClassDesc"; // #38     at 0x0228
+    Utf8 "of";                   // #39     at 0x0247
+    Utf8 "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"; // #40     at 0x024C
+    Field #42 #43;               // #41     at 0x0293
+    class #44;                   // #42     at 0x0298
+    NameAndType #45 #46;         // #43     at 0x029B
+    Utf8 "java/lang/constant/ConstantDescs"; // #44     at 0x02A0
+    Utf8 "CD_String";            // #45     at 0x02C3
+    Utf8 "Ljava/lang/constant/ClassDesc;"; // #46     at 0x02CF
+    Method #7 #48;               // #47     at 0x02F0
+    NameAndType #49 #50;         // #48     at 0x02F5
+    Utf8 "testFieldValue";       // #49     at 0x02FA
+    Utf8 "(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"; // #50     at 0x030B
+    String #52;                  // #51     at 0x037B
+    Utf8 "longField";            // #52     at 0x037E
+    Field #54 #55;               // #53     at 0x038A
+    class #56;                   // #54     at 0x038F
+    NameAndType #57 #58;         // #55     at 0x0392
+    Utf8 "java/lang/Long";       // #56     at 0x0397
+    Utf8 "TYPE";                 // #57     at 0x03A8
+    Utf8 "Ljava/lang/Class;";    // #58     at 0x03AF
+    Field #42 #60;               // #59     at 0x03C3
+    NameAndType #61 #46;         // #60     at 0x03C8
+    Utf8 "CD_long";              // #61     at 0x03CD
+    String #63;                  // #62     at 0x03D7
+    Utf8 "stringField2";         // #63     at 0x03DA
+    String #65;                  // #64     at 0x03E9
+    Utf8 "longField2";           // #65     at 0x03EC
+    String #67;                  // #66     at 0x03F9
+    Utf8 "stringField3";         // #67     at 0x03FC
+    String #69;                  // #68     at 0x040B
+    Utf8 "longField3";           // #69     at 0x040E
+    Field #71 #72;               // #70     at 0x041B
+    class #73;                   // #71     at 0x0420
+    NameAndType #74 #75;         // #72     at 0x0423
+    Utf8 "java/lang/System";     // #73     at 0x0428
+    Utf8 "out";                  // #74     at 0x043B
+    Utf8 "Ljava/io/PrintStream;"; // #75     at 0x0441
+    Method #77 #78;              // #76     at 0x0459
+    class #79;                   // #77     at 0x045E
+    NameAndType #80 #81;         // #78     at 0x0461
+    Utf8 "java/lang/invoke/VarHandle"; // #79     at 0x0466
+    Utf8 "get";                  // #80     at 0x0483
+    Utf8 "()Ljava/lang/Object;"; // #81     at 0x0489
+    InvokeDynamic 1s #83;        // #82     at 0x04A0
+    NameAndType #17 #84;         // #83     at 0x04A5
+    Utf8 "(Ljava/lang/Object;)Ljava/lang/String;"; // #84     at 0x04AA
+    Method #86 #87;              // #85     at 0x04D3
+    class #88;                   // #86     at 0x04D8
+    NameAndType #89 #90;         // #87     at 0x04DB
+    Utf8 "java/io/PrintStream";  // #88     at 0x04E0
+    Utf8 "print";                // #89     at 0x04F6
+    Utf8 "(Ljava/lang/String;)V"; // #90     at 0x04FE
+    class #92;                   // #91     at 0x0516
+    Utf8 "java/lang/Throwable";  // #92     at 0x0519
+    String #94;                  // #93     at 0x052F
+    Utf8 " 1: failed";           // #94     at 0x0532
+    Method #86 #96;              // #95     at 0x053F
+    NameAndType #97 #90;         // #96     at 0x0544
+    Utf8 "println";              // #97     at 0x0549
+    Field #71 #99;               // #98     at 0x0553
+    NameAndType #100 #75;        // #99     at 0x0558
+    Utf8 "err";                  // #100     at 0x055D
+    Method #91 #102;             // #101     at 0x0563
+    NameAndType #103 #104;       // #102     at 0x0568
+    Utf8 "printStackTrace";      // #103     at 0x056D
+    Utf8 "(Ljava/io/PrintStream;)V"; // #104     at 0x057F
+    Method #106 #107;            // #105     at 0x059A
+    class #108;                  // #106     at 0x059F
+    NameAndType #109 #110;       // #107     at 0x05A2
+    Utf8 "java/lang/invoke/MethodHandles"; // #108     at 0x05A7
+    Utf8 "lookup";               // #109     at 0x05C8
+    Utf8 "()Ljava/lang/invoke/MethodHandles$Lookup;"; // #110     at 0x05D1
+    InterfaceMethod #36 #112;    // #111     at 0x05FD
+    NameAndType #113 #114;       // #112     at 0x0602
+    Utf8 "resolveConstantDesc";  // #113     at 0x0607
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;"; // #114     at 0x061D
+    Method #116 #117;            // #115     at 0x065B
+    class #118;                  // #116     at 0x0660
+    NameAndType #119 #32;        // #117     at 0x0663
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #118     at 0x0668
+    Utf8 "findStaticVarHandle";  // #119     at 0x0690
+    InvokeDynamic 2s #83;        // #120     at 0x06A6
+    String #122;                 // #121     at 0x06AB
+    Utf8 " 2: failed";           // #122     at 0x06AE
+    Method #77 #124;             // #123     at 0x06BB
+    NameAndType #125 #126;       // #124     at 0x06C0
+    Utf8 "describeConstable";    // #125     at 0x06C5
+    Utf8 "()Ljava/util/Optional;"; // #126     at 0x06D9
+    Method #128 #129;            // #127     at 0x06F2
+    class #130;                  // #128     at 0x06F7
+    NameAndType #131 #81;        // #129     at 0x06FA
+    Utf8 "java/util/Optional";   // #130     at 0x06FF
+    Utf8 "orElseThrow";          // #131     at 0x0714
+    class #133;                  // #132     at 0x0722
+    Utf8 "java/lang/invoke/VarHandle$VarHandleDesc"; // #133     at 0x0725
+    Method #132 #135;            // #134     at 0x0750
+    NameAndType #113 #136;       // #135     at 0x0755
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;"; // #136     at 0x075A
+    InvokeDynamic 3s #83;        // #137     at 0x07A2
+    String #139;                 // #138     at 0x07A7
+    Utf8 " 3: failed";           // #139     at 0x07AA
+    Method #132 #141;            // #140     at 0x07B7
+    NameAndType #142 #143;       // #141     at 0x07BC
+    Utf8 "ofStaticField";        // #142     at 0x07C1
+    Utf8 "(Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)Ljava/lang/invoke/VarHandle$VarHandleDesc;"; // #143     at 0x07D1
+    InvokeDynamic 4s #83;        // #144     at 0x084E
+    String #146;                 // #145     at 0x0853
+    Utf8 " 4: failed";           // #146     at 0x0856
+    InvokeDynamic 5s #16;        // #147     at 0x0863
+    class #149;                  // #148     at 0x0868
+    Utf8 "java/lang/NoSuchFieldException"; // #149     at 0x086B
+    class #151;                  // #150     at 0x088C
+    Utf8 "java/lang/IllegalAccessException"; // #151     at 0x088F
+    String #153;                 // #152     at 0x08B2
+    Utf8 "0: failed";            // #153     at 0x08B5
+    Method #155 #102;            // #154     at 0x08C1
+    class #156;                  // #155     at 0x08C6
+    Utf8 "java/lang/ReflectiveOperationException"; // #156     at 0x08C9
+    class #158;                  // #157     at 0x08F2
+    Utf8 "org/openjdk/asmtools/lib/transform/ITestRunner"; // #158     at 0x08F5
+    Utf8 "Code";                 // #159     at 0x0926
+    Utf8 "LineNumberTable";      // #160     at 0x092D
+    Utf8 "LocalVariableTable";   // #161     at 0x093F
+    Utf8 "this";                 // #162     at 0x0954
+    Utf8 "Lorg/openjdk/asmtools/transform/case8302260/TestRunner;"; // #163     at 0x095B
+    Utf8 "run";                  // #164     at 0x0995
+    Utf8 "vh";                   // #165     at 0x099B
+    Utf8 "Ljava/lang/invoke/VarHandle;"; // #166     at 0x09A0
+    Utf8 "e";                    // #167     at 0x09BF
+    Utf8 "Ljava/lang/Throwable;"; // #168     at 0x09C3
+    Utf8 "vh2";                  // #169     at 0x09DB
+    Utf8 "vhd";                  // #170     at 0x09E1
+    Utf8 "Ljava/lang/invoke/VarHandle$VarHandleDesc;"; // #171     at 0x09E7
+    Utf8 "obj";                  // #172     at 0x0A14
+    Utf8 "t";                    // #173     at 0x0A1A
+    Utf8 "desc";                 // #174     at 0x0A1E
+    Utf8 "name";                 // #175     at 0x0A25
+    Utf8 "fdesc";                // #176     at 0x0A2C
+    Utf8 "StackMapTable";        // #177     at 0x0A34
+    Utf8 "Ljava/lang/ReflectiveOperationException;"; // #178     at 0x0A44
+    Utf8 "rec";                  // #179     at 0x0A6F
+    Utf8 "fname";                // #180     at 0x0A75
+    Utf8 "type";                 // #181     at 0x0A7D
+    Utf8 "LocalVariableTypeTable"; // #182     at 0x0A84
+    Utf8 "Ljava/lang/Class<*>;"; // #183     at 0x0A9D
+    Utf8 "Signature";            // #184     at 0x0AB4
+    Utf8 "(Ljava/lang/Class<*>;Ljava/lang/String;Ljava/lang/Class<*>;)Ljava/lang/invoke/VarHandle;"; // #185     at 0x0AC0
+    Utf8 "SourceFile";           // #186     at 0x0B1B
+    Utf8 "TestRunner.java";      // #187     at 0x0B28
+    Utf8 "BootstrapMethods";     // #188     at 0x0B3A
+    MethodHandle 6b #190;        // #189     at 0x0B4D
+    Method #191 #192;            // #190     at 0x0B51
+    class #193;                  // #191     at 0x0B56
+    NameAndType #17 #194;        // #192     at 0x0B59
+    Utf8 "java/lang/invoke/StringConcatFactory"; // #193     at 0x0B5E
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"; // #194     at 0x0B85
+    String #196;                 // #195     at 0x0C20
+    Utf8 ".data";               // #196     at 0x0C23
+    String #198;                 // #197     at 0x0C2C
+    Utf8 " 1: ";                // #198     at 0x0C2F
+    String #200;                 // #199     at 0x0C37
+    Utf8 " 2: ";                // #200     at 0x0C3A
+    String #202;                 // #201     at 0x0C42
+    Utf8 " 3: ";                // #202     at 0x0C45
+    String #204;                 // #203     at 0x0C4D
+    Utf8 " 4: ";                // #204     at 0x0C50
+    String #206;                 // #205     at 0x0C58
+    Utf8 "0: ";                 // #206     at 0x0C5B
+    Utf8 "InnerClasses";         // #207     at 0x0C62
+    Utf8 "Lookup";               // #208     at 0x0C71
+    Utf8 "VarHandleDesc";        // #209     at 0x0C7A
+  }                              // end of Constant Pool
+
+  0x0021;                        // access [ ACC_PUBLIC, ACC_SUPER  ]
+  #7;                            // this_cpx
+  #2;                            // super_cpx
+
+  [1] {                          // Interfaces
+    #157;                        // org/openjdk/asmtools/lib/transform/ITestRunner at 0x0C94
+  }                              // end of Interfaces
+
+  [1] {                          // Fields
+    {                            // field at 0x0C96
+      0x0010;                    // access
+      #21;                       // name_index       : superPackage
+      #22;                       // descriptor_index : Ljava/lang/String;
+      [0] {                      // Attributes
+      }                          // end of Attributes
+    }
+  }                              // end of Fields
+
+  [4] {                          // Methods
+    {                            // method at 0x0CA0
+      0x0001;                    // access
+      #5;                        // name_index       : <init>
+      #6;                        // descriptor_index : ()V
+      [1] {                      // Attributes
+        Attr(#159, 65) {         // Code at 0x0CA8
+          2;                     // max_stack
+          1;                     // max_locals
+          Bytes[19]{
+            0x2AB700012A1207B6;
+            0x0009BA000F0000B5;
+            0x0013B1;
+          }
+          [0] {                  // Traps
+          }                      // end of Traps
+          [2] {                  // Attributes
+            Attr(#160, 10) {     // LineNumberTable at 0x0CCD
+              [2] {              // line_number_table
+                0  35;           // at 0x0CD9
+                4  37;           // at 0x0CDD
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#161, 12) {     // LocalVariableTable at 0x0CDD
+              [1] {              // LocalVariableTable
+                0 19 162 163 0;  // at 0x0CEF
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method at 0x0CEF
+      0x0001;                    // access
+      #164;                      // name_index       : run
+      #6;                        // descriptor_index : ()V
+      [1] {                      // Attributes
+        Attr(#159, 284) {        // Code at 0x0CF7
+          5;                     // max_stack
+          2;                     // max_locals
+          Bytes[184]{
+            0x2A12171219121BB6;
+            0x001D4C2A2B2AB400;
+            0x131221B800231219;
+            0xB20029B6002F2A12;
+            0x171233B20035B600;
+            0x1D4C2A2B2AB40013;
+            0x1221B800231233B2;
+            0x003BB6002F2A1217;
+            0x123E121BB6001D4C;
+            0x2A2B2AB400131221;
+            0xB80023123EB20029;
+            0xB6002F2A12171240;
+            0xB20035B6001D4C2A;
+            0x2B2AB400131221B8;
+            0x00231240B2003BB6;
+            0x002F2A1217124212;
+            0x1BB6001D4C2A2B2A;
+            0xB400131221B80023;
+            0x1242B20029B6002F;
+            0x2A12171244B20035;
+            0xB6001D4C2A2B2AB4;
+            0x00131221B8002312;
+            0x44B2003BB6002FB1;
+          }
+          [0] {                  // Traps
+          }                      // end of Traps
+          [2] {                  // Attributes
+            Attr(#160, 54) {     // LineNumberTable at 0x0DC1
+              [13] {             // line_number_table
+                0  44;           // at 0x0DCD
+                11  45;          // at 0x0DD1
+                30  46;          // at 0x0DD5
+                42  47;          // at 0x0DD9
+                61  49;          // at 0x0DDD
+                72  50;          // at 0x0DE1
+                91  51;          // at 0x0DE5
+                103  52;         // at 0x0DE9
+                122  54;         // at 0x0DED
+                133  55;         // at 0x0DF1
+                152  56;         // at 0x0DF5
+                164  57;         // at 0x0DF9
+                183  58;         // at 0x0DFD
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#161, 22) {     // LocalVariableTable at 0x0DFD
+              [2] {              // LocalVariableTable
+                0 184 162 163 0; // at 0x0E0F
+                11 173 165 166 1; // at 0x0E19
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method at 0x0E19
+      0x0000;                    // access
+      #49;                       // name_index       : testFieldValue
+      #50;                       // descriptor_index : (Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V
+      [1] {                      // Attributes
+        Attr(#159, 579) {        // Code at 0x0E21
+          5;                     // max_stack
+          7;                     // max_locals
+          Bytes[231]{
+            0x2BC60027B200462B;
+            0xB6004CBA00520000;
+            0xB60055A700153A05;
+            0xB20046125DB6005F;
+            0x1905B20062B60065;
+            0xB800692CB80069B9;
+            0x006F0200C0000A2D;
+            0x1904B80069B9006F;
+            0x0200C0000AB60073;
+            0x3A05B200461905B6;
+            0x004CBA00780000B6;
+            0x0055A700153A05B2;
+            0x00461279B6005F19;
+            0x05B20062B600652B;
+            0xC6003E2BB6007BB6;
+            0x007FC000843A0519;
+            0x05B80069B600863A;
+            0x06B200461906B600;
+            0x4CBA00890000B600;
+            0x55A700153A05B200;
+            0x46128AB6005F1905;
+            0xB20062B600652C2D;
+            0x1904B8008C3A0519;
+            0x05B80069B600863A;
+            0x06B200461906B600;
+            0x4CBA00900000B600;
+            0x5FA700153A05B200;
+            0x461291B6005F1905;
+            0xB20046B60065B1;
+          }
+          [4] {                  // Traps
+            4 19 22 91;          // at 0x0F20
+            40 90 93 91;         // at 0x0F28
+            115 153 156 91;      // at 0x0F30
+            174 209 212 91;      // at 0x0F38
+          }                      // end of Traps
+          [3] {                  // Attributes
+            Attr(#160, 122) {    // LineNumberTable at 0x0F3A
+              [30] {             // line_number_table
+                0  61;           // at 0x0F46
+                4  63;           // at 0x0F4A
+                19  67;          // at 0x0F4E
+                22  64;          // at 0x0F52
+                24  65;          // at 0x0F56
+                32  66;          // at 0x0F5A
+                40  70;          // at 0x0F5E
+                58  71;          // at 0x0F62
+                69  70;          // at 0x0F66
+                74  72;          // at 0x0F6A
+                90  76;          // at 0x0F6E
+                93  73;          // at 0x0F72
+                95  74;          // at 0x0F76
+                103  75;         // at 0x0F7A
+                111  77;         // at 0x0F7E
+                115  79;         // at 0x0F82
+                127  80;         // at 0x0F86
+                137  81;         // at 0x0F8A
+                153  85;         // at 0x0F8E
+                156  82;         // at 0x0F92
+                158  83;         // at 0x0F96
+                166  84;         // at 0x0F9A
+                174  88;         // at 0x0F9E
+                183  89;         // at 0x0FA2
+                193  90;         // at 0x0FA6
+                209  94;         // at 0x0FAA
+                212  91;         // at 0x0FAE
+                214  92;         // at 0x0FB2
+                222  93;         // at 0x0FB6
+                230  95;         // at 0x0FBA
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#161, 142) {    // LocalVariableTable at 0x0FBA
+              [14] {             // LocalVariableTable
+                24 16 167 168 5; // at 0x0FCC
+                74 16 169 166 5; // at 0x0FD6
+                95 16 167 168 5; // at 0x0FE0
+                127 26 170 171 5; // at 0x0FEA
+                137 16 172 166 6; // at 0x0FF4
+                158 16 167 168 5; // at 0x0FFE
+                183 26 170 171 5; // at 0x1008
+                193 16 172 166 6; // at 0x1012
+                214 16 173 168 5; // at 0x101C
+                0 231 162 163 0; // at 0x1026
+                0 231 165 166 1; // at 0x1030
+                0 231 174 46 2;  // at 0x103A
+                0 231 175 22 3;  // at 0x1044
+                0 231 176 46 4;  // at 0x104E
+              }
+            }                    // end of LocalVariableTable
+            ;
+            Attr(#177, 22) {     // StackMapTable at 0x104E
+              [8] {              //
+                86b, [1]z{7b,91}; // same_locals_1_stack_item_frame
+                17b;             // same_frame
+                116b, [1]z{7b,91}; // same_locals_1_stack_item_frame
+                17b;             // same_frame
+                108b, [1]z{7b,91}; // same_locals_1_stack_item_frame
+                17b;             // same_frame
+                101b, [1]z{7b,91}; // same_locals_1_stack_item_frame
+                17b;             // same_frame
+              }
+            }                    // end of StackMapTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method at 0x106A
+      0x0000;                    // access
+      #31;                       // name_index       : testFieldRef
+      #32;                       // descriptor_index : (Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;
+      [2] {                      // Attributes
+        Attr(#159, 248) {        // Code at 0x1072
+          4;                     // max_stack
+          6;                     // max_locals
+          Bytes[50]{
+            0x013A04B800692B2C;
+            0x2DB600733A04B200;
+            0x462CBA00930000B6;
+            0x0055A700153A05B2;
+            0x00461298B6005F19;
+            0x05B20062B6009A19;
+            0x04B0;
+          }
+          [2] {                  // Traps
+            3 26 29 148;         // at 0x10BC
+            3 26 29 150;         // at 0x10C4
+          }                      // end of Traps
+          [4] {                  // Attributes
+            Attr(#160, 34) {     // LineNumberTable at 0x10C6
+              [8] {              // line_number_table
+                0  98;           // at 0x10D2
+                3  100;          // at 0x10D6
+                14  101;         // at 0x10DA
+                26  105;         // at 0x10DE
+                29  102;         // at 0x10E2
+                31  103;         // at 0x10E6
+                39  104;         // at 0x10EA
+                47  106;         // at 0x10EE
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#161, 62) {     // LocalVariableTable at 0x10EE
+              [6] {              // LocalVariableTable
+                31 16 167 178 5; // at 0x1100
+                0 50 162 163 0;  // at 0x110A
+                0 50 179 58 1;   // at 0x1114
+                0 50 180 22 2;   // at 0x111E
+                0 50 181 58 3;   // at 0x1128
+                3 47 165 166 4;  // at 0x1132
+              }
+            }                    // end of LocalVariableTable
+            ;
+            Attr(#182, 22) {     // LocalVariableTypeTable at 0x1132
+              [2] {              // LocalVariableTypeTable
+                0 50 179 183 1;  // at 0x1144
+                0 50 181 183 3;  // at 0x114E
+              }
+            }                    // end of LocalVariableTypeTable
+            ;
+            Attr(#177, 28) {     // StackMapTable at 0x114E
+              [2] {              //
+                255b, 29, [5]{7b,7; 7b,10; 7b,27; 7b,10; 7b,77}, [1]{7b,155}; // full_frame
+                17b;             // same_frame
+              }
+            }                    // end of StackMapTable
+          }                      // end of Attributes
+        }                        // end of Code
+        ;
+        Attr(#184, 2) {          // Signature at 0x1170
+          #185;
+        }                        // end of Signature
+      }                          // end of Attributes
+    }
+  }                              // end of Methods
+
+  [3] {                          // Attributes
+    Attr(#186, 2) {              // SourceFile at 0x117A
+      #187;
+    }                            // end of SourceFile
+    ;
+    Attr(#188, 38) {             // BootstrapMethods at 0x1182
+      [6] {                      // bootstrap_methods
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #195;                // at 0x1190
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #197;                // at 0x1196
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #199;                // at 0x119C
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #201;                // at 0x11A2
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #203;                // at 0x11A8
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #189;                  // bootstrap_method_ref
+          [1] {                  // bootstrap_arguments
+            #205;                // at 0x11AE
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+      }
+    }                            // end of BootstrapMethods
+    ;
+    Attr(#207, 18) {             // InnerClasses at 0x11AE
+      [2] {                      // classes
+        #116 #106 #208 25;       // at 0x11BE
+        #132 #77 #209 25;        // at 0x11C6
+      }
+    }                            // end of InnerClasses
+  }                              // end of Attributes
+}                                // end of class org/openjdk/asmtools/transform/case8302260/TestRunner

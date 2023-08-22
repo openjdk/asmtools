@@ -4,53 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openjdk.[PRODUCT_NAME]</groupId>
+    <groupId>org.openjdk</groupId>
 <!-- substituted from build/productinfo.properties -->
-    <artifactId>[PRODUCT_NAME]-core</artifactId>
+    <artifactId>[PRODUCT_NAME]</artifactId>
     <version>[PRODUCT_VERSION].b[PRODUCT_BUILDNUMBER]-[PRODUCT_MILESTONE]</version>
 <!--eg:      7.0.b10-ea-->
     <packaging>jar</packaging>
 
     <name>[PRODUCT_NAME]</name>
     <description>Maven wrapper around [PRODUCT_NAME] - [PRODUCT_NAME_LONG] project</description>
-    <url>https://github.com/openjdk/asmtools</url>
-
-    <licenses>
-        <license>
-            <name>GNU General Public License v2.0</name>
-            <url>https://github.com/openjdk/asmtools/blob/master/LICENSE</url>
-        </license>
-    </licenses>
-
-    <developers>
-        <!-- this list not intended to be complete, see contributors at project pages-->
-        <developer>
-            <id>lkuskov</id>
-            <name>Leonid Kuskov</name>
-            <email>leonid.kuskov@oracle.com</email>
-            <organization>Oracle</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <id>maccimo</id>
-            <name>Maxim Degtyarev</name>
-            <email>maccimo@github.com</email>
-        </developer>
-        <developer>
-            <id>edvbld</id>
-            <name>Erik Duveblad</name>
-            <email>erikd.duveblad@oracle.com</email>
-            <organization>Oracle</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <id>judovana</id>
-            <name>Jiri Vanek</name>
-            <email>jvanek@redhat.com</email>
-            <organization>Redhat</organization>
-            <organizationUrl>http://www.redhat.com</organizationUrl>
-        </developer>
-    </developers>
 
     <scm>
         <url>https://github.com/openjdk/asmtools</url>
@@ -58,28 +20,30 @@
         <developerConnection>scm:git:https://git@github.com/openjdk/asmtools.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
-
-    <properties>
+  <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+  </properties>
 
     <build>
-        <!-- Although the symlinks are correct, and working, source plugin is unable to resolve them, thus pointing it to the original sources-->
-        <sourceDirectory>../src</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>[SOURCE]</source>
+                    <target>[TARGET]</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M9</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.3.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -89,69 +53,33 @@
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <quiet>true</quiet>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <!--to release, obtain credentials to org.openjdk via https://central.sonatype.org/publish/publish-guide/#create-a-ticket-with-sonatype and working and valid gpg keys
-                    once (both) active, and you have working verified artifacts, you can execute:
-                         mvn clean verify gpg:sign install:install deploy:deploy -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2/ 
-                    to upload to maven staging. With deploy to central (preferably via gui) follow https://central.sonatype.org/publish/publish-guide/ guide
-                    note, that org.openjdk is indeed on https://oss.sonatype.org/ not on https://s01.oss.sonatype.org
-                    Dont forget to have:
-                         <servers>
-                           <server>
-                             <id>ossrh</id>
-                             <username>...</username>
-                             <password>...</password>
-                           </server>
-                         </servers>
-                   in your ~/.m2/settings.xml
-                   See https://issues.sonatype.org/browse/OSSRH-69690 for exmaple
-                   The manual release process is in place, as we do not wont release plugin and simialr to use tags, or even make tags in https://git@github.com/openjdk/asmtools.git (at leaset for now)
-                -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
+    <dependencies>
+      <!-- For tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.9.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opentest4j</groupId>
+            <artifactId>opentest4j</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>2.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

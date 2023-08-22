@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,41 +22,52 @@
  */
 package org.openjdk.asmtools.jasm;
 
+
+
 /**
- *
+ * Base helper class for a Parser.
  */
 public class ParseBase {
 
+    // debug flag
     protected boolean debugFlag;
     protected Scanner scanner;
     protected Parser parser;
-    protected Environment env;
+    protected JasmEnvironment environment;
 
     public ParseBase() {
-        init(null, null, null);
     }
 
-    public void init(Scanner scnr, Parser prsr, Environment envr) {
-        debugFlag = false;
-        scanner = scnr;
-        parser = prsr;
-        env = envr;
+    public void init(Parser parentParser) {
+        this.environment = parentParser.environment;
+        this.scanner = parentParser.scanner;
+        this.parser = parentParser;
     }
 
-    public void enableDebug(boolean debState) {
-        debugFlag = debState;
+    public void init(JasmEnvironment environment, Parser parser) {
+        this.environment = environment;
+        this.scanner = new Scanner(environment);
+        this.parser = parser;
     }
 
-    protected void debugStr(String str) {
+    public void init(JasmEnvironment environment) {
+        this.environment = environment;
+    }
+
+    public void setDebugFlag(boolean value) {
+        debugFlag = value;
+    }
+
+    protected void traceMethodInfoLn() {
+        traceMethodInfoLn(null);
+    }
+
+    protected void traceMethodInfoLn(String str) {
         if (debugFlag) {
-            env.traceln(str);
+            StackTraceElement elem = Thread.currentThread().getStackTrace()[str == null ? 3 : 2];
+            String msg = String.format("%s::%s[%d]%s", elem.getClassName().substring(elem.getClassName().lastIndexOf('.') + 1),
+                    elem.getMethodName(), elem.getLineNumber(), str == null ? "" : " " + str);
+            environment.traceln(msg);
         }
     }
-
-    protected void debugScan(String str) {
-        if (debugFlag) {
-            scanner.debugScan(str);
-        }
-    }
-
 }

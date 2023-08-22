@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
 
 /**
@@ -29,11 +31,11 @@ import java.io.IOException;
  */
 class CPXAttr extends AttrData {
 
-    Argument cell;
+    ConstCell<?> cell;
 
-    public CPXAttr(ClassData cls, String attrName, Argument cell) {
-        super(cls, attrName);
-        this.cell = cell;
+    public CPXAttr(ConstantPool pool, EAttribute attribute, ConstCell<?> cell) {
+        super(pool, attribute);
+        this.cell = classifyConstCell(pool, cell);
     }
 
     public int attrLength() {
@@ -42,7 +44,6 @@ class CPXAttr extends AttrData {
 
     public void write(CheckedDataOutputStream out) throws IOException {
         super.write(out);  // attr name, attr len
-        out.writeShort(cell.arg);
+        out.writeShort(cell.cpIndex);
     }
 } // end class CPXAttr
-

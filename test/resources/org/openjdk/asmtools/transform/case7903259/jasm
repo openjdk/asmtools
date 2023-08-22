@@ -1,0 +1,97 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+package org/openjdk/asmtools/transform/case7903259/data;
+
+public final super class #10 /* BuildString */ version 60:0
+{
+  const #1  = Method      #2.#3;          // java/lang/Object."<init>":"()V"
+  const #2  = class       #4;             // java/lang/Object
+  const #3  = NameAndType #5:#6;          // "<init>":"()V"
+  const #4  = Asciz       "java/lang/Object";
+  const #5  = Asciz       "<init>";
+  const #6  = Asciz       "()V";
+  const #7  = String      #8;             // "Hello"
+  const #8  = Asciz       "Hello";
+  const #9  = Field       #10.#11;        // BuildString.intialString:"Ljava/lang/String;"
+  const #10 = class       #12;            // BuildString
+  const #11 = NameAndType #13:#14;        // intialString:"Ljava/lang/String;"
+  const #12 = Asciz       "org/openjdk/asmtools/transform/case7903259/data/BuildString";
+  const #13 = Asciz       "intialString";
+  const #14 = Asciz       "Ljava/lang/String;";
+  const #15 = Field       #16.#17;        // java/lang/System.out:"Ljava/io/PrintStream;"
+  const #16 = class       #18;            // java/lang/System
+  const #17 = NameAndType #19:#20;        // out:"Ljava/io/PrintStream;"
+  const #18 = Asciz       "java/lang/System";
+  const #19 = Asciz       "out";
+  const #20 = Asciz       "Ljava/io/PrintStream;";
+  const #21 = String      #22;            // " World !"
+  const #22 = Asciz       " World !";
+  const #23 = Method      #24.#25;        // java/lang/String.concat:"(Ljava/lang/String;)Ljava/lang/String;"
+  const #24 = class       #26;            // java/lang/String
+  const #25 = NameAndType #27:#28;        // concat:"(Ljava/lang/String;)Ljava/lang/String;"
+  const #26 = Asciz       "java/lang/String";
+  const #27 = Asciz       "concat";
+  const #28 = Asciz       "(Ljava/lang/String;)Ljava/lang/String;";
+  const #29 = Method      #30.#31;        // java/io/PrintStream.println:"(Ljava/lang/String;)V"
+  const #30 = class       #32;            // java/io/PrintStream
+  const #31 = NameAndType #33:#34;        // println:"(Ljava/lang/String;)V"
+  const #32 = Asciz       "java/io/PrintStream";
+  const #33 = Asciz       "println";
+  const #34 = Asciz       "(Ljava/lang/String;)V";
+  const #35 = Asciz       "ConstantValue";
+  const #36 = Asciz       "Code";
+  const #37 = Asciz       "LineNumberTable";
+  const #38 = Asciz       "LocalVariableTable";
+  const #39 = Asciz       "this";
+  const #40 = Asciz       "Lorg/openjdk/asmtools/transform/case7903259/data/BuildString;";
+  const #41 = Asciz       "printDecoratedString";
+  const #42 = Asciz       "SourceFile";
+  const #43 = Asciz       "BuildString.java";
+
+  private final Field #13:#14 = #7;       // intialString:"Ljava/lang/String;" = String "Hello"
+
+  public Method #5:#6                     // "<init>":"()V"
+    stack  2 locals  1
+  {
+           var               0 #39:#40;   // this:"Lorg/openjdk/asmtools/transform/case7903259/data/BuildString;"
+     0:    aload_0;
+     1:    invokespecial     #1;          // Method java/lang/Object."<init>":"()V"
+     4:    aload_0;
+     5:    ldc               #7;          // String "Hello"
+     7:    putfield          #9;          // Field intialString:"Ljava/lang/String;"
+    10:    return;
+           endvar            0;
+  }
+  public Method #41:#6                    // printDecoratedString:"()V"
+    stack  3 locals  1
+  {
+           var               0 #39:#40;   // this:"Lorg/openjdk/asmtools/transform/case7903259/data/BuildString;"
+     0:    getstatic         #15;         // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     3:    ldc               #7;          // String "Hello"
+     5:    ldc               #21;         // String " World !"
+     7:    invokevirtual     #23;         // Method java/lang/String.concat:"(Ljava/lang/String;)Ljava/lang/String;"
+    10:    invokevirtual     #29;         // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    13:    return;
+           endvar            0;
+  }
+} // end Class BuildString compiled from "BuildString.java"

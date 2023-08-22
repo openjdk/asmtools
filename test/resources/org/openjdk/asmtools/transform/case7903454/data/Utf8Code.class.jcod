@@ -1,0 +1,664 @@
+/*
+ * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+class org/openjdk/asmtools/transform/case7903454/data/Utf8Code {
+  0xCAFEBABE;
+  0;                             // minor version
+  61;                            // version
+  [] {                           // Constant Pool
+    ;                            // first element is empty
+    Field #2 #3;                 // #1
+    class #4;                    // #2
+    NameAndType #5 #6;           // #3
+    Utf8 "org/openjdk/asmtools/transform/case7903454/data/Utf8Code"; // #4
+    Utf8 "line";                 // #5
+    Utf8 "Ljava/lang/String;";   // #6
+    Method #8 #9;                // #7
+    class #10;                   // #8
+    NameAndType #11 #12;         // #9
+    Utf8 "java/lang/String";     // #10
+    Utf8 "codePoints";           // #11
+    Utf8 "()Ljava/util/stream/IntStream;"; // #12
+    InvokeDynamic 0s #14;        // #13
+    NameAndType #15 #16;         // #14
+    Utf8 "test";                 // #15
+    Utf8 "()Ljava/util/function/IntPredicate;"; // #16
+    InterfaceMethod #18 #19;     // #17
+    class #20;                   // #18
+    NameAndType #21 #22;         // #19
+    Utf8 "java/util/stream/IntStream"; // #20
+    Utf8 "filter";               // #21
+    Utf8 "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"; // #22
+    InvokeDynamic 1s #24;        // #23
+    NameAndType #25 #26;         // #24
+    Utf8 "apply";                // #25
+    Utf8 "()Ljava/util/function/IntFunction;"; // #26
+    InterfaceMethod #18 #28;     // #27
+    NameAndType #29 #30;         // #28
+    Utf8 "mapToObj";             // #29
+    Utf8 "(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;"; // #30
+    Method #32 #33;              // #31
+    class #34;                   // #32
+    NameAndType #35 #36;         // #33
+    Utf8 "java/util/stream/Collectors"; // #34
+    Utf8 "joining";              // #35
+    Utf8 "()Ljava/util/stream/Collector;"; // #36
+    InterfaceMethod #38 #39;     // #37
+    class #40;                   // #38
+    NameAndType #41 #42;         // #39
+    Utf8 "java/util/stream/Stream"; // #40
+    Utf8 "collect";              // #41
+    Utf8 "(Ljava/util/stream/Collector;)Ljava/lang/Object;"; // #42
+    InvokeDynamic 2s #14;        // #43
+    InvokeDynamic 3s #24;        // #44
+    Field #2 #46;                // #45
+    NameAndType #47 #6;          // #46
+    Utf8 "نتیجہ";                // #47
+    Method #8 #49;               // #48
+    NameAndType #50 #51;         // #49
+    Utf8 "isEmpty";              // #50
+    Utf8 "()Z";                  // #51
+    Method #2 #53;               // #52
+    NameAndType #54 #55;         // #53
+    Utf8 "вычислитьБольшиеБуквы"; // #54
+    Utf8 "()Ljava/lang/String;"; // #55
+    Method #8 #57;               // #56
+    NameAndType #58 #59;         // #57
+    Utf8 "substring";            // #58
+    Utf8 "(II)Ljava/lang/String;"; // #59
+    Method #2 #61;               // #60
+    NameAndType #62 #55;         // #61
+    Utf8 "вычислитьМаленькиеБуквы"; // #62
+    Method #8 #64;               // #63
+    NameAndType #58 #65;         // #64
+    Utf8 "(I)Ljava/lang/String;"; // #65
+    InvokeDynamic 4s #67;        // #66
+    NameAndType #68 #69;         // #67
+    Utf8 "makeConcatWithConstants"; // #68
+    Utf8 "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"; // #69
+    Method #8 #71;               // #70
+    NameAndType #72 #73;         // #71
+    Utf8 "length";               // #72
+    Utf8 "()I";                  // #73
+    Field #75 #76;               // #74
+    class #77;                   // #75
+    NameAndType #78 #79;         // #76
+    Utf8 "java/lang/System";     // #77
+    Utf8 "out";                  // #78
+    Utf8 "Ljava/io/PrintStream;"; // #79
+    InvokeDynamic 5s #81;        // #80
+    NameAndType #68 #82;         // #81
+    Utf8 "(ILjava/lang/String;)Ljava/lang/String;"; // #82
+    Method #84 #85;              // #83
+    class #86;                   // #84
+    NameAndType #87 #88;         // #85
+    Utf8 "java/io/PrintStream";  // #86
+    Utf8 "println";              // #87
+    Utf8 "(Ljava/lang/String;)V"; // #88
+    Method #90 #91;              // #89
+    class #92;                   // #90
+    NameAndType #93 #94;         // #91
+    Utf8 "java/lang/Object";     // #92
+    Utf8 "<init>";               // #93
+    Utf8 "()V";                  // #94
+    String #96;                  // #95
+    Utf8 "";                     // #96
+    Field #2 #98;                // #97
+    NameAndType #99 #6;          // #98
+    Utf8 "ČeštinaAlphabet";      // #99
+    String #101;                 // #100
+    Utf8 " ";                    // #101
+    Method #8 #103;              // #102
+    NameAndType #104 #69;        // #103
+    Utf8 "replaceAll";           // #104
+    Field #2 #106;               // #105
+    NameAndType #107 #6;         // #106
+    Utf8 "ქართულიენაAlphabet";   // #107
+    Field #2 #109;               // #108
+    NameAndType #110 #6;         // #109
+    Utf8 "ΕλληνικάAlphabet";     // #110
+    InvokeDynamic 6s #112;       // #111
+    NameAndType #68 #113;        // #112
+    Utf8 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"; // #113
+    Method #115 #116;            // #114
+    class #117;                  // #115
+    NameAndType #118 #65;        // #116
+    Utf8 "java/lang/Character";  // #117
+    Utf8 "toString";             // #118
+    Method #115 #120;            // #119
+    NameAndType #121 #122;       // #120
+    Utf8 "isLowerCase";          // #121
+    Utf8 "(I)Z";                 // #122
+    Method #115 #124;            // #123
+    NameAndType #125 #122;       // #124
+    Utf8 "isUpperCase";          // #125
+    String #127;                 // #126
+    Utf8 "A Á B C Č D Ď E É Ě F G H Ch I Í J K L M N Ň O Ó P Q R Ř S Š T Ť U Ú Ů V W X Y Ý Z Ž a á b c č d ď e é ě f g h ch i í j k l m n ň o ó p q r ř s š t ť u ú ů v w x y ý z ž"; // #127
+    String #129;                 // #128
+    Utf8 "Ⴀ Ⴁ Ⴂ Ⴃ Ⴄ Ⴅ Ⴆ Ⴇ Ⴈ Ⴉ Ⴊ Ⴋ Ⴌ Ⴍ Ⴎ Ⴏ Ⴐ Ⴑ Ⴒ Ⴓ Ⴔ Ⴕ Ⴖ Ⴗ Ⴘ Ⴙ Ⴚ Ⴛ Ⴜ Ⴝ Ⴞ Ⴟ Ⴠ Ⴡ Ⴢ Ⴣ Ⴤ Ⴥ ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ ო პ ჟ რ ს ტ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჯ ჰ ჱ ჲ ჳ ჴ ჵ ჶ ჷ ჸ ჹ ჺ ჻ ჼ ჽ ჾ ჿ"; // #129
+    String #131;                 // #130
+    Utf8 "Α α Β β Γ γ Δ δ Ε ε Ζ ζ Η η Θ θ Ι ι Κ κ Λ λ Μ μ Ν ν Ξ ξ Ο ο Π π Ρ ρ Σ σ/ς Τ τ Υ υ Φ φ Χ χ Ψ ψ Ω ω"; // #131
+    Utf8 "Code";                 // #132
+    Utf8 "LineNumberTable";      // #133
+    Utf8 "LocalVariableTable";   // #134
+    Utf8 "this";                 // #135
+    Utf8 "Lorg/openjdk/asmtools/transform/case7903454/data/Utf8Code;"; // #136
+    Utf8 "calculate";            // #137
+    Utf8 "I";                    // #138
+    Utf8 "StackMapTable";        // #139
+    Utf8 "lambda$вычислитьМаленькиеБуквы$3"; // #140
+    Utf8 "cp";                   // #141
+    Utf8 "lambda$вычислитьМаленькиеБуквы$2"; // #142
+    Utf8 "lambda$вычислитьБольшиеБуквы$1"; // #143
+    Utf8 "lambda$вычислитьБольшиеБуквы$0"; // #144
+    Utf8 "<clinit>";             // #145
+    Utf8 "SourceFile";           // #146
+    Utf8 "Utf8Code.java";        // #147
+    Utf8 "BootstrapMethods";     // #148
+    MethodHandle 6b #150;        // #149
+    Method #151 #152;            // #150
+    class #153;                  // #151
+    NameAndType #154 #155;       // #152
+    Utf8 "java/lang/invoke/LambdaMetafactory"; // #153
+    Utf8 "metafactory";          // #154
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"; // #155
+    MethodType #122;             // #156
+    MethodHandle 6b #158;        // #157
+    Method #2 #159;              // #158
+    NameAndType #144 #122;       // #159
+    MethodType #161;             // #160
+    Utf8 "(I)Ljava/lang/Object;"; // #161
+    MethodHandle 6b #163;        // #162
+    Method #2 #164;              // #163
+    NameAndType #143 #65;        // #164
+    MethodType #65;              // #165
+    MethodHandle 6b #167;        // #166
+    Method #2 #168;              // #167
+    NameAndType #142 #122;       // #168
+    MethodHandle 6b #170;        // #169
+    Method #2 #171;              // #170
+    NameAndType #140 #65;        // #171
+    MethodHandle 6b #173;        // #172
+    Method #174 #175;            // #173
+    class #176;                  // #174
+    NameAndType #68 #177;        // #175
+    Utf8 "java/lang/invoke/StringConcatFactory"; // #176
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"; // #177
+    String #179;                 // #178
+    Utf8 "\u0001\u0001";         // #179
+    String #181;                 // #180
+    Utf8 "\u0001 \u0001";        // #181
+    String #183;                 // #182
+    Utf8 "\u0001\u0001\u0001";   // #183
+    Utf8 "InnerClasses";         // #184
+    class #186;                  // #185
+    Utf8 "java/lang/invoke/MethodHandles$Lookup"; // #186
+    class #188;                  // #187
+    Utf8 "java/lang/invoke/MethodHandles"; // #188
+    Utf8 "Lookup";               // #189
+    Utf8 "SourceDebugExtension"; // #190
+  }
+
+  0x0021;                        // access
+  #2;                            // this_cpx
+  #90;                           // super_cpx
+
+  [] {                           // Interfaces
+  }                              // end of Interfaces
+
+  [] {                           // Fields
+    {                            // field
+      0x0008;                    // access
+      #99;                       // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field
+      0x0008;                    // access
+      #107;                      // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field
+      0x0008;                    // access
+      #110;                      // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field
+      0x0000;                    // access
+      #5;                        // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+      }                          // end of Attributes
+    }
+    ;
+    {                            // field
+      0x0002;                    // access
+      #47;                       // name_index
+      #6;                        // descriptor_index
+      [] {                       // Attributes
+      }                          // end of Attributes
+    }
+  }                              // end of Fields
+
+  [] {                           // Methods
+    {                            // method
+      0x0002;                    // access
+      #54;                       // name_index
+      #55;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          2;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x2AB40001B60007BA;
+            0x000D0000B9001102;
+            0x00BA00170000B900;
+            0x1B0200B8001FB900;
+            0x250200C00008B0;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  21;
+                27  22;
+                38  21;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 39 135 136 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x0002;                    // access
+      #62;                       // name_index
+      #55;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          2;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x2AB40001B60007BA;
+            0x002B0000B9001102;
+            0x00BA002C0000B900;
+            0x1B0200B8001FB900;
+            0x250200C00008B0;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  26;
+                27  27;
+                38  26;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 39 135 136 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x0001;                    // access
+      #137;                      // name_index
+      #73;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          4;                     // max_stack
+          2;                     // max_locals
+          Bytes[]{
+            0x2AB4002DB6003099;
+            0x001F2A2AB6003403;
+            0x1014B600382AB600;
+            0x3C105AB6003FBA00;
+            0x420000B5002D2AB4;
+            0x002DB600463CB200;
+            0x4A1B2AB4002DBA00;
+            0x500000B600531BAC;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  31;
+                10  32;
+                38  33;
+                46  34;
+                62  35;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 64 135 136 0;
+                46 18 72 138 1;
+              }
+            }                    // end of LocalVariableTable
+            ;
+            Attr(#139) {         // StackMapTable
+              [] {               //
+                38b;             // same_frame
+              }
+            }                    // end of StackMapTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x0001;                    // access
+      #93;                       // name_index
+      #94;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          6;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x2AB700592A125FB5;
+            0x002D2AB200611264;
+            0x125FB60066B20069;
+            0x1264125FB60066B2;
+            0x006C1264125FB600;
+            0x66BA006F0000B500;
+            0x01B1;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  38;
+                4  18;
+                10  39;
+                28  40;
+                38  41;
+                49  42;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 50 135 136 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x100A;                    // access
+      #140;                      // name_index
+      #65;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x1AB80072B0;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  26;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 5 141 138 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x100A;                    // access
+      #142;                      // name_index
+      #122;                      // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x1AB80077AC;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  26;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 5 141 138 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x100A;                    // access
+      #143;                      // name_index
+      #65;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x1AB80072B0;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  21;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 5 141 138 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x100A;                    // access
+      #144;                      // name_index
+      #122;                      // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          1;                     // max_stack
+          1;                     // max_locals
+          Bytes[]{
+            0x1AB8007BAC;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  21;
+              }
+            }                    // end of LineNumberTable
+            ;
+            Attr(#134) {         // LocalVariableTable
+              [] {               // LocalVariableTable
+                0 5 141 138 0;
+              }
+            }                    // end of LocalVariableTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+    ;
+    {                            // method
+      0x0008;                    // access
+      #145;                      // name_index
+      #94;                       // descriptor_index
+      [] {                       // Attributes
+        Attr(#132) {             // Code
+          1;                     // max_stack
+          0;                     // max_locals
+          Bytes[]{
+            0x127EB300611280B3;
+            0x00691282B3006CB1;
+          }
+          [] {                   // Traps
+          }                      // end of Traps
+          [] {                   // Attributes
+            Attr(#133) {         // LineNumberTable
+              [] {               // line_number_table
+                0  6;
+                5  10;
+                10  14;
+              }
+            }                    // end of LineNumberTable
+          }                      // end of Attributes
+        }                        // end of Code
+      }                          // end of Attributes
+    }
+  }                              // end of Methods
+
+  [] {                           // Attributes
+    Attr(#146) {                 // SourceFile
+      #147;
+    }                            // end of SourceFile
+    ;
+    Attr(#148) {                 // BootstrapMethods
+      [] {                       // bootstrap_methods
+        {                        // bootstrap_method
+          #149;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #156;
+            #157;
+            #156;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #149;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #160;
+            #162;
+            #165;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #149;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #156;
+            #166;
+            #156;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #149;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #160;
+            #169;
+            #165;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #172;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #178;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #172;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #180;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+        ;
+        {                        // bootstrap_method
+          #172;                  // bootstrap_method_ref
+          [] {                   // bootstrap_arguments
+            #182;
+          }                      // bootstrap_arguments
+        }                        // bootstrap_method
+      }
+    }                            // end of BootstrapMethods
+    ;
+    Attr(#184) {                 // InnerClasses
+      [] {                       // classes
+        #185 #187 #189 25;
+      }
+    }                            // end of InnerClasses
+    ;
+    Attr(#190) {                 // SourceDebugExtension
+          "\u0000\tThe Memory Model determines what values can be read at every point in the program.\n";
+          "The actions of each thread in isolation must behave as governed by the semantics of ";
+          "that thread, with the exception that the values seen by each read are determined by ";
+          "the memory model.\nWhen we refer to this, we say that the program obeys intra-thread ";
+          "semantics.\n\tIntra-thread semantics are the semantics for single-threaded programs, ";
+          "and allow the complete prediction of the behavior of a thread based on the values ";
+          "seen by read actions within the thread.\n\tTo determine if the actions of thread \'t\' in ";
+          "an execution are legal, we simply evaluate the implementation of thread \"t\" as it would ";
+          "be performed in a single-threaded context, as defined in the rest of this specification.";
+    }                            // end of SourceDebugExtension
+  }                              // end of Attributes
+}

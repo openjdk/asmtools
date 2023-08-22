@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ */
+package  javasoft/sqe/tests/api/java/lang/invoke/MethodHandles/Lookup;
+
+interface  TestInterface01n01 version 51:0
+{
+  public static final Field iField:I	= int 255;
+
+  public abstract Method getTestResult:"()I";
+  public Method xAA:"()I"
+	stack 1 locals 1
+  {
+		sipush	170;
+		ireturn;
+  }
+  public static Method xBB:"()I"
+	stack 1 locals 0
+  {
+		sipush	187;
+		ireturn;
+  }
+
+} // end Class TestInterface01n01

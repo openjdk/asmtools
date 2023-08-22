@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 1996, 2018 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package javasoft/sqe/tests/vm/classfmt/clf/clfacc006/clfacc00610m1;
+
+public class  clfacc00610m10p {
+
+public Method <init>:"()V"
+	stack 4 locals 1
+{
+	aload_0;
+	invokespecial  Method java/lang/Object.<init>:"()V";
+
+	iconst_1;
+	anewarray class clfacc00610m10p_;
+	pop;
+
+       	return;
+}
+}
+
+private class clfacc00610m10p_ {
+
+public Method <init>:"()V"
+	stack 1 locals 1
+{
+	aload_0;
+	invokespecial  Method java/lang/Object.<init>:"()V";
+	return;
+}
+}

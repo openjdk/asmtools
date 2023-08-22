@@ -22,8 +22,12 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Base class of the "classes[]" data of attributes
@@ -46,11 +50,13 @@ import java.util.List;
  */
 public class ClassArrayAttr extends AttrData {
 
-    List<ConstantPool.ConstCell> classes;
+    List<ConstCell> classes = new ArrayList<>();
 
-    public ClassArrayAttr(String attributeName, ClassData cdata, List<ConstantPool.ConstCell> classes) {
-        super(cdata, attributeName);
-        this.classes = classes;
+    public ClassArrayAttr(ConstantPool pool, EAttribute attribute, List<ConstCell> constCellList) {
+        super(pool, attribute);
+        for (ConstCell<?> cell : constCellList) {
+            this.classes.add(classifyConstCell(pool, cell));
+        }
     }
 
     @Override
@@ -62,8 +68,8 @@ public class ClassArrayAttr extends AttrData {
     public void write(CheckedDataOutputStream out) throws IOException {
         super.write(out);
         out.writeShort(classes.size());
-        for (ConstantPool.ConstCell c : classes) {
-            out.writeShort(c.arg);
+        for (ConstCell c : classes) {
+            out.writeShort(c.cpIndex);
         }
     }
 }

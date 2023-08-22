@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,10 +23,13 @@
 package org.openjdk.asmtools.jdis;
 
 
-import org.openjdk.asmtools.jasm.Tables;
+import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.structure.EAttribute;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 
@@ -35,34 +38,43 @@ import static java.lang.String.format;
  * <p>
  * since class file 49.0
  */
-public class SignatureData {
-    ClassData cls;
-    int signature_index;
-    private Options options = Options.OptionObject();
+public class SignatureData extends MemberData<ClassData> {
 
-    public SignatureData(ClassData cls) {
-        this.cls = cls;
+    private int index;
+
+    public SignatureData(ClassData classData) {
+        super(classData);
     }
 
     public SignatureData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
         if (attribute_length != 2) {
-            throw new ClassFormatError(format("%s: Invalid attribute length #%d", Tables.AttrTag.ATT_Signature.printval(), attribute_length));
+            throw new FormatError(environment.getLogger(),
+                    "err.invalid.attribute.length", EAttribute.ATT_Signature.printValue(), attribute_length);
         }
-        signature_index = in.readUnsignedShort();
+        index = in.readUnsignedShort();
         return this;
-    }
-
-    public void print(String bodyPrefix, String commentPrefix) {
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        if (pr_cpx) {
-            cls.out.print(format("%s#%d%s%s", bodyPrefix, signature_index, commentPrefix, cls.pool.StringValue(signature_index)));
-        } else {
-            cls.out.print(format("%s%s%s", bodyPrefix, cls.pool.getName(signature_index), commentPrefix));
-        }
     }
 
     @Override
     public String toString() {
-        return format("signature[%d]=%s", signature_index, cls.pool.StringValue(signature_index));
+        return format("signature[%d]=%s", getIndex(), pool.StringValue(getIndex()));
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String asString() {
+        return pool.StringValue(index);
+    }
+
+    /**
+     * @param checkRange function to check that index belongs CP
+     * @return string presentation of index and signature used to print
+     * ClassFile, field_info, method_info, or record_component_info
+     */
+    public Pair<String, String> getPrintInfo(Function<Integer, Boolean> checkRange) {
+        return new Pair<>(format(":#%d", index),
+                checkRange.apply(index) ? format(":%s", pool.StringValue(index)) : ":?? invalid index");
     }
 }

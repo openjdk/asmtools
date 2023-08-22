@@ -22,9 +22,6 @@
  */
 package org.openjdk.asmtools.jdis;
 
-/**
- *
- */
 public class Utils {
 
     static public String javaName(String name) {
@@ -36,7 +33,7 @@ public class Utils {
             return "\"\"";
         }
         char cc = '/';
-fullname:
+        fullname:
         { // xxx/yyy/zzz
             for (int k = 0; k < len; k++) {
                 char c = name.charAt(k);
@@ -57,22 +54,6 @@ fullname:
     }
 
     static public boolean isClassArrayDescriptor(String name) {
-        boolean retval = false;
-        if (name != null) {
-            if (name.startsWith("[")) {
-                retval = true;
-            }
-        }
-
-        return retval;
+        return (name != null) && name.startsWith("[");
     }
-
-    static public String commentString(String  str) {
-        return commentString(str,"// ");
-    }
-
-    static public String commentString(String  str, String prefix) {
-        return prefix + str.replace("\n", "\n" + prefix);
-    }
-
 }

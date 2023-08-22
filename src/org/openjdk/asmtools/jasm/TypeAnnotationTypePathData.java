@@ -25,24 +25,24 @@ package org.openjdk.asmtools.jasm;
 import org.openjdk.asmtools.jasm.TypeAnnotationTypes.TypePathEntry;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * JVMS 4.7.20.2. The type_path structure
- *
+ * <p>
  * type_path {
- *     u1 path_length;
- *     {   u1 type_path_kind;
- *         u1 type_argument_index;
- *     } path[path_length];
+ * u1 path_length;
+ * {   u1 type_path_kind;
+ * u1 type_argument_index;
+ * } path[path_length];
  * }
  */
-public class TypeAnnotationTypePathData implements Data {
+public class TypeAnnotationTypePathData implements DataWriter {
 
     private ArrayList<TypePathEntry> typePathEntries = new ArrayList<>();
 
-    public void addTypePathEntry( TypePathEntry entry) {
+    public void addTypePathEntry(TypePathEntry entry) {
         typePathEntries.add(entry);
     }
 
@@ -60,39 +60,21 @@ public class TypeAnnotationTypePathData implements Data {
         return 1 + typePathEntries.size() * 2;
     }
 
-    public String toString(int tabLevel) {
-        String buffer = "";
-        if( typePathEntries.size() > 0 ) {
-        StringBuilder sb = new StringBuilder(tabString(tabLevel));
-        sb.append(" [ ");
-        boolean first = true;
-        for (TypePathEntry entry : typePathEntries) {
-                if (!first)
-                    sb.append(", ");
-                first = false;
-            sb.append(entry.toString());
-            }
-            sb.append("]");
-        buffer = sb.toString();
+    @Override
+    public String toString() {
+        if (typePathEntries.size() > 0) {
+            StringBuilder sb = new StringBuilder("{ ");
+            sb.append(typePathEntries.stream().map(e -> e.toString()).collect(Collectors.joining(", ")));
+            sb.append(" }");
+            return sb.toString();
         }
-        return buffer;
+        return "";
     }
 
     /**
-     * jdis: print the type_path structure
+     * jdis: get a string representation of type path structure for kids printing
      */
-    public void print(PrintWriter out, String tab) {
-        if( typePathEntries.size() > 0 ) {
-            out.print(tab + " {");
-            boolean first = true;
-            for (TypePathEntry entry : typePathEntries) {
-                if (!first) {
-                    out.print(", ");
-                }
-                first = false;
-                out.print(entry.toString());
-            }
-            out.print(tab + "} ");
-        }
+    public String toPrintString() {
+        return toString();
     }
 }

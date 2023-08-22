@@ -1,0 +1,564 @@
+//
+// Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+//
+// This code is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License version 2 only, as
+// published by the Free Software Foundation.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// version 2 for more details (a copy is included in the LICENSE file that
+// accompanied this code).
+//
+// You should have received a copy of the GNU General Public License version
+// 2 along with this work; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+// or visit www.oracle.com if you need additional information or have any
+// questions.
+//
+package org/openjdk/asmtools/transform/case8302260;
+
+public super class #7 /* TestRunner */ implements #157 /* org/openjdk/asmtools/lib/transform/ITestRunner */ version 60:0
+{
+  const #1   = Method          #2.#3;          // java/lang/Object."<init>":"()V"
+  const #2   = class           #4;             // java/lang/Object
+  const #3   = NameAndType     #5:#6;          // "<init>":"()V"
+  const #4   = Asciz           "java/lang/Object";
+  const #5   = Asciz           "<init>";
+  const #6   = Asciz           "()V";
+  const #7   = class           #8;             // TestRunner
+  const #8   = Asciz           "org/openjdk/asmtools/transform/case8302260/TestRunner";
+  const #9   = Method          #10.#11;        // java/lang/Class.getPackageName:"()Ljava/lang/String;"
+  const #10  = class           #12;            // java/lang/Class
+  const #11  = NameAndType     #13:#14;        // getPackageName:"()Ljava/lang/String;"
+  const #12  = Asciz           "java/lang/Class";
+  const #13  = Asciz           "getPackageName";
+  const #14  = Asciz           "()Ljava/lang/String;";
+  const #15  = InvokeDynamic   0:#16;          // #0:makeConcatWithConstants:"(Ljava/lang/String;)Ljava/lang/String;"
+  const #16  = NameAndType     #17:#18;        // makeConcatWithConstants:"(Ljava/lang/String;)Ljava/lang/String;"
+  const #17  = Asciz           "makeConcatWithConstants";
+  const #18  = Asciz           "(Ljava/lang/String;)Ljava/lang/String;";
+  const #19  = Field           #7.#20;         // TestRunner.superPackage:"Ljava/lang/String;"
+  const #20  = NameAndType     #21:#22;        // superPackage:"Ljava/lang/String;"
+  const #21  = Asciz           "superPackage";
+  const #22  = Asciz           "Ljava/lang/String;";
+  const #23  = class           #24;            // org/openjdk/asmtools/transform/case8302260/data/CTestClass
+  const #24  = Asciz           "org/openjdk/asmtools/transform/case8302260/data/CTestClass";
+  const #25  = String          #26;            // "stringField"
+  const #26  = Asciz           "stringField";
+  const #27  = class           #28;            // java/lang/String
+  const #28  = Asciz           "java/lang/String";
+  const #29  = Method          #7.#30;         // TestRunner.testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+  const #30  = NameAndType     #31:#32;        // testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+  const #31  = Asciz           "testFieldRef";
+  const #32  = Asciz           "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;";
+  const #33  = String          #34;            // "CTestClass"
+  const #34  = Asciz           "CTestClass";
+  const #35  = InterfaceMethod #36.#37;        // java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+  const #36  = class           #38;            // java/lang/constant/ClassDesc
+  const #37  = NameAndType     #39:#40;        // of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+  const #38  = Asciz           "java/lang/constant/ClassDesc";
+  const #39  = Asciz           "of";
+  const #40  = Asciz           "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;";
+  const #41  = Field           #42.#43;        // java/lang/constant/ConstantDescs.CD_String:"Ljava/lang/constant/ClassDesc;"
+  const #42  = class           #44;            // java/lang/constant/ConstantDescs
+  const #43  = NameAndType     #45:#46;        // CD_String:"Ljava/lang/constant/ClassDesc;"
+  const #44  = Asciz           "java/lang/constant/ConstantDescs";
+  const #45  = Asciz           "CD_String";
+  const #46  = Asciz           "Ljava/lang/constant/ClassDesc;";
+  const #47  = Method          #7.#48;         // TestRunner.testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+  const #48  = NameAndType     #49:#50;        // testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+  const #49  = Asciz           "testFieldValue";
+  const #50  = Asciz           "(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V";
+  const #51  = String          #52;            // "longField"
+  const #52  = Asciz           "longField";
+  const #53  = Field           #54.#55;        // java/lang/Long.TYPE:"Ljava/lang/Class;"
+  const #54  = class           #56;            // java/lang/Long
+  const #55  = NameAndType     #57:#58;        // TYPE:"Ljava/lang/Class;"
+  const #56  = Asciz           "java/lang/Long";
+  const #57  = Asciz           "TYPE";
+  const #58  = Asciz           "Ljava/lang/Class;";
+  const #59  = Field           #42.#60;        // java/lang/constant/ConstantDescs.CD_long:"Ljava/lang/constant/ClassDesc;"
+  const #60  = NameAndType     #61:#46;        // CD_long:"Ljava/lang/constant/ClassDesc;"
+  const #61  = Asciz           "CD_long";
+  const #62  = String          #63;            // "stringField2"
+  const #63  = Asciz           "stringField2";
+  const #64  = String          #65;            // "longField2"
+  const #65  = Asciz           "longField2";
+  const #66  = String          #67;            // "stringField3"
+  const #67  = Asciz           "stringField3";
+  const #68  = String          #69;            // "longField3"
+  const #69  = Asciz           "longField3";
+  const #70  = Field           #71.#72;        // java/lang/System.out:"Ljava/io/PrintStream;"
+  const #71  = class           #73;            // java/lang/System
+  const #72  = NameAndType     #74:#75;        // out:"Ljava/io/PrintStream;"
+  const #73  = Asciz           "java/lang/System";
+  const #74  = Asciz           "out";
+  const #75  = Asciz           "Ljava/io/PrintStream;";
+  const #76  = Method          #77.#78;        // java/lang/invoke/VarHandle.get:"()Ljava/lang/Object;"
+  const #77  = class           #79;            // java/lang/invoke/VarHandle
+  const #78  = NameAndType     #80:#81;        // get:"()Ljava/lang/Object;"
+  const #79  = Asciz           "java/lang/invoke/VarHandle";
+  const #80  = Asciz           "get";
+  const #81  = Asciz           "()Ljava/lang/Object;";
+  const #82  = InvokeDynamic   1:#83;          // #1:makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;"
+  const #83  = NameAndType     #17:#84;        // makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;"
+  const #84  = Asciz           "(Ljava/lang/Object;)Ljava/lang/String;";
+  const #85  = Method          #86.#87;        // java/io/PrintStream.print:"(Ljava/lang/String;)V"
+  const #86  = class           #88;            // java/io/PrintStream
+  const #87  = NameAndType     #89:#90;        // print:"(Ljava/lang/String;)V"
+  const #88  = Asciz           "java/io/PrintStream";
+  const #89  = Asciz           "print";
+  const #90  = Asciz           "(Ljava/lang/String;)V";
+  const #91  = class           #92;            // java/lang/Throwable
+  const #92  = Asciz           "java/lang/Throwable";
+  const #93  = String          #94;            // " 1: failed"
+  const #94  = Asciz           " 1: failed";
+  const #95  = Method          #86.#96;        // java/io/PrintStream.println:"(Ljava/lang/String;)V"
+  const #96  = NameAndType     #97:#90;        // println:"(Ljava/lang/String;)V"
+  const #97  = Asciz           "println";
+  const #98  = Field           #71.#99;        // java/lang/System.err:"Ljava/io/PrintStream;"
+  const #99  = NameAndType     #100:#75;       // err:"Ljava/io/PrintStream;"
+  const #100 = Asciz           "err";
+  const #101 = Method          #91.#102;       // java/lang/Throwable.printStackTrace:"(Ljava/io/PrintStream;)V"
+  const #102 = NameAndType     #103:#104;      // printStackTrace:"(Ljava/io/PrintStream;)V"
+  const #103 = Asciz           "printStackTrace";
+  const #104 = Asciz           "(Ljava/io/PrintStream;)V";
+  const #105 = Method          #106.#107;      // java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+  const #106 = class           #108;           // java/lang/invoke/MethodHandles
+  const #107 = NameAndType     #109:#110;      // lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+  const #108 = Asciz           "java/lang/invoke/MethodHandles";
+  const #109 = Asciz           "lookup";
+  const #110 = Asciz           "()Ljava/lang/invoke/MethodHandles$Lookup;";
+  const #111 = InterfaceMethod #36.#112;       // java/lang/constant/ClassDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;"
+  const #112 = NameAndType     #113:#114;      // resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;"
+  const #113 = Asciz           "resolveConstantDesc";
+  const #114 = Asciz           "(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;";
+  const #115 = Method          #116.#117;      // java/lang/invoke/MethodHandles$Lookup.findStaticVarHandle:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+  const #116 = class           #118;           // java/lang/invoke/MethodHandles$Lookup
+  const #117 = NameAndType     #119:#32;       // findStaticVarHandle:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+  const #118 = Asciz           "java/lang/invoke/MethodHandles$Lookup";
+  const #119 = Asciz           "findStaticVarHandle";
+  const #120 = InvokeDynamic   2:#83;          // #2:makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;"
+  const #121 = String          #122;           // " 2: failed"
+  const #122 = Asciz           " 2: failed";
+  const #123 = Method          #77.#124;       // java/lang/invoke/VarHandle.describeConstable:"()Ljava/util/Optional;"
+  const #124 = NameAndType     #125:#126;      // describeConstable:"()Ljava/util/Optional;"
+  const #125 = Asciz           "describeConstable";
+  const #126 = Asciz           "()Ljava/util/Optional;";
+  const #127 = Method          #128.#129;      // java/util/Optional.orElseThrow:"()Ljava/lang/Object;"
+  const #128 = class           #130;           // java/util/Optional
+  const #129 = NameAndType     #131:#81;       // orElseThrow:"()Ljava/lang/Object;"
+  const #130 = Asciz           "java/util/Optional";
+  const #131 = Asciz           "orElseThrow";
+  const #132 = class           #133;           // java/lang/invoke/VarHandle$VarHandleDesc
+  const #133 = Asciz           "java/lang/invoke/VarHandle$VarHandleDesc";
+  const #134 = Method          #132.#135;      // java/lang/invoke/VarHandle$VarHandleDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;"
+  const #135 = NameAndType     #113:#136;      // resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;"
+  const #136 = Asciz           "(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;";
+  const #137 = InvokeDynamic   3:#83;          // #3:makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;"
+  const #138 = String          #139;           // " 3: failed"
+  const #139 = Asciz           " 3: failed";
+  const #140 = Method          #132.#141;      // java/lang/invoke/VarHandle$VarHandleDesc.ofStaticField:"(Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)Ljava/lang/invoke/VarHandle$VarHandleDesc;"
+  const #141 = NameAndType     #142:#143;      // ofStaticField:"(Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)Ljava/lang/invoke/VarHandle$VarHandleDesc;"
+  const #142 = Asciz           "ofStaticField";
+  const #143 = Asciz           "(Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)Ljava/lang/invoke/VarHandle$VarHandleDesc;";
+  const #144 = InvokeDynamic   4:#83;          // #4:makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;"
+  const #145 = String          #146;           // " 4: failed"
+  const #146 = Asciz           " 4: failed";
+  const #147 = InvokeDynamic   5:#16;          // #5:makeConcatWithConstants:"(Ljava/lang/String;)Ljava/lang/String;"
+  const #148 = class           #149;           // java/lang/NoSuchFieldException
+  const #149 = Asciz           "java/lang/NoSuchFieldException";
+  const #150 = class           #151;           // java/lang/IllegalAccessException
+  const #151 = Asciz           "java/lang/IllegalAccessException";
+  const #152 = String          #153;           // "0: failed"
+  const #153 = Asciz           "0: failed";
+  const #154 = Method          #155.#102;      // java/lang/ReflectiveOperationException.printStackTrace:"(Ljava/io/PrintStream;)V"
+  const #155 = class           #156;           // java/lang/ReflectiveOperationException
+  const #156 = Asciz           "java/lang/ReflectiveOperationException";
+  const #157 = class           #158;           // org/openjdk/asmtools/lib/transform/ITestRunner
+  const #158 = Asciz           "org/openjdk/asmtools/lib/transform/ITestRunner";
+  const #159 = Asciz           "Code";
+  const #160 = Asciz           "LineNumberTable";
+  const #161 = Asciz           "LocalVariableTable";
+  const #162 = Asciz           "this";
+  const #163 = Asciz           "Lorg/openjdk/asmtools/transform/case8302260/TestRunner;";
+  const #164 = Asciz           "run";
+  const #165 = Asciz           "vh";
+  const #166 = Asciz           "Ljava/lang/invoke/VarHandle;";
+  const #167 = Asciz           "e";
+  const #168 = Asciz           "Ljava/lang/Throwable;";
+  const #169 = Asciz           "vh2";
+  const #170 = Asciz           "vhd";
+  const #171 = Asciz           "Ljava/lang/invoke/VarHandle$VarHandleDesc;";
+  const #172 = Asciz           "obj";
+  const #173 = Asciz           "t";
+  const #174 = Asciz           "desc";
+  const #175 = Asciz           "name";
+  const #176 = Asciz           "fdesc";
+  const #177 = Asciz           "StackMapTable";
+  const #178 = Asciz           "Ljava/lang/ReflectiveOperationException;";
+  const #179 = Asciz           "rec";
+  const #180 = Asciz           "fname";
+  const #181 = Asciz           "type";
+  const #182 = Asciz           "LocalVariableTypeTable";
+  const #183 = Asciz           "Ljava/lang/Class<*>;";
+  const #184 = Asciz           "Signature";
+  const #185 = Asciz           "(Ljava/lang/Class<*>;Ljava/lang/String;Ljava/lang/Class<*>;)Ljava/lang/invoke/VarHandle;";
+  const #186 = Asciz           "SourceFile";
+  const #187 = Asciz           "TestRunner.java";
+  const #188 = Asciz           "BootstrapMethods";
+  const #189 = MethodHandle    6:#190;         // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #190 = Method          #191.#192;      // java/lang/invoke/StringConcatFactory.makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #191 = class           #193;           // java/lang/invoke/StringConcatFactory
+  const #192 = NameAndType     #17:#194;       // makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #193 = Asciz           "java/lang/invoke/StringConcatFactory";
+  const #194 = Asciz           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+  const #195 = String          #196;           // ".data"
+  const #196 = Asciz           ".data";
+  const #197 = String          #198;           // " 1: "
+  const #198 = Asciz           " 1: ";
+  const #199 = String          #200;           // " 2: "
+  const #200 = Asciz           " 2: ";
+  const #201 = String          #202;           // " 3: "
+  const #202 = Asciz           " 3: ";
+  const #203 = String          #204;           // " 4: "
+  const #204 = Asciz           " 4: ";
+  const #205 = String          #206;           // "0: "
+  const #206 = Asciz           "0: ";
+  const #207 = Asciz           "InnerClasses";
+  const #208 = Asciz           "Lookup";
+  const #209 = Asciz           "VarHandleDesc";
+
+  final Field #21:#22;                         // superPackage:"Ljava/lang/String;"
+
+  public Method #5:#6                          // "<init>":"()V"
+    stack  2 locals  1
+  {
+           var               0 #162:#163;      // this:"Lorg/openjdk/asmtools/transform/case8302260/TestRunner;"
+     0:    aload_0;
+     1:    invokespecial     #1;               // Method java/lang/Object."<init>":"()V"
+     4:    aload_0;
+     5:    ldc               #7;               // class TestRunner
+     7:    invokevirtual     #9;               // Method java/lang/Class.getPackageName:"()Ljava/lang/String;"
+    10:    invokedynamic     #15;              // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/String;)Ljava/lang/String;" {
+                                               //   String ".data"
+                                               // }
+    15:    putfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    18:    return;
+           endvar            0;
+  }
+  public Method #164:#6                        // run:"()V"
+    stack  5 locals  2
+  {
+           var               0 #162:#163;      // this:"Lorg/openjdk/asmtools/transform/case8302260/TestRunner;"
+     0:    aload_0;
+     1:    ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+     3:    ldc               #25;              // String "stringField"
+     5:    ldc               #27;              // class java/lang/String
+     7:    invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    10:    astore_1;
+           var               1 #165:#166;      // vh:"Ljava/lang/invoke/VarHandle;"
+    11:    aload_0;
+    12:    aload_1;
+    13:    aload_0;
+    14:    getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    17:    ldc               #33;              // String "CTestClass"
+    19:    invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    22:    ldc               #25;              // String "stringField"
+    24:    getstatic         #41;              // Field java/lang/constant/ConstantDescs.CD_String:"Ljava/lang/constant/ClassDesc;"
+    27:    invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    30:    aload_0;
+    31:    ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+    33:    ldc               #51;              // String "longField"
+    35:    getstatic         #53;              // Field java/lang/Long.TYPE:"Ljava/lang/Class;"
+    38:    invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    41:    astore_1;
+    42:    aload_0;
+    43:    aload_1;
+    44:    aload_0;
+    45:    getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    48:    ldc               #33;              // String "CTestClass"
+    50:    invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    53:    ldc               #51;              // String "longField"
+    55:    getstatic         #59;              // Field java/lang/constant/ConstantDescs.CD_long:"Ljava/lang/constant/ClassDesc;"
+    58:    invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    61:    aload_0;
+    62:    ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+    64:    ldc               #62;              // String "stringField2"
+    66:    ldc               #27;              // class java/lang/String
+    68:    invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    71:    astore_1;
+    72:    aload_0;
+    73:    aload_1;
+    74:    aload_0;
+    75:    getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    78:    ldc               #33;              // String "CTestClass"
+    80:    invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    83:    ldc               #62;              // String "stringField2"
+    85:    getstatic         #41;              // Field java/lang/constant/ConstantDescs.CD_String:"Ljava/lang/constant/ClassDesc;"
+    88:    invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    91:    aload_0;
+    92:    ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+    94:    ldc               #64;              // String "longField2"
+    96:    getstatic         #53;              // Field java/lang/Long.TYPE:"Ljava/lang/Class;"
+    99:    invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    102:   astore_1;
+    103:   aload_0;
+    104:   aload_1;
+    105:   aload_0;
+    106:   getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    109:   ldc               #33;              // String "CTestClass"
+    111:   invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    114:   ldc               #64;              // String "longField2"
+    116:   getstatic         #59;              // Field java/lang/constant/ConstantDescs.CD_long:"Ljava/lang/constant/ClassDesc;"
+    119:   invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    122:   aload_0;
+    123:   ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+    125:   ldc               #66;              // String "stringField3"
+    127:   ldc               #27;              // class java/lang/String
+    129:   invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    132:   astore_1;
+    133:   aload_0;
+    134:   aload_1;
+    135:   aload_0;
+    136:   getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    139:   ldc               #33;              // String "CTestClass"
+    141:   invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    144:   ldc               #66;              // String "stringField3"
+    146:   getstatic         #41;              // Field java/lang/constant/ConstantDescs.CD_String:"Ljava/lang/constant/ClassDesc;"
+    149:   invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    152:   aload_0;
+    153:   ldc               #23;              // class org/openjdk/asmtools/transform/case8302260/data/CTestClass
+    155:   ldc               #68;              // String "longField3"
+    157:   getstatic         #53;              // Field java/lang/Long.TYPE:"Ljava/lang/Class;"
+    160:   invokevirtual     #29;              // Method testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    163:   astore_1;
+    164:   aload_0;
+    165:   aload_1;
+    166:   aload_0;
+    167:   getfield          #19;              // Field superPackage:"Ljava/lang/String;"
+    170:   ldc               #33;              // String "CTestClass"
+    172:   invokestatic      #35;              // InterfaceMethod java/lang/constant/ClassDesc.of:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/constant/ClassDesc;"
+    175:   ldc               #68;              // String "longField3"
+    177:   getstatic         #59;              // Field java/lang/constant/ConstantDescs.CD_long:"Ljava/lang/constant/ClassDesc;"
+    180:   invokevirtual     #47;              // Method testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    183:   return;
+           endvar            0,1;
+  }
+  Method #49:#50                               // testFieldValue:"(Ljava/lang/invoke/VarHandle;Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)V"
+    stack  5 locals  7
+  {
+           var               0 #162:#163;      // this:"Lorg/openjdk/asmtools/transform/case8302260/TestRunner;"
+           var               1 #165:#166;      // vh:"Ljava/lang/invoke/VarHandle;"
+           var               2 #174:#46;       // desc:"Ljava/lang/constant/ClassDesc;"
+           var               3 #175:#22;       // name:"Ljava/lang/String;"
+           var               4 #176:#46;       // fdesc:"Ljava/lang/constant/ClassDesc;"
+     0:    aload_1;
+     1:    ifnull            40;
+           try               T0;
+     4:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     7:    aload_1;
+     8:    invokevirtual     #76;              // Method java/lang/invoke/VarHandle.get:"()Ljava/lang/Object;"
+    11:    invokedynamic     #82;              // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;" {
+                                               //   String " 1: "
+                                               // }
+    16:    invokevirtual     #85;              // Method java/io/PrintStream.print:"(Ljava/lang/String;)V"
+           endtry            T0;
+    19:    goto              40;
+           catch             T0 #91;           // java/lang/Throwable
+    22:    stack_frame_type  stack1;
+           stack_map         #91;              // class java/lang/Throwable;
+           astore            5;
+           var               5 #167:#168;      // e:"Ljava/lang/Throwable;"
+    24:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    27:    ldc               #93;              // String " 1: failed"
+    29:    invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    32:    aload             5;
+    34:    getstatic         #98;              // Field java/lang/System.err:"Ljava/io/PrintStream;"
+    37:    invokevirtual     #101;             // Method java/lang/Throwable.printStackTrace:"(Ljava/io/PrintStream;)V"
+           endvar            5;
+           try               T1;
+    40:    stack_frame_type  same;
+           invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+    43:    aload_2;
+    44:    invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+    47:    invokeinterface   #111, 2;          // InterfaceMethod java/lang/constant/ClassDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;"
+    52:    checkcast         #10;              // class java/lang/Class
+    55:    aload_3;
+    56:    aload             4;
+    58:    invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+    61:    invokeinterface   #111, 2;          // InterfaceMethod java/lang/constant/ClassDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;"
+    66:    checkcast         #10;              // class java/lang/Class
+    69:    invokevirtual     #115;             // Method java/lang/invoke/MethodHandles$Lookup.findStaticVarHandle:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    72:    astore            5;
+           var               5 #169:#166;      // vh2:"Ljava/lang/invoke/VarHandle;"
+    74:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    77:    aload             5;
+    79:    invokevirtual     #76;              // Method java/lang/invoke/VarHandle.get:"()Ljava/lang/Object;"
+    82:    invokedynamic     #120;             // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;" {
+                                               //   String " 2: "
+                                               // }
+    87:    invokevirtual     #85;              // Method java/io/PrintStream.print:"(Ljava/lang/String;)V"
+           endvar            5;
+           endtry            T1;
+    90:    goto              111;
+           catch             T1 #91;           // java/lang/Throwable
+    93:    stack_frame_type  stack1;
+           stack_map         #91;              // class java/lang/Throwable;
+           astore            5;
+           var               5 #167:#168;      // e:"Ljava/lang/Throwable;"
+    95:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    98:    ldc               #121;             // String " 2: failed"
+    100:   invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    103:   aload             5;
+    105:   getstatic         #98;              // Field java/lang/System.err:"Ljava/io/PrintStream;"
+    108:   invokevirtual     #101;             // Method java/lang/Throwable.printStackTrace:"(Ljava/io/PrintStream;)V"
+           endvar            5;
+    111:   stack_frame_type  same;
+           aload_1;
+    112:   ifnull            174;
+           try               T2;
+    115:   aload_1;
+    116:   invokevirtual     #123;             // Method java/lang/invoke/VarHandle.describeConstable:"()Ljava/util/Optional;"
+    119:   invokevirtual     #127;             // Method java/util/Optional.orElseThrow:"()Ljava/lang/Object;"
+    122:   checkcast         #132;             // class java/lang/invoke/VarHandle$VarHandleDesc
+    125:   astore            5;
+           var               5 #170:#171;      // vhd:"Ljava/lang/invoke/VarHandle$VarHandleDesc;"
+    127:   aload             5;
+    129:   invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+    132:   invokevirtual     #134;             // Method java/lang/invoke/VarHandle$VarHandleDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;"
+    135:   astore            6;
+           var               6 #172:#166;      // obj:"Ljava/lang/invoke/VarHandle;"
+    137:   getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    140:   aload             6;
+    142:   invokevirtual     #76;              // Method java/lang/invoke/VarHandle.get:"()Ljava/lang/Object;"
+    145:   invokedynamic     #137;             // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;" {
+                                               //   String " 3: "
+                                               // }
+    150:   invokevirtual     #85;              // Method java/io/PrintStream.print:"(Ljava/lang/String;)V"
+           endvar            5,6;
+           endtry            T2;
+    153:   goto              174;
+           catch             T2 #91;           // java/lang/Throwable
+    156:   stack_frame_type  stack1;
+           stack_map         #91;              // class java/lang/Throwable;
+           astore            5;
+           var               5 #167:#168;      // e:"Ljava/lang/Throwable;"
+    158:   getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    161:   ldc               #138;             // String " 3: failed"
+    163:   invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    166:   aload             5;
+    168:   getstatic         #98;              // Field java/lang/System.err:"Ljava/io/PrintStream;"
+    171:   invokevirtual     #101;             // Method java/lang/Throwable.printStackTrace:"(Ljava/io/PrintStream;)V"
+           endvar            5;
+           try               T3;
+    174:   stack_frame_type  same;
+           aload_2;
+    175:   aload_3;
+    176:   aload             4;
+    178:   invokestatic      #140;             // Method java/lang/invoke/VarHandle$VarHandleDesc.ofStaticField:"(Ljava/lang/constant/ClassDesc;Ljava/lang/String;Ljava/lang/constant/ClassDesc;)Ljava/lang/invoke/VarHandle$VarHandleDesc;"
+    181:   astore            5;
+           var               5 #170:#171;      // vhd:"Ljava/lang/invoke/VarHandle$VarHandleDesc;"
+    183:   aload             5;
+    185:   invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+    188:   invokevirtual     #134;             // Method java/lang/invoke/VarHandle$VarHandleDesc.resolveConstantDesc:"(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/VarHandle;"
+    191:   astore            6;
+           var               6 #172:#166;      // obj:"Ljava/lang/invoke/VarHandle;"
+    193:   getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    196:   aload             6;
+    198:   invokevirtual     #76;              // Method java/lang/invoke/VarHandle.get:"()Ljava/lang/Object;"
+    201:   invokedynamic     #144;             // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/Object;)Ljava/lang/String;" {
+                                               //   String " 4: "
+                                               // }
+    206:   invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+           endvar            5,6;
+           endtry            T3;
+    209:   goto              230;
+           catch             T3 #91;           // java/lang/Throwable
+    212:   stack_frame_type  stack1;
+           stack_map         #91;              // class java/lang/Throwable;
+           astore            5;
+           var               5 #173:#168;      // t:"Ljava/lang/Throwable;"
+    214:   getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    217:   ldc               #145;             // String " 4: failed"
+    219:   invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    222:   aload             5;
+    224:   getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    227:   invokevirtual     #101;             // Method java/lang/Throwable.printStackTrace:"(Ljava/io/PrintStream;)V"
+           endvar            5;
+    230:   stack_frame_type  same;
+           return;
+           endvar            0,1,2,3,4;
+  }
+  Method #31:#32:#185                          // testFieldRef:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;":"(Ljava/lang/Class<*>;Ljava/lang/String;Ljava/lang/Class<*>;)Ljava/lang/invoke/VarHandle;"
+    stack  4 locals  6
+  {
+           var               0 #162:#163;      // this:"Lorg/openjdk/asmtools/transform/case8302260/TestRunner;"
+           var               1 #179:#58;       // rec:"Ljava/lang/Class;"
+           var               2 #180:#22;       // fname:"Ljava/lang/String;"
+           var               3 #181:#58;       // type:"Ljava/lang/Class;"
+     0:    aconst_null;
+     1:    astore            4;
+           try               T0, T1;
+           var               4 #165:#166;      // vh:"Ljava/lang/invoke/VarHandle;"
+     3:    invokestatic      #105;             // Method java/lang/invoke/MethodHandles.lookup:"()Ljava/lang/invoke/MethodHandles$Lookup;"
+     6:    aload_1;
+     7:    aload_2;
+     8:    aload_3;
+     9:    invokevirtual     #115;             // Method java/lang/invoke/MethodHandles$Lookup.findStaticVarHandle:"(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;"
+    12:    astore            4;
+    14:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    17:    aload_2;
+    18:    invokedynamic     #147;             // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                               // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                               // makeConcatWithConstants:"(Ljava/lang/String;)Ljava/lang/String;" {
+                                               //   String "0: "
+                                               // }
+    23:    invokevirtual     #85;              // Method java/io/PrintStream.print:"(Ljava/lang/String;)V"
+           endtry            T0,T1;
+    26:    goto              47;
+           catch             T0 #148;          // java/lang/NoSuchFieldException
+           catch             T1 #150;          // java/lang/IllegalAccessException
+    29:    stack_frame_type  full;
+           locals_map        #7, #10, #27, #10, #77; // class TestRunner, class java/lang/Class, class java/lang/String, class java/lang/Class, class java/lang/invoke/VarHandle;
+           stack_map         #155;                   // class java/lang/ReflectiveOperationException;
+           astore            5;
+           var               5 #167:#178;      // e:"Ljava/lang/ReflectiveOperationException;"
+    31:    getstatic         #70;              // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    34:    ldc               #152;             // String "0: failed"
+    36:    invokevirtual     #95;              // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    39:    aload             5;
+    41:    getstatic         #98;              // Field java/lang/System.err:"Ljava/io/PrintStream;"
+    44:    invokevirtual     #154;             // Method java/lang/ReflectiveOperationException.printStackTrace:"(Ljava/io/PrintStream;)V"
+           endvar            5;
+    47:    stack_frame_type  same;
+           aload             4;
+    49:    areturn;
+           endvar            0,1,2,3,4;
+  }
+
+  public static final InnerClass #208 = #116 of #106; // Lookup = class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+  public static final InnerClass #209 = #132 of #77; // VarHandleDesc = class java/lang/invoke/VarHandle$VarHandleDesc of class java/lang/invoke/VarHandle
+
+  BootstrapMethod #189 #195;
+  BootstrapMethod #189 #197;
+  BootstrapMethod #189 #199;
+  BootstrapMethod #189 #201;
+  BootstrapMethod #189 #203;
+  BootstrapMethod #189 #205;
+} // end Class TestRunner compiled from "TestRunner.java"

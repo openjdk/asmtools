@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -30,22 +32,22 @@ import java.util.ArrayList;
  */
 class SwitchTable {
 
-    Argument deflabel = null;
-    ArrayList<Argument> labels = new ArrayList<>();
+    Indexer defLabel = null;
+    ArrayList<Indexer> labels = new ArrayList<>();
     ArrayList<Integer> keys = new ArrayList<>();
 
 // for tableswitch:
-    Argument[] resLabels;
+    Indexer[] resLabels;
     int high, low;
 
     int pc, pad;
-    Environment env;
+    JasmEnvironment environment;
 
-    SwitchTable(Environment env) {
-        this.env = env;
+    SwitchTable(JasmEnvironment environment) {
+        this.environment = environment;
     }
 
-    void addEntry(int key, Argument label) {
+    void addEntry(int key, Indexer label) {
         keys.add(key);
         labels.add(label);
     }
@@ -55,23 +57,23 @@ class SwitchTable {
         this.pc = pc;
         pad = ((3 - pc) & 0x3);
         int len = 1 + pad + (keys.size() + 1) * 8;
-        if (deflabel == null) {
-            deflabel = new Argument(pc + len);
+        if (defLabel == null) {
+            defLabel = new Indexer(pc + len);
         }
         return len;
     }
 
     void writeLookupSwitch(CheckedDataOutputStream out) throws IOException {
-        env.traceln("  writeLookupSwitch: pc=" + pc + " pad=" + pad + " deflabel=" + deflabel.arg);
+        environment.traceln("  writeLookupSwitch: pc=" + pc + " pad=" + pad + " deflabel=" + defLabel.cpIndex);
         int k;
         for (k = 0; k < pad; k++) {
             out.writeByte(0);
         }
-        out.writeInt(deflabel.arg - pc);
+        out.writeInt(defLabel.cpIndex - pc);
         out.writeInt(keys.size());
         for (k = 0; k < keys.size(); k++) {
             out.writeInt(keys.get(k));
-            out.writeInt((labels.get(k)).arg - pc);
+            out.writeInt((labels.get(k)).cpIndex - pc);
         }
     }
 
@@ -92,20 +94,19 @@ class SwitchTable {
             }
             numslots = high1 - low1 + 1;
         }
-//      if (numslots>2000) env.error("long.switchtable", "2000");
-        env.traceln("  recalcTableSwitch: low=" + low1 + " high=" + high1);
+        environment.traceln("  recalcTableSwitch: low=" + low1 + " high=" + high1);
         this.pc = pc;
         pad = ((3 - pc) & 0x3);
         int len = 1 + pad + (numslots + 3) * 4;
-        if (deflabel == null) {
-            deflabel = new Argument(pc + len);
+        if (defLabel == null) {
+            defLabel = new Indexer(pc + len);
         }
-        Argument[] resLabels1 = new Argument[numslots];
+        Indexer[] resLabels1 = new Indexer[numslots];
         for (k = 0; k < numslots; k++) {
-            resLabels1[k] = deflabel;
+            resLabels1[k] = defLabel;
         }
         for (k = 0; k < numpairs; k++) {
-            env.traceln("   keys.data[" + k + "]=" + keys.get(k));
+            environment.traceln("   keys.data[" + k + "]=" + keys.get(k));
             resLabels1[keys.get(k) - low1] = labels.get(k);
         }
         this.resLabels = resLabels1;
@@ -121,11 +122,11 @@ class SwitchTable {
         for (k = 0; k < pad; k++) {
             out.writeByte(0);
         }
-        out.writeInt(deflabel.arg - pc);
+        out.writeInt(defLabel.cpIndex - pc);
         out.writeInt(low);
         out.writeInt(high);
         for (k = 0; k < resLabels.length; k++) {
-            out.writeInt(resLabels[k].arg - pc);
+            out.writeInt(resLabels[k].cpIndex - pc);
         }
     }
 }

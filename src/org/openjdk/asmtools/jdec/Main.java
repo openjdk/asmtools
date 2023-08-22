@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,113 +22,158 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.jdis.uEscWriter;
-import org.openjdk.asmtools.util.I18NResourceBundle;
-import org.openjdk.asmtools.util.ProductInfo;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
-import java.io.DataInputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.openjdk.asmtools.common.Environment.FAILED;
+import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
+ * jdec is a disassembler that accepts a .class file, and prints the plain-text translation of jcod source file
+ * to the standard output.
+ * <p>
  * Main program of the Java DECoder :: class to jcod
  */
-public class Main extends Tool {
+public class Main extends JdecTool {
 
-    int     printFlags = 0;
-
-    public static final I18NResourceBundle i18n
-            = I18NResourceBundle.getBundleForClass(Main.class);
-
-    public Main(PrintWriter out, PrintWriter err, String programName) {
-        super(out, err, programName);
-        printCannotReadMsg = (fname) ->
-                error( i18n.getString("jdec.error.cannot_read", fname));
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
+        super(toolOutput, log);
+        Collections.addAll(fileList, toolInputs);
     }
 
-    public Main(PrintStream out, String program) {
-        this(new PrintWriter(out), new PrintWriter(System.err), program);
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+        super(toolOutput, log);
+        if (toolInput != null) {
+            fileList.add(toolInput);
+        }
+        parseArgs(argv);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, String... argv) {
+        this(toolOutput, log, null, argv);
+    }
+
+    public Main(EscapedPrintStreamOutput toolOutput, String[] argv) {
+        this(toolOutput, new StderrLog(), argv);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput) {
+        super(toolOutput, log);
+        fileList.add(toolInput);
+    }
+
+    // jdec entry point
+    public static void main(String... argv) {
+        Main decoder = new Main(new StdoutOutput(), argv);
+        System.exit(decoder.decode());
     }
 
     @Override
     public void usage() {
-        println(i18n.getString("jdec.usage"));
-        println(i18n.getString("jdec.opt.g"));
-        println(i18n.getString("jdec.opt.version"));
+        environment.usage(List.of(
+                "info.usage",
+                "info.opt.g",
+                "info.opt.d",
+                "info.opt.v",
+                "info.opt.version"));
     }
 
-    /**
-     * Run the decoder
-     */
-    public synchronized boolean decode(String argv[]) {
-        long tm = System.currentTimeMillis();
-        ArrayList<String> vargs = new ArrayList<>();
-        ArrayList<String> vj = new ArrayList<>();
-        boolean nowrite = false;
-        int addOptions = 0;
-
+    @Override
+    protected void parseArgs(String... argv) {
         // Parse arguments
-        int i = 0;
-        for (String arg : argv) {
-            //
-            if (arg.equals("-g")) {
-                printFlags = printFlags | 1;
-                vargs.add(arg);
-            } else if (arg.equals("-v")) {
-                DebugFlag = () -> true;
-                vargs.add(arg);
-                out.println("arg[" + i + "]=" + argv[i] + "/verbose");
-            } else if (arg.equals("-version")) {
-                out.println(ProductInfo.FULL_VERSION);
-            } else if (arg.startsWith("-")) {
-                error(i18n.getString("jdec.error.invalid_flag", arg));
-                usage();
-                return false;
-            } else {
-                vargs.add(arg);
-                vj.add(arg);
+        for (int i = 0; i < argv.length; i++) {
+            String arg = argv[i];
+            switch (arg) {
+                case "-g":
+                    setPrintDetails();
+                    break;
+                case "-v":
+                    environment.setVerboseFlag(true);
+                    break;
+                case "-t":
+                    environment.setVerboseFlag(true);
+                    environment.setTraceFlag(true);
+                    break;
+                case org.openjdk.asmtools.Main.DIR_SWITCH:
+                    setDestDir(++i, argv);
+                    break;
+                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
+                    this.environment.setOutputs(new DualOutputStreamOutput());
+                    break;
+                case org.openjdk.asmtools.Main.VERSION_SWITCH:
+                    environment.println(FULL_VERSION);
+                    System.exit(OK);
+                case "-h", "-help":
+                    usage();
+                    System.exit(OK);
+                case org.openjdk.asmtools.Main.STDIN_SWITCH:
+                    addStdIn();
+                    break;
+                default:
+                    if (arg.startsWith("-")) {
+                        environment.error("err.invalid_option", arg);
+                        usage();
+                        System.exit(FAILED);
+                    } else {
+                        fileList.add(new FileInput(arg));
+                    }
             }
-            i += 1;
         }
-
-        if (vj.isEmpty()) {
+        if (fileList.isEmpty()) {
             usage();
-            return false;
+            System.exit(FAILED);
         }
+    }
 
-        String[] names = new String[0];
-        names = vj.toArray(names);
-        for (String inpname : names) {
-            try {
-                DataInputStream dataInputStream = getDataInputStream(inpname);
-                if( dataInputStream == null )
-                    return false;
-                ClassData cc = new ClassData(dataInputStream, printFlags, out);
-                cc.DebugFlag = DebugFlag.getAsBoolean();
-                cc.decodeClass(inpname);
-                out.flush();
-                continue;
-            } catch (Error ee) {
-                if (DebugFlag.getAsBoolean())
-                    ee.printStackTrace();
-                error(i18n.getString("jdec.error.fatal_error"));
-            } catch (Exception ee) {
-                if (DebugFlag.getAsBoolean())
-                    ee.printStackTrace();
-                error(i18n.getString("jdec.error.fatal_exception"));
-            }
-            return false;
-        }
-        return true;
+    public void setPrintDetails() {
+        environment.setPrintDetailsFlag(true);
+    }
+
+    // Runs the decoder with args
+    public synchronized boolean decode(String... argv) {
+        parseArgs(argv);
+        return this.decode() == OK;
     }
 
     /**
-     * Main program
+     * Runs the decoder
      */
-    public static void main(String argv[]) {
-        Main decoder = new Main(new PrintWriter(new uEscWriter(System.out)), new PrintWriter(System.err), "jdec");
-        System.exit(decoder.decode(argv) ? 0 : 1);
+    public synchronized int decode() {
+        for (ToolInput inputFileName : fileList) {
+            try {
+                environment.setInputFile(inputFileName);
+                ClassData classData = new ClassData(environment);
+                classData.decodeClass();
+                continue;
+            } catch (FileNotFoundException fnf) {
+                environment.printException(fnf);
+                environment.error("err.not_found", inputFileName);
+            } catch (IOException | ClassFormatError ioe) {
+                environment.printException(ioe);
+                if (!environment.getVerboseFlag())
+                    environment.printErrorLn(ioe.getMessage());
+                environment.error("err.fatal_error", inputFileName);
+            } catch (Error error) {
+                environment.printException(error);
+                environment.error("err.fatal_error", inputFileName);
+            } catch (Exception ex) {
+                environment.printException(ex);
+                environment.error("err.fatal_exception", inputFileName);
+            }
+            return FAILED;
+        }
+        return OK;
     }
 }

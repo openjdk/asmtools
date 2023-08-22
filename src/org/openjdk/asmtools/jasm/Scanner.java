@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,62 +22,43 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import static java.lang.String.format;
-import static org.openjdk.asmtools.jasm.JasmTokens.*;
-import static org.openjdk.asmtools.jasm.Constants.EOF;
-import static org.openjdk.asmtools.jasm.Constants.OFFSETBITS;
-import java.io.IOException;
+
+import org.openjdk.asmtools.asmutils.StringUtils;
+import org.openjdk.asmtools.common.SyntaxError;
+
 import java.util.function.Predicate;
+
+import static java.lang.String.format;
+import static org.openjdk.asmtools.common.CompilerConstants.EOF;
+import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token;
+import static org.openjdk.asmtools.jasm.JasmTokens.keyword_token_ident;
 
 /**
  * A Scanner for Jasm tokens. Errors are reported to the environment object.<p>
- *
+ * <p>
  * The scanner keeps track of the current token, the value of the current token (if any),
  * and the start position of the current token.<p>
- *
+ * <p>
  * The scan() method advances the scanner to the next token in the input.<p>
- *
+ * <p>
  * The match() method is used to quickly match opening brackets (ie: '(', '{', or '[')
  * with their closing counter part. This is useful during error recovery.<p>
- *
+ * <p>
  * The compiler treats either "\n", "\r" or "\r\n" as the end of a line.<p>
  */
 public class Scanner extends ParseBase {
 
-    /**
-     * SyntaxError is the generic error thrown for parsing problems.
-     */
-    protected static class SyntaxError extends Error {
-        boolean fatalError = false;
-        SyntaxError Fatal() { fatalError = true; return this; }
-        boolean isFatal() {return fatalError;}
-    }
-
-    /**
-     * Input stream
-     */
-    protected Environment in;
-
-    /**
-     * The current character
-     */
+    // The current character
     protected int ch;
 
-    /**
-     * Current token
-     */
-//    protected int token;
+    // Current token
     protected Token token;
 
-    /**
-     * The position of the current token
-     */
+    // The position of the current token
     protected int pos;
 
-    /*
-     * Token values.
-     */
-    protected char charValue;
+    // Token values.
     protected int intValue;
     protected long longValue;
     protected float floatValue;
@@ -88,12 +69,6 @@ public class Scanner extends ParseBase {
 
     /*   doc comment preceding the most recent token  */
     protected String docComment;
-
-    /* A growable character buffer. */
-    private int count;
-    private char buffer[] = new char[32];
-    //
-    private Predicate<Integer> escapingAllowed;
     /**
      * The position of the previous token
      */
@@ -101,20 +76,32 @@ public class Scanner extends ParseBase {
     protected int sign;              // sign, when reading number
     protected boolean inBits;        // inBits prefix, when reading number
 
+    /* A growable character buffer. */
+    private int count;
+    private char[] buffer = new char[32];
+    //
+    private Predicate<Integer> escapingAllowed;
+    private final Predicate<Integer> noFunc = (ch) -> false;
+    private final Predicate<Integer> yesAndProcessFunc = (ch) -> {
+        boolean res = ((ch == '\\') || (ch == ':') || (ch == '@'));
+        if (res)
+            putCh('\\');
+        return res;
+    };
+
     /**
      * main constructor.
-     *
+     * <p>
      * Create a scanner to scan an input stream.
      */
-    protected Scanner(Environment env) throws IOException {
-        super.init(this, null, env);
+    protected Scanner(JasmEnvironment environment) {
+        super.init(environment);
         escapingAllowed = noFunc;
-        this.in = env;
-        ch = env.read();
+        ch = environment.read();
         xscan();
     }
 
-    protected void scanModuleStatement() throws IOException {
+    protected void scanModuleStatement() {
         try {
             escapingAllowed = yesAndProcessFunc;
             scan();
@@ -124,17 +111,13 @@ public class Scanner extends ParseBase {
     }
 
     /**
-     * scan
-     *
      * Scan the next token.
-     *
-     * @throws IOException
      */
-    protected void scan() throws IOException {
-        int signloc = 1, cnt = 0;
+    protected void scan() {
+        int signloc = 1;
         prevPos = pos;
-prefix:
-        for (;;) {
+        prefix:
+        for (; ; ) {
             xscan();
             switch (token) {
                 case SIGN:
@@ -143,18 +126,11 @@ prefix:
                 default:
                     break prefix;
             }
-            cnt++;
         }
         switch (token) {
-            case INTVAL:
-            case LONGVAL:
-            case FLOATVAL:
-            case DOUBLEVAL:
-            case INF:
-            case NAN:
-                sign = signloc;
-                break;
-            default:
+            case INTVAL, LONGVAL, FLOATVAL, DOUBLEVAL, INF, NAN -> sign = signloc;
+            default -> {
+            }
         }
     }
 
@@ -162,17 +138,13 @@ prefix:
      * Check the token may be identifier
      */
     protected final boolean checkTokenIdent() {
-        return token.possibleJasmIdentifier();
-    }
-
-    static String readableConstant(int t) {
-        return "<" + Tables.tag(t) + "> [" + t + "]";
+        return token.isPossibleJasmIdentifier();
     }
 
     /**
      * Expects a token, scans the next token or throws an exception.
      */
-    protected final void expect(Token t) throws SyntaxError, IOException {
+    protected final void expect(Token t) throws SyntaxError {
         check(t);
         scan();
     }
@@ -180,32 +152,24 @@ prefix:
     /**
      * Checks a token, throws an exception if not the same
      */
-    protected final void check(Token t) throws SyntaxError, IOException {
+    protected final void check(Token t) throws SyntaxError {
         if (token != t) {
             if ((t != Token.IDENT) || !checkTokenIdent()) {
-                env.traceln("expect: " + t + " instead of " + token);
-                switch (t) {
-                    case IDENT:
-                        env.error(pos, "identifier.expected");
-                        break;
-                    default:
-                        env.error(pos, "token.expected", "<" + t.printValue() + ">");
-                        break;
-                }
-
-                if (debugFlag) {
-                    debugStr("<<<<<PROBLEM>>>>>>>: ");
-                    throw new Error("<<<<<PROBLEM>>>>>>>");
+                environment.traceln("expect: " + t + " instead of " + token);
+                if (t == Token.IDENT) {
+                    environment.error(pos, "err.identifier.expected");
                 } else {
-                    throw new SyntaxError();
+                    environment.error(pos, "err.token.expected", "<" + t.parseKey() + ">");
                 }
+                environment.traceln("<<<<<PROBLEM>>>>>>>: ");
+                throw new SyntaxError();
             }
         }
     }
 
     private void putCh(int ch) {
         if (count == buffer.length) {
-            char newBuffer[] = new char[buffer.length * 2];
+            char[] newBuffer = new char[buffer.length * 2];
             System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
             buffer = newBuffer;
         }
@@ -213,110 +177,29 @@ prefix:
     }
 
     private String bufferString() {
-        char buf[] = new char[count];
+        char[] buf = new char[count];
         System.arraycopy(buffer, 0, buf, 0, count);
         return new String(buf);
-    }
-
-    /**
-     * Returns true if the character is a unicode digit.
-     *
-     * @param ch the character to be checked
-     */
-    public static boolean isUCDigit(int ch) {
-        if ((ch >= '0') && (ch <= '9')) {
-            return true;
-        }
-        switch (ch >> 8) {
-            case 0x06:
-                return ((ch >= 0x0660) && (ch <= 0x0669)) ||        // Arabic-Indic
-                        ((ch >= 0x06f0) && (ch <= 0x06f9));         // Eastern Arabic-Indic
-            case 0x07:
-            case 0x08:
-            default:
-                return false;
-            case 0x09:
-                return ((ch >= 0x0966) && (ch <= 0x096f)) ||        // Devanagari
-                        ((ch >= 0x09e6) && (ch <= 0x09ef));         // Bengali
-            case 0x0a:
-                return ((ch >= 0x0a66) && (ch <= 0x0a6f)) ||        // Gurmukhi
-                        ((ch >= 0x0ae6) && (ch <= 0x0aef));         // Gujarati
-            case 0x0b:
-                return ((ch >= 0x0b66) && (ch <= 0x0b6f)) ||        // Oriya
-                        ((ch >= 0x0be7) && (ch <= 0x0bef));         // Tamil
-            case 0x0c:
-                return ((ch >= 0x0c66) && (ch <= 0x0c6f)) ||        // Telugu
-                        ((ch >= 0x0ce6) && (ch <= 0x0cef));         // Kannada
-            case 0x0d:
-                return ((ch >= 0x0d66) && (ch <= 0x0d6f));          // Malayalam
-            case 0x0e:
-                return ((ch >= 0x0e50) && (ch <= 0x0e59)) ||        // Thai
-                        ((ch >= 0x0ed0) && (ch <= 0x0ed9));         // Lao
-            case 0x0f:
-                return false;
-            case 0x10:
-                return ((ch >= 0x1040) && (ch <= 0x1049));         // Tibetan
-        }
-    }
-
-    /**
-     * Returns true if the character is a Unicode letter.
-     *
-     * @param ch the character to be checked
-     */
-    public static boolean isUCLetter(int ch) {
-        // fast check for Latin capitals and small letters
-        if (((ch >= 'A') && (ch <= 'Z'))
-                || ((ch >= 'a') && (ch <= 'z'))) {
-            return true;
-        }
-        // rest of ISO-LATIN-1
-        if (ch < 0x0100) {
-            // fast check
-            if (ch < 0x00c0) {
-                return (ch == '_') || (ch == '$');
-            }
-            // various latin letters and diacritics,
-            // but *not* the multiplication and division symbols
-            return ((ch >= 0x00c0) && (ch <= 0x00d6))
-                    || ((ch >= 0x00d8) && (ch <= 0x00f6))
-                    || ((ch >= 0x00f8) && (ch <= 0x00ff));
-        }
-        // other non CJK alphabets and symbols, but not digits
-        if (ch <= 0x1fff) {
-            return !isUCDigit(ch);
-        }
-        // rest are letters only in five ranges:
-        //        Hiragana, Katakana, Bopomofo and Hangul
-        //        CJK Squared Words
-        //        Korean Hangul Symbols
-        //        Han (Chinese, Japanese, Korean)
-        //        Han compatibility
-        return ((ch >= 0x3040) && (ch <= 0x318f))
-                || ((ch >= 0x3300) && (ch <= 0x337f))
-                || ((ch >= 0x3400) && (ch <= 0x3d2d))
-                || ((ch >= 0x4e00) && (ch <= 0x9fff))
-                || ((ch >= 0xf900) && (ch <= 0xfaff));
     }
 
     /**
      * Scan a comment. This method should be called once the initial /, * and the next
      * character have been read.
      */
-    private void skipComment() throws IOException {
+    private void skipComment() {
         while (true) {
             switch (ch) {
                 case EOF:
-                    env.error(pos, "eof.in.comment");
+                    environment.error(pos, "err.eof.in.comment");
                     return;
                 case '*':
-                    if ((ch = in.read()) == '/') {
-                        ch = in.read();
+                    if ((ch = environment.read()) == '/') {
+                        ch = environment.read();
                         return;
                     }
                     break;
                 default:
-                    ch = in.read();
+                    ch = environment.read();
                     break;
             }
         }
@@ -328,23 +211,20 @@ prefix:
      * in the string buffer.
      */
     @SuppressWarnings("empty-statement")
-    private String scanDocComment() throws IOException {
+    private String scanDocComment() {
         count = 0;
 
         if (ch == '*') {
             do {
-                ch = in.read();
+                ch = environment.read();
             } while (ch == '*');
             if (ch == '/') {
-                ch = in.read();
+                ch = environment.read();
                 return "";
             }
         }
         switch (ch) {
-            case '\n':
-            case ' ':
-                ch = in.read();
-                break;
+            case '\n', ' ' -> ch = environment.read();
         }
 
         boolean seenstar = false;
@@ -352,23 +232,23 @@ prefix:
         while (true) {
             switch (ch) {
                 case EOF:
-                    env.error(pos, "eof.in.comment");
+                    environment.error(pos, "err.eof.in.comment");
                     return bufferString();
                 case '\n':
                     putCh('\n');
-                    ch = in.read();
+                    ch = environment.read();
                     seenstar = false;
                     c = count;
                     break;
                 case ' ':
                 case '\t':
                     putCh(ch);
-                    ch = in.read();
+                    ch = environment.read();
                     break;
                 case '*':
                     if (seenstar) {
-                        if ((ch = in.read()) == '/') {
-                            ch = in.read();
+                        if ((ch = environment.read()) == '/') {
+                            ch = environment.read();
                             count = c;
                             return bufferString();
                         }
@@ -376,15 +256,14 @@ prefix:
                     } else {
                         seenstar = true;
                         count = c;
-                        while ((ch = in.read()) == '*');
+                        while ((ch = environment.read()) == '*') ;
                         switch (ch) {
-                            case ' ':
-                                ch = in.read();
-                                break;
-                            case '/':
-                                ch = in.read();
+                            case ' ' -> ch = environment.read();
+                            case '/' -> {
+                                ch = environment.read();
                                 count = c;
                                 return bufferString();
+                            }
                         }
                     }
                     break;
@@ -393,7 +272,7 @@ prefix:
                         seenstar = true;
                     }
                     putCh(ch);
-                    ch = in.read();
+                    ch = environment.read();
                     c = count;
                     break;
             }
@@ -403,25 +282,16 @@ prefix:
     /**
      * Scan a decimal at this point
      */
-    private void scanCPRef() throws IOException {
-        switch (ch = in.read()) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9': {
+    private void scanCPRef() {
+        switch (ch = environment.read()) {
+            case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 boolean overflow = false;
                 long value = ch - '0';
                 count = 0;
                 putCh(ch);                // save character in buffer
-numberLoop:
-                for (;;) {
-                    switch (ch = in.read()) {
+                numberLoop:
+                for (; ; ) {
+                    switch (ch = environment.read()) {
                         case '0':
                         case '1':
                         case '2':
@@ -447,16 +317,16 @@ numberLoop:
                 stringValue = bufferString();
                 token = Token.CPINDEX;
                 if (overflow) {
-                    env.error(pos, "overflow");
+                    environment.error(pos, "err.overflow");
                 }
-                break;
             }
-            default:
-                stringValue = Character.toString((char)ch);
-                env.error(in.pos, "invalid.number", stringValue);
+            default -> {
+                stringValue = Character.toString((char) ch);
+                environment.error(environment.getPosition(), "err.invalid.number", stringValue);
                 intValue = 0;
                 token = Token.CPINDEX;
-                ch = in.read();
+                ch = environment.read();
+            }
         }
     } // scanCPRef()
 
@@ -464,16 +334,16 @@ numberLoop:
      * Scan a number. The first digit of the number should be the current character. We
      * may be scanning hex, decimal, or octal at this point
      */
-    private void scanNumber() throws IOException {
+    private void scanNumber() {
         boolean seenNonOctal = false;
         boolean overflow = false;
         radix = (ch == '0' ? 8 : 10);
         long value = ch - '0';
         count = 0;
         putCh(ch);                // save character in buffer
-numberLoop:
-        for (;;) {
-            switch (ch = in.read()) {
+        numberLoop:
+        for (; ; ) {
+            switch (ch = environment.read()) {
                 case '.':
                     if (radix == 16) {
                         break numberLoop; // an illegal character
@@ -517,7 +387,7 @@ numberLoop:
                         scanReal();
                         return;
                     }
-                // fall through
+                    // fall through
                 case 'a':
                 case 'A':
                 case 'b':
@@ -534,13 +404,13 @@ numberLoop:
                     break;
                 case 'l':
                 case 'L':
-                    ch = in.read();        // skip over 'l'
+                    ch = environment.read();        // skip over 'l'
                     longValue = value;
                     token = Token.LONGVAL;
                     break numberLoop;
                 case 'x':
                 case 'X':
-                   // if the first character is a '0' and this is the second
+                    // if the first character is a '0' and this is the second
                     // letter, then read in a hexadecimal number.  Otherwise, error.
                     if (count == 1 && radix == 8) {
                         radix = 16;
@@ -557,24 +427,24 @@ numberLoop:
         } // while true
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
-        if (isUCDigit(ch) || isUCLetter(ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", Character.toString((char)ch));
+        if (Character.isLetterOrDigit(ch) || ch == '.') {
+            environment.error(environment.getPosition(), "err.invalid.number", Character.toString((char) ch));
             do {
-                ch = in.read();
-            } while (isUCDigit(ch) || isUCLetter(ch) || ch == '.');
+                ch = environment.read();
+            } while (Character.isLetterOrDigit(ch) || ch == '.');
             intValue = 0;
             token = Token.INTVAL;
         } else if (radix == 8 && seenNonOctal) {
             intValue = 0;
             token = Token.INTVAL;
-            env.error(in.pos, "invalid.octal.number");
+            environment.error(environment.getPosition(), "err.invalid.octal.number");
         } else if (overflow
                 || (token == Token.INTVAL
                 && ((radix == 10) ? (intValue - 1 < -1)
-                        : ((value & 0xFFFFFFFF00000000L) != 0)))) {
+                : ((value & 0xFFFFFFFF00000000L) != 0)))) {
             intValue = 0;        // so we don't get second overflow in Parser
             longValue = 0;
-            env.error(pos, "overflow");
+            environment.error(pos, "err.overflow");
         }
     } // scanNumber()
 
@@ -583,17 +453,17 @@ numberLoop:
      * put it into the buffer. We haven't seen an exponent. Scan a float. Should be called
      * with the current character is either the 'e', 'E' or '.'
      */
-    private void scanReal() throws IOException {
+    private void scanReal() {
         boolean seenExponent = false;
         boolean isSingleFloat = false;
         char lastChar;
         if (ch == '.') {
             putCh(ch);
-            ch = in.read();
+            ch = environment.read();
         }
 
-numberLoop:
-        for (;; ch = in.read()) {
+        numberLoop:
+        for (; ; ch = environment.read()) {
             switch (ch) {
                 case '0':
                 case '1':
@@ -625,13 +495,13 @@ numberLoop:
                     break;
                 case 'f':
                 case 'F':
-                    ch = in.read(); // skip over 'f'
+                    ch = environment.read(); // skip over 'f'
                     isSingleFloat = true;
                     break numberLoop;
                 case 'd':
                 case 'D':
-                    ch = in.read(); // skip over 'd'
-                // fall through
+                    ch = environment.read(); // skip over 'd'
+                    // fall through
                 default:
                     break numberLoop;
             } // sswitch
@@ -639,11 +509,11 @@ numberLoop:
 
         // we have just finished reading the number.  The next thing better
         // not be a letter or digit.
-        if (isUCDigit(ch) || isUCLetter(ch) || ch == '.') {
-            env.error(in.pos, "invalid.number", Character.toString((char)ch));
+        if (Character.isLetterOrDigit(ch) || ch == '.') {
+            environment.error(environment.getPosition(), "err.invalid.number", Character.toString((char) ch));
             do {
-                ch = in.read();
-            } while (isUCDigit(ch) || isUCLetter(ch) || ch == '.');
+                ch = environment.read();
+            } while (Character.isLetterOrDigit(ch) || ch == '.');
             doubleValue = 0;
             token = Token.DOUBLEVAL;
         } else {
@@ -652,21 +522,21 @@ numberLoop:
                 lastChar = buffer[count - 1];
                 if (lastChar == 'e' || lastChar == 'E'
                         || lastChar == '+' || lastChar == '-') {
-                    env.error(in.pos - 1, "float.format");
+                    environment.error(environment.getPosition() - 1, "err.float.format");
                 } else if (isSingleFloat) {
-                    floatValue = Float.valueOf(bufferString());
+                    floatValue = Float.parseFloat(bufferString());
                     if (Float.isInfinite(floatValue)) {
-                        env.error(pos, "overflow");
+                        environment.error(pos, "err.overflow");
                     }
                 } else {
-                    doubleValue = Double.valueOf(bufferString());
+                    doubleValue = Double.parseDouble(bufferString());
                     if (Double.isInfinite(doubleValue)) {
-                        env.error(pos, "overflow");
-                        env.error(pos, "overflow");
+                        environment.error(pos, "err.overflow");
+                        environment.error(pos, "err.overflow");
                     }
                 }
             } catch (NumberFormatException ee) {
-                env.error(pos, "float.format");
+                environment.error(pos, "err.float.format");
                 doubleValue = 0;
                 floatValue = 0;
             }
@@ -678,72 +548,66 @@ numberLoop:
      *
      * @return the character or '\\'
      */
-    private int scanEscapeChar() throws IOException {
-        int p = in.pos;
+    private int scanEscapeChar() {
+        int p = environment.getPosition();
 
-        switch (ch = in.read()) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7': {
+        switch (ch = environment.read()) {
+            case '0', '1', '2', '3', '4', '5', '6', '7' -> {
                 int n = ch - '0';
                 for (int i = 2; i > 0; i--) {
-                    switch (ch = in.read()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                            n = (n << 3) + ch - '0';
-                            break;
-                        default:
+                    switch (ch = environment.read()) {
+                        case '0', '1', '2', '3', '4', '5', '6', '7' -> n = (n << 3) + ch - '0';
+                        default -> {
                             if (n > 0xFF) {
-                                env.error(p, "invalid.escape.char");
+                                environment.error(p, "err.invalid.escape.char");
                             }
                             return n;
+                        }
                     }
                 }
-                ch = in.read();
+                ch = environment.read();
                 if (n > 0xFF) {
-                    env.error(p, "invalid.escape.char");
+                    environment.error(p, "err.invalid.escape.char");
                 }
                 return n;
             }
-            case 'r':
-                ch = in.read();
+            case 'r' -> {
+                ch = environment.read();
                 return '\r';
-            case 'n':
-                ch = in.read();
+            }
+            case 'n' -> {
+                ch = environment.read();
                 return '\n';
-            case 'f':
-                ch = in.read();
+            }
+            case 'f' -> {
+                ch = environment.read();
                 return '\f';
-            case 'b':
-                ch = in.read();
+            }
+            case 'b' -> {
+                ch = environment.read();
                 return '\b';
-            case 't':
-                ch = in.read();
+            }
+            case 't' -> {
+                ch = environment.read();
                 return '\t';
-            case '\\':
-                ch = in.read();
+            }
+            case '\\' -> {
+                ch = environment.read();
                 return '\\';
-            case '\"':
-                ch = in.read();
+            }
+            case '\"' -> {
+                ch = environment.read();
                 return '\"';
-            case '\'':
-                ch = in.read();
+            }
+            case '\'' -> {
+                ch = environment.read();
                 return '\'';
-            case 'u':
-                int unich = in.convertUnicode();
-                ch = in.read();
+            }
+            case 'u' -> {
+                int unich = environment.convertUnicode();
+                ch = environment.read();
                 return unich;
+            }
         }
         return '\\';
     }
@@ -751,87 +615,87 @@ numberLoop:
     /**
      * Scan a string. The current character should be the opening " of the string.
      */
-    private void scanString() throws IOException {
+    private void scanString() {
         token = Token.STRINGVAL;
         count = 0;
-        ch = in.read();
+        ch = environment.read();
 
         // Scan a String
         while (true) {
             switch (ch) {
-                case EOF:
-                    env.error(pos, "eof.in.string");
+                case EOF -> {
+                    environment.error(pos, "err.eof.in.string");
                     stringValue = bufferString();
                     return;
-                case '\n':
-                    ch = in.read();
-                    env.error(pos, "newline.in.string");
+                }
+                case '\n' -> {
+                    ch = environment.read();
+                    environment.error(pos, "err.newline.in.string");
                     stringValue = bufferString();
                     return;
-                case '"':
-                    ch = in.read();
+                }
+                case '"' -> {
+                    ch = environment.read();
                     stringValue = bufferString();
                     return;
-                case '\\': {
+                }
+                case '\\' -> {
                     int c = scanEscapeChar();
                     if (c >= 0) {
                         putCh((char) c);
                     }
-                    break;
                 }
-                default:
+                default -> {
                     putCh(ch);
-                    ch = in.read();
-                    break;
+                    ch = environment.read();
+                }
             }
         }
     }
-
 
     /**
      * Scan an Identifier. The current character should be the first character of the
      * identifier.
      */
-    private void scanIdentifier(char[] prefix) throws IOException {
+    private void scanIdentifier(char[] prefix) {
         int firstChar;
         count = 0;
-        if(prefix != null) {
-            for(;;) {
-                for (int i = 0; i < prefix.length; i++)
-                    putCh(prefix[i]);
-                ch = in.read();
+        if (prefix != null) {
+            for (; ; ) {
+                for (char c : prefix) putCh(c);
+                ch = environment.read();
                 if (ch == '\\') {
-                    ch = in.read();
+                    ch = environment.read();
                     if (ch == 'u') {
-                        ch = in.convertUnicode();
-                        if (!isUCLetter(ch) && !isUCDigit(ch)) {
-                            prefix = new char[]{(char)ch};
+                        ch = environment.convertUnicode();
+                        if (!Character.isLetterOrDigit(ch)) {
+                            prefix = new char[]{(char) ch};
                             continue;
                         }
                     } else if (escapingAllowed.test(ch)) {
-                        prefix = new char[]{(char)ch};
+                        prefix = new char[]{(char) ch};
                         continue;
                     }
-                    int p = in.pos;
-                    env.error(p, "invalid.escape.char");
+                    int p = environment.getPosition();
+                    environment.error(p, "err.invalid.escape.char");
                 }
                 break;
             }
         }
         firstChar = ch;
         boolean firstIteration = true;
-scanloop:
+        scanloop:
         while (true) {
             putCh(ch);
-            ch = in.read();
+            ch = environment.read();
 
             // Check to see if the annotation marker is at
             // the front of the identifier.
             if (firstIteration && firstChar == '@') {
-                // May be a type annotation
+                // Maybe a type annotation
                 if (ch == 'T') {  // type annotation
                     putCh(ch);
-                    ch = in.read();
+                    ch = environment.read();
                 }
 
                 // is either a runtime visible or invisible annotation
@@ -839,323 +703,164 @@ scanloop:
                     // possible annotation -
                     // need to eat up the '@+' or '@-'
                     putCh(ch);
-                    ch = in.read();
+                    ch = environment.read();
                 }
                 idValue = bufferString();
                 stringValue = idValue;
                 token = Token.ANNOTATION;
                 return;
             }
-
             firstIteration = false;
-            switch (ch) {
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'g':
-                case 'h':
-                case 'i':
-                case 'j':
-                case 'k':
-                case 'l':
-                case 'm':
-                case 'n':
-                case 'o':
-                case 'p':
-                case 'q':
-                case 'r':
-                case 's':
-                case 't':
-                case 'u':
-                case 'v':
-                case 'w':
-                case 'x':
-                case 'y':
-                case 'z':
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '$':
-                case '_':
-                case '-':
-                case '[':
-                case ']':
-                case '(':
-                case ')':
-                case '<':
-                case '>':
-                    break;
-                case '/': {// may be comment right after identifier
-                    int c = in.lookForward();
-                    if ((c == '*') || (c == '/')) {
-                        break scanloop; // yes, comment
+            if (!Character.isJavaIdentifierPart(ch) && !StringUtils.isOneOf(ch, '-', '[', ']', '(', ')', '<', '>')) {
+                switch (ch) {
+                    case '/': {// may be comment right after identifier
+                        int c = environment.lookForward();
+                        if ((c == '*') || (c == '/')) {
+                            break scanloop; // yes, comment
+                        }
+                        break; // no, continue to parse identifier
                     }
-                    break; // no, continue to parse identifier
-                }
-                case '\\':
-                    ch = in.read();
-                    if ( ch == 'u') {
-                        ch = in.convertUnicode();
-                        if (isUCLetter(ch) || isUCDigit(ch)) {
+                    case '\\':
+                        ch = environment.read();
+                        if (ch == 'u') {
+                            ch = environment.convertUnicode();
+                            if (!Character.isLetterOrDigit(ch)) {
+                                break;
+                            }
+                        } else if (escapingAllowed.test(ch)) {
                             break;
                         }
-                    } else if( escapingAllowed.test(ch)) {
-                        break;
-                    }
-                    int p = in.pos;
-                    env.error(p, "invalid.escape.char");
-                default:
-//                    if ((!isUCDigit(ch)) && (!isUCLetter(ch))) {
-                    break scanloop;
-//                    }
-            } // end switch
+                        int p = environment.getPosition();
+                        environment.error(p, "err.invalid.escape.char");
+                    default:
+                        break scanloop;
+                } // end switch
+            }
         } // end scanloop
         idValue = bufferString();
         stringValue = idValue;
         token = keyword_token_ident(idValue);
-        debugStr(format("##### SCANNER (scanIdent) ######## token = %s value = \"%s\"\n", token, idValue));
+        traceMethodInfoLn(format("token = %s value = '%s'", token, idValue));
     } // end scanIdentifier
 
-//==============================
+    //==============================
     @SuppressWarnings("empty-statement")
-    protected final void xscan() throws IOException {
+    protected final void xscan() { // throws IOException {
         docComment = null;
-loop:
-        for (;;) {
-            pos = in.pos;
-            switch (ch) {
-                case EOF:
-                    token = Token.EOF;
-                    break loop;
-                case '\n':
-                case ' ':
-                case '\t':
-                case '\f':
-                    ch = in.read();
-                    break;
-                case '/':
-                    switch (ch = in.read()) {
-                        case '/':
-                            // Parse a // comment
-                            while (((ch = in.read()) != EOF) && (ch != '\n'));
-                            break;
-                        case '*':
-                            ch = in.read();
-                            if (ch == '*') {
-                                docComment = scanDocComment();
-                            } else {
-                                skipComment();
-                            }
-                            break;
-                        default:
-                            token = Token.DIV;
-                            break loop;
-                    }
-                    break;
-                case '"':
-                    scanString();
-                    break loop;
-                case '-':
-                    intValue = -1;
-                    token = Token.SIGN;
-                    ch = in.read();
-                    break loop;
-                case '+':
-                    intValue = +1;
-                    ch = in.read();
-                    token = Token.SIGN;
-                    break loop;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    scanNumber();
-                    break loop;
-                case '.':
-                    switch (ch = in.read()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            count = 0;
-                            putCh('.');
-                            scanReal();
-                            break;
-                        default:
-                            token = Token.FIELD;
-                    }
-                    break loop;
-                case '{':
-                    ch = in.read();
-                    token = Token.LBRACE;
-                    break loop;
-                case '}':
-                    ch = in.read();
-                    token = Token.RBRACE;
-                    break loop;
-                case ',':
-                    ch = in.read();
-                    token = Token.COMMA;
-                    break loop;
-                case ';':
-                    ch = in.read();
-                    token = Token.SEMICOLON;
-                    break loop;
-                case ':':
-                    ch = in.read();
-                    token = Token.COLON;
-                    break loop;
-                case '=':
-                    if ((ch = in.read()) == '=') {
-                        ch = in.read();
-                        token = Token.EQ;
-                        break loop;
-                    }
-                    token = Token.ASSIGN;
-                    break loop;
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'g':
-                case 'h':
-                case 'i':
-                case 'j':
-                case 'k':
-                case 'l':
-                case 'm':
-                case 'n':
-                case 'o':
-                case 'p':
-                case 'q':
-                case 'r':
-                case 's':
-                case 't':
-                case 'u':
-                case 'v':
-                case 'w':
-                case 'x':
-                case 'y':
-                case 'z':
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case '$':
-                case '_':
-                case '@':
-                case '[':
-                case ']':
-                case '(':
-                case ')':
-                case '<':
-                case '>':
-                    scanIdentifier(null);
-                    break loop;
-                case '\u001a':
-                    // Our one concession to DOS.
-                    if ((ch = in.read()) == EOF) {
-                        token = Token.EOF;
-                        break loop;
-                    }
-                    env.error(pos, "funny.char");
-                    ch = in.read();
-                    break;
-                case '#':
-                    int c = in.lookForward();
-                    if (c == '{') {
-                        // '#' char denotes a "paramMethod name" token
-                        ch = in.read();
-                        token = Token.PARAM_NAME;
-                        break loop;
-                    }
-                    // otherwise, it is a normal cpref
-                    scanCPRef();
-                    break loop;
-                case '\\':
-                    ch = in.read();
-                    if ( ch == 'u') {
-                        ch = in.convertUnicode();
-                        if (isUCLetter(ch)) {
-                            scanIdentifier(null);
-                            break loop;
+        loop:
+        for (; ; ) {
+            pos = environment.getPosition();
+            if (Character.isLetter(ch) || StringUtils.isOneOf(ch, '$', '_', '@', '[', ']', '(', ')', '<', '>')) {
+                scanIdentifier(null);
+                break;
+            } else if (ch == EOF) {
+                token = Token.EOF;
+                break;
+            } else if (ch == '\n' || ch == '\r' || ch == ' ' || ch == '\t' || ch == '\f') {
+                ch = environment.read();
+            } else if (ch == '/') {
+                switch (ch = environment.read()) {
+                    case '/':
+                        // Parse a // comment
+                        while (((ch = environment.read()) != EOF) && (ch != '\n')) ;
+                        break;
+                    case '*':
+                        ch = environment.read();
+                        if (ch == '*') {
+                            docComment = scanDocComment();
+                        } else {
+                            skipComment();
                         }
-                    } else if( escapingAllowed.test(ch)) {
-                        scanIdentifier(new char[]{'\\', (char)ch});
+                        break;
+                    default:
+                        token = Token.DIV;
                         break loop;
+                }
+            } else if (ch == '"') {
+                scanString();
+                break;
+            } else if (ch == '-') {
+                intValue = -1;
+                token = Token.SIGN;
+                ch = environment.read();
+                break;
+            } else if (ch == '+') {
+                intValue = 1;
+                ch = environment.read();
+                token = Token.SIGN;
+                break;
+            } else if (ch == '0' || ch == '1' || ch == '2' || ch == '3' || ch == '4' || ch == '5' ||
+                    ch == '6' || ch == '7' || ch == '8' || ch == '9') {
+                scanNumber();
+                break;
+            } else if (ch == '.') {
+                switch (ch = environment.read()) {
+                    case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                        count = 0;
+                        putCh('.');
+                        scanReal();
                     }
+                    default -> token = Token.FIELD;
+                }
+                break;
+            } else if (ch == '{') {
+                ch = environment.read();
+                token = Token.LBRACE;
+                break;
+            } else if (ch == '}') {
+                ch = environment.read();
+                token = Token.RBRACE;
+                break;
+            } else if (ch == ',') {
+                ch = environment.read();
+                token = Token.COMMA;
+                break;
+            } else if (ch == ';') {
+                ch = environment.read();
+                token = Token.SEMICOLON;
+                break;
+            } else if (ch == ':') {
+                ch = environment.read();
+                token = Token.COLON;
+                break;
+            } else if (ch == '=') {
+                if ((ch = environment.read()) == '=') {
+                    ch = environment.read();
+                    token = Token.EQ;
+                    break;
+                }
+                token = Token.ASSIGN;
+                break;
+            } else if (ch == '\u001a') {// Our one concession to DOS.
+                if ((ch = environment.read()) == EOF) {
+                    token = Token.EOF;
+                    break;
+                }
+                environment.warning(prevPos, "warn.funny.char", ch);
+                ch = environment.read();
+            } else if (ch == '#') {
+                int c = environment.lookForward();
+                if (c == '{') {
+                    // '#' char denotes a "paramMethod name" token
+                    ch = environment.read();
+                    token = Token.PARAM_NAME;
+                    break loop;
+                }
+                // otherwise, it is a normal cpref
+                scanCPRef();
+                break loop;
+            } else if (ch == '\\') {
+                ch = environment.read();
+                if (ch == 'u') {
+                    ch = environment.convertUnicode();
+                    if (Character.isLetterOrDigit(ch) && !Character.isDigit(ch)) {
+                        scanIdentifier(null);
+                        break;
+                    }
+                } else if (escapingAllowed.test(ch)) {
+                    scanIdentifier(new char[]{'\\', (char) ch});
+                    break;
+                }
 //                    if ((ch = in.read()) == 'u') {
 //                        ch = in.convertUnicode();
 //                        if (isUCLetter(ch)) {
@@ -1163,47 +868,33 @@ loop:
 //                            break loop;
 //                        }
 //                    }
-                default:
-                    env.out.println("funny.char:" + env.lineNumber(pos) + "/" + (pos & ((1 << OFFSETBITS) - 1)));
-                    env.error(pos, "funny.char");
-                    ch = in.read();
+
+                environment.traceln("Funny char with code=" + ch + " at: " +
+                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                environment.warning(pos, "warn.funny.char", ch);
+                ch = environment.read();
+            } else {
+                environment.traceln("Funny char with code=" + ch + " at: " +
+                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                environment.warning(pos, "warn.funny.char", ch);
+                ch = environment.read();
             }
         }
     }
 
-    @Override
     protected void debugScan(String dbstr) {
         if (token == null) {
-            env.traceln(dbstr + "<<<NULL TOKEN>>>");
+            environment.traceln(dbstr + "<<<NULL TOKEN>>>");
             return;
         }
-        env.trace(dbstr + token);
+        environment.trace(dbstr + token);
         switch (token) {
-            case IDENT:
-                env.traceln(" = '" + stringValue + "' {idValue = '" + idValue + "'}");
-                break;
-            case STRINGVAL:
-                env.traceln(" = {stringValue}: \"" + stringValue + "\"");
-                break;
-            case INTVAL:
-                env.traceln(" = {intValue}: " + intValue + "}");
-                break;
-            case FLOATVAL:
-                env.traceln(" = {floatValue}: " + floatValue);
-                break;
-            case DOUBLEVAL:
-                env.traceln(" = {doubleValue}: " + doubleValue);
-                break;
-            default:
-                env.traceln("");
+            case IDENT -> environment.traceln(" = '" + stringValue + "' {idValue = '" + idValue + "'}");
+            case STRINGVAL -> environment.traceln(" = {stringValue}: \"" + stringValue + "\"");
+            case INTVAL -> environment.traceln(" = {intValue}: " + intValue);
+            case FLOATVAL -> environment.traceln(" = {floatValue}: " + floatValue);
+            case DOUBLEVAL -> environment.traceln(" = {doubleValue}: " + doubleValue);
+            default -> environment.traceln("");
         }
     }
-
-    private Predicate<Integer> noFunc = (ch)-> false;
-    private Predicate<Integer> yesAndProcessFunc = (ch) -> {
-        boolean res = ((ch == '\\') || (ch == ':') || (ch == '@'));
-        if (res)
-            putCh('\\');
-        return res;
-    };
 }

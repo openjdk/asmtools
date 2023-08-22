@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,39 +22,35 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.jasm.JasmTokens;
-import org.openjdk.asmtools.jasm.Tables;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token.*;
-import static org.openjdk.asmtools.jdis.TraceUtils.traceln;
 
 /**
  * The Record attribute data
  * <p>
  * since class file 58.65535 (JEP 359)
  */
-public class RecordData extends  Indenter {
+public class RecordData extends  MemberData<ClassData> {
 
-
-    private final ClassData cls;
     private List<Component> components;
 
-    public RecordData(ClassData cls) {
-        this.cls = cls;
+    public RecordData(ClassData classData) {
+        super(classData);
     }
 
     public RecordData read(DataInputStream in) throws IOException {
         int count = in.readUnsignedShort();
-        traceln("components=" + count);
+        environment.traceln("components=" + count);
         components = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            components.add(new Component(cls).read(in));
+            components.add(new Component(data).read(in));
         }
         return this;
     }
@@ -65,45 +61,48 @@ public class RecordData extends  Indenter {
     public void print() throws IOException {
         int count = components.size();
         if (count > 0) {
-            cls.out.println(getIndentString() + RECORD.parseKey() + getIndentString() + LBRACE.parseKey());
+            printIndentLn(RECORD.parseKey() + " {");
             for (int i = 0; i < count; i++) {
                 Component cn = components.get(i);
-                cn.setIndent(indent() * 2);
+                cn.setCommentOffset(getCommentOffset() + getIndentSize()).incIndent();
                 if (i != 0 && cn.getAnnotationsCount() > 0)
-                    cn.out.println();
+                    cn.toolOutput.printlns("");
                 cn.print();
             }
-            cls.out.println(getIndentString() + RBRACE.parseKey());
-            cls.out.println();
+            printIndentLn("}");
         }
     }
 
-    private class Component extends MemberData {
-        // CP index to the name
+    /**
+     * record_component_info {
+     *     u2             name_index;
+     *     u2             descriptor_index;
+     *     u2             attributes_count;
+     *     attribute_info attributes[attributes_count];
+     * }
+     */
+    private static class Component extends MemberData<ClassData> {
+        // CP index to a CONSTANT_Utf8_info structure representing a valid unqualified name denoting the record component
         private int name_cpx;
-        // CP index to the type descriptor
-        private int type_cpx;
+        // CP index to a CONSTANT_Utf8_info structure representing a field descriptor which encodes the type of the record component (§4.3.2).
+        private int descriptor_cpx;
 
-        public Component(ClassData cls) {
-            super(cls);
+        public Component(ClassData classData) {
+            super(classData);
             memberType = "RecordData";
         }
 
         @Override
-        protected boolean handleAttributes(DataInputStream in, Tables.AttrTag attrtag, int attrlen) throws IOException {
+        protected boolean handleAttributes(DataInputStream in, EAttribute attributeTag, int attributeLength) throws IOException {
             // Read the Attributes
             boolean handled = true;
-            switch (attrtag) {
-                case ATT_Signature:
-                    if( signature != null ) {
-                        traceln("Record attribute:  more than one attribute Signature are in component.attribute_info_attributes[attribute_count]");
-                        traceln("Last one will be used.");
-                    }
-                    signature = new SignatureData(cls).read(in, attrlen);
-                    break;
-                default:
-                    handled = false;
-                    break;
+            if (attributeTag == EAttribute.ATT_Signature) {
+                if (signature != null) {
+                    environment.warning("warn.one.attribute.required", "Signature", "record_component_info");
+                }
+                signature = new SignatureData(data).read(in, attributeLength);
+            } else {
+                handled = false;
             }
             return handled;
         }
@@ -114,9 +113,9 @@ public class RecordData extends  Indenter {
         public Component read(DataInputStream in) throws IOException {
             // read the Component CP indexes
             name_cpx = in.readUnsignedShort();
-            type_cpx = in.readUnsignedShort();
-            traceln(2, "RecordComponent: name[" + name_cpx + "]=" + cls.pool.getString(name_cpx)
-                    + " descriptor[" + type_cpx + "]=" + cls.pool.getString(type_cpx));
+            descriptor_cpx = in.readUnsignedShort();
+            environment.traceln("RecordComponent: name[" + name_cpx + "]=" + data.pool.getString(name_cpx, index->"?")
+                    + " descriptor[" + descriptor_cpx + "]=" + data.pool.getString(descriptor_cpx, index->"?"));
             // Read the attributes
             readAttributes(in);
             return this;
@@ -127,20 +126,14 @@ public class RecordData extends  Indenter {
          */
         public void print() throws IOException {
             // print component's attributes
-                super.printAnnotations(getIndentString());
+                super.printAnnotations();
             // print component
-            StringBuilder bodyPrefix = new StringBuilder(getIndentString());
-            StringBuilder tailPrefix = new StringBuilder();
-            if (isSynthetic) {
-                bodyPrefix.append(JasmTokens.Token.SYNTHETIC.parseKey()).append(' ');
-            }
-            if (isDeprecated) {
-                bodyPrefix.append(JasmTokens.Token.DEPRECATED.parseKey()).append(' ');
-            }
+            StringBuilder prefix = new StringBuilder(getIndentString());
+            // add synthetic, deprecated if necessary
+            prefix.append(getPseudoFlagsAsString());
             // component
-            bodyPrefix.append(JasmTokens.Token.COMPONENT.parseKey()).append(' ');
-
-            printVar(bodyPrefix, tailPrefix,name_cpx, type_cpx);
+            prefix.append(JasmTokens.Token.COMPONENT.parseKey()).append(' ');
+            printVar(prefix, null, name_cpx, descriptor_cpx, 0);
         }
     }
 }

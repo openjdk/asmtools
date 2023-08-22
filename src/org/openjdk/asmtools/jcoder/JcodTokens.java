@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,7 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import static org.openjdk.asmtools.jasm.Tables.*;
+import org.openjdk.asmtools.common.structure.StackMap;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -74,15 +74,15 @@ public class JcodTokens {
         MISC                (5, "Misc");
 
         private final Integer value;
-        private final String printval;
+        private final String printVal;
 
-        TokenType(Integer val, String print) {
+        TokenType(Integer val, String printVal) {
             value = val;
-            printval = print;
+            this.printVal = printVal;
         }
 
-        public String printval() {
-            return printval;
+        public String printVal() {
+            return printVal;
         }
     }
 
@@ -185,7 +185,7 @@ public class JcodTokens {
 
     static {
 
-        // register all of the tokens
+        // register all the tokens
         for (Token tk : Token.values()) {
             registerToken(tk);
         }
@@ -313,20 +313,20 @@ public class JcodTokens {
 
         private final int value;
         private final String parseKey;
-        private final String printval;
+        private final String printVal;
         private final String alias;
 
         ConstType(int val, String print, String parse) {
             value = val;
             parseKey = parse;
-            printval = print;
+            printVal = print;
             alias = null;
         }
 
         ConstType(int val, String print, String parse, String als) {
             value = val;
             parseKey = parse;
-            printval = print;
+            printVal = print;
             alias = als;
         }
 
@@ -339,7 +339,7 @@ public class JcodTokens {
         }
 
         public String printval() {
-            return printval;
+            return printVal;
         }
 
         public void print(PrintWriter out) {
@@ -348,7 +348,7 @@ public class JcodTokens {
 
         @Override
         public String toString() {
-            return "<" + printval + "> [" + Integer.toString(value) + "]";
+            return "<" + printVal + "> [" + value + "]";
         }
     };
 
@@ -369,19 +369,7 @@ public class JcodTokens {
     }
 
     public static int constValue(String stringValue) {
-        ConstType Val = constType(stringValue);
-        int val = -1;
-
-        if (Val != null) {
-            val = Val.value();
-        } else {
-            StackMapType smt = stackMapTypeKey(stringValue);
-
-            if (smt != null) {
-                val = smt.value();
-            }
-        }
-        return val;
+        ConstType constType = constType(stringValue);
+        return constType != null ? constType.value() : StackMap.VerificationType.getByParseKey(stringValue).tag();
     }
-
 }

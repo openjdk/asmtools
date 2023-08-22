@@ -27,10 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- *
- */
-public class DataVector<T extends Data> implements Iterable<T> {
+public class DataVector<T extends DataWriter> implements Iterable<T> {
 
     ArrayList<T> elements;
 
@@ -75,7 +72,7 @@ public class DataVector<T extends Data> implements Iterable<T> {
 
     public void writeElements(CheckedDataOutputStream out)
             throws IOException {
-        for (Data element : elements) {
+        for (DataWriter element : elements) {
             element.write(out);
         }
     }
@@ -89,7 +86,7 @@ public class DataVector<T extends Data> implements Iterable<T> {
         return elements.size();
     }
 
-    public Data elementAt(int k) {
+    public DataWriter elementAt(int k) {
         return elements.get(k);
     }
 }// end class DataVector

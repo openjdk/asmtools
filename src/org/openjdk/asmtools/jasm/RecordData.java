@@ -22,29 +22,38 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.openjdk.asmtools.jasm.RuntimeConstants.*;
+import static org.openjdk.asmtools.common.structure.EModifier.*;
 
 /**
  * The record attribute (JEP 359 since class file 58.65535)
  */
 public class RecordData extends AttrData {
+    private ClassData classData;
     private List<ComponentData> components = new ArrayList<>();
 
-    public RecordData(ClassData cls) {
-        super(cls, Tables.AttrTag.ATT_Record.parsekey());
+    /**
+     *
+     * @param classData callback reference to class data to manipulate signature attribute
+     */
+    public RecordData(ClassData classData) {
+        super(classData.pool, EAttribute.ATT_Record);
+        this.classData = classData;
     }
 
-    public void addComponent(ConstantPool.ConstCell nameCell,
-                             ConstantPool.ConstCell descCell,
-                             ConstantPool.ConstCell signature,
+    public void addComponent(ConstCell nameCell,
+                             ConstCell descCell,
+                             ConstCell signature,
                              ArrayList<AnnotationData> annotations) {
         // Define a field if absent
-        FieldData fd = getClassData().addFieldIfAbsent(ACC_MANDATED & ACC_PRIVATE & ACC_FINAL, nameCell, descCell);
-        ComponentData cd = new ComponentData(fd);
+        FieldData fd = classData.addFieldIfAbsent(EModifier.getFlags(ACC_MANDATED, ACC_PRIVATE, ACC_FINAL), nameCell, descCell);
+        ComponentData cd = new ComponentData(classData, fd);
         if( annotations != null ) {
             cd.addAnnotations(annotations);
         }
@@ -74,21 +83,23 @@ public class RecordData extends AttrData {
     }
 
     class ComponentData extends MemberData {
+        private ClassData classData;
         private FieldData field;
 
-        public ComponentData(FieldData field) {
-            super(getClassData());
+        public ComponentData(ClassData classData, FieldData field) {
+            super(classData.pool, classData.getEnvironment());
+            this.classData = classData;
             this.field = field;
         }
 
         @Override
         protected DataVector getAttrVector() {
-            return getDataVector(signatureAttr);
+            return classData.getDataVector(signatureAttr);
         }
 
         public void write(CheckedDataOutputStream out) throws IOException, Parser.CompilerError {
-            out.writeShort(field.getNameDesc().left.arg);
-            out.writeShort(field.getNameDesc().right.arg);
+            out.writeShort(field.getNameDesc().value.first.cpIndex);
+            out.writeShort(field.getNameDesc().value.second.cpIndex);
             DataVector attrs = getAttrVector();
             attrs.write(out);
         }

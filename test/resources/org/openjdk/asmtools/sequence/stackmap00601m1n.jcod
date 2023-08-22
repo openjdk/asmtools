@@ -1,0 +1,79 @@
+/*
+ * Ident: @(#)stackmap00601m1n.jcod generated from: @(#)stackmap00601m.jmpp 1.9 06/06/06
+ *
+ * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+
+
+class javasoft/sqe/tests/vm/cldc/classfmt/stackmap006/stackmap00601m1/stackmap00601m1n {
+  0xCAFEBABE;
+  0;
+  50;
+  [] { // Constant Pool
+    ; // first element is empty
+    Method #3 #5; // #1    
+    Utf8 "StackMapTable"; // #2    
+    class #4; // #3    
+    Utf8 "java/lang/Object"; // #4    
+    NameAndType #10 #7; // #5    
+    Utf8 "SourceFile"; // #6    
+    Utf8 "()V"; // #7    
+    Utf8 "Code"; // #8    
+    Utf8 "a.jasm"; // #9    
+    Utf8 "<init>"; // #10    
+    class #12; // #11    
+    Utf8 "javasoft/sqe/tests/vm/cldc/classfmt/stackmap006/stackmap00601m1/stackmap00601m1n"; // #12    
+  } // Constant Pool
+
+  0x0000; // access
+  #11;// this_cpx
+  #3;// super_cpx
+
+  [] { // Interfaces
+  } // Interfaces
+
+  [] { // fields
+  } // fields
+
+  [] { // methods
+    { // Member
+      0x0001; // access
+      #10; // name_cpx
+      #7; // sig_cpx
+      [] { // Attributes
+        Attr(#8) { // Code
+          1; // max_stack
+          1; // max_stack_items
+          Bytes[]{
+            0x2AB70001B1000000;
+            0x0000000000B1;
+          };
+          [] { // Traps
+          } // end Traps
+          [] { // Attributes
+            Attr(#2) { // StackMap
+                [] { //
+/* right:
+                  255b,  5, []{}, []{B};
+end right */
+// wrong:
+                  255b,  5, []{}, [0]{B};
+// end wrong
+                }
+            } // end StackMap
+          } // Attributes
+        } // end Code
+      } // Attributes
+    } // Member
+  } // methods
+
+  [] { // Attributes
+    Attr(#6) { // SourceFile
+      #9;
+    } // end SourceFile
+  } // Attributes
+} // end class javasoft/sqe/tests/vm/cldc/classfmt/stackmap006/stackmap00601m1/stackmap00601m1n
+
+

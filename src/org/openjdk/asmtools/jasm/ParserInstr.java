@@ -22,14 +22,16 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.SyntaxError;
+
 import static org.openjdk.asmtools.jasm.JasmTokens.*;
-import static org.openjdk.asmtools.jasm.Tables.*;
+import static org.openjdk.asmtools.jasm.ClassFileConst.*;
 import static org.openjdk.asmtools.jasm.OpcodeTables.*;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 
 /**
- * ParserInstr
+ * Instruction Parser
  *
  * ParserInstr is a parser class owned by Parser.java. It is primarily responsible for
  * parsing instruction byte codes.
@@ -40,24 +42,22 @@ public class ParserInstr extends ParseBase {
      * local handle for the constant parser - needed for parsing constants during
      * instruction construction.
      */
-    private ParserCP cpParser = null;
+    private final ParserCP instructionParser;
 
     /**
-     * main constructor
-     *
-     * @param scanner
-     * @param parser
-     * @param env
+     * Constructor
+     * @param parser    parent, main parser
+     * @param cpParser  constant pool parser
      */
-    protected ParserInstr(Scanner scanner, Parser parser, ParserCP cpParser, Environment env) {
-        super.init(scanner, parser, env);
-        this.cpParser = cpParser;
+    protected ParserInstr(Parser parser, ParserCP cpParser) throws IOException {
+        super.init(parser);
+        this.instructionParser = cpParser;
     }
 
     /**
      * Parse an instruction.
      */
-    protected void parseInstr() throws Scanner.SyntaxError, IOException {
+    protected void parseInstr() throws SyntaxError, IOException {
         // ignore possible line numbers after java disassembler
         if (scanner.token == Token.INTVAL) {
             scanner.scan();
@@ -84,29 +84,30 @@ public class ParserInstr extends ParseBase {
             }
             // actually it was a label
             scanner.scan();
-            parser.curCode.LabelDef(mnenoc_pos, mnemocode);
+            parser.curCodeAttr.LabelDef(mnenoc_pos, mnemocode);
         }
 
         Opcode opcode = OpcodeTables.opcode(mnemocode);
         if (opcode == null) {
-            debugScan(" Error:  mnemocode = '" + mnemocode + "'.   ");
+            environment.error(mnenoc_pos, "err.wrong.mnemocode", mnemocode);
+            throw new SyntaxError();
         }
-        OpcodeType optype = opcode.type();
+        OpcodeType opcodeType = opcode.type();
 
-        Argument arg = null;
+        Indexer arg = null;
         Object arg2 = null;
-        StackMapData sMap = null;
+        StackMapData stackMapData;
 
-        debugScan(" --IIIII---[ParserInstr:[parseInstr]:  (Pos: " + mnenoc_pos + ") mnemocode: '" + opcode.parsekey() + "' ");
+        scanner.debugScan(" --IIIII---[ParserInstr:[parseInstr]:  (Pos: " + mnenoc_pos + ") mnemocode: '" + opcode.parseKey() + "' ");
 
-        switch (optype) {
+        switch (opcodeType) {
             case NORMAL:
                 switch (opcode) {
 
                     // pseudo-instructions:
                     case opc_bytecode:
                         for (;;) {
-                            parser.curCode.addInstr(mnenoc_pos, Opcode.opc_bytecode, parser.parseUInt(1), null);
+                            parser.curCodeAttr.addInstr(mnenoc_pos, Opcode.opc_bytecode, parser.parseUInt(1), null);
                             if (scanner.token != Token.COMMA) {
                                 return;
                             }
@@ -114,7 +115,7 @@ public class ParserInstr extends ParseBase {
                         }
                     case opc_try:
                         for (;;) {
-                            parser.curCode.beginTrap(scanner.pos, parser.parseIdent());
+                            parser.curCodeAttr.beginTrap(scanner.pos, parser.parseIdent());
                             if (scanner.token != Token.COMMA) {
                                 return;
                             }
@@ -122,15 +123,15 @@ public class ParserInstr extends ParseBase {
                         }
                     case opc_endtry:
                         for (;;) {
-                            parser.curCode.endTrap(scanner.pos, parser.parseIdent());
+                            parser.curCodeAttr.endTrap(scanner.pos, parser.parseIdent());
                             if (scanner.token != Token.COMMA) {
                                 return;
                             }
                             scanner.scan();
                         }
                     case opc_catch:
-                        parser.curCode.trapHandler(scanner.pos, parser.parseIdent(),
-                                cpParser.parseConstRef(ConstType.CONSTANT_CLASS));
+                        parser.curCodeAttr.trapHandler(scanner.pos, parser.parseIdent(),
+                                instructionParser.parseConstRef(ConstType.CONSTANT_CLASS));
                         return;
                     case opc_var:
                         for (;;) {
@@ -149,13 +150,12 @@ public class ParserInstr extends ParseBase {
                             scanner.scan();
                         }
                     case opc_locals_map:
-                        sMap = parser.curCode.getStackMap();
-                        if (sMap.localsMap != null) {
-                            env.error(scanner.pos, "localsmap.repeated");
+                        stackMapData = parser.curCodeAttr.getStackMap();
+                        if (stackMapData.localsMap != null) {
+                            environment.error(scanner.pos, "err.localsmap.repeated");
                         }
-                        ;
                         DataVector localsMap = new DataVector();
-                        sMap.localsMap = localsMap;
+                        stackMapData.localsMap = localsMap;
                         if (scanner.token == Token.SEMICOLON) {
                             return;  // empty locals_map allowed
                         }
@@ -167,13 +167,12 @@ public class ParserInstr extends ParseBase {
                             scanner.scan();
                         }
                     case opc_stack_map:
-                        sMap = parser.curCode.getStackMap();
-                        if (sMap.stackMap != null) {
-                            env.error(scanner.pos, "stackmap.repeated");
+                        stackMapData = parser.curCodeAttr.getStackMap();
+                        if (stackMapData.stackMap != null) {
+                            environment.error(scanner.pos, "err.stackmap.repeated");
                         }
-                        ;
                         DataVector stackMap = new DataVector();
-                        sMap.stackMap = stackMap;
+                        stackMapData.stackMap = stackMap;
                         if (scanner.token == Token.SEMICOLON) {
                             return;  // empty stack_map allowed
                         }
@@ -185,12 +184,11 @@ public class ParserInstr extends ParseBase {
                             scanner.scan();
                         }
                     case opc_stack_frame_type:
-                        sMap = parser.curCode.getStackMap();
-                        if (sMap.stackFrameType != null) {
-                            env.error(scanner.pos, "frametype.repeated");
+                        stackMapData = parser.curCodeAttr.getStackMap();
+                        if (stackMapData.isSet()) {
+                            environment.error(scanner.pos, "err.stackmaptable.repeated");
                         }
-                        ;
-                        sMap.setStackFrameType(parser.parseIdent());
+                        stackMapData.setScannerPosition(scanner.pos).setStackFrameType(parser.parseIdent());
                         return;
 
                     // normal instructions:
@@ -222,7 +220,7 @@ public class ParserInstr extends ParseBase {
                     case opc_iinc: // loc var, const
                         arg = parser.parseLocVarRef();
                         scanner.expect(Token.COMMA);
-                        arg2 = parser.parseInt(1);
+                        arg2 = parser.parseInt(opcode.parseKey(), 1);
                         break;
                     case opc_tableswitch:
                     case opc_lookupswitch:
@@ -232,49 +230,51 @@ public class ParserInstr extends ParseBase {
                         int type;
                         if (scanner.token == Token.INTVAL) {
                             type = scanner.intValue;
-                        } else if ((type = Tables.basictypeValue(scanner.idValue)) == -1) {
-                            env.error(scanner.pos, "type.expected");
-                            throw new Scanner.SyntaxError();
+                        } else if ((type = ClassFileConst.basicTypeValue(scanner.idValue)) == -1) {
+                            environment.error(scanner.pos, "err.array.type.expected");
+                            throw new SyntaxError();
                         }
                         scanner.scan();
-                        arg = new Argument(type);
+                        arg = new Indexer(type);
                         break;
                     }
                     case opc_new:
                     case opc_anewarray:
                     case opc_instanceof:
                     case opc_checkcast:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
+                    case opc_aconst_init:  // Valhalla
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_CLASS);
                         break;
                     case opc_bipush:
-                        arg = parser.parseInt(1);
+                        arg = parser.parseInt(opcode.parseKey(), 1);
                         break;
                     case opc_sipush:
-                        arg = parser.parseInt(2);
+                        arg = parser.parseInt(opcode.parseKey(), 2);
                         break;
                     case opc_ldc:
                     case opc_ldc_w:
                     case opc_ldc2_w:
-                        arg = cpParser.parseConstRef(null);
+                        arg = instructionParser.parseConstRef(null);
                         break;
                     case opc_putstatic:
                     case opc_getstatic:
                     case opc_putfield:
                     case opc_getfield:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_FIELD);
+                    case opc_withfield:     // Valhalla
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_FIELDREF);
                         break;
                     case opc_invokevirtual:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_METHOD);
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_METHODREF);
                         break;
                     case opc_invokestatic:
                     case opc_invokespecial:
-                        ConstType ctype01  = ConstType.CONSTANT_METHOD;
-                        ConstType ctype02  = ConstType.CONSTANT_INTERFACEMETHOD;
-                        if(Modifier.isInterface(this.parser.cd.access)) {
-                            ctype01  = ConstType.CONSTANT_INTERFACEMETHOD;
-                            ctype02  = ConstType.CONSTANT_METHOD;
+                        ConstType ctype01  = ConstType.CONSTANT_METHODREF;
+                        ConstType ctype02  = ConstType.CONSTANT_INTERFACEMETHODREF;
+                        if(Modifier.isInterface(this.parser.classData.access)) {
+                            ctype01  = ConstType.CONSTANT_INTERFACEMETHODREF;
+                            ctype02  = ConstType.CONSTANT_METHODREF;
                         }
-                        arg = cpParser.parseConstRef(ctype01, ctype02);
+                        arg = instructionParser.parseConstRef(ctype01, ctype02);
                         break;
                     case opc_jsr:
                     case opc_goto:
@@ -298,25 +298,24 @@ public class ParserInstr extends ParseBase {
                     case opc_goto_w:
                         arg = parseLabelRef();
                         break;
-
                     case opc_invokeinterface:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_INTERFACEMETHOD);
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_INTERFACEMETHODREF);
                         scanner.expect(Token.COMMA);
                         arg2 = parser.parseUInt(1);
                         break;
                     case opc_invokedynamic:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_INVOKEDYNAMIC);
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_INVOKEDYNAMIC);
                         break;
 
                     case opc_multianewarray:
-                        arg = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
+                        arg = instructionParser.parseConstRef(ConstType.CONSTANT_CLASS);
                         scanner.expect(Token.COMMA);
                         arg2 = parser.parseUInt(1);
                         break;
                     case opc_wide:
                     case opc_nonpriv:
                     case opc_priv:
-                        int opc2 = (opcode.value() << 8) | parser.parseUInt(1).arg;
+                        int opc2 = (opcode.value() << 8) | parser.parseUInt(1).cpIndex;
                         opcode = opcode(opc2);
                         break;
                 }
@@ -325,42 +324,38 @@ public class ParserInstr extends ParseBase {
                 arg = parser.parseLocVarRef();
                 if (opcode == Opcode.opc_iinc_w) { // loc var, const
                     scanner.expect(Token.COMMA);
-                    arg2 = parser.parseInt(2);
+                    arg2 = parser.parseInt(opcode.parseKey(),2);
                 }
                 break;
             case NONPRIVELEGED:
             case PRIVELEGED:
                 break;
             default:
-                env.error(scanner.prevPos, "wrong.mnemocode", mnemocode);
-                throw new Scanner.SyntaxError();
+                environment.error(scanner.prevPos, "err.wrong.mnemocode", mnemocode);
+                throw new SyntaxError();
         }
-        // env.traceln(" [ParserInstr.parseInstr] ===============> Adding Instruction: [" + mnenoc_pos + "]: instr: "+ mnemocode /* opcNamesTab[opc] */);
-        parser.curCode.addInstr(mnenoc_pos, opcode, arg, arg2);
+        parser.curCodeAttr.addInstr(mnenoc_pos, opcode, arg, arg2);
     } //end parseInstr
 
     /**
      * Parse a Switch Table. return value: SwitchTable.
      */
-    protected SwitchTable parseSwitchTable() throws Scanner.SyntaxError, IOException {
+    protected SwitchTable parseSwitchTable() throws SyntaxError, IOException {
         scanner.expect(Token.LBRACE);
-        Argument label;
+        Indexer label;
         int numpairs = 0, key;
-        SwitchTable table = new SwitchTable(env);
+        SwitchTable table = new SwitchTable(environment);
 tableScan:
         {
             while (numpairs < 1000) {
-//              env.traceln("start tableScan:" + token);
                 switch (scanner.token) {
                     case INTVAL:
-//                        env.traceln("enter tableScan:" + token);
                         key = scanner.intValue * scanner.sign;
                         scanner.scan();
                         scanner.expect(Token.COLON);
                         table.addEntry(key, parseLabelRef());
                         numpairs++;
                         if (scanner.token != Token.SEMICOLON) {
-//                            env.traceln("break tableScan1:" + token);
                             break tableScan;
                         }
                         scanner.scan();
@@ -368,22 +363,20 @@ tableScan:
                     case DEFAULT:
                         scanner.scan();
                         scanner.expect(Token.COLON);
-                        if (table.deflabel != null) {
-                            env.error("default.redecl");
+                        if (table.defLabel != null) {
+                            environment.error("err.default.redecl");
                         }
-                        table.deflabel = parseLabelRef();
+                        table.defLabel = parseLabelRef();
                         if (scanner.token != Token.SEMICOLON) {
-//                            env.traceln("break tableScan2:" + token);
                             break tableScan;
                         }
                         scanner.scan();
                         break;
                     default:
-//                      env.traceln("break tableScan3:" + token + "val=" + intValue);
                         break tableScan;
                 } // end switch
             } // while (numpairs<1000)
-            env.error("long.switchtable", "1000");
+            environment.error("err.long.switchtable", "1000");
         } // end tableScan
         scanner.expect(Token.RBRACE);
         return table;
@@ -392,21 +385,21 @@ tableScan:
     /**
      * Parse a label instruction argument
      */
-    protected Argument parseLabelRef() throws Scanner.SyntaxError, IOException {
+    protected Indexer parseLabelRef() throws SyntaxError, IOException {
         switch (scanner.token) {
             case INTVAL: {
                 int v = scanner.intValue * scanner.sign;
                 scanner.scan();
-                return new Argument(v);
+                return new Indexer(v);
             }
             case IDENT: {
                 String label = scanner.stringValue;
                 scanner.scan();
-                return parser.curCode.LabelRef(label);
+                return parser.curCodeAttr.LabelRef(label);
             }
         }
-        env.error("label.expected");
-        throw new Scanner.SyntaxError();
+        environment.error("err.label.expected");
+        throw new SyntaxError();
     }
 
 }

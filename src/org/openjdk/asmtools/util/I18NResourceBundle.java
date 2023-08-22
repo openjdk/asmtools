@@ -34,6 +34,8 @@ import java.util.ResourceBundle;
  */
 public class I18NResourceBundle extends ResourceBundle {
 
+    private boolean warn = true;
+
     /**
      * Get a package-specific resource bundle for a class containing localization data.
      * The bundle is named i18n.properties in the same package as the given class.
@@ -59,19 +61,19 @@ public class I18NResourceBundle extends ResourceBundle {
         this.classLoader = cl;
     }
 
-    /**
-     * Get an entry from the resource bundle. If the resource cannot be found, a message
-     * is printed to the console and the result will be a string containing the method
-     * parameters.
-     *
-     * @param key the name of the entry to be returned
-     * @param arg an argument to be formatted into the result using
-     * {@link java.text.MessageFormat#format}
-     * @return the formatted string
-     */
-    public String getString(String key, Object arg) {
-        return getString(key, new Object[]{arg});
-    }
+//    /**
+//     * Get an entry from the resource bundle. If the resource cannot be found, a message
+//     * is printed to the console and the result will be a string containing the method
+//     * parameters.
+//     *
+//     * @param key the name of the entry to be returned
+//     * @param arg an argument to be formatted into the result using
+//     * {@link java.text.MessageFormat#format}
+//     * @return the formatted string
+//     */
+//    public String getString(String key, Object arg) {
+//        return getString(key, new Object[]{arg});
+//    }
 
     /**
      * Get an entry from the resource bundle. If the resource cannot be found, a message
@@ -85,15 +87,12 @@ public class I18NResourceBundle extends ResourceBundle {
      */
     public String getString(String key, Object... args) {
         try {
-            return MessageFormat.format(getString(key), args);
-        } catch (MissingResourceException e) {
-            System.err.println("WARNING: missing resource: " + key + " for " + name);
-            StringBuffer sb = new StringBuffer(key);
-            for (int i = 0; i < args.length; i++) {
-                sb.append('\n');
-                sb.append(args.toString());
-            }
-            return sb.toString();
+            String resourceString = getString(key);
+            return MessageFormat.format(resourceString, args);
+        } catch (MissingResourceException mre) {
+            return null;
+        } catch(IllegalArgumentException  iae) {
+            return iae.getMessage();
         }
     }
 
@@ -118,6 +117,10 @@ public class I18NResourceBundle extends ResourceBundle {
         }
     }
 
+    public void setWarn(boolean warn) {
+        this.warn = warn;
+    }
+
     /**
      * A required internal method for ResourceBundle. Load the actual resource bundle, if
      * it has not yet been loaded, then hand the request off to that bundle. If the
@@ -131,7 +134,9 @@ public class I18NResourceBundle extends ResourceBundle {
             }
             return delegate.getObject(key);
         } catch (MissingResourceException e) {
-            System.err.println("WARNING: missing resource: " + key + " for " + name);
+            if (warn) {
+                System.err.println("WARNING: resource: '" + key + "' not found in " + name);
+            }
             return key;
         }
     }

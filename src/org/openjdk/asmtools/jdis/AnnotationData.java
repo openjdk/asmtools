@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,123 +24,128 @@ package org.openjdk.asmtools.jdis;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
-import static java.lang.String.format;
+import static org.openjdk.asmtools.jdis.MemberData.AnnotationElementState.*;
 
-/**
- *
- */
-public class  AnnotationData {
-    /*-------------------------------------------------------- */
-    /* AnnotData Fields */
-
-    protected String visAnnotToken = "@+";
-    protected String invAnnotToken = "@-";
+public class AnnotationData<T extends MemberData> extends MemberData {
+    protected String visibleAnnotationToken = "@+";
+    protected String invisibleAnnotationToken = "@-";
     protected String dataName = "AnnotationData";
-    private boolean invisible = false;
-    private int type_cpx = 0;  //an index into the constant pool indicating the annotation type for this annotation.
-    private ArrayList<AnnotationElement> array = new ArrayList<>();
-    private ClassData cls;
-    /*-------------------------------------------------------- */
+    private final ArrayList<AnnotationElement> annotationElements = new ArrayList<>();
 
-    public AnnotationData(boolean invisible, ClassData cls) {
-        this.cls = cls;
+    private int type_cpx = 0;       //an index into the constant pool indicating the annotation type for this annotation.
+    private final boolean invisible;
+
+    public <T extends MemberData> AnnotationData(T data, boolean invisible) {
+        super(data);
         this.invisible = invisible;
     }
 
     public void read(DataInputStream in) throws IOException {
         type_cpx = in.readShort();
         int elemValueLength = in.readShort();
-        TraceUtils.traceln(3, format(" %s: name[%d]=%s", dataName, type_cpx, cls.pool.getString(type_cpx)),
-                format(" %s: %s  num_elems: %d", dataName, cls.pool.getString(type_cpx), elemValueLength));
-        for (int evc = 0; evc < elemValueLength; evc++) {
-            AnnotationElement elem = new AnnotationElement(cls);
-            TraceUtils.traceln(3, format(" %s: %s reading [%d]", dataName, cls.pool.getString(type_cpx), evc));
+        for (int i = 0; i < elemValueLength; i++) {
+            AnnotationElement elem = new AnnotationElement(data);
             elem.read(in, invisible);
-            array.add(elem);
+            annotationElements.add(elem);
         }
     }
 
-    public void print(PrintWriter out, String tab) {
-        printHeader(out, tab);
-        printBody(out, "");
+    @Override
+    public void print() throws IOException {
+        printHeader();
+        printBody();
     }
 
-    protected void printHeader(PrintWriter out, String tab) {
+    protected void printHeader() {
         //Print annotation Header, which consists of the
         // Annotation Token ('@'), visibility ('+', '-'),
         // and the annotation name (type index, CPX).
-
         // Mark whether it is invisible or not.
-        if (invisible) {
-            out.print(tab + invAnnotToken);
-        } else {
-            out.print(tab + visAnnotToken);
-        }
-        String annoName = cls.pool.getString(type_cpx);
-
+        String annotationName = pool.getString(type_cpx, index -> "#" + index);
+        // TODO: check Valhalla InlinableReferenceType: Q ClassName ;
         // converts class type to java class name
-        if (annoName.startsWith("L") && annoName.endsWith(";")) {
-            annoName = annoName.substring(1, annoName.length() - 1);
+        if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
+            annotationName = annotationName.substring(1, annotationName.length() - 1);
         }
-
-        out.print(annoName);
+        switch (getAnnotationElementState()) {
+            case HAS_DEFAULT_VALUE -> {
+                print(DEFAULT_VALUE_PREFIX).print(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
+                setCommentOffset(getCommentOffset() + DEFAULT_VALUE_PREFIX.length());
+            }
+            case PARAMETER_ANNOTATION, INLINED_ELEMENT -> print(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
+            default -> printIndent(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
+        }
     }
 
-    protected void printBody(PrintWriter out, String tab) {
+    protected void printBody() throws IOException {
         // For a standard annotation, print out brackets,
         // and list the name/value pairs.
-        out.print(" { ");
-        int i = 0;
-        for (AnnotationElement elem : array) {
-            elem.print(out, tab);
-            if (i++ < array.size() - 1) {
-                out.print(", ");
+        if (isEmpty()) {
+            // Marker annotation
+            print(" { }");
+        } else {
+            switch (getAnnotationElementState()) {
+                case HAS_DEFAULT_VALUE -> {
+                    println(" {");
+                    printBodyOfDefaultData();
+                    print(" }");
+                }
+                case INLINED_ELEMENT -> {
+                    incIndent().printIndentLn("{");
+                    printBodyOfData();
+                    printIndent("}").decIndent();
+                }
+                default -> {
+                    println("{");
+                    printBodyOfData();
+                    printIndent("}");
+                }
             }
         }
-        out.print("  }");
+    }
+
+    // Prints the annotation value that is the default.
+    protected void printBodyOfDefaultData() throws IOException {
+        int prefixLength = getCommentOffset();
+        for (AnnotationElement annotationElement : annotationElements) {
+            print(enlargedIndent(prefixLength));
+            annotationElement.setElementState(RIGHT_OPERAND);
+            annotationElement.print();
+        }
+    }
+
+    // Prints the annotation value that is the default.
+    protected void printBodyOfData() throws IOException {
+        int i = 0;
+        for (AnnotationElement annotationElement : annotationElements) {
+            annotationElement.setCommentOffset(getCommentOffset()).setTheSame(this).incIndent();
+            annotationElement.print();
+            println((i++ < annotationElements.size() - 1) ? "," : "");
+        }
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        String annoName = cls.pool.getString(type_cpx);
-
+        String annotationName = pool.getString(type_cpx, index -> "#" + index);
+        // TODO: check 401 InlinableReferenceType: Q ClassName ;
         // converts class type to java class name
-        if (annoName.startsWith("L") && annoName.endsWith(";")) {
-            annoName = annoName.substring(1, annoName.length() - 1);
+        if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
+            annotationName = annotationName.substring(1, annotationName.length() - 1);
         }
-
-        //Print annotation
-        // Mark whether it is invisible or not.
-        if (invisible) {
-            sb.append(invAnnotToken);
-        } else {
-            sb.append(visAnnotToken);
-        }
-
-        sb.append(annoName);
-        sb.append(" { ");
-
-        int i = 0;
-        for (AnnotationElement elem : array) {
-            sb.append(elem.toString());
-
-            if (i++ < array.size() - 1) {
-                sb.append(", ");
-            }
-        }
-
-        _toString(sb);
-
-        sb.append("}");
-        return sb.toString();
+        sb.append(invisible ? invisibleAnnotationToken : visibleAnnotationToken);
+        sb.append(annotationName).append("{");
+        sb.append(annotationElements.stream().map(AnnotationElement::toString).collect(Collectors.joining(",")));
+        return sb.append("}").toString();
     }
 
-    protected void _toString(StringBuilder sb) {
-        // sub-classes override this
+    /**
+     * @return true if annotation has no elements
+     */
+    public boolean isEmpty() {
+        return annotationElements.isEmpty();
     }
 }
-

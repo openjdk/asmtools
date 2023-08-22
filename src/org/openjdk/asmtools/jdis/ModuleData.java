@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,181 +22,202 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-
-import org.openjdk.asmtools.common.Module;
-import org.openjdk.asmtools.common.Tool;
+import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.jasm.JasmTokens;
 
-import static org.openjdk.asmtools.jdis.Main.i18n;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.openjdk.asmtools.jdis.ConstantPool.TAG.CONSTANT_CLASS;
+import static org.openjdk.asmtools.jdis.ConstantPool.TAG.CONSTANT_MODULE;
+import static org.openjdk.asmtools.jdis.Options.PR.CPX;
 
 /**
- *  The module attribute data.
+ * The module attribute data.
  */
-public class ModuleData {
+public class ModuleData extends MemberData<ClassData>{
 
-  // internal references
-  private final Tool tool;
+    protected final boolean printCPIndex = Options.contains(CPX);
+    private ModuleContent moduleContent;
 
-  private ConstantPool pool;
-  private PrintWriter out;
-  private Module module;
-
-  public ModuleData(ClassData clsData) {
-    this.tool = clsData.tool;
-    this.pool = clsData.pool;
-    this.out = clsData.out;
-  }
-
-  public String getModuleName() {
-    return module == null ? "N/A" : module.getModuleName();
-  }
-
-  public String getModuleVersion() { return module.getModuleVersion();  }
-
-  public String getModuleHeader() {
-    if ( module == null ) {
-      return "N/A";
-    } else {
-      StringBuilder sb = new StringBuilder(module.getModuleFlags());
-      sb.append(JasmTokens.Token.MODULE.parseKey()).append(" ");
-      sb.append(module.getModuleName());
-      if (module.getModuleVersion() != null)
-        sb.append("// @").append(module.getModuleVersion());
-      return sb.toString();
-    }
-  }
-
-  /**
-   * Reads and resolve the method's attribute data called from ClassData.
-   */
-  public void read(DataInputStream in) throws IOException {
-    int index, moduleFlags, versionIndex;
-    String moduleName, version;
-    Module.Builder builder;
-    try {
-    // u2 module_name_index;
-    index = in.readUnsignedShort();
-    moduleName = pool.getModule(index);
-    // u2 module_flags;
-    moduleFlags = in.readUnsignedShort();
-    // u2 module_version_index;
-    versionIndex = in.readUnsignedShort();
-    version = pool.getString(versionIndex);
-    builder = new Module.Builder(moduleName, moduleFlags, version);
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_header"));
-      throw ioe;
+    public ModuleData(ClassData classData) {
+        super(classData);
     }
 
-    try {
-      int requires_count = in.readUnsignedShort();
-      for (int i = 0; i < requires_count; i++) {
-        index = in.readUnsignedShort();
-        int requiresFlags = in.readUnsignedShort();
-        versionIndex = in.readUnsignedShort();
-
-        moduleName = pool.getModule(index);
-        version = pool.getString(versionIndex);
-        builder.require(moduleName, requiresFlags, version);
-      }
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_requires"));
-      throw ioe;
+    public String getModuleName() {
+        return moduleContent == null ? "N/A" : moduleContent.getModuleName();
     }
 
-    try {
-      int exports_count = in.readUnsignedShort();
-      if (exports_count > 0) {
-        for (int i = 0; i < exports_count; i++) {
-          index = in.readUnsignedShort();
-          String packageName = pool.getPackage(index);
-          int exportsFlags = in.readUnsignedShort();
-          int exports_to_count = in.readUnsignedShort();
-          if (exports_to_count > 0) {
-            Set<String> targets = new HashSet<>(exports_to_count);
-            for (int j = 0; j < exports_to_count; j++) {
-              int exports_to_index = in.readUnsignedShort();
-              targets.add(pool.getModule(exports_to_index));
+    public String getModuleVersion() {
+        return moduleContent == null ? null : moduleContent.getModuleVersion();
+    }
+
+    public String getModuleHeader(String versionString) {
+        StringBuilder sb = new StringBuilder(25);
+        if (moduleContent == null) {
+            sb.append(JasmTokens.Token.MODULE.parseKey());
+            sb.append(' ');
+            if (printCPIndex) {
+                sb.append(String.format("#?? /* %s */", getModuleName()));
+            } else {
+                sb.append(getModuleName());
             }
-            builder.exports(packageName, exportsFlags, targets);
-          } else {
-            builder.exports(packageName, exportsFlags);
-          }
-        }
-      }
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_exports"));
-      throw ioe;
-    }
-
-    try {
-      int opens_count = in.readUnsignedShort();
-      if (opens_count > 0) {
-        for (int i = 0; i < opens_count; i++) {
-          index = in.readUnsignedShort();
-          String packageName = pool.getPackage(index);
-          int opensFlags = in.readUnsignedShort();
-          int opens_to_count = in.readUnsignedShort();
-          if (opens_to_count > 0) {
-            Set<String> targets = new HashSet<>(opens_to_count);
-            for (int j = 0; j < opens_to_count; j++) {
-              int opens_to_index = in.readUnsignedShort();
-              targets.add(pool.getModule(opens_to_index));
+            if (versionString != null && versionString.length() > 0) {
+                sb.append(' ').append(versionString);
             }
-            builder.opens(packageName, opensFlags, targets);
-          } else {
-            builder.opens(packageName, opensFlags);
-          }
+        } else {
+            sb.append(moduleContent.getModuleFlags());
+            sb.append(JasmTokens.Token.MODULE.parseKey()).append(' ');
+            if (printCPIndex) {
+                sb.append(String.format("#%d /* %s%s%s",
+                        moduleContent.getModuleCPX(),
+                        moduleContent.getModuleName(),
+                        moduleContent.getModuleVersion() != null ? "@" + moduleContent.getModuleVersion() + " */" : " */",
+                        (versionString != null && versionString.length() > 0) ? " " + versionString : ""));
+            } else {
+                sb.append(moduleContent.getModuleName());
+                if (versionString != null && versionString.length() > 0) {
+                    sb.append(' ').append(versionString);
+                }
+                if (moduleContent.getModuleVersion() != null) {
+                    sb.append("// @").append(moduleContent.getModuleVersion());
+                }
+            }
         }
-      }
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_opens"));
-      throw ioe;
+        return sb.toString();
     }
 
-    try {
-      int uses_count = in.readUnsignedShort();
-      if (uses_count > 0) {
-        for (int i = 0; i < uses_count; i++) {
-          index = in.readUnsignedShort();
-          String serviceName = pool.getClassName(index);
-          builder.uses(serviceName);
+    /**
+     * Reads and resolve the method's attribute data called from ClassData.
+     */
+    public void read(DataInputStream in) throws FormatError {
+        int index, moduleFlags, versionIndex;
+        String moduleName, version;
+        ModuleContent.Builder builder;
+        try {
+            // u2 module_name_index;
+            index = in.readUnsignedShort();
+            moduleName = pool.getModuleName(index);
+
+            // u2 module_flags;
+            moduleFlags = in.readUnsignedShort();
+
+            // u2 module_version_index;
+            versionIndex = in.readUnsignedShort();
+            version = pool.getString(versionIndex, ind -> null);
+
+            builder = new ModuleContent.Builder(index, moduleName, moduleFlags, version);
+
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_header");
         }
-      }
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_uses"));
-      throw ioe;
+
+        try {
+            int requires_count = in.readUnsignedShort();
+            for (int i = 0; i < requires_count; i++) {
+                index = in.readUnsignedShort();
+                int requiresFlags = in.readUnsignedShort();
+                versionIndex = in.readUnsignedShort();
+
+                moduleName = pool.getModuleName(index);
+                version = pool.getString(versionIndex, ind -> null);
+                builder.require(index, moduleName, requiresFlags, version);
+            }
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_requires");
+        }
+
+        try {
+            int exports_count = in.readUnsignedShort();
+            if (exports_count > 0) {
+                for (int i = 0; i < exports_count; i++) {
+                    index = in.readUnsignedShort();
+                    String packageName = pool.getPackageName(index);
+                    int exportsFlags = in.readUnsignedShort();
+                    int exports_to_count = in.readUnsignedShort();
+                    if (exports_to_count > 0) {
+                        Set<ModuleContent.TargetType> targets = new HashSet<>(exports_to_count);
+                        for (int j = 0; j < exports_to_count; j++) {
+                            int exports_to_index = in.readUnsignedShort();
+                            targets.add(new ModuleContent.TargetType(CONSTANT_MODULE, exports_to_index, pool.getModuleName(exports_to_index)));
+                        }
+                        builder.exports(index, packageName, exportsFlags, targets);
+                    } else {
+                        builder.exports(index, packageName, exportsFlags);
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_exports");
+        }
+
+        try {
+            int opens_count = in.readUnsignedShort();
+            if (opens_count > 0) {
+                for (int i = 0; i < opens_count; i++) {
+                    index = in.readUnsignedShort();
+                    String packageName = pool.getPackageName(index);
+                    int opensFlags = in.readUnsignedShort();
+                    int opens_to_count = in.readUnsignedShort();
+                    if (opens_to_count > 0) {
+                        Set<ModuleContent.TargetType> opens = new HashSet<>(opens_to_count);
+                        for (int j = 0; j < opens_to_count; j++) {
+                            int opens_to_index = in.readUnsignedShort();
+                            opens.add(new ModuleContent.TargetType(CONSTANT_MODULE, opens_to_index, pool.getModuleName(opens_to_index)));
+                        }
+                        builder.opens(index, packageName, opensFlags, opens);
+                    } else {
+                        builder.opens(index, packageName, opensFlags);
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_opens");
+        }
+
+        try {
+            int uses_count = in.readUnsignedShort();
+            if (uses_count > 0) {
+                for (int i = 0; i < uses_count; i++) {
+                    index = in.readUnsignedShort();
+                    String serviceName = pool.getClassName(index);
+                    builder.uses(index, serviceName);
+                }
+            }
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_uses");
+        }
+
+        try {
+            int provides_count = in.readUnsignedShort();
+            if (provides_count > 0) {
+                for (int i = 0; i < provides_count; i++) {
+                    index = in.readUnsignedShort();
+                    String serviceName = pool.getClassName(index);
+                    int provides_with_count = in.readUnsignedShort();
+                    Set<ModuleContent.TargetType> implNames = new HashSet<>(provides_with_count);
+                    for (int j = 0; j < provides_with_count; j++) {
+                        int provides_with_index = in.readUnsignedShort();
+                        implNames.add(new ModuleContent.TargetType(CONSTANT_CLASS, provides_with_index, pool.getClassName(provides_with_index)));
+                    }
+                    builder.provides(index, serviceName, implNames);
+                }
+            }
+        } catch (IOException ioe) {
+            throw new FormatError(environment.getLogger(), "err.invalid_provides");
+        }
+        moduleContent = builder.build();
     }
 
-    try {
-      int provides_count = in.readUnsignedShort();
-      if (provides_count > 0) {
-        for (int i = 0; i < provides_count; i++) {
-          index = in.readUnsignedShort();
-          String serviceName = pool.getClassName(index);
-          int provides_with_count = in.readUnsignedShort();
-          Set<String> implNames = new HashSet<>(provides_with_count);
-          for (int j = 0; j < provides_with_count; j++) {
-            int provides_with_index = in.readUnsignedShort();
-            implNames.add(pool.getClassName(provides_with_index));
-          }
-          builder.provides(serviceName, implNames);
+    /* Print Module Content */
+    public void print() {
+        if (moduleContent != null ) {
+            String s = moduleContent.toString();
+            if (!s.isEmpty()) {
+                println(s);
+            }
         }
-      }
-    } catch (IOException ioe) {
-      tool.error(i18n.getString("jdis.error.invalid_provides"));
-      throw ioe;
     }
-    module = builder.build();
-  }
-
-  /* Print Methods */
-  public void print() {
-    if (module != null)
-      out.println(module.toString());
-  }
 }

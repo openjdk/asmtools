@@ -22,30 +22,77 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
+import java.util.Optional;
+
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
 
 /**
  * AttrData
- *
+ * <p>
  * AttrData is the base class for many attributes (or parts of attributes), and it is
  * instantiated directly for simple attributes (like Synthetic or Deprecated).
  */
-class AttrData implements Data {
+class AttrData implements ConstantPoolDataVisitor {
 
-    private final ClassData clsData;
-    private final Argument attrNameCPX;
+    private final EAttribute attribute;
+    private final ConstCell attributeNameConstantCell;
 
-    AttrData(ClassData cdata, String name) {
-        clsData = cdata;
-        attrNameCPX = cdata.pool.FindCellAsciz(name);
+    AttrData(ConstantPool pool, EAttribute attribute) {
+        this.attribute = attribute;
+        this.attributeNameConstantCell = pool.findUTF8Cell(attribute.parseKey());
     }
 
-    protected ClassData getClassData() {
-        return clsData;
+    @Override
+    public <T extends DataWriter> T visit(ConstantPool pool) {
+        if (this instanceof CPXAttr cpxAttr) {
+            final ConstCell cell = cpxAttr.cell;
+            if (! cell.isSet()) {
+                if (cell.getType() ==  CONSTANT_STRING)  {
+                    if (attribute.getCPTypeOfIndex() == CONSTANT_UTF8) {
+                        Optional<ConstCell<?>> strCell = pool.ConstantPoolHashByValue.values().stream().
+                                filter(v -> v.isSet() && v.getType() == CONSTANT_STRING && v.equalsByValue(cell)).
+                                findAny();
+                        cpxAttr.cell = strCell.isPresent() ?
+                                strCell.get() :
+                                pool.findCell(new ConstantPool.ConstValue_String((ConstCell<ConstantPool.ConstValue_UTF8>) cell.ref.value));
+                        }
+                    }
+                }
+            }
+        return (T) this;
+    }
+
+    protected ConstCell<?> classifyConstCell(ConstantPool pool, ConstCell<?> cell) {
+        switch (cell.getType()) {
+            case CONSTANT_CLASS -> {
+                return cell;
+            }
+            case CONSTANT_UTF8 -> {
+                if( attribute.getCPTypeOfIndex() == CONSTANT_CLASS ) {
+                    Optional<ConstCell<?>> clsCell = pool.ConstantPoolHashByValue.values().stream().
+                            filter(v -> v.getType() == CONSTANT_CLASS && v.ref.value.equals(cell)).
+                            findAny();
+                    if (clsCell.isPresent()) {
+                        return clsCell.get();
+                    } else {
+                        // create class cell referencing to UTF8
+                        return pool.findCell(new ConstantPool.ConstValue_Class((ConstCell<ConstantPool.ConstValue_UTF8>) cell));
+                    }
+                }
+            }
+            default -> {
+                // no action
+            }
+        }
+        return cell;
     }
 
     // full length of the attribute
     // declared in Data
+    @Override
     public int getLength() {
         return 6 + attrLength();
     }
@@ -55,9 +102,9 @@ class AttrData implements Data {
         return 0;
     }
 
+    @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        out.writeShort(attrNameCPX.arg);
-        out.writeInt(attrLength()); // attr len
+        out.writeShort(attributeNameConstantCell.cpIndex);
+        out.writeInt(attrLength()); // attribute length
     }
 } // end class AttrData
-

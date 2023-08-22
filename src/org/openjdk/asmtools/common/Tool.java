@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,103 +23,71 @@
 package org.openjdk.asmtools.common;
 
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
+import org.openjdk.asmtools.common.inputs.StdinInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.DirOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
 
-public abstract class Tool {
+import java.io.File;
+import java.util.ArrayList;
 
-    // Name of the program.
-    protected final String programName;
-    // Errors counter.
-    protected int nerrors = 0;
-    // The stream where error message are printed.
-    protected PrintWriter err;
+public abstract class Tool<T extends Environment<? extends ToolLogger>> {
 
-    // Output stream
-    protected PrintWriter out;
+    protected final ArrayList<ToolInput> fileList = new ArrayList<>();
+    protected T environment;
 
-    // A consumer to print a error message if the tool can't read a file
-    protected Consumer<String> printCannotReadMsg;
-
-    // A supplier to get a status of a debug flag
-    protected BooleanSupplier DebugFlag = () -> false;
-
-    public Tool(PrintWriter out, String programName) {
-        this(out, out, programName);
+    protected Tool(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
+        this.environment = getEnvironment(toolOutput, outerLog);
     }
 
-    public Tool(PrintWriter out, PrintWriter err, String programName) {
-        this.out = out;
-        this.err = err;
-        this.programName = programName;
+    public Environment<?> setVerboseFlag(boolean value) {
+        environment.setVerboseFlag(value);
+        return environment;
     }
 
-
-    public String getError(String msg) {
-        return programName + ": " + msg;
+    public Environment<?> setTraceFlag(boolean value) {
+        environment.setTraceFlag(value);
+        return environment;
     }
 
-    /**
-     * Top level error message
-     */
-    public void error(String msg) {
-        err.println(getError(msg));
-        err.flush();
+    public T getEnvironment() {
+        return environment;
     }
 
-    /**
-     * Top level print message
-     */
-    public void println(String msg) {
-        out.println(msg);
-        out.flush();
+    // Build environment
+    public T getEnvironment(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
+        throw new NotImplementedException();
     }
 
-    public void println() {
-        println("");
-    }
-
-    public void print(String msg) {
-        out.print(getError(msg));
-        out.flush();
-    }
-
-    /**
-     * @param fname file name
-     * @return DataInputStream or null if the method can't read a file
-     */
-    public DataInputStream getDataInputStream(String fname) {
-        try {
-            return new DataInputStream(new FileInputStream(fname));
-        } catch (IOException ex) {
-            if (fname.matches("^[A-Za-z]+:.*")) {
-                try {
-                    final URI uri = new URI(fname);
-                    final URL url = uri.toURL();
-                    final URLConnection conn = url.openConnection();
-                    conn.setUseCaches(false);
-                    return new DataInputStream(conn.getInputStream());
-                } catch (URISyntaxException | IOException e) {
-                    if (DebugFlag.getAsBoolean())
-                        e.printStackTrace();
-                }
-            }
-            if (printCannotReadMsg != null)
-                printCannotReadMsg.accept(fname);
-        }
-        return null;
-    }
-
-    /**
-     * Usage
-     */
+    // Usage
     protected abstract void usage();
+
+    // Parse arguments. Tool will be left using System.Exit if error found.
+    protected abstract void parseArgs(String... argv);
+
+    protected void setDestDir(int index, String... argv) {
+        File destDir;
+        if ((index) >= argv.length) {
+            environment.error("err.d_requires_argument");
+            usage();
+            throw new IllegalArgumentException();
+        }
+        destDir = new File(argv[index]);
+        if (!destDir.exists()) {
+            environment.error("err.does_not_exist", destDir.getPath());
+            throw new IllegalArgumentException();
+        }
+        environment.setToolOutput(new DirOutput(destDir));
+    }
+
+    protected void addStdIn() {
+        for (ToolInput toolInput: fileList) {
+            if (toolInput instanceof StdinInput) {
+                //or throw?
+                return;
+            }
+        }
+        fileList.add(new StdinInput());
+    }
 }

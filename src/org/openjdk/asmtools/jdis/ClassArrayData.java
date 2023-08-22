@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,8 @@ package org.openjdk.asmtools.jdis;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static java.lang.String.format;
+
 /**
  * Base class of the "classes[]" data of attributes
  * <p>
@@ -45,14 +47,12 @@ import java.io.IOException;
  * }
  * </p>
  */
-public class ClassArrayData extends Indenter {
+public class ClassArrayData extends MemberData {
     String name;
-    ClassData cls;
-    int[] classes;
-    private Options options = Options.OptionObject();
+    int[] classIndexes;
 
-    protected ClassArrayData(ClassData cls, String attrName) {
-        this.cls = cls;
+    protected ClassArrayData(ClassData classData, String attrName) {
+        super(classData);
         this.name = attrName;
     }
 
@@ -61,33 +61,31 @@ public class ClassArrayData extends Indenter {
         if (attribute_length != 2 + number_of_classes * 2) {
             throw new ClassFormatError(name + "_attribute: Invalid attribute length");
         }
-        classes = new int[number_of_classes];
+        classIndexes = new int[number_of_classes];
         for (int i = 0; i < number_of_classes; i++) {
-            classes[i] = in.readUnsignedShort();
+            classIndexes[i] = in.readUnsignedShort();
         }
         return this;
     }
 
+    @Override
     public void print() {
-        String indexes = "";
-        String names = "";
-        boolean pr_cpx = options.contains(Options.PR.CPX);
-        cls.out.print(getIndentString() + name + " ");
-        for (int i = 0; i < classes.length; i++) {
-            if (pr_cpx) {
-                indexes += (indexes.isEmpty() ? "" : ", ") + "#" + classes[i];
+        StringBuilder indexes = new StringBuilder();
+        StringBuilder names = new StringBuilder();
+        for (int classIndex : classIndexes) {
+            if (printCPIndex) {
+                indexes.append((indexes.length() == 0) ? "" : ", ").append("#").append(classIndex);
             }
-            names += (names.isEmpty() ? "" : ", ") + cls.pool.StringValue(classes[i]);
+            names.append((names.length() == 0) ? "" : ", ").append(pool.StringValue(classIndex));
         }
-        if (pr_cpx) {
-            cls.out.print(indexes + "; // ");
-        }
-        cls.out.print(names);
-        if (pr_cpx) {
-            cls.out.println();
+        if (printCPIndex) {
+            if( skipComments ) {
+                printIndentLn("%s %s;", name, indexes);
+            }  else {
+                printIndent(PadRight(format("%s %s;", name, indexes), getCommentOffset() - 1)).println(" // " + names);
+            }
         } else {
-            cls.out.println(";");
+            printIndentLn("%s %s;", name, names.toString());
         }
     }
-
 }

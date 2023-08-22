@@ -1,0 +1,222 @@
+/*
+ * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+package org/openjdk/asmtools/transform/case7903454/data;
+
+public super class Utf8Code version 61:0
+{
+  static Field ČeštinaAlphabet:"Ljava/lang/String;";
+  static Field ქართულიენაAlphabet:"Ljava/lang/String;";
+  static Field ΕλληνικάAlphabet:"Ljava/lang/String;";
+  Field line:"Ljava/lang/String;";
+  private Field نتیجہ:"Ljava/lang/String;";
+
+  private Method вычислитьБольшиеБуквы:"()Ljava/lang/String;"
+    stack  2 locals  1
+  {
+         aload_0;
+         getfield          Field line:"Ljava/lang/String;";
+         invokevirtual     Method java/lang/String.codePoints:"()Ljava/util/stream/IntStream;";
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/LambdaMetafactory.metafactory:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":
+                           test:"()Ljava/util/function/IntPredicate;" {
+                             MethodType "(I)Z",
+                             MethodHandle REF_invokeStatic:Method Utf8Code.lambda$вычислитьБольшиеБуквы$0:"(I)Z",
+                             MethodType "(I)Z"
+                           };
+         invokeinterface   InterfaceMethod java/util/stream/IntStream.filter:"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;", 2;
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/LambdaMetafactory.metafactory:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":
+                           apply:"()Ljava/util/function/IntFunction;" {
+                             MethodType "(I)Ljava/lang/Object;",
+                             MethodHandle REF_invokeStatic:Method Utf8Code.lambda$вычислитьБольшиеБуквы$1:"(I)Ljava/lang/String;",
+                             MethodType "(I)Ljava/lang/String;"
+                           };
+         invokeinterface   InterfaceMethod java/util/stream/IntStream.mapToObj:"(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;", 2;
+         invokestatic      Method java/util/stream/Collectors.joining:"()Ljava/util/stream/Collector;";
+         invokeinterface   InterfaceMethod java/util/stream/Stream.collect:"(Ljava/util/stream/Collector;)Ljava/lang/Object;", 2;
+         checkcast         class java/lang/String;
+         areturn;
+  }
+  private Method вычислитьМаленькиеБуквы:"()Ljava/lang/String;"
+    stack  2 locals  1
+  {
+         aload_0;
+         getfield          Field line:"Ljava/lang/String;";
+         invokevirtual     Method java/lang/String.codePoints:"()Ljava/util/stream/IntStream;";
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/LambdaMetafactory.metafactory:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":
+                           test:"()Ljava/util/function/IntPredicate;" {
+                             MethodType "(I)Z",
+                             MethodHandle REF_invokeStatic:Method Utf8Code.lambda$вычислитьМаленькиеБуквы$2:"(I)Z",
+                             MethodType "(I)Z"
+                           };
+         invokeinterface   InterfaceMethod java/util/stream/IntStream.filter:"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;", 2;
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/LambdaMetafactory.metafactory:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;":
+                           apply:"()Ljava/util/function/IntFunction;" {
+                             MethodType "(I)Ljava/lang/Object;",
+                             MethodHandle REF_invokeStatic:Method Utf8Code.lambda$вычислитьМаленькиеБуквы$3:"(I)Ljava/lang/String;",
+                             MethodType "(I)Ljava/lang/String;"
+                           };
+         invokeinterface   InterfaceMethod java/util/stream/IntStream.mapToObj:"(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;", 2;
+         invokestatic      Method java/util/stream/Collectors.joining:"()Ljava/util/stream/Collector;";
+         invokeinterface   InterfaceMethod java/util/stream/Stream.collect:"(Ljava/util/stream/Collector;)Ljava/lang/Object;", 2;
+         checkcast         class java/lang/String;
+         areturn;
+  }
+  public Method calculate:"()I"
+    stack  4 locals  2
+  {
+         aload_0;
+         getfield          Field نتیجہ:"Ljava/lang/String;";
+         invokevirtual     Method java/lang/String.isEmpty:"()Z";
+         ifeq              L38;
+         aload_0;
+         aload_0;
+         invokevirtual     Method вычислитьБольшиеБуквы:"()Ljava/lang/String;";
+         iconst_0;
+         bipush            20;
+         invokevirtual     Method java/lang/String.substring:"(II)Ljava/lang/String;";
+         aload_0;
+         invokevirtual     Method вычислитьМаленькиеБуквы:"()Ljava/lang/String;";
+         bipush            90;
+         invokevirtual     Method java/lang/String.substring:"(I)Ljava/lang/String;";
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                           makeConcatWithConstants:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" {
+                             String "\u0001\u0001"
+                           };
+         putfield          Field نتیجہ:"Ljava/lang/String;";
+  L38:   stack_frame_type  same;
+         aload_0;
+         getfield          Field نتیجہ:"Ljava/lang/String;";
+         invokevirtual     Method java/lang/String.length:"()I";
+         istore_1;
+         getstatic         Field java/lang/System.out:"Ljava/io/PrintStream;";
+         iload_1;
+         aload_0;
+         getfield          Field نتیجہ:"Ljava/lang/String;";
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                           makeConcatWithConstants:"(ILjava/lang/String;)Ljava/lang/String;" {
+                             String "\u0001 \u0001"
+                           };
+         invokevirtual     Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+         iload_1;
+         ireturn;
+  }
+  public Method "<init>":"()V"
+    stack  6 locals  1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         aload_0;
+         ldc               String "";
+         putfield          Field نتیجہ:"Ljava/lang/String;";
+         aload_0;
+         getstatic         Field ČeštinaAlphabet:"Ljava/lang/String;";
+         ldc               String " ";
+         ldc               String "";
+         invokevirtual     Method java/lang/String.replaceAll:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
+         getstatic         Field ქართულიენაAlphabet:"Ljava/lang/String;";
+         ldc               String " ";
+         ldc               String "";
+         invokevirtual     Method java/lang/String.replaceAll:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
+         getstatic         Field ΕλληνικάAlphabet:"Ljava/lang/String;";
+         ldc               String " ";
+         ldc               String "";
+         invokevirtual     Method java/lang/String.replaceAll:"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                           makeConcatWithConstants:"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" {
+                             String "\u0001\u0001\u0001"
+                           };
+         putfield          Field line:"Ljava/lang/String;";
+         return;
+  }
+  private static synthetic Method lambda$вычислитьМаленькиеБуквы$3:"(I)Ljava/lang/String;"
+    stack  1 locals  1
+  {
+         iload_0;
+         invokestatic      Method java/lang/Character.toString:"(I)Ljava/lang/String;";
+         areturn;
+  }
+  private static synthetic Method lambda$вычислитьМаленькиеБуквы$2:"(I)Z"
+    stack  1 locals  1
+  {
+         iload_0;
+         invokestatic      Method java/lang/Character.isLowerCase:"(I)Z";
+         ireturn;
+  }
+  private static synthetic Method lambda$вычислитьБольшиеБуквы$1:"(I)Ljava/lang/String;"
+    stack  1 locals  1
+  {
+         iload_0;
+         invokestatic      Method java/lang/Character.toString:"(I)Ljava/lang/String;";
+         areturn;
+  }
+  private static synthetic Method lambda$вычислитьБольшиеБуквы$0:"(I)Z"
+    stack  1 locals  1
+  {
+         iload_0;
+         invokestatic      Method java/lang/Character.isUpperCase:"(I)Z";
+         ireturn;
+  }
+  static Method "<clinit>":"()V"
+    stack  1 locals  0
+  {
+         ldc               String "A Á B C Č D Ď E É Ě F G H Ch I Í J K L M N Ň O Ó P Q R Ř S Š T Ť U Ú Ů V W X Y Ý Z Ž a á b c č d ď e é ě f g h ch i í j k l m n ň o ó p q r ř s š t ť u ú ů v w x y ý z ž";
+         putstatic         Field ČeštinaAlphabet:"Ljava/lang/String;";
+         ldc               String "Ⴀ Ⴁ Ⴂ Ⴃ Ⴄ Ⴅ Ⴆ Ⴇ Ⴈ Ⴉ Ⴊ Ⴋ Ⴌ Ⴍ Ⴎ Ⴏ Ⴐ Ⴑ Ⴒ Ⴓ Ⴔ Ⴕ Ⴖ Ⴗ Ⴘ Ⴙ Ⴚ Ⴛ Ⴜ Ⴝ Ⴞ Ⴟ Ⴠ Ⴡ Ⴢ Ⴣ Ⴤ Ⴥ ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ ო პ ჟ რ ს ტ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჯ ჰ ჱ ჲ ჳ ჴ ჵ ჶ ჷ ჸ ჹ ჺ ჻ ჼ ჽ ჾ ჿ";
+         putstatic         Field ქართულიენაAlphabet:"Ljava/lang/String;";
+         ldc               String "Α α Β β Γ γ Δ δ Ε ε Ζ ζ Η η Θ θ Ι ι Κ κ Λ λ Μ μ Ν ν Ξ ξ Ο ο Π π Ρ ρ Σ σ/ς Τ τ Υ υ Φ φ Χ χ Ψ ψ Ω ω";
+         putstatic         Field ΕλληνικάAlphabet:"Ljava/lang/String;";
+         return;
+  }
+
+  SourceFile               "Utf8Code.java";
+
+  SourceDebugExtension {
+      "\tThe Memory Model determines what values can be read at every point in th";
+      "e program.\nThe actions of each thread in isolation must behave as governe";
+      "d by the semantics of that thread, with the exception that the values seen";
+      " by each read are determined by the memory model.\nWhen we refer to this, ";
+      "we say that the program obeys intra-thread semantics.\n\tIntra-thread sema";
+      "ntics are the semantics for single-threaded programs, and allow the comple";
+      "te prediction of the behavior of a thread based on the values seen by read";
+      " actions within the thread.\n\tTo determine if the actions of thread \'t\'";
+      " in an execution are legal, we simply evaluate the implementation of threa";
+      "d \"t\" as it would be performed in a single-threaded context, as defined ";
+      "in the rest of this specification.";
+    }
+
+  public static final InnerClass Lookup = class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles;
+
+  BootstrapMethod #149 #156 #157 #156;
+  BootstrapMethod #149 #160 #162 #165;
+  BootstrapMethod #149 #156 #166 #156;
+  BootstrapMethod #149 #160 #169 #165;
+  BootstrapMethod #172 #178;
+  BootstrapMethod #172 #180;
+  BootstrapMethod #172 #182;
+} // end Class Utf8Code compiled from "Utf8Code.java"

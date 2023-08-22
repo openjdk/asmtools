@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,57 +26,57 @@ import org.openjdk.asmtools.jasm.JasmTokens;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- *
+ *  BootstrapMethods_attribute {
+ *     ...
+ *     {   u2 bootstrap_method_ref;
+ *         u2 num_bootstrap_arguments;
+ *         u2 bootstrap_arguments[num_bootstrap_arguments];
+ *     }
+ *  }
  */
 public class BootstrapMethodData extends Indenter {
 
-    int bsm_index;
-    ArrayList<Integer> bsm_args_indexes;
+    int bsmRef;                              //  u2 bootstrap_method_ref;
+    ArrayList<Integer> bsmArguments;         //  u2 bootstrap_arguments[num_bootstrap_arguments];
+    int numBsmArgs;                          //  num_bootstrap_arguments
 
-    // internal references
-    private Options options = Options.OptionObject();
-    private ClassData cls;
-    private PrintWriter out;
 
     public BootstrapMethodData(ClassData cls) {
-        this.cls = cls;
-        out = cls.out;
+        super(cls.toolOutput);
     }
 
+    @Override
+    public boolean isPrintable() {
+        return printCPIndex && bsmArguments != null && !bsmArguments.isEmpty();
+    }
 
-    /*========================================================*/
-    /* Read Methods */
+    // suppress setting comment offset
+    @Override
+    public Indenter setCommentOffset(int commentOffset) {
+        return this;
+    }
 
     /**
-     *
-     * read
-     *
-     * read and resolve the bootstrap method data called from ClassData. precondition:
-     * NumFields has already been read from the stream.
-     *
+     * Read and resolve the bootstrap method data called from ClassData.
      */
     public void read(DataInputStream in) throws IOException {
         // read the Methods CP indexes
-        bsm_index = in.readUnsignedShort();
-        int arg_num = in.readUnsignedShort();
-        bsm_args_indexes = new ArrayList<>(arg_num);
-        for (int i = 0; i < arg_num; i++) {
-            bsm_args_indexes.add(in.readUnsignedShort());
+        bsmRef = in.readUnsignedShort();
+        numBsmArgs = in.readUnsignedShort();
+        bsmArguments = new ArrayList<>(numBsmArgs);
+        for (int i = 0; i < numBsmArgs; i++) {
+            bsmArguments.add(in.readUnsignedShort());
         }
     }
 
-
-    /*========================================================*/
-    /* Print Methods */
     public void print() throws IOException {
-        out.print(getIndentString() + JasmTokens.Token.BOOTSTRAPMETHOD.parseKey() + " #" + bsm_index);
-        for (int i = 0; i < bsm_args_indexes.size(); i++) {
-            out.print(" #" + bsm_args_indexes.get(i));
+        printIndent(JasmTokens.Token.BOOTSTRAPMETHOD.parseKey() + " #" + bsmRef);
+        for (int i = 0; i < numBsmArgs; i++) {
+            print(" #" + bsmArguments.get(i));
         }
-        out.println(";");
+        println(";");
     }
 }

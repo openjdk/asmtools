@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,309 +22,292 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MAJOR_VERSION;
-import static org.openjdk.asmtools.jasm.CFVersion.DEFAULT_MINOR_VERSION;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
+import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.outputs.log.StderrLog;
+import org.openjdk.asmtools.common.structure.CFVersion;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.util.I18NResourceBundle;
-import org.openjdk.asmtools.util.ProductInfo;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.PatternSyntaxException;
 
-import java.io.*;
-import java.util.ArrayList;
+import static org.openjdk.asmtools.common.Environment.FAILED;
+import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
- *
- *
+ * Jasm is an assembler that accepts a text file based on the JASM Specification,
+ * and produces a .class file for use with a Java Virtual Machine.
+ * <p>
+ * Main entry point of the JASM assembler :: jasm to class
  */
-public class Main extends Tool {
+public class Main extends JasmTool {
 
-    public static final I18NResourceBundle i18n
-            = I18NResourceBundle.getBundleForClass(Main.class);
+    private final CFVersion cfv = new CFVersion();
 
-    private File destDir = null;
-    private boolean traceFlag = false;
-    private long tm = System.currentTimeMillis();
-    private ArrayList<String> v = new ArrayList<>();
-    private boolean nowrite = false;
-    private boolean nowarn = false;
-    private boolean strict = false;
-    private String props = null;
-    private int nwarnings = 0;
-    private CFVersion cfv = new CFVersion();
-    private int bytelimit = 0;
+    // tool options
+    private boolean noWriteFlag = false;        // Do not write generated class files
+
+    // hidden options
+    private int byteLimit = 0;
+
+    // hidden options: Parser debug flags
     private boolean debugScanner = false;
     private boolean debugMembers = false;
     private boolean debugCP = false;
     private boolean debugAnnot = false;
     private boolean debugInstr = false;
 
-
-    public Main(PrintWriter out, String programName) {
-        super(out, programName);
-        printCannotReadMsg = (fname) ->
-            error( i18n.getString("jasm.error.cannot_read", fname));
+    public Main(ToolOutput toolOutput, String... argv) {
+        super(toolOutput);
+        parseArgs(argv);
     }
 
-    public Main(PrintStream out, String program) {
-        this(new PrintWriter(out), program);
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, String... argv) {
+        super(toolOutput, log);
+        parseArgs(argv);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput, String... argv) {
+        super(toolOutput, log);
+        if (toolInput != null) {
+            fileList.add(toolInput);
+        }
+        parseArgs(argv);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput... toolInputs) {
+        super(toolOutput, log);
+        Collections.addAll(fileList, toolInputs);
+    }
+
+    public Main(ToolOutput toolOutput, DualStreamToolOutput log, ToolInput toolInput) {
+        super(toolOutput, log);
+        fileList.add(toolInput);
+    }
+
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param ref      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintWriter ref, String toolName) {
+        super(new PrintWriterOutput(ref));
+    }
+
+    /**
+     * Deprecated method to support external tools having it
+     *
+     * @param out      A stream to which to write reference output
+     * @param toolName the tool's name (ignored)
+     */
+    @Deprecated
+    public Main(PrintStream out, String toolName) {
+        this(new PrintWriter(out), toolName);
+    }
+
+    // jasm entry point
+    public static void main(String... argv) {
+        Main compiler = new Main(new StdoutOutput(), new StderrLog(), argv);
+        System.exit(compiler.compile());
+    }
+
+    // Run jasm compiler with args
+    public synchronized boolean compile(String... argv) {
+        parseArgs(argv);
+        return this.compile() == OK;
+    }
+
+    // Run jasm compiler when args already parsed
+    public synchronized int compile() {
+        // compile all input files
+        int rc = OK;
+        try {
+            for (ToolInput inputFileName : fileList) {
+                environment.setInputFile(inputFileName);
+                Parser parser = new Parser(environment, cfv);
+                // Set hidden options: Parser debug flags
+                parser.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
+                parser.parseFile();
+                if (environment.getErrorCount() > 0) break;
+                if (noWriteFlag) continue;
+                ClassData[] clsData = parser.getClassesData();
+                for (ClassData cd : clsData) {
+                    String fqn = cd.myClassName;
+                    environment.getToolOutput().startClass(fqn, Optional.of(cd.fileExtension), environment);
+                    if (byteLimit > 0) {
+                        cd.setByteLimit(byteLimit);
+                    }
+                    cd.write(environment.getToolOutput());
+                    environment.getToolOutput().finishClass(fqn);
+                }
+                if (environment.hasMessages()) rc += environment.flush(true);
+            }
+        } catch (IOException | URISyntaxException | Error exception) {
+            environment.printException(exception);
+            rc++;
+        } catch (Throwable exception) {
+            // all untrapped exception/errors that escaped CompilerLogger
+            environment.printException(exception);
+            environment.error(exception);
+        }
+        if (environment.hasMessages()) rc += environment.flush(true);
+        return rc;
     }
 
     @Override
     public void usage() {
-        println(i18n.getString("jasm.usage"));
-        println(i18n.getString("jasm.opt.d"));
-        println(i18n.getString("jasm.opt.g"));
-        println(i18n.getString("jasm.opt.v"));
-        println(i18n.getString("jasm.opt.nowrite"));
-        println(i18n.getString("jasm.opt.nowarn"));
-        println(i18n.getString("jasm.opt.strict"));
-        println(i18n.getString("jasm.opt.cv", DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION));
-        println(i18n.getString("jasm.opt.version"));
+        environment.flush(false);
+        environment.usage(List.of(
+                "info.usage",
+                "info.opt.d",
+                "info.opt.t",
+                "info.opt.v",
+                "info.opt.nowrite",
+                "info.opt.nowarn",
+                "info.opt.strict",
+                "info.opt.cv",
+                "info.opt.fixcv",
+                "info.opt.fixcv.full",
+                "info.opt.version"
+        ));
     }
 
-    /**
-     * Run the compiler
-     */
-    private synchronized boolean parseArgs(String argv[]) {
-        // Parse arguments
-        boolean frozenCFV = false;
-        for (int i = 0; i < argv.length; i++) {
-            String arg = argv[i];
-            switch (arg) {
-                case "-v":
-                    traceFlag = true;
-                    break;
-                case "-g":
-                    super.DebugFlag = () -> true;
-                    break;
-                case "-nowrite":
-                    nowrite = true;
-                    break;
-                case "-strict":
-                    strict = true;
-                    break;
-                case "-nowarn":
-                    nowarn = true;
-                    break;
-                case "-version":
-                    println(ProductInfo.FULL_VERSION);
-                    break;
-                case "-d":
-                    if ((i + 1) >= argv.length) {
-                        error(i18n.getString("jasm.error.d_requires_argument"));
-                        usage();
-                        return false;
-                    }
-                    destDir = new File(argv[++i]);
-                    if (!destDir.exists()) {
-                        error(i18n.getString("jasm.error.does_not_exist", destDir.getPath()));
-                        return false;
-                    }
-                    break;
-                // non-public options
-                case "-XdScanner":
-                    debugScanner = true;
-                    break;
-                case "-XdMember":
-                    debugMembers = true;
-                    break;
-                case "-XdCP":
-                    debugCP = true;
-                    break;
-                case "-XdInstr":
-                    debugInstr = true;
-                    break;
-                case "-XdAnnot":
-                    debugAnnot = true;
-                    break;
-                case "-XdAll":
-                    debugScanner = true;
-                    debugMembers = true;
-                    debugCP = true;
-                    debugInstr = true;
-                    debugAnnot = true;
-                    break;
-                case "-Xdlimit":
-                    // parses file until the specified byte number
-                    if (i + 1 > argv.length) {
-                        println(" Error: Unspecified byte-limit");
-                        return false;
-                    } else {
-                        i++;
-                        String bytelimstr = argv[i];
-                        bytelimit = 0;
-                        try {
-                            bytelimit = Integer.parseInt(bytelimstr);
-                        } catch (NumberFormatException e) {
-                            println(" Error: Unspecified byte-limit");
-                            return false;
-                        }
-                    }
-                    break;
-                case "-fixcv":
-                    // overrides cf version if it's defined in the source file.
-                    frozenCFV = true;
-                // public options
-                case "-cv":
-                    if ((i + 1) >= argv.length) {
-                        error(i18n.getString("jasm.error.cv_requires_arg"));
-                        usage();
-                        return false;
-                    }
-                    String[] versions = {"", ""};                      // workaround for String.split()
-                    int index = argv[++i].indexOf(".");                //
-                    if (index != -1) {                                 //
-                        versions[0] = argv[i].substring(0, index);     //
-                        versions[1] = argv[i].substring(index + 1);    //
-                    }                                                  //
-                    if (versions.length != 2) {
-                        error(i18n.getString("jasm.error.invalid_major_minor_param"));
-                        usage();
-                        return false;
-                    }
-                    try {
-                        cfv = new CFVersion(frozenCFV, Short.parseShort(versions[0]), Short.parseShort(versions[1]) );
-                    } catch (NumberFormatException e) {
-                        error(i18n.getString("jasm.error.invalid_major_minor_param"));
-                        usage();
-                        return false;
-                    }
-                    break;
-                default:
-                    if (arg.startsWith("-")) {
-                        error(i18n.getString("jasm.error.invalid_option", arg));
-                        usage();
-                        return false;
-                    } else {
-                        v.add(argv[i]);
-                    }
-                    break;
-            }
-        }
-        if (v.size() == 0) {
-            usage();
-            return false;
-        }
-        if (strict) {
-            nowarn = false;
-        }
-        return true;
-    }
-
-    private void reset() {
-        destDir = null;
-        traceFlag = false;
-        super.DebugFlag = () -> false;
-        System.currentTimeMillis();
-        v = new ArrayList<>();
-        nowrite = false;
-        nowarn = false;
-        strict = false;
-        props = null;
-        nwarnings = 0;
-        bytelimit = 0;
-    }
-
-    /**
-     * Run the compiler
-     */
-    public synchronized boolean compile(String argv[]) {
-        // Reset the state of all objs
-        reset();
-
-        boolean validArgs = parseArgs(argv);
-        if (!validArgs) {
-            return false;
-        }
-        // compile all input files
-        Environment sf = null;
+    @Override
+    protected void parseArgs(String... argv) {
         try {
-            for (String inpname : v) {
-                Parser p;
-
-                DataInputStream dataInputStream = getDataInputStream(inpname);
-                if( dataInputStream == null ) {
-                    nerrors++;
-                    continue;
-                }
-                sf = new Environment(dataInputStream, inpname, out, nowarn);
-                sf.traceFlag = traceFlag;
-                sf.debugInfoFlag = DebugFlag.getAsBoolean();
-                p = new Parser(sf, cfv.clone() );
-                p.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
-                p.parseFile();
-
-                nerrors += sf.nerrors;
-                nwarnings += sf.nwarnings;
-                if (nowrite || (nerrors > 0)) {
-                    sf.flushErrors();
-                    continue;
-                }
-                try {
-                    ClassData[] clsData = p.getClassesData();
-                    for (int i = 0; i < clsData.length; i++) {
-                        ClassData cd = clsData[i];
-                        if (bytelimit > 0) {
-                            cd.setByteLimit(bytelimit);
+            // Parse arguments
+            for (int i = 0; i < argv.length; i++) {
+                String arg = argv[i];
+                switch (arg) {
+                    // public options
+                    case "-v" -> setVerboseFlag(true);
+                    case "-t" -> {
+                        setVerboseFlag(true);
+                        setTraceFlag(true);
+                    }
+                    case "-strict" -> environment.setStrictWarnings(true);
+                    case "-nowarn" -> environment.setIgnoreWarnings(true);
+                    case "-nowrite" -> noWriteFlag = true;
+                    case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
+                        environment.println(FULL_VERSION);
+                        System.exit(OK);
+                    }
+                    case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
+                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
+                            this.environment.setOutputs(new DualOutputStreamOutput());
+                    case "-h", "-help", "-?" -> {
+                        usage();
+                        System.exit(OK);
+                    }
+                    // overrides cf version even if it's defined in the source file.
+                    case "-fixcv", "-cv" -> {
+                        boolean frozenCFV = (arg.startsWith("-fix"));
+                        if ((i + 1) >= argv.length) {
+                            if (frozenCFV) {
+                                environment.error("err.fix_cv_requires_arg");
+                            } else {
+                                environment.error("err.cv_requires_arg");
+                            }
+                            usage();
+                            throw new IllegalArgumentException();
                         }
-                        cd.write(destDir);
+                        try {
+                            String cfvArg = argv[++i];
+                            if (cfvArg.contains("-")) {
+                                if (!frozenCFV) {
+                                    throw new NumberFormatException();
+                                }
+                                String[] versions = cfvArg.split("-", 2);
+                                String[] versionsThreshold = versions[0].split("[.:]+", 2);
+                                String[] versionsUpdate = versions[1].split("[.:]+", 2);
+                                if (versionsThreshold.length != 2 || versionsUpdate.length != 2) {
+                                    throw new NumberFormatException();
+                                }
+                                cfv.setThreshold(Short.parseShort(versionsThreshold[0]), Short.parseShort(versionsThreshold[1])).
+                                        setVersion(Short.parseShort(versionsUpdate[0]), Short.parseShort(versionsUpdate[1])).
+                                        setByParameter(true).setFrozen(true);
+                            } else {
+                                String[] versions = cfvArg.split("[.:]+", 2);
+                                if (versions.length == 2) {
+                                    cfv.setVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1])).
+                                            setByParameter(true).setFrozen(frozenCFV);
+                                } else {
+                                    throw new NumberFormatException();
+                                }
+                            }
+                        } catch (PatternSyntaxException | NumberFormatException exception) {
+                            if (frozenCFV) {
+                                environment.error("err.invalid_threshold_major_minor_param");
+                            } else {
+                                environment.error("err.invalid_major_minor_param");
+
+                            }
+                            usage();
+                            throw new IllegalArgumentException();
+                        }
                     }
-                } catch (IOException ex) {
-                    if (bytelimit > 0) {
-                        // IO Error thrown from user-specified byte count
-                        ex.printStackTrace();
-                        error("UserSpecified byte-limit at byte[" + bytelimit + "]: " +
-                                ex.getMessage() + "\n" +
-                                inpname + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
-                    } else {
-                        String er = i18n.getString("jasm.error.cannot_write", ex.getMessage());
-                        error(er + "\n" + inpname + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+                    // non-public options
+                    case "-XdScanner" -> debugScanner = true;
+                    case "-XdMember" -> debugMembers = true;
+                    case "-XdCP" -> debugCP = true;
+                    case "-XdInstr" -> debugInstr = true;
+                    case "-XdAnnot" -> debugAnnot = true;
+                    case "-XdAll" -> {
+                        debugScanner = true;
+                        debugMembers = true;
+                        debugCP = true;
+                        debugInstr = true;
+                        debugAnnot = true;
+                    }
+                    case "-Xdlimit" -> {
+                        // parses file until the specified byte number
+                        if (i + 1 > argv.length) {
+                            environment.error("err.byte.limit");
+                            throw new IllegalArgumentException();
+                        } else {
+                            try {
+                                byteLimit = Integer.parseInt(argv[++i]);
+                            } catch (NumberFormatException e) {
+                                environment.error("err.byte.limit");
+                                throw new IllegalArgumentException();
+                            }
+                        }
+                    }
+                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> addStdIn();
+                    default -> {
+                        if (arg.startsWith("-")) {
+                            environment.error("err.invalid_option", arg);
+                            usage();
+                            throw new IllegalArgumentException();
+                        } else {
+                            fileList.add(new FileInput(argv[i]));
+                        }
                     }
                 }
-                sf.flushErrors(); // possible errors from write()
             }
-        } catch (Error ee) {
-            if (DebugFlag.getAsBoolean()) {
-                ee.printStackTrace();
+            if (fileList.isEmpty()) {
+                usage();
+                System.exit(FAILED);
             }
-            String er = ee.getMessage() + "\n" + i18n.getString("jasm.error.fatal_error");
-            error(er + "\n" + sf.getInputFileName() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
-        } catch (Exception ee) {
-            if (DebugFlag.getAsBoolean()) {
-                ee.printStackTrace();
+        } catch (IllegalArgumentException iae) {
+            if (environment.hasMessages()) {
+                environment.flush(false);
             }
-            String er = ee.getMessage() + "\n" + ee.getMessage() + "\n" + i18n.getString("jasm.error.fatal_exception");
-            error(er + "\n" + sf.getInputFileName() + ": [" + sf.lineNumber() + ", " + sf.lineOffset() + "]");
+            System.exit(FAILED);
         }
 
-        boolean errs = nerrors > 0;
-        boolean warns = (nwarnings > 0) && (!nowarn);
-        boolean errsOrWarns = errs || warns;
-        if (!errsOrWarns) {
-            return true;
-        }
-        if (errs) {
-            out.print(nerrors > 1 ? (nerrors + " errors") : "1 error");
-        }
-        if (errs && warns) {
-            out.print(", ");
-        }
-        if (warns) {
-            out.print(nwarnings > 1 ? (nwarnings + " warnings") : "1 warning");
-        }
-        println();
-        if (strict) {
-            return !errsOrWarns;
-        } else {
-            return !errs;
-        }
-    }
-
-    /**
-     * main program
-     */
-    public static void main(String argv[]) {
-        Main compiler = new Main(new PrintWriter(System.out), "jasm");
-        System.exit(compiler.compile(argv) ? 0 : 1);
     }
 }

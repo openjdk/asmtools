@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 /**
  * JVMS 4.7.16.
@@ -31,29 +32,36 @@ import java.util.ArrayList;
  * annotation {
  *     u2 type_index;
  *     u2 num_element_value_pairs;
- *     {   u2            element_name_index;
+ *     {   u2  element_name_index;
  *         element_value value;
  *     } element_value_pairs[num_element_value_pairs];
  * }
  */
-class AnnotationData implements Data {
+class AnnotationData implements ConstantPoolDataVisitor {
 
     boolean invisible;
-    Argument typeCPX;
+    Indexer typeCPX;
     ArrayList<ElemValuePair> elemValuePairs;
-    int annotationLength = 0;
+
+    @Override
+    public <T extends DataWriter> T visit(ConstantPool pool) {
+        for( ElemValuePair pair : elemValuePairs ) {
+            pair.visit(pool);
+        }
+        return (T) this;
+    }
 
     /**
      * AnnotationElemValue
      *
      * Used to store Annotation Data
      */
-    static public class ElemValuePair implements Data {
+    static public class ElemValuePair implements ConstantPoolDataVisitor {
 
-        ConstantPool.ConstCell name;
-        Data value;
+        ConstCell name;
+        DataWriter value;
 
-        public ElemValuePair(ConstantPool.ConstCell name, Data value) {
+        public ElemValuePair(ConstCell name, DataWriter value) {
             this.name = name;
             this.value = value;
         }
@@ -68,9 +76,16 @@ class AnnotationData implements Data {
         public int getLength() {
             return 2 + value.getLength();
         }
+
+        @Override
+        public <T extends DataWriter> T visit(ConstantPool pool) {
+            this.name = visitConstCell(this.name, pool);
+            this.value = visitData(this.value, pool);
+            return (T) this;
+        }
     }
 
-    public AnnotationData(Argument typeCPX, boolean invisible) {
+    public AnnotationData(Indexer typeCPX, boolean invisible) {
         this.typeCPX = typeCPX;
         this.elemValuePairs = new ArrayList<>();
         this.invisible = invisible;
@@ -78,21 +93,19 @@ class AnnotationData implements Data {
 
     public void add(ElemValuePair elemValuePair) {
         elemValuePairs.add(elemValuePair);
-        annotationLength += elemValuePair.getLength();
     }
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        out.writeShort(typeCPX.arg);
+        out.writeShort(typeCPX.cpIndex);
         out.writeShort(elemValuePairs.size());
-
-        for (Data pair : elemValuePairs) {
+        for (DataWriter pair : elemValuePairs) {
             pair.write(out);
         }
     }
 
     @Override
     public int getLength() {
-        return 4 + annotationLength;
+        return 4 + elemValuePairs.stream().flatMapToInt(elem-> IntStream.of(elem.getLength())).sum();
     }
 }

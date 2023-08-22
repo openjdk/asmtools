@@ -131,7 +131,5 @@ class ByteBuffer extends java.io.OutputStream {
         writeAt(length, val, width);
         length += width;
     }
-
-    /*======================================================*/
 } // end ByteBuffer
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,71 +23,69 @@
 package org.openjdk.asmtools.jdis;
 
 import java.util.EnumSet;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 /**
  * The singleton class to share global options among jdis classes.
  */
 public class Options {
 
-    public static final int BODY_INDENT = 2;
-
-    /* Options Fields */
-    private static Options ref;
-
      public enum PR {
+        CP("Constant Pool"),
+        LNT("Line Number table"),
+        PC("Program Counter - for all instructions"),
+        LABS("Labels (as identifiers)"),
+        CPX("CP index along with arguments"),
+        SRC("Source Line as comment"),
+        HEX("Numbers as hexadecimals"),
+        VAR("Local variables declarations"),
+        TRACE("Print internal traces, debug information"),
+        NC("No comments, suppress printing comments"),
+        VERBOSE("Verbose information");
+        final String descriptor;
 
-        CP, // print Constant Pool
-        LNT, // print Line Number table
-        PC, // print Program Counter - for all instr
-        LABS, // print Labels (as identifiers)
-        CPX, // print CP index along with arguments
-        SRC, // print Source Line as comment
-        HEX, // print numbers as hexadecimals
-        VAR, // print local variables declarations
-        DEBUG;  // Debug flag
-    };
+         PR(String descriptor) {
+             this.descriptor=descriptor;
+         }
+     };
 
-    static private final EnumSet<PR> JASM = EnumSet.<PR>of(PR.LABS); // default options
-    static private final EnumSet<PR> CODE = EnumSet.<PR>of(
+    static private final EnumSet<PR> JASM = EnumSet.of(PR.LABS);    // <no options>: default option(s)
+    static private final EnumSet<PR> DETAILED_OUTPUT = EnumSet.of(  // -g:           detailed output format
             PR.CP,
-            PR.LNT,
             PR.PC,
             PR.CPX,
             PR.VAR
     );
 
     static private EnumSet<PR> printOptions = JASM;
-    /*-------------------------------------------------------- */
+    /* -------------------------------------------------------- */
 
-    private Options() {
-    }
-
-    public static Options OptionObject() {
-        if (ref == null) {
-            ref = new Options();
-        }
-        return ref;
-    }
-
-    public void set(PR val) {
+    public static  void set(PR val) {
         printOptions.add(val);
     }
 
-    public void setCodeOptions() {
-        printOptions.addAll(CODE);
+    public static  void setDetailedOutputOptions() {
+        printOptions.addAll(DETAILED_OUTPUT);
+        printOptions.remove(PR.LABS);
     }
 
-    public boolean contains(PR val) {
-        return printOptions.contains(val);
+    public static  void unsetDetailedOutputOptions() {
+        printOptions.removeAll(DETAILED_OUTPUT);
+        printOptions.add(PR.LABS);
     }
 
-    public boolean debug() {
-        return printOptions.contains(PR.DEBUG);
-    }
+    public static boolean contains(PR val) { return printOptions.contains(val); }
 
-    @Override
-    public String toString() {
-        return printOptions.toString();
-    }
+    public static boolean traceEnabled() { return printOptions.contains(PR.TRACE); }
 
+    public static String asShortString() {
+        return  format("[ %s ]",
+                printOptions.stream().map(item -> item.name()).collect(Collectors.joining(", ")));
+    }
+    public static String asLongString() {
+        return format("Prints: [ %s ]",
+                printOptions.stream().map(item -> item.descriptor).collect(Collectors.joining(", ")));
+    }
 }

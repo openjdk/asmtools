@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.structure.EAttribute;
+
 import java.io.IOException;
 
 /**
@@ -32,19 +34,14 @@ import java.io.IOException;
  */
 public class DefaultAnnotationAttr extends AttrData {
 
-    Data element; // Data
+    DataWriter element; // Data
 
-    public DefaultAnnotationAttr(ClassData cls, String name, Data element) {
-        super(cls, name);
+    public DefaultAnnotationAttr(ConstantPool pool, EAttribute attribute, DataWriter element) {
+        super(pool, attribute);
         this.element = element;
     }
 
-    public DefaultAnnotationAttr(ClassData cls, String name) {
-        super(cls, name);
-        this.element = null;
-    }
-
-    public void add(Data element) {
+    public void add(DataWriter element) {
         this.element = element;
     }
 

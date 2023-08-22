@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,68 +22,76 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.Module;
 import org.openjdk.asmtools.asmutils.StringUtils;
-import org.openjdk.asmtools.jasm.Modifiers;
+import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.structure.ClassFileContext;
+import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.EModifier;
+import org.openjdk.asmtools.common.structure.StackMap;
 import org.openjdk.asmtools.jcoder.JcodTokens;
-import org.openjdk.asmtools.util.I18NResourceBundle;
 
 import java.awt.event.KeyEvent;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.net.URISyntaxException;
+import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.openjdk.asmtools.jasm.Tables.*;
-import static org.openjdk.asmtools.jasm.Tables.AnnotElemType.AE_UNKNOWN;
-import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.*;
+import static org.openjdk.asmtools.Main.sharedI18n;
+import static org.openjdk.asmtools.asmutils.StringUtils.*;
+import static org.openjdk.asmtools.common.structure.ClassFileContext.MODULE_DIRECTIVES;
+import static org.openjdk.asmtools.jasm.ClassFileConst.*;
+import static org.openjdk.asmtools.jasm.ClassFileConst.AnnotationElementType.AE_UNKNOWN;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_MODULE;
+import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetInfo;
+import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetType;
+import static org.openjdk.asmtools.jcoder.JcodTokens.Token.IDENT;
 
 /**
  * Class data of the Java Decoder
  */
 class ClassData {
 
+    private static final int COMMENT_OFFSET = 32;
+    private static final String INDENT_STRING = "  ";
+    private static final int INDENT_LENGTH = INDENT_STRING.length();
+    /*========================================================*/
+
+    private final NestedByteArrayInputStream arrayInputStream;
+    private final DataInputStream inputStream;
+    protected JdecEnvironment environment;
+    /* ====================================================== */
     private byte[] types;
     private Object[] cpool;
     private int CPlen;
-    private NestedByteArrayInputStream countedin;
-    private DataInputStream in;
-    private PrintWriter out;
     private int[] cpe_pos;
-    private boolean printDetails;
     private String entityType = "";
     private String entityName = "";
-
-    public static I18NResourceBundle i18n
-            = I18NResourceBundle.getBundleForClass(Main.class);
-
-    ClassData(DataInputStream dis, int printFlags, PrintWriter out) throws IOException {
-        byte[] buf = new byte[dis.available()];
-        try {
-            if (dis.read(buf) <= 0)
-                throw new IOException("The file is empty");
-        } finally {
-            dis.close();
-        }
-        countedin = new NestedByteArrayInputStream(buf);
-        in = new DataInputStream(countedin);
-        this.out = out;
-        printDetails = ((printFlags & 1) == 1);
-    }
-
     /*========================================================*/
-    private static final char[] hexTable = {
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-    };
+    private int indent = 0;
+
+    ClassData(JdecEnvironment environment) throws IOException, URISyntaxException {
+        this.environment = environment;
+        //
+        try (DataInputStream dis = environment.getInputFile().getDataInputStream(Optional.empty())) {
+            byte[] buf = new byte[dis.available()];
+            if (dis.read(buf) <= 0) {
+                throw new FormatError(environment.getLogger(),
+                        "err.file.empty", environment.getSimpleInputFileName());
+            }
+            arrayInputStream = new NestedByteArrayInputStream(buf);
+            inputStream = new DataInputStream(arrayInputStream);
+        }
+    }
 
     private String toHex(long val, int width) {
         StringBuilder s = new StringBuilder();
         for (int i = width * 2 - 1; i >= 0; i--) {
             s.append(hexTable[((int) (val >> (4 * i))) & 0xF]);
         }
-        return "0x" + s.toString();
+        return "0x" + s;
     }
 
     private String toHex(long val) {
@@ -96,40 +104,67 @@ class ClassData {
         return toHex(val, width);
     }
 
-    private void printByteHex(PrintWriter out, int b) {
-        out.print(hexTable[(b >> 4) & 0xF]);
-        out.print(hexTable[b & 0xF]);
+    private void printByteHex(int b) {
+        environment.print(hexTable[(b >> 4) & 0xF]);
+        environment.print(hexTable[b & 0xF]);
     }
 
-    private void printBytes(PrintWriter out, DataInputStream in, int len)
-            throws IOException {
+    /**
+     *
+     * @param in              input stream to get bytes for printing
+     * @param len             number of bytes
+     * @param printSeparately defines a format  of printed lines which will be either  0x04 0x3C 0x04 0x3D; or 0x043C043D043E1B1C;
+     * @throws IOException exception might happen while reading DataInputStream
+     **/
+    private void printBytes(DataInputStream in, int len, boolean printSeparately) throws IOException {
+        int i = 0;
+        final int BYTES_IN_LINE = printSeparately ? 4 : 8;
         try {
-            for (int i = 0; i < len; i++) {
-                if (i % 8 == 0) {
-                    out_print("0x");
+            for (; i < len; i++) {
+                if (i % BYTES_IN_LINE == 0) {
+                    out_print(printSeparately ? "" : "0x");
                 }
-                printByteHex(out, in.readByte());
-                if (i % 8 == 7) {
-                    out.println(";");
+                if (printSeparately) {
+                    environment.print("0x");
+                }
+                printByteHex(in.readByte());
+                if (printSeparately) {
+                    if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
+                        environment.println(";");
+                    } else if (i + 1 != len) {
+                        environment.print(" ");
+                    }
+                } else {
+                    if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
+                        environment.println(";");
+                    }
                 }
             }
         } finally {
             if (len % 8 != 0) {
-                out.println(";");
+                if (i > 0)
+                    environment.println(";");
+                else
+                    out_println(";");
             }
         }
+    }
+
+    private void printUtf8String(DataInputStream in, int len) throws IOException {
+        final int CHARS_IN_LINE = 78;
+        readUtf8String(in, len, CHARS_IN_LINE).forEach(s -> environment.println(getOutString("") + s));
     }
 
     private void printRestOfBytes() {
         for (int i = 0; ; i++) {
             try {
-                byte b = in.readByte();
+                byte b = inputStream.readByte();
                 if (i % 8 == 0) {
                     out_print("0x");
                 }
-                printByteHex(out, b);
+                printByteHex(b);
                 if (i % 8 == 7) {
-                    out.print(";\n");
+                    environment.println(";");
                 }
             } catch (IOException e) {
                 return;
@@ -140,48 +175,38 @@ class ClassData {
     private void printUtf8InfoIndex(int index, String indexName) {
         String name = (String) cpool[index];
         out_print("#" + index + "; // ");
-        if (printDetails) {
-            out.println(String.format("%-16s",indexName) + " : " + name);
+        if (environment.printDetailsFlag) {
+            environment.println(format("%-16s", indexName) + " : " + name);
         } else {
-            out.println(indexName);
+            environment.println(indexName);
         }
     }
 
-    /*========================================================*/
-    private int shift = 0;
-
     private void out_begin(String s) {
-        for (int i = 0; i < shift; i++) {
-            out.print("  ");
-        }
-        out.println(s);
-        shift++;
+        environment.println(getOutString(s));
+        indent++;
     }
 
     private void out_print(String s) {
-        for (int i = 0; i < shift; i++) {
-            out.print("  ");
-        }
-        out.print(s);
+        environment.print(getOutString(s));
     }
 
     private void out_println(String s) {
-        for (int i = 0; i < shift; i++) {
-            out.print("  ");
-        }
-        out.println(s);
+        environment.println(getOutString(s));
+    }
+
+    private String getOutString(String s) {
+        s = formatComments(s, indent);
+        return repeat(INDENT_STRING, indent) + s;
     }
 
     private void out_end(String s) {
-        shift--;
-        for (int i = 0; i < shift; i++) {
-            out.print("  ");
-        }
-        out.println(s);
+        s = formatComments(s, indent - 1);
+        environment.println(repeat(INDENT_STRING, --indent) + s);
     }
 
     private String startArray(int length) {
-        return "[" + (printDetails ? Integer.toString(length) : "") + "]";
+        return "[" + (environment.printDetailsFlag ? Integer.toString(length) : "") + "]";
     }
 
     private void startArrayCmt(int length, String comment) {
@@ -192,11 +217,10 @@ class ClassData {
         out_begin(startArray(length) + format("b {%s", comment == null ? "" : " // " + comment));
     }
 
-    /*========================================================*/
     private void readCP(DataInputStream in) throws IOException {
         int length = in.readUnsignedShort();
         CPlen = length;
-        traceln(i18n.getString("jdec.trace.CP_len", length));
+        environment.traceln("jdec.trace.CP_len", length);
         types = new byte[length];
         cpool = new Object[length];
         cpe_pos = new int[length];
@@ -204,66 +228,52 @@ class ClassData {
             byte btag;
             int v1;
             long lv;
-            cpe_pos[i] = countedin.getPos();
+            cpe_pos[i] = arrayInputStream.getPos();
             btag = in.readByte();
-            traceln(i18n.getString("jdec.trace.CP_entry", i, btag));
+            environment.traceln("jdec.trace.CP_entry", i, btag);
             types[i] = btag;
             ConstType tg = tag(btag);
             switch (tg) {
-                case CONSTANT_UTF8:
-                    cpool[i] = in.readUTF();
-                    break;
-                case CONSTANT_INTEGER:
+                case CONSTANT_UTF8 -> cpool[i] = in.readUTF();
+                case CONSTANT_INTEGER -> {
                     v1 = in.readInt();
                     cpool[i] = v1;
-                    break;
-                case CONSTANT_FLOAT:
+                }
+                case CONSTANT_FLOAT -> {
                     v1 = Float.floatToIntBits(in.readFloat());
                     cpool[i] = v1;
-                    break;
-                case CONSTANT_LONG:
+                }
+                case CONSTANT_LONG -> {
                     lv = in.readLong();
                     cpool[i] = lv;
                     i++;
-                    break;
-                case CONSTANT_DOUBLE:
+                }
+                case CONSTANT_DOUBLE -> {
                     lv = Double.doubleToLongBits(in.readDouble());
                     cpool[i] = lv;
                     i++;
-                    break;
-                case CONSTANT_CLASS:
-                case CONSTANT_STRING:
-                case CONSTANT_MODULE:
-                case CONSTANT_PACKAGE:
+                }
+                case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_MODULE, CONSTANT_PACKAGE -> {
                     v1 = in.readUnsignedShort();
                     cpool[i] = v1;
-                    break;
-                case CONSTANT_INTERFACEMETHOD:
-                case CONSTANT_FIELD:
-                case CONSTANT_METHOD:
-                case CONSTANT_NAMEANDTYPE:
-                    cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
-                    break;
-                case CONSTANT_DYNAMIC:
-                case CONSTANT_INVOKEDYNAMIC:
-                    cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
-                    break;
-                case CONSTANT_METHODHANDLE:
-                    cpool[i] = in.readUnsignedByte() + "b #" + in.readUnsignedShort();
-                    break;
-                case CONSTANT_METHODTYPE:
-                    cpool[i] = "#" + in.readUnsignedShort();
-                    break;
-                default:
+                }
+                case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE ->
+                        cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
+                case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                        cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
+                case CONSTANT_METHODHANDLE -> cpool[i] = in.readUnsignedByte() + "b #" + in.readUnsignedShort();
+                case CONSTANT_METHODTYPE -> cpool[i] = "#" + in.readUnsignedShort();
+                default -> {
                     CPlen = i;
-                    printCP(out);
+                    printCP();
                     out_println(toHex(btag, 1) + "; // invalid constant type: " + (int) btag + " for element " + i);
                     throw new ClassFormatError();
+                }
             }
         }
     }
 
-    private void printCP(PrintWriter out) {
+    private void printCP() {
         int length = CPlen;
         startArrayCmt(length, "Constant Pool");
         out_println("; // first element is empty");
@@ -284,130 +294,141 @@ class ClassData {
                     throw new Error("Can't get a tg representing the type of Constant in the Constant Pool at: " + i);
                 }
                 switch (tg) {
-                    case CONSTANT_UTF8: {
+                    case CONSTANT_UTF8 -> {
                         tagstr = "Utf8";
-                        valstr = StringUtils.Utf8ToString((String) cpool[i]);
+                        valstr = StringUtils.Utf8ToString((String) cpool[i], "\"");
                     }
-                    break;
-                    case CONSTANT_FLOAT:
-                    case CONSTANT_INTEGER:
+                    case CONSTANT_FLOAT, CONSTANT_INTEGER -> {
                         v1 = (Integer) cpool[i];
                         valstr = toHex(v1, 4);
-                        break;
-                    case CONSTANT_DOUBLE:
-                    case CONSTANT_LONG:
+                    }
+                    case CONSTANT_DOUBLE, CONSTANT_LONG -> {
                         lv = (Long) cpool[i];
                         valstr = toHex(lv, 8) + ";";
                         size = 2;
-                        break;
-                    case CONSTANT_CLASS:
-                    case CONSTANT_MODULE:
-                    case CONSTANT_PACKAGE:
-                    case CONSTANT_STRING:
+                    }
+                    case CONSTANT_CLASS, CONSTANT_MODULE, CONSTANT_PACKAGE, CONSTANT_STRING -> {
                         v1 = (Integer) cpool[i];
                         valstr = "#" + v1;
-                        break;
-                    case CONSTANT_INTERFACEMETHOD:
-                    case CONSTANT_FIELD:
-                    case CONSTANT_METHOD:
-                    case CONSTANT_NAMEANDTYPE:
-                    case CONSTANT_METHODHANDLE:
-                    case CONSTANT_METHODTYPE:
-                    case CONSTANT_DYNAMIC:
-                    case CONSTANT_INVOKEDYNAMIC:
-                        valstr = (String) cpool[i];
-                        break;
-                    default:
-                        throw new Error("invalid constant type: " + (int) btag);
+                    }
+                    case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF,
+                            CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE,
+                            CONSTANT_METHODHANDLE, CONSTANT_METHODTYPE,
+                            CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> valstr = (String) cpool[i];
+                    default -> throw new Error("invalid constant type: " + (int) btag);
                 }
                 out_print(tagstr + " " + valstr + "; // #" + i);
-                if (printDetails) {
+                if (environment.printDetailsFlag) {
                     out_println(" at " + toHex(pos));
                 } else {
-                    out.println();
+                    environment.println();
                 }
             }
         } finally {
-            out_end("} // Constant Pool");
-            out.println();
+            out_end("}" + (environment.printDetailsFlag ? " // end of Constant Pool" : ""));
+            environment.println();
         }
     }
 
+    /**
+     * CONSTANT_Module_info {
+     *     u1 tag;              // == CONSTANT_MODULE(19)
+     *     u2 name_index;
+     * }
+     *
+     * @return Constant Pool module name by name_index
+     */
+    private String getModuleName() {
+        int idx = 0;
+        String name = "";
+        for (int i = 1; i < types.length; i++) {
+            if (types[i] == CONSTANT_MODULE.getTag()) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx != 0) {
+            try {
+                name = StringUtils.Utf8ToString((String) cpool[(int) cpool[idx]]);
+            } catch (Throwable ignored) { /* ignored*/ }
+        }
+        return name;
+    }
+
     private String getStringPos() {
-        return " at " + toHex(countedin.getPos());
+        return " at " + toHex(arrayInputStream.getPos());
     }
 
     private String getCommentPosCond() {
-        if (printDetails) {
+        if (environment.printDetailsFlag) {
             return " // " + getStringPos();
         } else {
             return "";
         }
     }
 
-    private void decodeCPXAttr(DataInputStream in, int len, String attrname, PrintWriter out) throws IOException {
-        decodeCPXAttrM(in, len, attrname, out, 1);
+    private void decodeCPXAttr(DataInputStream in, int len, String attrname) throws IOException {
+        decodeCPXAttrM(in, len, attrname, 1);
     }
 
-    private void decodeCPXAttrM(DataInputStream in, int len, String attrname, PrintWriter out, int expectedIndices) throws IOException {
+    private void decodeCPXAttrM(DataInputStream in, int len, String attrName, int expectedIndices) throws IOException {
         if (len != expectedIndices * 2) {
-            out_println("// invalid length of " + attrname + " attr: " + len + " (should be " + (expectedIndices * 2) + ") > ");
-            printBytes(out, in, len);
+            out_println("// == invalid length of " + attrName + " attr: " + len + " (should be " + (expectedIndices * 2) + ") ==");
+            printBytes(in, len, false);
         } else {
             StringBuilder outputString = new StringBuilder();
             for (int k = 1; k <= expectedIndices; k++) {
                 outputString.append("#").append(in.readUnsignedShort()).append("; ");
                 if (k % 16 == 0) {
-                    out_println(outputString.toString().replaceAll("\\s+$",""));
+                    out_println(outputString.toString().replaceAll("\\s+$", ""));
                     outputString = new StringBuilder();
                 }
             }
             if (outputString.length() > 0) {
-                out_println(outputString.toString().replaceAll("\\s+$",""));
+                out_println(outputString.toString().replaceAll("\\s+$", ""));
             }
         }
     }
 
-    private void printStackMap(DataInputStream in, int elementsNum) throws IOException {
+    private String getStackMap(DataInputStream in, int elementsNum) throws IOException {
         int num;
+        StringBuilder sb = new StringBuilder(20);
         if (elementsNum > 0) {
             num = elementsNum;
         } else {
             num = in.readUnsignedShort();
         }
-        out.print(startArray(num) + (elementsNum > 0 ? "z" : "") + "{");
+        sb.append(startArray(num)).append(elementsNum > 0 ? "z" : "").append('{');
         try {
             for (int k = 0; k < num; k++) {
                 int maptype = in.readUnsignedByte();
-                StackMapType mptyp = stackMapType(maptype, out);
+                StackMap.VerificationType verificationType = StackMap.getVerificationType(maptype,
+                        Optional.of((s) -> environment.printErrorLn(s)));
                 String maptypeImg;
-                if (printDetails) {
+                if (environment.printDetailsFlag) {
                     maptypeImg = maptype + "b";
                 } else {
                     try {
-                        maptypeImg = mptyp.parsekey();
+                        maptypeImg = verificationType.parseKey();
                     } catch (ArrayIndexOutOfBoundsException e) {
                         maptypeImg = "/* BAD TYPE: */ " + maptype + "b";
                     }
                 }
-                switch (mptyp) {
-                    case ITEM_Object:
-                    case ITEM_NewObject:
-                        maptypeImg = maptypeImg + "," + in.readUnsignedShort();
-                        break;
-                    case ITEM_UNKNOWN:
-                        maptypeImg = maptype + "b";
-                        break;
-                    default:
+                switch (verificationType) {
+                    case ITEM_Object, ITEM_NewObject -> maptypeImg = maptypeImg + "," + in.readUnsignedShort();
+                    case ITEM_UNKNOWN -> maptypeImg = maptype + "b";
+                    default -> {
+                    }
                 }
-                out.print(maptypeImg);
+                sb.append(maptypeImg);
                 if (k < num - 1) {
-                    out.print("; ");
+                    sb.append("; ");
                 }
             }
         } finally {
-            out.print("}");
+            sb.append('}');
         }
+        return sb.toString();
     }
 
     /**
@@ -417,7 +438,7 @@ class ClassData {
     private void decodeTargetTypeAndRefInfo(DataInputStream in) throws IOException {
         int tt = in.readUnsignedByte(); // [4.7.20] annotations[], type_annotation { u1 target_type; ...}
         ETargetType targetType = ETargetType.getTargetType(tt);
-        if( targetType == null ) {
+        if (targetType == null) {
             throw new Error("Type annotation: invalid target_type(u1) " + tt);
         }
         ETargetInfo targetInfo = targetType.targetInfo();
@@ -488,39 +509,27 @@ class ClassData {
         }
     }
 
-    private void decodeElementValue(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeElementValue(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  element_value");
         try {
             char tg = (char) in.readByte();
-            AnnotElemType tag = annotElemType(tg);
+            AnnotationElementType tag = getAnnotationElementType(tg);
             if (tag != AE_UNKNOWN) {
                 out_println("'" + tg + "';");
             }
             switch (tag) {
-                case AE_BYTE:
-                case AE_CHAR:
-                case AE_DOUBLE:
-                case AE_FLOAT:
-                case AE_INT:
-                case AE_LONG:
-                case AE_SHORT:
-                case AE_BOOLEAN:
-                case AE_STRING:
-                    decodeCPXAttr(in, 2, "const_value_index", out);
-                    break;
-                case AE_ENUM:
+                case AE_BYTE, AE_CHAR, AE_DOUBLE, AE_FLOAT,
+                        AE_INT, AE_LONG, AE_SHORT, AE_BOOLEAN,
+                        AE_STRING -> decodeCPXAttr(in, 2, "const_value_index");
+                case AE_ENUM -> {
                     out_begin("{  //  enum_const_value");
-                    decodeCPXAttr(in, 2, "type_name_index", out);
-                    decodeCPXAttr(in, 2, "const_name_index", out);
+                    decodeCPXAttr(in, 2, "type_name_index");
+                    decodeCPXAttr(in, 2, "const_name_index");
                     out_end("}  //  enum_const_value");
-                    break;
-                case AE_CLASS:
-                    decodeCPXAttr(in, 2, "class_info_index", out);
-                    break;
-                case AE_ANNOTATION:
-                    decodeAnnotation(in, out);
-                    break;
-                case AE_ARRAY:
+                }
+                case AE_CLASS -> decodeCPXAttr(in, 2, "class_info_index");
+                case AE_ANNOTATION -> decodeAnnotation(in, out);
+                case AE_ARRAY -> {
                     int ev_num = in.readUnsignedShort();
                     startArrayCmt(ev_num, "array_value");
                     try {
@@ -533,12 +542,12 @@ class ClassData {
                     } finally {
                         out_end("}  //  array_value");
                     }
-                    break;
-                case AE_UNKNOWN:
-                default:
-                    String msg = "invalid element_value" + (isPrintableChar(tg) ? " tag type : " + tg : "");
+                }
+                case AE_UNKNOWN -> {
+                    String msg = "invalid element_value" + (isPrintableChar(tg) ? " tag type : " + tg : "??");
                     out_println(toHex(tg, 1) + "; // " + msg);
                     throw new ClassFormatError(msg);
+                }
             }
         } finally {
             out_end("}  //  element_value");
@@ -553,10 +562,10 @@ class ClassData {
                 block != Character.UnicodeBlock.SPECIALS;
     }
 
-    private void decodeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAnnotation(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  annotation");
         try {
-            decodeCPXAttr(in, 2, "field descriptor", out);
+            decodeCPXAttr(in, 2, "field descriptor");
             int evp_num = in.readUnsignedShort();
             decodeElementValuePairs(evp_num, in, out);
         } finally {
@@ -564,13 +573,13 @@ class ClassData {
         }
     }
 
-    private void decodeElementValuePairs(int count, DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeElementValuePairs(int count, DataInputStream in, ToolOutput out) throws IOException {
         startArrayCmt(count, "element_value_pairs");
         try {
             for (int i = 0; i < count; i++) {
                 out_begin("{  //  element value pair");
                 try {
-                    decodeCPXAttr(in, 2, "name of the annotation type element", out);
+                    decodeCPXAttr(in, 2, "name of the annotation type element");
                     decodeElementValue(in, out);
                 } finally {
                     out_end("}  //  element value pair");
@@ -586,34 +595,33 @@ class ClassData {
 
     /**
      * component_info {     JEP 359 Record(Preview): class file 58.65535
-     *     u2               name_index;
-     *     u2               descriptor_index;
-     *     u2               attributes_count;
-     *     attribute_info attributes[attributes_count];
+     * u2               name_index;
+     * u2               descriptor_index;
+     * u2               attributes_count;
+     * attribute_info attributes[attributes_count];
      * }
-     *
+     * <p>
      * or
      * field_info {
-     *     u2             access_flags;
-     *     u2             name_index;
-     *     u2             descriptor_index;
-     *     u2             attributes_count;
-     *     attribute_info attributes[attributes_count];
+     * u2             access_flags;
+     * u2             name_index;
+     * u2             descriptor_index;
+     * u2             attributes_count;
+     * attribute_info attributes[attributes_count];
      * }
      * or
      * method_info {
-     *     u2             access_flags;
-     *     u2             name_index;
-     *     u2             descriptor_index;
-     *     u2             attributes_count;
-     *     attribute_info attributes[attributes_count];
+     * u2             access_flags;
+     * u2             name_index;
+     * u2             descriptor_index;
+     * u2             attributes_count;
+     * attribute_info attributes[attributes_count];
      * }
-     *
      */
-    private void decodeInfo(DataInputStream in, PrintWriter out, String elementName, boolean hasAccessFlag) throws IOException {
-        out_begin("{  // " + elementName + (printDetails ? getStringPos() : ""));
+    private void decodeInfo(DataInputStream in, ToolOutput out, String elementName, boolean hasAccessFlag) throws IOException {
+        out_begin("{  // " + elementName + (environment.printDetailsFlag ? getStringPos() : ""));
         try {
-            if(hasAccessFlag) {
+            if (hasAccessFlag) {
                 //  u2 access_flags;
                 out_println(toHex(in.readShort(), 2) + "; // access");
             }
@@ -629,11 +637,11 @@ class ClassData {
         }
     }
 
-    private void decodeTypeAnnotation(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeTypeAnnotation(DataInputStream in, ToolOutput out) throws IOException {
         out_begin("{  //  type_annotation");
         try {
             decodeTargetTypeAndRefInfo(in);
-            decodeCPXAttr(in, 2, "field descriptor", out);
+            decodeCPXAttr(in, 2, "field descriptor");
             int evp_num = in.readUnsignedShort();
             decodeElementValuePairs(evp_num, in, out);
         } finally {
@@ -659,13 +667,14 @@ class ClassData {
         }
     }
 
-    private void decodeAttr(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAttr(DataInputStream in, ToolOutput out) throws IOException {
         // Read one attribute
         String posComment = getStringPos();
-        int name_cpx = in.readUnsignedShort(), btag, len;
+        int name_cpx = 0, btag, len;
 
         String AttrName = "";
         try {
+            name_cpx = in.readUnsignedShort();
             btag = types[name_cpx];
             ConstType tag = tag(btag);
 
@@ -673,26 +682,28 @@ class ClassData {
                 AttrName = (String) cpool[name_cpx];
             }
         } catch (ArrayIndexOutOfBoundsException ignored) {
+            environment.print(getOutString(""));
+            environment.println("// == %s ==", sharedI18n.getString("main.error.wrong.bytes"));
         }
-        AttrTag tg = attrtag(AttrName);
-        String endingComment = AttrName;
+        EAttribute tg = EAttribute.get(AttrName);
+        String endingComment = AttrName.isEmpty() ? "#" + name_cpx : AttrName;
         len = in.readInt();
-        countedin.enter(len);
+        arrayInputStream.enter(len);
         try {
-            if (printDetails) {
-                out_begin("Attr(#" + name_cpx + ", " + len + ") { // " + AttrName + posComment);
+            if (environment.printDetailsFlag) {
+                out_begin("Attr(#" + name_cpx + ", " + len + ") { // " + endingComment + posComment);
             } else {
-                out_begin("Attr(#" + name_cpx + ") { // " + AttrName);
+                out_begin("Attr(#" + name_cpx + ") { // " + endingComment);
             }
 
             switch (tg) {
-                case ATT_Code:
+                case ATT_Code -> {
                     out_println(in.readUnsignedShort() + "; // max_stack");
                     out_println(in.readUnsignedShort() + "; // max_locals");
                     int code_len = in.readInt();
                     out_begin("Bytes" + startArray(code_len) + "{");
                     try {
-                        printBytes(out, in, code_len);
+                        printBytes(in, code_len, false);
                     } finally {
                         out_end("}");
                     }
@@ -707,13 +718,12 @@ class ClassData {
                                     getCommentPosCond());
                         }
                     } finally {
-                        out_end("} // end Traps");
+                        out_end("} // end of Traps");
                     }
                     // Read the attributes
                     decodeAttrs(in, out);
-                    break;
-
-                case ATT_Exceptions:
+                }
+                case ATT_Exceptions -> {
                     int count = in.readUnsignedShort();
                     startArrayCmt(count, AttrName);
                     try {
@@ -724,8 +734,8 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_LineNumberTable:
+                }
+                case ATT_LineNumberTable -> {
                     int ll_num = in.readUnsignedShort();
                     startArrayCmt(ll_num, "line_number_table");
                     try {
@@ -737,9 +747,8 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_LocalVariableTable:
-                case ATT_LocalVariableTypeTable:
+                }
+                case ATT_LocalVariableTable, ATT_LocalVariableTypeTable -> {
                     int lvt_num = in.readUnsignedShort();
                     startArrayCmt(lvt_num, AttrName);
                     try {
@@ -754,8 +763,8 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_InnerClasses:
+                }
+                case ATT_InnerClasses -> {
                     int ic_num = in.readUnsignedShort();
                     startArrayCmt(ic_num, "classes");
                     try {
@@ -768,96 +777,80 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_StackMap:
+                }
+                case ATT_StackMap -> {
                     int e_num = in.readUnsignedShort();
                     startArrayCmt(e_num, "");
                     try {
                         for (int k = 0; k < e_num; k++) {
                             int start_pc = in.readUnsignedShort();
-                            out_print("" + start_pc + ", ");
-                            printStackMap(in, 0);
-                            out.print(", ");
-                            printStackMap(in, 0);
-                            out.println(";");
+                            environment.println(format("%d, %s, %s;", start_pc,
+                                    getStackMap(in, 0), getStackMap(in, 0)));
                         }
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_StackMapTable:
+                }
+                case ATT_StackMapTable -> {
                     int et_num = in.readUnsignedShort();
                     startArrayCmt(et_num, "");
                     try {
                         for (int k = 0; k < et_num; k++) {
                             int frame_type = in.readUnsignedByte();
-                            StackMapFrameType ftype = stackMapFrameType(frame_type);
+                            StackMap.FrameType ftype = StackMap.stackMapFrameType(frame_type);
                             switch (ftype) {
-                                case SAME_FRAME:
-                                    // type is same_frame;
-                                    out_print("" + frame_type + "b");
-                                    out.println("; // same_frame");
-                                    break;
-                                case SAME_LOCALS_1_STACK_ITEM_FRAME:
-                                    // type is same_locals_1_stack_item_frame
-                                    out_print("" + frame_type + "b, ");
+                                case SAME_FRAME -> {
+                                    // verificationType is same_frame;
+                                    out_println("" + frame_type + "b; // same_frame");
+                                }
+                                case SAME_LOCALS_1_STACK_ITEM_FRAME -> {
+                                    // verificationType is same_locals_1_stack_item_frame
                                     // read additional single stack element
-                                    printStackMap(in, 1);
-                                    out.println("; // same_locals_1_stack_item_frame");
-                                    break;
-                                case SAME_LOCALS_1_STACK_ITEM_EXTENDED_FRAME:
-                                    // type is same_locals_1_stack_item_frame_extended
+                                    out_println(format("%db, %s; // same_locals_1_stack_item_frame",
+                                            frame_type, getStackMap(in, 1)));
+                                }
+                                case SAME_LOCALS_1_STACK_ITEM_EXTENDED_FRAME -> {
+                                    // verificationType is same_locals_1_stack_item_frame_extended
+                                    // read additional single stack element
                                     int noffset = in.readUnsignedShort();
-                                    out_print("" + frame_type + "b, " + noffset + ", ");
-                                    // read additional single stack element
-                                    printStackMap(in, 1);
-                                    out.println("; // same_locals_1_stack_item_frame_extended");
-                                    break;
-                                case CHOP_1_FRAME:
-                                case CHOP_2_FRAME:
-                                case CHOP_3_FRAME:
-                                    // type is chop_frame
+                                    out_println(format("%db, %d, %s; // same_locals_1_stack_item_frame_extended",
+                                            frame_type, noffset, getStackMap(in, 1)));
+                                }
+                                case CHOP_1_FRAME, CHOP_2_FRAME, CHOP_3_FRAME -> {
+                                    // verificationType is chop_frame
                                     int coffset = in.readUnsignedShort();
-                                    out_print("" + frame_type + "b, " + coffset);
-                                    out.println("; // chop_frame " + (251 - frame_type));
-                                    break;
-                                case SAME_FRAME_EX:
-                                    // type is same_frame_extended;
+                                    out_println(format("%db, %d; // chop_frame %d",
+                                            frame_type, coffset, 251 - frame_type));
+                                }
+                                case SAME_FRAME_EX -> {
+                                    // verificationType is same_frame_extended;
                                     int xoffset = in.readUnsignedShort();
-                                    out_print("" + frame_type + "b, " + xoffset);
-                                    out.println("; // same_frame_extended");
-                                    break;
-                                case APPEND_FRAME:
-                                    // type is append_frame
-                                    int aoffset = in.readUnsignedShort();
-                                    out_print("" + frame_type + "b, " + aoffset + ", ");
+                                    out_println(format("%db, %d; // same_frame_extended",
+                                            frame_type, xoffset));
+                                }
+                                case APPEND_FRAME -> {
+                                    // verificationType is append_frame
                                     // read additional locals
-                                    printStackMap(in, frame_type - 251);
-                                    out.println("; // append_frame " + (frame_type - 251));
-                                    break;
-                                case FULL_FRAME:
-                                    // type is full_frame
+                                    int aoffset = in.readUnsignedShort();
+                                    out_println(format("%db, %d, %s; // append_frame %d",
+                                            frame_type, aoffset,
+                                            getStackMap(in, frame_type - 251), frame_type - 251));
+                                }
+                                case FULL_FRAME -> {
+                                    // verificationType is full_frame
                                     int foffset = in.readUnsignedShort();
-                                    out_print("" + frame_type + "b, " + foffset + ", ");
-                                    printStackMap(in, 0);
-                                    out.print(", ");
-                                    printStackMap(in, 0);
-                                    out.println("; // full_frame");
-                                    break;
+                                    out_println(format("%db, %d, %s, %s; // full_frame", frame_type, foffset,
+                                            getStackMap(in, 0), getStackMap(in, 0)));
+                                }
                             }
                         }
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_EnclosingMethod:
-                    decodeCPXAttrM(in, len, AttrName, out, 2);
-                    break;
-                case ATT_AnnotationDefault:
-                    decodeElementValue(in, out);
-                    break;
-                case ATT_RuntimeInvisibleAnnotations:
-                case ATT_RuntimeVisibleAnnotations:
+                }
+                case ATT_EnclosingMethod -> decodeCPXAttrM(in, len, AttrName, 2);
+                case ATT_AnnotationDefault -> decodeElementValue(in, out);
+                case ATT_RuntimeInvisibleAnnotations, ATT_RuntimeVisibleAnnotations -> {
                     int an_num = in.readUnsignedShort();
                     startArrayCmt(an_num, "annotations");
                     try {
@@ -870,11 +863,10 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
+                }
                 // 4.7.20 The RuntimeVisibleTypeAnnotations Attribute
                 // 4.7.21 The RuntimeInvisibleTypeAnnotations Attribute
-                case ATT_RuntimeInvisibleTypeAnnotations:
-                case ATT_RuntimeVisibleTypeAnnotations:
+                case ATT_RuntimeInvisibleTypeAnnotations, ATT_RuntimeVisibleTypeAnnotations -> {
                     int ant_num = in.readUnsignedShort();
                     startArrayCmt(ant_num, "annotations");
                     try {
@@ -887,9 +879,8 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_RuntimeInvisibleParameterAnnotations:
-                case ATT_RuntimeVisibleParameterAnnotations:
+                }
+                case ATT_RuntimeInvisibleParameterAnnotations, ATT_RuntimeVisibleParameterAnnotations -> {
                     int pm_num = in.readUnsignedByte();
                     startArrayCmtB(pm_num, "parameters");
                     try {
@@ -913,8 +904,8 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_BootstrapMethods:
+                }
+                case ATT_BootstrapMethods -> {
                     int bm_num = in.readUnsignedShort();
                     startArrayCmt(bm_num, "bootstrap_methods");
                     try {
@@ -927,22 +918,18 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_Module:
-                    decodeModule(in);
-                    break;
-                case ATT_TargetPlatform:
-                    decodeCPXAttrM(in, len, AttrName, out, 3);
-                    break;
-                case ATT_ModulePackages:
+                }
+                case ATT_Module -> decodeModule(in);
+                case ATT_TargetPlatform -> decodeCPXAttrM(in, len, AttrName, 3);
+                case ATT_ModulePackages -> {
                     int p_num = in.readUnsignedShort();
                     startArrayCmt(p_num, null);
                     try {
-                        decodeCPXAttrM(in, len - 2, AttrName, out, p_num);
+                        decodeCPXAttrM(in, len - 2, AttrName, p_num);
                     } finally {
                         out_end("}");
                     }
-                    break;
+                }
                 //  MethodParameters_attribute {
                 //    u2 attribute_name_index;
                 //    u4 attribute_length;
@@ -951,7 +938,7 @@ class ClassData {
                 //        u2 access_flags;
                 //    } parameters[parameters_count];
                 //  }
-                case ATT_MethodParameters:
+                case ATT_MethodParameters -> {
                     int pcount = in.readUnsignedByte();
                     startArrayCmtB(pcount, AttrName);
                     try {
@@ -963,7 +950,7 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
+                }
                 //  JEP 359 Record(Preview): class file 58.65535
                 //  Record_attribute {
                 //      u2 attribute_name_index;
@@ -971,12 +958,12 @@ class ClassData {
                 //      u2 components_count;
                 //      component_info components[components_count];
                 //  }
-                case ATT_Record:
+                case ATT_Record -> {
                     int ncomps = in.readUnsignedShort();
                     startArrayCmt(ncomps, "components");
                     try {
                         for (int i = 0; i < ncomps; i++) {
-                            decodeInfo(in,out,"component",false);
+                            decodeInfo(in, out, "component", false);
                             if (i < ncomps - 1) {
                                 out_println(";");
                             }
@@ -984,76 +971,87 @@ class ClassData {
                     } finally {
                         out_end("}");
                     }
-                    break;
-                case ATT_ConstantValue:
-                case ATT_Signature:
-                case ATT_SourceFile:
-                    decodeCPXAttr(in, len, AttrName, out);
-                    break;
-                    //  JEP 181 (Nest-based Access Control): class file 55.0
-                    //  NestHost_attribute {
-                    //    u2 attribute_name_index;
-                    //    u4 attribute_length;
-                    //    u2 host_class_index;
-                    //  }
-                case ATT_NestHost:
-                    decodeTypes(in, out, 1);
-                    break;
-                    //  JEP 181 (Nest-based Access Control): class file 55.0
-                    //  NestMembers_attribute {
-                    //    u2 attribute_name_index;
-                    //    u4 attribute_length;
-                    //    u2 number_of_classes;
-                    //    u2 classes[number_of_classes];
-                    //  }
-                case ATT_NestMembers:
-                    //  JEP 360 (Sealed types): class file 59.65535
-                    //  PermittedSubclasses_attribute {
-                    //    u2 attribute_name_index;
-                    //    u4 attribute_length;
-                    //    u2 number_of_classes;
-                    //    u2 classes[number_of_classes];
-                    //  }
-                case ATT_PermittedSubclasses:
+                }
+                case ATT_ConstantValue, ATT_Signature, ATT_SourceFile -> decodeCPXAttr(in, len, AttrName);
+
+                //  JEP 181 (Nest-based Access Control): class file 55.0
+                //  NestHost_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u2 host_class_index;
+                //  }
+                case ATT_NestHost -> decodeTypes(in, 1);
+
+                //  JEP 181 (Nest-based Access Control): class file 55.0
+                //  NestMembers_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u2 number_of_classes;
+                //    u2 classes[number_of_classes];
+                //  }
+                //  JEP 360 (Sealed types): class file 59.65535
+                //  PermittedSubclasses_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u2 number_of_classes;
+                //    u2 classes[number_of_classes];
+                //  }
+                // Valhalla
+                case ATT_NestMembers, ATT_PermittedSubclasses, ATT_Preload -> {
                     int nsubtypes = in.readUnsignedShort();
                     startArrayCmt(nsubtypes, "classes");
                     try {
-                        decodeTypes(in, out, nsubtypes);
+                        decodeTypes(in, nsubtypes);
                     } finally {
                         out_end("}");
                     }
-                    break;
-                default:
-                    printBytes(out, in, len);
+                }
+                // SourceDebugExtension_attribute {
+                //    u2 attribute_name_index;
+                //    u4 attribute_length;
+                //    u1 debug_extension[attribute_length];
+                // }
+                case ATT_SourceDebugExtension -> {
+                    printUtf8String(in, len);
                     if (AttrName == null) {
                         endingComment = "Attr(#" + name_cpx + ")";
                     }
+                }
+                default -> {
+                    printBytes(in, len, true);
+                    if (AttrName == null) {
+                        endingComment = "Attr(#" + name_cpx + ")";
+                    }
+                }
             }
 
         } catch (EOFException e) {
-            out.println("// ======== unexpected end of attribute array");
+            environment.println(getOutString("") + "// == The unexpected end of attribute array while parsing. ==");
         } finally {
-            int rest = countedin.available();
+            int rest = arrayInputStream.available();
             if (rest > 0) {
-                out.println("// ======== attribute array started " + posComment + " has " + rest + " bytes more:");
-                printBytes(out, in, rest);
+                environment.println(getOutString("") +
+                        "// == The attribute array started at" + posComment + " has " + rest + " bytes more than expected. ==");
+                printBytes(in, rest, true);
             }
-            out_end("} // end " + endingComment);
-            countedin.leave();
+            out_end("} // end of " + endingComment);
+            arrayInputStream.leave();
         }
     }
 
     private void decodeModuleStatement(String statementName, DataInputStream in) throws IOException {
+        int index, nFlags;
+        String sComment;
         // u2 {exports|opens}_count
         int count = in.readUnsignedShort();
         startArrayCmt(count, statementName);
         try {
             for (int i = 0; i < count; i++) {
                 // u2 {exports|opens}_index; u2 {exports|opens}_flags
-                int index = in.readUnsignedShort();
-                int nFlags = in.readUnsignedShort();
-                String sFlags = printDetails ? Module.Modifier.getStatementFlags(nFlags) : "";
-                out_println("#" + index + " " + toHex(nFlags, 2) + (sFlags.isEmpty() ? "" : " // [ " + sFlags + " ]"));
+                index = in.readUnsignedShort();
+                nFlags = in.readUnsignedShort();
+                sComment = environment.printDetailsFlag ? format(" // [ %s ]", EModifier.asNames(nFlags, MODULE_DIRECTIVES)) : "";
+                out_println(format("#%d %s%s", index, toHex(nFlags, 2), sComment));
                 int exports_to_count = in.readUnsignedShort();
                 startArrayCmt(exports_to_count, null);
                 try {
@@ -1065,28 +1063,29 @@ class ClassData {
                 }
             }
         } finally {
-            out_end("} // " + statementName + "\n");
+            out_end("} // of " + statementName);
+            environment.println();
         }
     }
 
     private void decodeModule(DataInputStream in) throws IOException {
+        int nFlags;
+        String sComment;
         //u2 module_name_index
         int index = in.readUnsignedShort();
         entityName = (String) cpool[(Integer) cpool[index]];
         out_print("#" + index + "; // ");
-        if (printDetails) {
-            out.println(String.format("%-16s","name_index") + " : " + entityName);
+        if (environment.printDetailsFlag) {
+            environment.println(format("%-16s", "name_index") + " : " + entityName);
         } else {
-            out.println("name_index");
+            environment.println("name_index");
         }
 
         // u2 module_flags
         int moduleFlags = in.readUnsignedShort();
-        out_print(toHex(moduleFlags, 2) + "; // flags");
-        if (printDetails) {
-            out_print(" " + Module.Modifier.getModuleFlags(moduleFlags));
-        }
-        out.println();
+        out_println(format("%s; //flags%s",
+                toHex(moduleFlags, 2), environment.printDetailsFlag ? EModifier.asNames(moduleFlags, MODULE_DIRECTIVES) + " " : ""));
+        environment.println();
 
         //u2 module_version
         int versionIndex = in.readUnsignedShort();
@@ -1099,13 +1098,14 @@ class ClassData {
             for (int i = 0; i < count; i++) {
                 // u2 requires_index; u2 requires_flags; u2 requires_version_index
                 index = in.readUnsignedShort();
-                int nFlags = in.readUnsignedShort();
+                nFlags = in.readUnsignedShort();
                 versionIndex = in.readUnsignedShort();
-                String sFlags = printDetails ? Module.Modifier.getStatementFlags(nFlags) : "";
-                out_println("#" + index + " " + toHex(nFlags, 2) + " #" + versionIndex + ";" + (sFlags.isEmpty() ? "" : " // " + sFlags));
+                sComment = environment.printDetailsFlag ? format(" // %s", EModifier.asNames(nFlags, MODULE_DIRECTIVES)) : "";
+                out_println(format("#%d %s #%d;%s", index, toHex(nFlags, 2), versionIndex, sComment));
             }
         } finally {
-            out_end("} // requires\n");
+            out_end("} // end of requires");
+            environment.println();
         }
 
         decodeModuleStatement("exports", in);
@@ -1120,7 +1120,8 @@ class ClassData {
                 out_println("#" + in.readUnsignedShort() + ";");
             }
         } finally {
-            out_end("} // uses\n");
+            out_end("} // end of uses");
+            environment.println();
         }
         count = in.readUnsignedShort(); // u2 provides_count
         startArrayCmt(count, "provides");
@@ -1141,11 +1142,12 @@ class ClassData {
                 }
             }
         } finally {
-            out_end("} // provides\n");
+            out_end("} // end of provides");
+            environment.println();
         }
     }
 
-    private void decodeAttrs(DataInputStream in, PrintWriter out) throws IOException {
+    private void decodeAttrs(DataInputStream in, ToolOutput out) throws IOException {
         // Read the attributes
         int attr_num = in.readUnsignedShort();
         startArrayCmt(attr_num, "Attributes");
@@ -1157,135 +1159,135 @@ class ClassData {
                 }
             }
         } finally {
-            out_end("} // Attributes");
+            out_end("} // end of Attributes");
         }
     }
 
-    private void decodeMembers(DataInputStream in, PrintWriter out, String groupName, String elementName) throws IOException {
+    private void decodeMembers(DataInputStream in, ToolOutput out, String groupName, String elementName) throws IOException {
         int count = in.readUnsignedShort();
-        traceln(groupName + "=" + count);
+        environment.traceln(groupName + "=" + count);
         startArrayCmt(count, groupName);
         try {
             for (int i = 0; i < count; i++) {
-                decodeInfo(in,out,elementName,true);
+                decodeInfo(in, out, elementName, true);
                 if (i + 1 < count) {
                     out_println(";");
                 }
             }
         } finally {
-            out_end("} // " + groupName);
-            out.println();
+            out_end("} // end of " + groupName);
+            environment.println();
         }
     }
 
-    void decodeClass(String fileName) throws IOException {
+    void decodeClass() throws IOException {
         // Read the header
         try {
-            int magic = in.readInt();
-            int min_version = in.readUnsignedShort();
-            int version = in.readUnsignedShort();
+            int magic = inputStream.readInt();
+            int min_version = inputStream.readUnsignedShort();
+            int version = inputStream.readUnsignedShort();
 
             // Read the constant pool
-            readCP(in);
-            short access = in.readShort(); // don't care about sign
-            int this_cpx = in.readUnsignedShort();
+            readCP(inputStream);
+            short access = inputStream.readShort(); // don't care about sign
+            int this_cpx = inputStream.readUnsignedShort();
 
             try {
                 entityName = (String) cpool[(Integer) cpool[this_cpx]];
+                environment.getToolOutput().startClass(entityName, Optional.of(".jcod"), environment);
                 if (entityName.equals("module-info")) {
                     entityType = "module";
-                    entityName = "";
+                    entityName = getModuleName();
                 } else {
                     entityType = "class";
                 }
-                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != JcodTokens.Token.IDENT || JcodTokens.constValue(entityName) != -1)) {
+                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != IDENT || JcodTokens.constValue(entityName) != -1)) {
                     // JCod can't parse a entityName matching a keyword or a constant value,
                     // then use the filename instead:
-                    out_begin(String.format("file \"%s.class\" {", entityName));
+                    out_begin(format("file \"%s.class\" {", entityName));
                 } else {
                     out_begin(format("%s %s {", entityType, entityName));
                 }
             } catch (Exception e) {
-                entityName = fileName;
-                out.println("// " + e.getMessage() + " while accessing entityName");
+                entityName = environment.getInputFile().getFileName();
+                environment.println("// " + e.getMessage() + " while accessing entityName");
                 out_begin(format("%s %s { // source file name", entityType, entityName));
             }
 
-            out_print(toHex(magic, 4) + ";");
             if (magic != JAVA_MAGIC) {
-                out.print(" // wrong magic: 0x" + Integer.toString(JAVA_MAGIC, 16) + " expected");
+                out_println(toHex(magic, 4) + "; // wrong magic: 0x" + Integer.toString(JAVA_MAGIC, 16) + " expected");
+            } else {
+                out_println(toHex(magic, 4) + ";");
+
             }
-            out.println();
             out_println(min_version + "; // minor version");
             out_println(version + "; // version");
 
             // Print the constant pool
-            printCP(out);
+            printCP();
             out_println(toHex(access, 2) + "; // access" +
-                    (printDetails ? " [" + (" " + Modifiers.accessString(access, CF_Context.CTX_CLASS).toUpperCase()).replaceAll(" (\\S)", " ACC_$1") + "]" : ""));
-            out_println("#" + this_cpx + ";// this_cpx");
-            int super_cpx = in.readUnsignedShort();
-            out_println("#" + super_cpx + ";// super_cpx");
-            traceln(i18n.getString("jdec.trace.access_thisCpx_superCpx", access, this_cpx, super_cpx));
-            out.println();
+                    (environment.printDetailsFlag ? " [ " + EModifier.asNames(access, ClassFileContext.CLASS) + " ]" : ""));
+            out_println("#" + this_cpx + "; // this_cpx");
+            int super_cpx = inputStream.readUnsignedShort();
+            out_println("#" + super_cpx + "; // super_cpx");
+            environment.traceln("jdec.trace.access_thisCpx_superCpx", access, this_cpx, super_cpx);
+            environment.println();
 
             // Read the interfaces
-            int numinterfaces = in.readUnsignedShort();
-            traceln(i18n.getString("jdec.trace.numinterfaces", numinterfaces));
+            int numinterfaces = inputStream.readUnsignedShort();
+            environment.traceln("jdec.trace.numinterfaces", numinterfaces);
             startArrayCmt(numinterfaces, "Interfaces");
             try {
-                decodeTypes(in, out, numinterfaces);
+                decodeTypes(inputStream, numinterfaces);
             } finally {
-                out_end("} // Interfaces\n");
+                out_end("} // end of Interfaces");
+                environment.println();
             }
             // Read the fields
-            decodeMembers(in, out, "Fields", "field");
+            decodeMembers(inputStream, environment.getToolOutput(), "Fields", "field");
 
             // Read the methods
-            decodeMembers(in, out, "Methods", "method");
+            decodeMembers(inputStream, environment.getToolOutput(), "Methods", "method");
 
             // Read the attributes
-            decodeAttrs(in, out);
+            decodeAttrs(inputStream, environment.getToolOutput());
         } catch (EOFException ignored) {
         } catch (ClassFormatError err) {
             String msg = err.getMessage();
-            out.println("//------- ClassFormatError" +
+            environment.println("//------- ClassFormatError" +
                     (msg == null || msg.isEmpty() ? "" : ": " + msg));
             printRestOfBytes();
         } finally {
-            out_end(format("} // end %s %s", entityType, entityName));
+            if (environment.printDetailsFlag) {
+                out_end(format("} // end of %s %s", entityType, entityName));
+            } else {
+                out_end("}");
+            }
+            environment.getToolOutput().finishClass(entityName);
         }
     } // end decodeClass()
 
-    private void decodeTypes(DataInputStream in, PrintWriter out, int count) throws IOException {
+    private void decodeTypes(DataInputStream in, int count) throws IOException {
         for (int i = 0; i < count; i++) {
             int type_cpx = in.readUnsignedShort();
-            traceln(i18n.getString("jdec.trace.type", i, type_cpx));
-            out_print("#" + type_cpx + ";");
-            if (printDetails) {
-                String name = (String) cpool[(int)cpool[type_cpx]];
-                out.println(" // " + name + getStringPos());
+            environment.traceln("jdec.trace.type", i, type_cpx);
+            String s = "#" + type_cpx + ";";
+            if (environment.printDetailsFlag) {
+                String name = (String) cpool[(int) cpool[type_cpx]];
+                out_println(s + " // " + name + getStringPos());
             } else {
-                out.println();
+                environment.println(s);
             }
         }
     }
 
-    /* ====================================================== */
-    boolean DebugFlag = false;
-
-    public void trace(String s) {
-        if (!DebugFlag) {
-            return;
+    private String formatComments(String s, int shift) {
+        String[] pair = s.split("//");
+        if (pair.length != 2) {
+            return s;
         }
-        System.out.print(s);
-    }
-
-    public void traceln(String s) {
-        if (!DebugFlag) {
-            return;
-        }
-        System.out.println(s);
+        pair[0] = pair[0].trim();
+        pair[1] = pair[1].trim();
+        return pair[0] + repeat(" ", COMMENT_OFFSET - pair[0].length() - shift * INDENT_LENGTH) + " // " + pair[1];
     }
 }// end class ClassData
-
