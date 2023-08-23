@@ -127,16 +127,16 @@ public class Main extends JdisTool {
     public void usage() {
         environment.usage(List.of(
         "info.usage",
-        "info.opt.g",
-        "info.opt.sl",
-        "info.opt.lt",
-        "info.opt.lv",
-        "info.opt.nc",
-// TODO "info.opt.table",
-        "info.opt.hx",
         "info.opt.d",
-        "info.opt.v",
+        "info.opt.g",
+        "info.opt.nc",
+        "info.opt.lv",
+        "info.opt.lt",
+        "info.opt.hx",
+        "info.opt.sl",
+// TODO "info.opt.table",
         "info.opt.t",
+        "info.opt.v",
         "info.opt.version"));
     }
 

@@ -117,13 +117,13 @@ public class Main extends JcoderTool {
         environment.flush(false);
         environment.usage(List.of(
                 "info.usage",
+                "info.opt.d",
                 "info.opt.nowrite",
                 "info.opt.ignore",
-                "info.opt.d",
-                "info.opt.v",
-                "info.opt.t",
                 "info.opt.fixcv",
                 "info.opt.fixcv.full",
+                "info.opt.t",
+                "info.opt.v",
                 "info.opt.version"
         ));
     }

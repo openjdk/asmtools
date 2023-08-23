@@ -173,14 +173,14 @@ public class Main extends JasmTool {
         environment.usage(List.of(
                 "info.usage",
                 "info.opt.d",
-                "info.opt.t",
-                "info.opt.v",
                 "info.opt.nowrite",
                 "info.opt.nowarn",
                 "info.opt.strict",
                 "info.opt.cv",
                 "info.opt.fixcv",
                 "info.opt.fixcv.full",
+                "info.opt.t",
+                "info.opt.v",
                 "info.opt.version"
         ));
     }
@@ -198,8 +198,8 @@ public class Main extends JasmTool {
                         setVerboseFlag(true);
                         setTraceFlag(true);
                     }
-                    case "-strict" -> environment.setStrictWarnings(true);
-                    case "-nowarn" -> environment.setIgnoreWarnings(true);
+                    case "-strict" -> environment.setStrictWarningsOn();
+                    case "-nowarn" -> environment.setIgnoreWarningsOn();
                     case "-nowrite" -> noWriteFlag = true;
                     case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
                         environment.println(FULL_VERSION);

@@ -63,10 +63,10 @@ public class CompilerLogger extends ToolLogger implements ILogger {
             if (EMessageKind.isFromResourceBundle(id)) {
                 insert(NOWHERE, new Message(ERROR, "(I18NResourceBundle) The warning message '%s' not found", id));
             } else {
-                insert(where, new Message(WARNING, args.length == 0 ? id : format(id, args)));
+                insert(where, new Message((strictWarnings) ? ERROR : WARNING, args.length == 0 ? id : format(id, args)));
             }
         } else {
-            insert(where, message);
+            insert(where, strictWarnings ? new Message(ERROR, message.text()) : message);
         }
     }
 
@@ -163,6 +163,9 @@ public class CompilerLogger extends ToolLogger implements ILogger {
             int where = entry.getKey();
             Pair<Integer, Integer> filePosition = filePosition(where);
             for (Message msg : entry.getValue()) {
+                if( msg.kind() == WARNING && ignoreWarnings) {
+                   continue;
+                }
                 if (msg.kind() == ERROR) {
                     output = getOutputs().getEToolObject();
                     nErrors++;
