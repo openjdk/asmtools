@@ -84,8 +84,8 @@ public class Main extends JdecTool {
     public void usage() {
         environment.usage(List.of(
                 "info.usage",
-                "info.opt.g",
                 "info.opt.d",
+                "info.opt.g",
                 "info.opt.v",
                 "info.opt.version"));
     }

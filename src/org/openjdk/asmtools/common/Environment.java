@@ -48,8 +48,6 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     private boolean verboseFlag;
 
     private boolean traceFlag;
-    private boolean ignoreWarnings;         // do not print / ignore warnings
-    private boolean strictWarnings;         // consider warnings as errors
 
     /**
      * @param builder the environment builder
@@ -68,12 +66,12 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         this.traceFlag = flag;
     }
 
-    public void setIgnoreWarnings(boolean ignoreWarnings) {
-        this.ignoreWarnings = ignoreWarnings;
+    public void setIgnoreWarningsOn() {
+        toolLogger.ignoreWarnings = true;
     }
 
-    public void setStrictWarnings(boolean strictWarnings) {
-        this.strictWarnings = strictWarnings;
+    public void setStrictWarningsOn() {
+        toolLogger.strictWarnings = true;
     }
 
     public String getSimpleInputFileName() { return toolLogger.getSimpleInputFileName(); }
