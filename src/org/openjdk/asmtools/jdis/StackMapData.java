@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,6 +37,8 @@ import static org.openjdk.asmtools.asmutils.StringUtils.mapToHexString;
 class StackMapData extends MemberData<CodeData> {
     EAttributeType type;
     StackMap.FrameType stackFrameType = null;
+    // stack frame type value
+    int stackFrameTypeValue;
     int frame_pc;
     int offset;
     int[] lockMap;
@@ -61,44 +63,44 @@ class StackMapData extends MemberData<CodeData> {
             environment.traceln(" stack_map_entry:pc=%d numloc=%s  numstack=%s",
                     frame_pc, mapToHexString(lockMap), mapToHexString(stackMap));
         } else { // if (type == EDataType.STACKMAPTABLE)
-            int ft_val = in.readUnsignedByte();
-            StackMap.FrameType frame_type = StackMap.stackMapFrameType(ft_val);
+            stackFrameTypeValue = in.readUnsignedByte();
+            StackMap.FrameType frame_type = StackMap.stackMapFrameType(stackFrameTypeValue);
             switch (frame_type) {
                 case SAME_FRAME -> {
                     // verificationType is same_frame;
-                    offset = ft_val;
-                    environment.traceln(" same_frame=%d", ft_val);
+                    offset = stackFrameTypeValue;
+                    environment.traceln(" same_frame=%d", stackFrameTypeValue);
                 }
                 case SAME_FRAME_EX -> {
                     // verificationType is same_frame_extended;
                     offset = in.readUnsignedShort();
-                    environment.traceln(" same_frame_extended=%d, offset=%d", ft_val, offset);
+                    environment.traceln(" same_frame_extended=%d, offset=%d", stackFrameTypeValue, offset);
                 }
                 case SAME_LOCALS_1_STACK_ITEM_FRAME -> {
                     // verificationType is same_locals_1_stack_item_frame
-                    offset = ft_val - 64;
+                    offset = stackFrameTypeValue - 64;
                     stackMap = readMapElements(in, 1);
                     environment.traceln(" same_locals_1_stack_item_frame=%d, offset=%d, numstack=%s",
-                            ft_val, offset, mapToHexString(stackMap));
+                            stackFrameTypeValue, offset, mapToHexString(stackMap));
                 }
                 case SAME_LOCALS_1_STACK_ITEM_EXTENDED_FRAME -> {
                     // verificationType is same_locals_1_stack_item_frame_extended
                     offset = in.readUnsignedShort();
                     stackMap = readMapElements(in, 1);
                     environment.traceln(" same_locals_1_stack_item_frame_extended=%d, offset=%d, numstack=%s",
-                            ft_val, offset, mapToHexString(stackMap));
+                            stackFrameTypeValue, offset, mapToHexString(stackMap));
                 }
                 case CHOP_1_FRAME, CHOP_2_FRAME, CHOP_3_FRAME -> {
                     // verificationType is chop_frame
                     offset = in.readUnsignedShort();
-                    environment.traceln(" chop_frame=%d offset=%d", ft_val, offset);
+                    environment.traceln(" chop_frame=%d offset=%d", stackFrameTypeValue, offset);
                 }
                 case APPEND_FRAME -> {
                     // verificationType is append_frame
                     offset = in.readUnsignedShort();
-                    lockMap = readMapElements(in, ft_val - 251);
+                    lockMap = readMapElements(in, stackFrameTypeValue - 251);
                     environment.traceln(" append_frame=%d offset=%d numlock=%s",
-                            ft_val, offset, mapToHexString(lockMap));
+                            stackFrameTypeValue, offset, mapToHexString(lockMap));
                 }
                 case FULL_FRAME -> {
                     // verificationType is full_frame
@@ -106,7 +108,7 @@ class StackMapData extends MemberData<CodeData> {
                     lockMap = readMap(in);
                     stackMap = readMap(in);
                     environment.traceln(" full_frame=%d offset=%d numloc=%s  numstack=%s",
-                            ft_val, offset, mapToHexString(lockMap), mapToHexString(stackMap));
+                            stackFrameTypeValue, offset, mapToHexString(lockMap), mapToHexString(stackMap));
                 }
                 default -> environment.traceln("incorrect frame_type argument");
             }

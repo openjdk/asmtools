@@ -29,9 +29,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+
 public class TextOutput extends NamedToolOutput {
+
+    // decoration for text output
+    private BiFunction<String, String, String> namedSourceOrnament = null;
+
     private final ArrayList<NamedSource> outputs = new ArrayList<>();
     private StringBuilder currentClass;
 
@@ -46,7 +53,7 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public DataOutputStream getDataOutputStream() throws FileNotFoundException {
-        return null; //If you are here, you probably wanted ToolOutput.ByteOutput for assmbled binary output
+        return null; //If you are here, you probably wanted ToolOutput.ByteOutput for assembled binary output
     }
 
     @Override
@@ -56,14 +63,18 @@ public class TextOutput extends NamedToolOutput {
     }
 
     @Override
-    public void finishClass(String fqn) throws IOException {
-        if (!getCurrentClassName().equals(fqn)) {
-            throw new RuntimeException("Ended different class - " + fqn + " - then started - " + super.fqn);
+    public void finishClass(String fullyQualifiedName) throws IOException {
+        if (!getCurrentClassName().equals(fullyQualifiedName)) {
+            throw new RuntimeException("Ended different class - " + fullyQualifiedName + " - then started - " + super.fqn);
         }
-        outputs.add(new NamedSource(fqn, currentClass.toString()));
+        outputs.add(new NamedSource(fullyQualifiedName, currentClass.toString(), namedSourceOrnament));
         super.fqn = null;
         currentClass = null;
+    }
 
+    public TextOutput setNamedSourceOrnament(BiFunction<String, String, String> namedSourceOrnament) {
+        this.namedSourceOrnament = namedSourceOrnament;
+        return this;
     }
 
     @Override
@@ -83,20 +94,42 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public void flush() {
-
     }
 
     public class NamedSource {
-        private final String fqn;
+        // decoration for text output
+        private BiFunction<String, String, String> ornament = (fname, body) ->
+                format(
+                        """
+                        /**
+                        %s
+                        **/
+                        %s
+                        /**
+                        %s
+                        **/        
+                        """, fname, body, fname);
+        private final String fullyQualifiedName;
         private final String body;
 
-        public NamedSource(String fqn, String body) {
-            this.fqn = fqn;
+        public NamedSource(String fullyQualifiedName, String body) {
+            this.fullyQualifiedName = fullyQualifiedName;
             this.body = body;
         }
 
-        public String getFqn() {
-            return fqn;
+        public NamedSource(String fullyQualifiedName, String body, BiFunction<String, String, String> ornament) {
+            this.fullyQualifiedName = fullyQualifiedName;
+            this.body = body;
+            this.ornament = ornament;
+        }
+
+        public NamedSource setOrnament(BiFunction<String, String, String> ornament) {
+            this.ornament = ornament;
+            return this;
+        }
+
+        public String getFullyQualifiedName() {
+            return fullyQualifiedName;
         }
 
         public String getBody() {
@@ -105,7 +138,7 @@ public class TextOutput extends NamedToolOutput {
 
         @Override
         public String toString() {
-            return "/**********\n" + fqn + "\n**********/\n" + body + "\n/*end of " + fqn + "*/";
+            return ornament == null ? body : ornament.apply(fullyQualifiedName, body);
         }
     }
 }

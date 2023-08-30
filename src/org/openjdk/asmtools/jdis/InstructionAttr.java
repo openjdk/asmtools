@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -213,13 +213,18 @@ class InstructionAttr extends MemberData<MethodData> {
             return false;
         }
         boolean printed = false;
+        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep();
         if (stackMapEntry.stackFrameType != null) {
             printPadRight(Opcode.opc_stack_frame_type.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1);
-            println(stackMapEntry.stackFrameType.tagName() + ";");
+            if( printCPIndex && !skipComments ) {
+                print(PadRight(stackMapEntry.stackFrameType.tagName() + ";", mapShift)).
+                        println(" // frame_type " + stackMapEntry.stackFrameTypeValue);
+            } else {
+                println(stackMapEntry.stackFrameType.tagName() + ";");
+            }
             printed = true;
         }
         int[] map = stackMapEntry.lockMap;
-        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep();
         if ((map != null) && (map.length > 0)) {
             Pair<String, String> line = getMapListAsString(map);
             if (stackMapEntry.type == STACKMAPTABLE) {  // StackMapTable exists
