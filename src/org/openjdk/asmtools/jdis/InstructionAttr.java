@@ -253,7 +253,8 @@ class InstructionAttr extends MemberData<MethodData> {
                 print(this.enlargedIndent(
                         PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
             } else {   // version < 50 Class file has an implicit stack map attribute
-                print(PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1));
+                print(this.enlargedIndent(
+                        PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
             }
             if (printCPIndex) {
                 if( skipComments ) {

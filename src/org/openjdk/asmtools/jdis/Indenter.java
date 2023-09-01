@@ -53,9 +53,9 @@ public class Indenter implements Printable {
     // internal references
     protected final boolean printCPIndex = Options.contains(CPX);
     protected final boolean skipComments = Options.contains(NC);
-    protected final boolean printLabelAsIdentifiers = Options.contains(LABS);
-    protected final boolean printConstantPool = Options.contains(CP);
     protected final boolean printProgramCounter = Options.contains(PC);
+    protected final boolean printLabelAsIdentifiers = Options.contains(LABS) && !printProgramCounter;
+    protected final boolean printConstantPool = Options.contains(CP);
     protected final boolean printSourceLines = Options.contains(SRC);
     protected final boolean printLocalVars = Options.contains(VAR);
     protected final boolean printLineTable = Options.contains(LNT);
