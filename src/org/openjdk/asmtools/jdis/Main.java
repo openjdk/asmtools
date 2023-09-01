@@ -130,8 +130,9 @@ public class Main extends JdisTool {
         "info.opt.d",
         "info.opt.g",
         "info.opt.nc",
-        "info.opt.lv",
         "info.opt.lt",
+        "info.opt.lv",
+        "info.opt.instr.offset",
         "info.opt.hx",
         "info.opt.sl",
 // TODO "info.opt.table",
@@ -158,6 +159,9 @@ public class Main extends JdisTool {
                     Options.set(Options.PR.TRACE);
                     environment.setVerboseFlag(true);
                     environment.setTraceFlag(true);
+                    break;
+                case "-pc":
+                    Options.set(Options.PR.PC);
                     break;
                 case "-sl":
                     Options.set(Options.PR.SRC);
