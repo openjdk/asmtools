@@ -903,7 +903,13 @@ public class ConstantPool extends Indenter {
         public void print(ToolOutput out, int spacePadding) {
             super.print(out, spacePadding);
             if (skipComments) {
-                println("#%d.#%d;", value, value2);
+                switch (tag) {
+                    case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD -> println("#%d.#%d;", value, value2);
+                    case CONSTANT_METHODHANDLE, CONSTANT_NAMEANDTYPE, CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                            println("#%d:#%d;", value, value2);
+                    default ->
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// unknown tag: " + tag.tagName);
+                }
             } else {
                 switch (tag) {
                     case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD ->
