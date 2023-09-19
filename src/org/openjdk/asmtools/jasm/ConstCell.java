@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2023, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,6 +33,8 @@ public class ConstCell<V extends ConstValue> extends Indexer implements Constant
     V ref;
     // 0 - highest - ref from ldc, 1 - any ref, 2 - no ref
     ConstantPool.ReferenceRank rank = ConstantPool.ReferenceRank.NO;
+    // status flag
+    private int flag;
 
     ConstCell(int id, V ref) {
         this.cpIndex = id;
@@ -45,6 +47,14 @@ public class ConstCell<V extends ConstValue> extends Indexer implements Constant
 
     ConstCell(int id) {
         this(id, null);
+    }
+
+    public int getFlag() {
+        return flag;
+    }
+    public ConstCell<V> setFlag(int flag) {
+        this.flag = flag;
+        return this;
     }
 
     @Override

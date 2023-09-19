@@ -33,9 +33,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static org.openjdk.asmtools.lib.action.EAsmTools.Tool.TOOL_PASSED;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class NegativeJasmTests {
-    final int TOOL_PASSED = 0;
+
     CompileAction compiler;
     File resourceDir;
     String resName = "ifge_overflow.jasm";

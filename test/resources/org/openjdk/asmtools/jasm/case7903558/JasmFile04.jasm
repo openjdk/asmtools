@@ -1,0 +1,21 @@
+public super class FileName04.obj extends package/SuperClassName04 version 66:0
+{
+  this_class:   ClassName04;
+  super_class:  java/lang/Object;
+
+  public Method "<init>":"()V"
+    stack  1 locals  1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+  }
+
+  private static Method m:"()V"
+    stack  0 locals  0
+  {
+         return;
+  }
+
+  SourceFile               "JasmFile.g.jasm";
+} // end Class ClassName04 compiled from "JasmFile.g.jasm"

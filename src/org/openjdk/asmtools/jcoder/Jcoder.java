@@ -642,7 +642,7 @@ class Jcoder {
             }
             case STRINGVAL -> buf.myname = scanner.stringValue;
             default -> {
-                environment.error(scanner.prevPos, "err.name.expected");
+                environment.error(scanner.prevPos, "err.name.expected", "\"" + scanner.token.parsekey() + "\"");
                 throw new SyntaxError();
             }
         }

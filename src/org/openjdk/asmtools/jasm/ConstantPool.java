@@ -40,6 +40,9 @@ import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
  */
 public class ConstantPool implements Iterable<ConstCell<?>> {
 
+    static final int PROCESSED = 2;
+    static final int NON_PROCESSED = 0;
+
     private final ConstValue_UTF8 emptyConstValue = new ConstValue_UTF8("");
     private final ConstCell<?> nullConst = new ConstCell(null);
     private final ConstCell<?> zeroConst = new ConstCell(new ConstValue_Zero());
@@ -275,6 +278,50 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         environment.traceln("cpool_set2: " + cpx + " " + cell);
     }
 
+    private void delete(int cpx) {
+        environment.traceln("delete cell(" + cpx + ")");
+        Consumer<ConstCell<?>> op = cell -> {
+            if (cell.getFlag() == NON_PROCESSED) {
+                if (cell.cpIndex > cpx) {
+                    cell.cpIndex--;
+                    environment.traceln("\tcell from " + (cell.cpIndex + 1) + " to " + cell);
+                }
+                cell.setFlag(PROCESSED);
+            }
+        };
+        for (int i = 1; i < pool.size(); i++) {
+            if (i != cpx) {
+                ConstCell<?> constCell = uncheckedGetCell(i);
+                this.traverseConstantCell(constCell, op);
+            }
+        }
+        pool.remove(cpx);
+        pool.forEach(cell -> cell.setFlag(NON_PROCESSED));
+    }
+
+    private void traverseConstantCell(ConstCell<?> constCell, Consumer<ConstCell<?>> op) {
+        if (constCell != null && constCell instanceof ConstCell<?>) {
+            if (constCell instanceof ConstCell) {
+                if (op != null)
+                    op.accept(constCell);
+                ConstValue<?> constValue = constCell.ref;
+                if (constValue != null) {
+                    switch (constValue.tag) {
+                        case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_MODULE, CONSTANT_PACKAGE, CONSTANT_METHODTYPE,
+                                CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> {
+                            traverseConstantCell((ConstCell<?>) constValue.value, op);
+                        }
+                        case CONSTANT_METHODHANDLE, CONSTANT_NAMEANDTYPE, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF -> {
+                            Pair<ConstCell<?>, ConstCell<?>> pair = (Pair<ConstCell<?>, ConstCell<?>>) constValue.value;
+                            traverseConstantCell(pair.first, op);
+                            traverseConstantCell(pair.second, op);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     protected ConstCell uncheckedGetCell(int cpx) { // by index
         return pool.get(cpx);
     }
@@ -316,7 +363,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     public Optional<ConstCell<?>> getItemizedCell(ConstCell<?> cell) {
         final ConstValue value = cell.ref;
         if (value == null) {
-            if(   getBounds().in(cell.cpIndex) ) {
+            if (getBounds().in(cell.cpIndex)) {
                 return Optional.ofNullable(getConstPollCellByIndex(cell.cpIndex));
             } else if (cell.isSet()) {
                 environment.throwErrorException("err.constcell.null.val", cell.cpIndex);
@@ -487,13 +534,50 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         }
     }
 
-    public ArrayList<ConstCell<?>>  getPoolCellsByType(ClassFileConst.ConstType... types) {
-    return pool.stream().filter(c->c.getType().oneOf(types)).collect(Collectors.toCollection(ArrayList::new));
+    public ArrayList<ConstCell<?>> getPoolCellsByType(ClassFileConst.ConstType... types) {
+        return pool.stream().filter(c -> c.getType().oneOf(types)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public ArrayList<ConstCell<?>> getPoolValuesByRefType(ClassFileConst.ConstType... types) {
-        return pool.stream().filter(c->c.ref != null && c.getType().oneOf(types)).
+        return pool.stream().filter(c -> c.ref != null && c.getType().oneOf(types)).
                 collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Removes ClassCell entry from the Constant Pool
+     *
+     * @param cell the Constant Pool cell ConstCell<ConstValue_Class>
+     */
+    public void removeClassCell(ConstCell<ConstValue_Class> cell) {
+        int indCls, indUtf8 = 0;
+        if (cell != null) {
+            if (cell.getType() == CONSTANT_CLASS) {
+                if (cell.ref != null) {
+                    ConstCell<ConstValue_UTF8> utf8Cell = cell.ref.value;
+                    if (!isAllowedToBeDelete(utf8Cell))
+                        return;
+                    indUtf8 = utf8Cell.cpIndex;
+                }
+                indCls = cell.cpIndex;
+                this.delete(indCls);
+                this.delete(indCls > indUtf8 ? indUtf8 : indUtf8 - 1);
+            } else {
+                environment.warning("warn.cannot.delete.class.cell", cell);
+            }
+        }
+    }
+
+    /**
+     * @return true if the class name belongs to JDK public API
+     */
+    private boolean isAllowedToBeDelete(ConstCell<ConstValue_UTF8> utf8Cell) {
+        if (utf8Cell.ref.value != null) {
+            String className = utf8Cell.ref.value;
+            if (className.startsWith("java/") || className.startsWith("javax/"))
+                //  className.startsWith("jdk/") || className.startsWith("com/sun/tools/") || className.startsWith("org/w3c"))
+                return false;
+        }
+        return true;
     }
 
     public enum ReferenceRank {
