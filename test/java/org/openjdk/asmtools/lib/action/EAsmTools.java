@@ -66,6 +66,8 @@ public enum EAsmTools {
 
     @FunctionalInterface
     public interface Tool {
+        int TOOL_PASSED = 0;
+
         LogAndReturn call(List<String> files, String... args);
     }
 

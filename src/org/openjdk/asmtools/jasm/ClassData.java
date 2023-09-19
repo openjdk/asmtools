@@ -22,17 +22,21 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static org.openjdk.asmtools.common.structure.ClassFileContext.INNER_CLASS;
+import static org.openjdk.asmtools.jasm.ClassData.CoreClasses.PLACE.HEADER;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_DYNAMIC;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_INVOKEDYNAMIC;
@@ -54,12 +58,11 @@ class ClassData extends MemberData<JasmEnvironment> {
     String fileExtension = DEFAULT_EXTENSION;
     MethodData curMethod;
     CFVersion cfv;
-    ConstCell<?> this_class, super_class;
     String myClassName;
+    // Core classes of the class file: this_class, super_class
+    CoreClasses coreClasses = new CoreClasses();
     AttrData sourceFileAttr;
-
     SourceDebugExtensionAttr sourceDebugExtensionAttr;
-
     ArrayList<Indexer> interfaces;
     ArrayList<FieldData> fields = new ArrayList<>();
     ArrayList<MethodData> methods = new ArrayList<>();
@@ -102,8 +105,8 @@ class ClassData extends MemberData<JasmEnvironment> {
         if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
-        this.this_class = this_class;
-        this.super_class = super_class;
+        this.coreClasses.this_class(HEADER, this_class);
+        this.coreClasses.super_class(HEADER, super_class);
         this.interfaces = interfaces;
         // Set default class file version if it is not set.
         this.cfv.initClassDefaultVersion();
@@ -120,7 +123,7 @@ class ClassData extends MemberData<JasmEnvironment> {
         this.access = EModifier.ACC_MODULE.getFlag();
         // If the ACC_MODULE flag is set in the access_flags item
         // super_class: zero
-        this.super_class = new ConstCell(0);
+        this.coreClasses.super_class(HEADER, new ConstCell(0));
         this.cfv.initModuleDefaultVersion();
     }
 
@@ -166,7 +169,7 @@ class ClassData extends MemberData<JasmEnvironment> {
                 ConstantPool.ConstValue_BootstrapMethod refVal = (ConstantPool.ConstValue_BootstrapMethod) cell.ref;
                 BootstrapMethodData bsmData = refVal.bsmData();
                 if (refVal.isSet() & refVal.value.ref == null) {
-                    ConstCell c = pool.getCell(((ConstCell) refVal.value).cpIndex);
+                    ConstCell<?> c = pool.getCell(((ConstCell<?>) refVal.value).cpIndex);
                     refVal.setValue(c);
                 }
                 if (bsmData != null && bsmData.hasMethodAttrIndex()) {
@@ -316,7 +319,7 @@ class ClassData extends MemberData<JasmEnvironment> {
     }
 
     public ConstCell LocalMethodRef(ConstValue nape) {
-        return pool.findCell(ConstType.CONSTANT_METHODREF, this_class, pool.findCell(nape));
+        return pool.findCell(ConstType.CONSTANT_METHODREF, coreClasses.this_class(), pool.findCell(nape));
     }
 
     public ConstCell LocalMethodRef(ConstCell name, ConstCell sig) {
@@ -364,12 +367,12 @@ class ClassData extends MemberData<JasmEnvironment> {
     }
 
     public void endClass() {
-        if (super_class == null) {
-            super_class = pool.findClassCell("java/lang/Object");
+        if (coreClasses.super_class() == null) {
+            coreClasses.super_class(pool.findClassCell("java/lang/Object"));
         }
         pool.itemizePool();
-        super_class = pool.specifyCell(super_class);
-        this_class = pool.specifyCell(this_class);
+        coreClasses.specifyClasses(pool);
+        coreClasses.cleanConstantPool(pool);
         pool.checkGlobals();
         pool.fixIndexesInPool();
         itemizeAttributes(new DataVectorAttr<>(pool, EAttribute.ATT_ConstantValue).
@@ -377,11 +380,10 @@ class ClassData extends MemberData<JasmEnvironment> {
                 annotAttrInv, annotAttrVis);
         uniquifyBootstrapMethods();
         try {
-            ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) this_class.ref;
-            ConstantPool.ConstValue_UTF8 this_class_name = this_class_value.value.ref;
-            myClassName = this_class_name.value;
-            environment.traceln("this_class  = " + this_class);
-            environment.traceln("super_class = " + super_class);
+            myClassName = coreClasses.getFileName();
+            environment.traceln("ClassFileName = " + myClassName);
+            environment.traceln("this_class    = " + coreClasses.this_class());
+            environment.traceln("super_class   = " + coreClasses.super_class());
             environment.traceln("-- Constant Pool ---");
             environment.traceln("--------------------");
             pool.printPool();
@@ -398,21 +400,21 @@ class ClassData extends MemberData<JasmEnvironment> {
     }
 
     public void endPackageInfo() {
-        this.this_class = pool.findClassCell(this.myClassName);
+        coreClasses.this_class(pool.findClassCell(this.myClassName));
         // super_class: class "java/lang/Object"
-        this.super_class = pool.findClassCell("java/lang/Object");
+        coreClasses.super_class(pool.findClassCell("java/lang/Object"));
         pool.itemizePool();
-        super_class = pool.specifyCell(super_class);
-        this_class = pool.specifyCell(this_class);
+        coreClasses.super_class(pool.specifyCell(coreClasses.super_class()));
+        coreClasses.this_class(pool.specifyCell(coreClasses.this_class()));
         pool.checkGlobals();
     }
 
     public void endModule(ModuleAttr moduleAttr) {
         moduleAttribute = moduleAttr.build();
         this.myClassName = "module-info";
-        this.this_class = pool.findClassCell(this.myClassName);
+        coreClasses.this_class(pool.findClassCell(this.myClassName));
         pool.itemizePool();
-        this_class = pool.specifyCell(this_class);
+        coreClasses.this_class(pool.specifyCell(coreClasses.this_class()));
         pool.checkGlobals();
         // a module is annotated
         itemizeAttributes(annotAttrInv, annotAttrVis);
@@ -421,20 +423,20 @@ class ClassData extends MemberData<JasmEnvironment> {
     /**
      * Scans all attributes that
      * 1. only have cpIndex != 0 and undefined values, types if they are found the method sets their values and types.
-     *    It applies to DataVectorAttr<AnnotationData>
+     * It applies to DataVectorAttr<AnnotationData>
      * 2. only have values and undefined cpIndex if they are found the method finds the identical values in CP and
-     *    assigns their cpIndexes instead of  undefined indexes.
-     *    It works for DataVectorAttr<?>
+     * assigns their cpIndexes instead of  undefined indexes.
+     * It works for DataVectorAttr<?>
      *
      * @param attributeList list of attribute's list
      */
     private <A extends AttrData> void itemizeAttributes(A... attributeList) {
         for (A attributes : attributeList) {
-            if( attributes != null ) {
-                if ( attributes instanceof DataVectorAttr<?>) {
+            if (attributes != null) {
+                if (attributes instanceof DataVectorAttr<?>) {
                     ((DataVectorAttr<?>) attributes).getElements().stream().
-                            map(e->(ConstantPoolDataVisitor)e).forEach(v->v.visit(pool));
-                } else if( attributes instanceof AttrData ) {
+                            map(e -> (ConstantPoolDataVisitor) e).forEach(v -> v.visit(pool));
+                } else if (attributes instanceof AttrData) {
                     attributes.visit(pool);
                 }
             }
@@ -463,8 +465,8 @@ class ClassData extends MemberData<JasmEnvironment> {
 
         pool.write(out);
         out.writeShort(access); // & MM_CLASS; // Q
-        out.writeShort(this_class.cpIndex);
-        out.writeShort(super_class.cpIndex);
+        out.writeShort(coreClasses.this_class().cpIndex);
+        out.writeShort(coreClasses.super_class().cpIndex);
 
         // Write the interface names
         if (interfaces != null) {
@@ -681,6 +683,121 @@ class ClassData extends MemberData<JasmEnvironment> {
         public void writeUTF(String s) throws IOException {
             dos.writeUTF(s);
             check("Writing writeUTF: " + s);
+        }
+    }
+
+    /**
+     * Container holds 2 pairs of core classes: this_class, super_class, and functionality to get output file name.
+     *  jasm supports the values:
+     *  [CLASS_MODIFIERS] class|interface CLASSNAME [ extends SUPERCLASSNAME ] { // HEADER
+     *  this_class[:]  (#ID | IDENT); // CLASSNAME                                  CLASSFILE
+     *  super_class[:] (#ID | IDENT); // SUPERCLASSNAME                             CLASSFILE
+     */
+    public static class CoreClasses {
+        public enum PLACE {
+            // A place where this_class, super_class pair is defined.
+            HEADER, CLASSFILE
+        }
+
+        private String fileName;
+
+        // This and Super classes  are defined on the top in the header:
+        // [CLASS_MODIFIERS] class|interface CLASSNAME [ extends SUPERCLASSNAME ] { // HEADER
+        //
+        // public super class #11 extends #14 version 66:0
+        // public super class package/ClassName extends package/SuperClassName version 66:0
+        Pair<ConstCell<?>, ConstCell<?>> header = new Pair<>(null, null);
+        // This and Super classes are defined in a class file:
+        // this_class[:]  (#ID | IDENT);    // CLASSNAME                               CLASSFILE
+        // super_class[:] (#ID | IDENT);   // SUPERCLASSNAME                           CLASSFILE
+        //
+        // this_class  #7;                 // package/ClassName
+        // super_class java/lang/Object;   // java/lang/Object
+        Pair<ConstCell<?>, ConstCell<?>> classfile = new Pair<>(null, null);
+
+        public void this_class(PLACE where, ConstCell<?> this_class) {
+            if (where == PLACE.CLASSFILE) {
+                classfile.first = this_class;
+            } else {
+                header.first = this_class;
+            }
+        }
+
+        public void super_class(PLACE where, ConstCell<?> super_class) {
+            if (where == PLACE.CLASSFILE) {
+                classfile.second = super_class;
+            } else {
+                header.second = super_class;
+            }
+        }
+
+        public void this_class(ConstCell<?> this_class) {
+            if (classfile.first != null) {
+                classfile.first = this_class;
+            } else {
+                header.first = this_class;
+            }
+        }
+
+        public void super_class(ConstCell<?> super_class) {
+            if (classfile.second != null) {
+                classfile.second = super_class;
+            } else {
+                header.second = super_class;
+            }
+        }
+
+        public ConstCell<?> this_class() {
+            return (classfile.first != null) ? classfile.first : header.first;
+        }
+
+        public ConstCell<?> super_class() {
+            return (classfile.second != null) ? classfile.second : header.second;
+        }
+
+        public String getFileName() {
+            if (fileName == null) {
+                fileName = calculateFileName();
+            }
+            return fileName;
+        }
+
+        private String calculateFileName() {
+            if (header.first != null) {
+                ConstantPool.ConstValue_Class this_class_value = (ConstantPool.ConstValue_Class) header.first.ref;
+                ConstantPool.ConstValue_UTF8 this_class_name = this_class_value.value.ref;
+                this.fileName = this_class_name.value;
+                return this_class_name.value;
+            }
+            return null;
+        }
+
+        /**
+         * If jasm file contains this_class/super_class value then this value overwrites the class/super class defined on the top:
+         * "public super class ClassName extends #9 version 66:0 {"
+         * ie just added to ConstantPool classes: ClassName && #9 should be removed
+         *
+         * @param constantPool constant pool
+         */
+        public void cleanConstantPool(ConstantPool constantPool) {
+            if (classfile.first != null && classfile.first.cpIndex != header.first.cpIndex) {
+                calculateFileName();
+                constantPool.removeClassCell((ConstCell<ConstantPool.ConstValue_Class>)header.first);
+            }
+            if (classfile.second != null && header.second != null &&
+                    classfile.second.cpIndex != header.second.cpIndex) {
+                constantPool.removeClassCell((ConstCell<ConstantPool.ConstValue_Class>)header.second);
+            }
+        }
+        public void specifyClasses(ConstantPool constantPool) {
+            if (header.first != null)
+                header.first = constantPool.specifyCell(header.first);
+            if (header.second != null)
+                header.second = constantPool.specifyCell(header.second);
+            if (classfile.first != null)
+                classfile.first = constantPool.specifyCell(classfile.first);
+            if (classfile.second != null)
+                classfile.second = constantPool.specifyCell(classfile.second);
         }
     }
 }// end class ClassData

@@ -1,0 +1,36 @@
+public super class FileName01.class version 66:0
+{
+  const #1  = Method      #2.#3;          // java/lang/Object."<init>":"()V"
+  const #2  = class       #4;             // java/lang/Object
+  const #3  = NameAndType #5:#6;          // "<init>":"()V"
+  const #4  = Utf8        "java/lang/Object";
+  const #5  = Utf8        "<init>";
+  const #6  = Utf8        "()V";
+  const #7  = class        #10;            // ClassName
+  const #8  = Utf8         "java/lang/String";
+  const #9 = class         #8;             // java/lang/String
+  const #10  = Utf8        "ClassName01";
+  const #11  = Utf8        "Code";
+  const #12 = Utf8        "LineNumberTable";
+  const #13 = Utf8        "m";
+  const #14 = Utf8        "JasmFile.g.jasm";
+  const #15 = Utf8        "SourceFile";
+
+   this_class:  #7;                       // ClassName01
+   super_class  #9;                       // java/lang/String
+
+  public Method #5:#6                     // "<init>":"()V"
+    stack  1 locals  1
+  {
+     0:    aload_0;
+     1:    invokespecial     #1;          // Method java/lang/Object."<init>":"()V"
+     4:    return;
+  }
+  private static Method #13:#6            // m:"()V"
+    stack  0 locals  0
+  {
+     0:    return;
+  }
+
+  SourceFile #14;                         // JasmFile01.g.jasm
+}

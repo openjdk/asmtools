@@ -1,0 +1,20 @@
+public super class FileName01.class version 66:0
+{
+  this_class   ClassName01;
+  super_class  java/lang/String;
+
+  public Method "<init>":"()V"
+    stack  1 locals  1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+  }
+  private static Method m:"()V"
+    stack  0 locals  0
+  {
+         return;
+  }
+
+  SourceFile               "JasmFile.g.jasm";
+} // end Class ClassName01 compiled from "JasmFile.g.jasm"

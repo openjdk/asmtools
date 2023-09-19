@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.common.structure.CFVersion.copyOf;
 import static org.openjdk.asmtools.common.structure.EModifier.*;
+import static org.openjdk.asmtools.jasm.ClassData.CoreClasses.PLACE.CLASSFILE;
 import static org.openjdk.asmtools.jasm.ClassFileConst.*;
 import static org.openjdk.asmtools.jasm.ConstantPool.ConstValue_UTF8;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
@@ -302,7 +303,7 @@ class Parser extends ParseBase {
             scanner.scan();
             return pool.findUTF8Cell(v);
         }
-        environment.error(scanner.pos, "err.name.expected", scanner.token);
+        environment.error(scanner.pos, "err.name.expected", "\"" + scanner.token + "\"");
         throw new SyntaxError();
     }
 
@@ -968,6 +969,20 @@ class Parser extends ParseBase {
         classData.setSignatureAttr(signatureCell);
     }
 
+    /**
+     *  Parse class reference used by statements:
+     *  this_class[:]    (CPINDEX | STRING);
+     *  super_class[:]   (CPINDEX | STRING);
+     */
+    private void parseClassRef(Consumer<ConstCell<?>> consumer) {
+        traceMethodInfoLn("Begin");
+        if( scanner.token == COLON ) {
+            scanner.scan();
+        }
+        ConstCell nm = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
+        consumer.accept(nm);
+    }
+
     private void parseSourceFile() throws SyntaxError {
         // Parses in the form:
         // SOURCEFILE (CPINDEX | IDENT);
@@ -1465,17 +1480,19 @@ class Parser extends ParseBase {
             String fileExtension;
             scanner.scan();
             switch (scanner.token) {
-                case STRINGVAL -> fileExtension = scanner.stringValue;
+                // CLASS token added to allow:
+                // class ClassName.class version 45:0 {..}
+                case STRINGVAL, CLASS -> fileExtension = scanner.stringValue;
                 case IDENT -> fileExtension = scanner.idValue;
                 default -> {
-                    environment.error(scanner.pos, "err.name.expected");
+                    environment.error(scanner.pos, "err.name.expected", "\"" + scanner.token.parseKey() + "\"");
                     throw new SyntaxError();
                 }
             }
             scanner.scan();
             classData.fileExtension = "." + fileExtension;
         } else if (scanner.token == MODULE) {
-            environment.error(scanner.prevPos, "err.token.expected", OPEN.parseKey());
+            environment.error(scanner.prevPos, "err.token.expected", "\"" + OPEN.parseKey() + "\"");
             throw new SyntaxError();
         } else if (scanner.token == SEMICOLON) {
             // drop the semicolon following a name
@@ -1660,7 +1677,7 @@ class Parser extends ParseBase {
         // Parse the module name
         NameInfo moduleNameInfo = parseModuleName();
         if (moduleNameInfo.isEmpty()) {
-            environment.error(scanner.pos, "err.name.expected");
+            environment.error(scanner.pos, "err.name.expected", "\"" + scanner.token + "\"");
             throw new SyntaxError().setFatal();
         }
         if (moduleNameInfo.cpIndex() != 0) {
@@ -1961,6 +1978,17 @@ class Parser extends ParseBase {
                     }
                     scanner.scan();
                     parseClassSignature();
+                    scanner.expect(SEMICOLON);
+                }
+                //
+                case THIS_CLASS -> {
+                    scanner.scan();
+                    parseClassRef(constCell -> classData.coreClasses.this_class(CLASSFILE, constCell));
+                    scanner.expect(SEMICOLON);
+                }
+                case SUPER_CLASS -> {
+                    scanner.scan();
+                    parseClassRef(constCell -> classData.coreClasses.super_class(CLASSFILE, constCell));
                     scanner.expect(SEMICOLON);
                 }
                 //

@@ -500,10 +500,11 @@ public class ParserCP extends ParseBase {
                     NameCell = parser.parseName();
                 } else {
                     // no class provided - assume current class
-                    if (parser.classData.this_class.isSet() || parser.classData.this_class.ref == null) {
-                        ClassCell = (ConstCell<ConstValue_Class>) parser.classData.this_class;
+                    if (parser.classData.coreClasses.this_class().isSet() ||
+                            parser.classData.coreClasses.this_class().ref == null) {
+                        ClassCell = (ConstCell<ConstValue_Class>) parser.classData.coreClasses.this_class();
                     } else {
-                        ClassCell = parser.pool.findCell((ConstValue_Class) parser.classData.this_class.ref);
+                        ClassCell = parser.pool.findCell((ConstValue_Class) parser.classData.coreClasses.this_class().ref);
                     }
                     NameCell = firstName;
                 }

@@ -257,6 +257,9 @@ public class JasmTokens {
         THIS                (82, "THIS",        "this",     EnumSet.of(TokenType.EXPRESSION)),
         SUPER               (83, "SUPER",       "super",    EnumSet.of(TokenType.MODIFIER),  KeywordType.KEYWORD),
         NULL                (84, "NULL",        "null",     EnumSet.of(TokenType.EXPRESSION, TokenType.CLASS_NAME, TokenType.MODULE_NAME)),
+
+        THIS_CLASS          (85, "this_class",  "this_class",      EnumSet.of(TokenType.DECLARATION), KeywordType.KEYWORD),
+        SUPER_CLASS         (86, "super_class", "super_class",     EnumSet.of(TokenType.DECLARATION), KeywordType.KEYWORD),
     /*
      * Statement keywords
      */
