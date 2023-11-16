@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #####################################################################################################
-# Symlinks are forbidden in openjdk project, thus we generate them on the fly togehter with pom.xml #
+# Symlinks are forbidden in openjdk project, thus we generate them on the fly together with pom.xml #
 #####################################################################################################
 
 set -eo pipefail
