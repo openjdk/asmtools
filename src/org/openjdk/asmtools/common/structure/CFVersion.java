@@ -29,19 +29,19 @@ public class CFVersion {
     /**
      * Default versions of class file
      */
-    public static final short DEFAULT_MAJOR_VERSION = 45;
-    public static final short DEFAULT_MINOR_VERSION = 3;
-    public static final short DEFAULT_MODULE_MAJOR_VERSION = 53;
-    public static final short DEFAULT_MODULE_MINOR_VERSION = 0;
-    public static final short UNDEFINED_VERSION = -1;
+    public static final int DEFAULT_MAJOR_VERSION = 45;
+    public static final int DEFAULT_MINOR_VERSION = 3;
+    public static final int DEFAULT_MODULE_MAJOR_VERSION = 53;
+    public static final int DEFAULT_MODULE_MINOR_VERSION = 0;
+    public static final int UNDEFINED_VERSION = -1;
     /* The version of a class file since which the compact format of stack map is necessary */
     public static final int SPLIT_VERIFIER_CFV = 50;
 
-    private short major_version;
-    private short minor_version;
+    private int major_version;
+    private int minor_version;
 
-    private short threshold_major_version;
-    private short threshold_minor_version;
+    private int threshold_major_version;
+    private int threshold_minor_version;
 
     private boolean frozen;
 
@@ -57,7 +57,7 @@ public class CFVersion {
         threshold_minor_version = UNDEFINED_VERSION;
     }
 
-    public CFVersion(short major_version, short minor_version) {
+    public CFVersion(int major_version, int minor_version) {
         frozen = false;
         this.major_version = major_version;
         this.minor_version = minor_version;
@@ -68,19 +68,19 @@ public class CFVersion {
         return this;
     }
 
-    public CFVersion setThreshold(short major_version, short minor_version) {
+    public CFVersion setThreshold(int major_version, int minor_version) {
         this.threshold_major_version = major_version;
         this.threshold_minor_version = minor_version;
         return this;
     }
 
-    public CFVersion setVersion(short major_version, short minor_version) {
+    public CFVersion setVersion(int major_version, int minor_version) {
         this.major_version = major_version;
         this.minor_version = minor_version;
         return this;
     }
 
-    public CFVersion setFileVersion(short major_version, short minor_version) {
+    public CFVersion setFileVersion(int major_version, int minor_version) {
         if (isSet() && isFrozen()) {
             if (isThresholdSet()) {
                 if ((major_version < threshold_major_version) ||
@@ -97,13 +97,13 @@ public class CFVersion {
     }
 
 
-    public CFVersion setMajorVersion(short major_version) {
+    public CFVersion setMajorVersion(int major_version) {
         if (!frozen)
             this.major_version = major_version;
         return this;
     }
 
-    public CFVersion setMinorVersion(short minor_version) {
+    public CFVersion setMinorVersion(int minor_version) {
         if (!frozen) this.minor_version = minor_version;
         return this;
     }
@@ -172,11 +172,11 @@ public class CFVersion {
         return cfVersion;
     }
 
-    public short minor_version() {
-        return this.minor_version;
+    public int minor_version() {
+            return this.minor_version;
     }
 
-    public short major_version() {
+    public int major_version() {
         return this.major_version;
     }
 }

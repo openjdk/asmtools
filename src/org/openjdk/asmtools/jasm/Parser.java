@@ -121,16 +121,16 @@ class Parser extends ParseBase {
     }
 
     private void parseVersion() {
-        short majorVersion, minorVersion;
+        int majorVersion, minorVersion;
         if (scanner.token == Token.VERSION) {
             scanner.scan();
             if (scanner.token == Token.INTVAL) {
-                majorVersion = (short) scanner.intValue;
+                majorVersion = scanner.intValue;
                 scanner.scan();
                 if (scanner.token == Token.COLON) {
                     scanner.scan();
                     if (scanner.token == Token.INTVAL) {
-                        minorVersion = (short) scanner.intValue;
+                        minorVersion = scanner.intValue;
                         classData.cfv.setFileVersion(majorVersion, minorVersion);
                         scanner.scan();
                         traceMethodInfoLn("parseVersion: " + classData.cfv.asString());
@@ -1546,8 +1546,8 @@ class Parser extends ParseBase {
             }
         } else {
             if (classData.cfv.isSet() && classData.cfv.isSetByParameter() && classData.cfv.isFrozen()) {
-                short minor = classData.cfv.minor_version();
-                short major = classData.cfv.major_version();
+                int minor = classData.cfv.minor_version();
+                int major = classData.cfv.major_version();
                 String version =  classData.cfv.asString();
                 String option = classData.cfv.isThresholdSet() ? classData.cfv.asThresholdString() : classData.cfv.asString();
                 parseVersion();

@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.jcoder;
 
+import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.PrintWriterOutput;
@@ -216,31 +217,42 @@ public class Main extends JcoderTool {
                             usage();
                             throw new IllegalArgumentException();
                         }
+                        String cfvArg = argv[++i];
+                        boolean withThreshold = cfvArg.contains("-");
                         try {
-
-                            String cfvArg = argv[++i];
-                            if (cfvArg.contains("-")) {
+                            if (withThreshold) {
                                 String[] versions = cfvArg.split("-", 2);
                                 String[] versionsThreshold = versions[0].split("[.:]+", 2);
                                 String[] versionsUpdate = versions[1].split("[.:]+", 2);
                                 if (versionsThreshold.length != 2 || versionsUpdate.length != 2) {
                                     throw new NumberFormatException();
                                 }
-                                environment.cfv.setThreshold(Short.parseShort(versionsThreshold[0]), Short.parseShort(versionsThreshold[1])).
-                                        setVersion(Short.parseShort(versionsUpdate[0]), Short.parseShort(versionsUpdate[1])).
-                                        setByParameter(true).setFrozen(true);
-
+                                Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versionsThreshold[0]),
+                                        Integer.parseInt(versionsThreshold[1]));
+                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                    throw new NumberFormatException();
+                                }
+                                environment.cfv.setThreshold(versionsPair.first, versionsPair.second);
+                                versionsPair = new Pair<>(Integer.parseInt(versionsUpdate[0]), Integer.parseInt(versionsUpdate[1]));
+                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                    throw new NumberFormatException();
+                                }
+                                environment.cfv.setVersion(versionsPair.first, versionsPair.second).setByParameter(true).setFrozen(true);
                             } else {
                                 String[] versions = cfvArg.split("[.:]+", 2);
                                 if (versions.length == 2) {
-                                    environment.cfv.setVersion(Short.parseShort(versions[0]), Short.parseShort(versions[1])).
+                                    Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versions[0]), Integer.parseInt(versions[1]));
+                                    if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                        throw new NumberFormatException();
+                                    }
+                                    environment.cfv.setVersion(Integer.parseInt(versions[0]), Integer.parseInt(versions[1])).
                                             setByParameter(true).setFrozen(true);
                                 } else {
                                     throw new NumberFormatException();
                                 }
                             }
                         } catch (PatternSyntaxException | NumberFormatException exception) {
-                            environment.error("err.invalid_threshold_major_minor_param");
+                                environment.error("err.invalid_threshold_major_minor_param");
                             usage();
                             throw new IllegalArgumentException();
                         }

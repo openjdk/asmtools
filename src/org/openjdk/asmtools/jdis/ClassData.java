@@ -285,8 +285,8 @@ public class ClassData extends MemberData<ClassData> {
                 throw new ClassCastException("wrong magic: " + HexUtils.toHex(magic) + ", expected " + HexUtils.toHex(JAVA_MAGIC));
             }
 
-            cfVersion.setMinorVersion((short) in.readUnsignedShort());
-            cfVersion.setMajorVersion((short) in.readUnsignedShort());
+            cfVersion.setMinorVersion( in.readUnsignedShort());
+            cfVersion.setMajorVersion( in.readUnsignedShort());
 
             // Read the constant pool
             pool.read(in);
