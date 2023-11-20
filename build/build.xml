@@ -174,7 +174,10 @@ Other values for TARGET are:
     <target name="-check-java-version?">
         <echo></echo>
         <condition property="check-java-version.passed">
-            <matches pattern="1[789]+.*" string="${ant.java.version}"/>
+          <or>
+            <matches pattern=".*1[789]+.*" string="${ant.java.version}"/>
+            <matches pattern=".*2\d.*" string="${ant.java.version}"/>
+          </or>
         </condition>
         <fail unless="check-java-version.passed">
 .${line.separator}${line.separator}
