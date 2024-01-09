@@ -52,6 +52,7 @@
                         <nonFilteredFileExtension>class</nonFilteredFileExtension>
                         <nonFilteredFileExtension>propertieses</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
+                    <propertiesEncoding>UTF-8</propertiesEncoding>
                 </configuration>
             </plugin>
             <plugin>
