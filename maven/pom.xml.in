@@ -50,7 +50,7 @@
                 <configuration>
                     <nonFilteredFileExtensions>
                         <nonFilteredFileExtension>class</nonFilteredFileExtension>
-                        <nonFilteredFileExtension>propertieses</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>bin</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
                     <propertiesEncoding>UTF-8</propertiesEncoding>
                 </configuration>

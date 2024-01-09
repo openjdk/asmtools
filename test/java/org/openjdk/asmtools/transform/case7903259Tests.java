@@ -76,7 +76,7 @@ public class case7903259Tests {
 
     private String appendBin(String fileName) {
         if (disassemblers.contains(fileName)) {
-            return fileName+".class";
+            return fileName+".bin";
         } else {
             return fileName;
         }
