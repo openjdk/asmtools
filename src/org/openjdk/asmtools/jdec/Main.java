@@ -97,7 +97,7 @@ public class Main extends JdecTool {
             String arg = argv[i];
             switch (arg) {
                 case "-g":
-                    setPrintDetails();
+                    setPrintDetails(true);
                     break;
                 case "-v":
                     environment.setVerboseFlag(true);
@@ -137,8 +137,8 @@ public class Main extends JdecTool {
         }
     }
 
-    public void setPrintDetails() {
-        environment.setPrintDetailsFlag(true);
+    public void setPrintDetails(boolean value) {
+        environment.setPrintDetailsFlag(value);
     }
 
     // Runs the decoder with args

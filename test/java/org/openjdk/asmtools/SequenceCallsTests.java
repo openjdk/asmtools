@@ -98,11 +98,11 @@ public class SequenceCallsTests {
             List<String> jcodFiles = cases.get("jcoder").get(index).stream().
                     map(f -> resourceDir + File.separator + f).collect(Collectors.toList());
             if (index % 2 == 0) {
-                assertAll(() -> sequenceCompiler.reflectionJasm(jasmFiles),
-                        () -> sequenceCompiler.reflectionJcoder(jcodFiles));
+                assertAll(() -> sequenceCompiler.jasm(jasmFiles),
+                        () -> sequenceCompiler.jcoder(jcodFiles));
             } else {
-                assertAll(() -> sequenceCompiler.reflectionJcoder(jcodFiles),
-                        () -> sequenceCompiler.reflectionJasm(jasmFiles));
+                assertAll(() -> sequenceCompiler.jcoder(jcodFiles),
+                        () -> sequenceCompiler.jasm(jasmFiles));
             }
         }
     }

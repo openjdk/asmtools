@@ -103,6 +103,6 @@ public class Tests {
         Assertions.assertEquals(textResult.result, TOOL_PASSED);
         // expected substrings
         String str = textResult.output.toString().substring(0, 80);
-        Assertions.assertTrue(str.contains(jasmSubString), format("%s not found in %s%n", jasmSubString, str));
+        Assertions.assertTrue(str.contains(jasmSubString), format("'%s' not found in '%s'%n", jasmSubString, str));
     }
 }

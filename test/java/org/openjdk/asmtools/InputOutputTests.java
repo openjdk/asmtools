@@ -1,5 +1,7 @@
 package org.openjdk.asmtools;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,11 @@ import java.nio.file.Files;
 
 public class InputOutputTests extends ClassPathClassWork {
 
+    @AfterAll
+    public static void unsetDetailedOutputOptions() {
+        Options.unsetDetailedOutputOptions();
+    }
+
     public LogAndTextResults jdec(boolean g, byte[]... clazz) {
         ToolInput[] originalFiles = new ToolInput[clazz.length];
         for (int i = 0; i < clazz.length; i++) {
@@ -30,7 +37,9 @@ public class InputOutputTests extends ClassPathClassWork {
         jdec.setVerboseFlag(true);
         jdec.setTraceFlag(true);
         if (g) {
-            jdec.setPrintDetails();
+            jdec.setPrintDetails(true);
+        } else {
+            jdec.setPrintDetails(false);
         }
         int r = jdec.decode();
         return new LogAndTextResults(decodedFiles, decodeLog, r);
@@ -62,6 +71,8 @@ public class InputOutputTests extends ClassPathClassWork {
         jdis.setTraceFlag(true);
         if (g) {
             Options.setDetailedOutputOptions();
+        } else {
+            Options.unsetDetailedOutputOptions();
         }
         int r = jdis.disasm();
         return new LogAndTextResults(decodedFiles, decodeLog, r);
