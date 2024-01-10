@@ -40,6 +40,7 @@ import static org.openjdk.asmtools.common.structure.EModifier.*;
 import static org.openjdk.asmtools.jasm.ClassData.CoreClasses.PLACE.CLASSFILE;
 import static org.openjdk.asmtools.jasm.ClassFileConst.*;
 import static org.openjdk.asmtools.jasm.ConstantPool.ConstValue_UTF8;
+import static org.openjdk.asmtools.jasm.Indexer.NotSet;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token.*;
 import static org.openjdk.asmtools.jdis.ConstantPool.TAG.*;
@@ -159,7 +160,7 @@ class Parser extends ParseBase {
      * descriptor - a field descriptor which encodes the type of a local variable in the source program
      */
     void parseLocVarDef() throws SyntaxError {
-        int index = Indexer.NotSet;
+        int index = NotSet;
         ConstCell<?> nameCell, descriptorCell;
         // The form is (var) index  #name_index:#descriptor_index; [ (var) index name:descriptor; ]
         int indexPosition = scanner.pos;
@@ -970,13 +971,13 @@ class Parser extends ParseBase {
     }
 
     /**
-     *  Parse class reference used by statements:
-     *  this_class[:]    (CPINDEX | STRING);
-     *  super_class[:]   (CPINDEX | STRING);
+     * Parse class reference used by statements:
+     * this_class[:]    (CPINDEX | STRING);
+     * super_class[:]   (CPINDEX | STRING);
      */
     private void parseClassRef(Consumer<ConstCell<?>> consumer) {
         traceMethodInfoLn("Begin");
-        if( scanner.token == COLON ) {
+        if (scanner.token == COLON) {
             scanner.scan();
         }
         ConstCell nm = cpParser.parseConstRef(ConstType.CONSTANT_CLASS, null, true);
@@ -997,6 +998,10 @@ class Parser extends ParseBase {
             }
         }
         ConstCell<?> sourceFileCell = parseName();
+        if (sourceFileCell.ref == null && sourceFileCell.cpIndex != NotSet) {
+            environment.error(scanner.prevPos, "err.wrong.sourcefile.ref");
+            throw new SyntaxError();
+        }
         traceMethodInfoLn("Source File: " + sourceFileCell);
         if (cpSourceFile != null && !cpSourceFile.equals(sourceFileCell.ref.value)) {
             // new file name that overwrites CP value.
@@ -1548,7 +1553,7 @@ class Parser extends ParseBase {
             if (classData.cfv.isSet() && classData.cfv.isSetByParameter() && classData.cfv.isFrozen()) {
                 int minor = classData.cfv.minor_version();
                 int major = classData.cfv.major_version();
-                String version =  classData.cfv.asString();
+                String version = classData.cfv.asString();
                 String option = classData.cfv.isThresholdSet() ? classData.cfv.asThresholdString() : classData.cfv.asString();
                 parseVersion();
                 if (classData.cfv.isSetByParameter() &&
