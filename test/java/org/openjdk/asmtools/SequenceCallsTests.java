@@ -23,11 +23,11 @@
 package org.openjdk.asmtools;
 
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.openjdk.asmtools.lib.action.CompileAction;
-import org.openjdk.asmtools.ext.CaptureSystemOutput;
 import org.opentest4j.MultipleFailuresError;
 
 import java.io.File;
@@ -42,18 +42,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.BOTH;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.OUTPUT;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SequenceCallsTests {
     final String TEST_RESOURCE_FOLDER = "sequence" + File.separator;
 
-    private List<Error> errors = Collections.synchronizedList(new ArrayList<>());
+    private final List<Error> errors = Collections.synchronizedList(new ArrayList<>());
+    private final List<Integer> results = Collections.synchronizedList(new ArrayList<>());
 
     CompileAction sequenceCompiler;
     File resourceDir;
@@ -98,11 +95,25 @@ public class SequenceCallsTests {
             List<String> jcodFiles = cases.get("jcoder").get(index).stream().
                     map(f -> resourceDir + File.separator + f).collect(Collectors.toList());
             if (index % 2 == 0) {
-                assertAll(() -> sequenceCompiler.reflectionJasm(jasmFiles),
-                        () -> sequenceCompiler.reflectionJcoder(jcodFiles));
+                assertAll(() -> {
+                            var l = sequenceCompiler.jasm(jasmFiles);
+                            results.add(l.result);
+                        },
+                        () -> {
+                            var l = sequenceCompiler.jcoder(jcodFiles);
+                            results.add(l.result);
+                        }
+                );
             } else {
-                assertAll(() -> sequenceCompiler.reflectionJcoder(jcodFiles),
-                        () -> sequenceCompiler.reflectionJasm(jasmFiles));
+                assertAll(() -> {
+                            var l = sequenceCompiler.jcoder(jcodFiles);
+                            results.add(l.result);
+                        },
+                        () -> {
+                            var l = sequenceCompiler.jasm(jasmFiles);
+                            results.add(l.result);
+                        }
+                );
             }
         }
     }
@@ -139,8 +150,7 @@ public class SequenceCallsTests {
      * and therefore jasm can't find jasm-specific message in Jcoder environment.
      */
     @Test
-    @CaptureSystemOutput(value = BOTH, mute = true)
-    public void testCompilersWithConcurrency(CaptureSystemOutput.OutputCapture outputCapture) throws InterruptedException {
+    public void testCompilersWithConcurrency() throws InterruptedException {
         int numberOfThreads = cases.get("jasm").size();
         ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
         CountDownLatch latch = new CountDownLatch(numberOfThreads);
@@ -158,15 +168,15 @@ public class SequenceCallsTests {
         }
         latch.await();
         // check OK's results
-        List<String> list = outputCapture.getLogAsList(OUTPUT);
-        assertThat(list, allOf(
-                hasItem(matchesPattern("jcoder OK")),
-                hasItem(matchesPattern("jasm OK")))
-        );
-        assertThat(list, hasSize(6));
-        // check ERROR's results
-        assertEquals(6,
-                errors.stream().mapToInt(e -> ((MultipleFailuresError) e).getFailures().size()).sum(),
-                "Expected 4 missing plus 2 wrong format files.");
+        //"Expected 4 missing plus 2 wrong format files.");
+        assertEquals(12, results.size());
+        Collections.sort(results);
+        assertEquals(results.get(0), 0);
+        assertEquals(results.get(5), 0);
+        assertEquals(results.get(6), 1);
+        assertEquals(results.get(8), 1);
+        assertEquals(results.get(9), 2);
+        assertEquals(results.get(10), 2);
+        assertEquals(results.get(11), 8);
     }
 }

@@ -31,6 +31,8 @@ import org.openjdk.asmtools.lib.action.EAsmTools;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -43,13 +45,16 @@ import static org.openjdk.asmtools.common.FileUtils.getResourceFilePath;
 @TestInstance(PER_CLASS)
 public class case7903259Tests {
 
-    List<String> files = List.of("jasm", "jcoder", "jdec", "jdis");
+    List<String> assemblers = List.of("jasm", "jcoder");
+    List<String> disassemblers = List.of("jdec", "jdis");
+    List<String> files = Stream.concat(assemblers.stream(), disassemblers.stream()).collect(Collectors.toList());
+
     File resourceDir;
 
     @BeforeAll
     public void init() throws IOException {
         resourceDir = getResourceFilePath(this.getClass(),
-                "case7903259" + File.separator + files.get(0)).
+                "case7903259" + File.separator + assemblers.get(0)).
                 getParentFile();
     }
 
@@ -60,12 +65,20 @@ public class case7903259Tests {
         for (String fileName : files) {
             tool = EAsmTools.getTool(fileName);
             if (tool != null) {
-                LogAndReturn ret = tool.call(List.of(resourceDir + File.separator + fileName));
+                LogAndReturn ret = tool.call(List.of(resourceDir + File.separator + appendBin(fileName)));
                 assertTrue(ret.log.toString().isEmpty());
                 assertEquals(0, ret.result);
                 testedToolsCount++;
             }
         }
         assertEquals(4, testedToolsCount);
+    }
+
+    private String appendBin(String fileName) {
+        if (disassemblers.contains(fileName)) {
+            return fileName+".bin";
+        } else {
+            return fileName;
+        }
     }
 }

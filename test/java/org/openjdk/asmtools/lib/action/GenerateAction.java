@@ -26,17 +26,13 @@ import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.TextOutput;
-import org.openjdk.asmtools.common.outputs.ToolOutput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StringLog;
+import org.openjdk.asmtools.jdis.Options;
 import org.openjdk.asmtools.lib.LogAndReturn;
 import org.openjdk.asmtools.lib.LogAndTextResults;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,10 +45,15 @@ public class GenerateAction {
     private static GenerateAction entry;
     private final File destDir;
     private final List<String> toolArgs = new ArrayList<>();
+    private final boolean detailedOutputOptions;
 
     public GenerateAction() throws IOException {
+        this(false);
+    }
+    public GenerateAction(boolean detailedOutputOptions) throws IOException {
         destDir = Files.createTempDirectory("generate").toFile();
         destDir.deleteOnExit();
+        this.detailedOutputOptions = detailedOutputOptions;
     }
 
     public static LogAndReturn JDis(List<String> files, String... args) {
@@ -61,14 +62,6 @@ public class GenerateAction {
 
     public static LogAndReturn JDec(List<String> files, String... args) {
         return getEntry().setToolArgs().setToolArgs(args).jdec(files);
-    }
-
-    public void reflectionJdis(List<String> files) {
-        reflectionAction("jdis", files);
-    }
-
-    public void reflectionJdec(List<String> files) {
-        reflectionAction("jdec", files);
     }
 
     public LogAndReturn jdis(List<String> files) {
@@ -104,39 +97,6 @@ public class GenerateAction {
     }
 
     /**
-     * Moderator method based on reflection API to call tools
-     */
-    private void reflectionAction(String toolName, List<String> files) {
-        if (files.isEmpty())
-            fail(toolName + ": no files");
-        List<String> args = toolArgs.stream().collect(Collectors.toList());
-        args.add("-d");
-        args.add(destDir.getPath());
-        args.addAll(files);
-        try {
-            String toolClassName = "org.openjdk.asmtools." + toolName + ".Main";
-            Class<?> toolClass = Class.forName(toolClassName);
-            Constructor<?> constr = toolClass.getConstructor(PrintStream.class, String.class);
-            PrintStream ps = new PrintStream(System.out);
-            Object tool = constr.newInstance(ps, toolName);
-            Method m = toolClass.getMethod("compile", String[].class);
-            Object r = m.invoke(tool, new Object[]{args.toArray(new String[0])});
-            if (r instanceof Boolean) {
-                boolean ok = (Boolean) r;
-                if (!ok) {
-                    fail(toolName + " failed");
-                }
-                System.out.println(toolName + " OK");
-            } else
-                fail("unexpected result from " + toolName + ": " + r.toString());
-        } catch (ClassNotFoundException e) {
-            fail("can't find " + toolName);
-        } catch (ReflectiveOperationException t) {
-            fail("error invoking " + toolName + ": " + t);
-        }
-    }
-
-    /**
      * @return InputOutputTests.LogAndReturn wrapping both a log stream as a string and return code
      */
     private LogAndReturn getLogAndReturn(String toolName, List<String> files) {
@@ -152,10 +112,12 @@ public class GenerateAction {
         if (toolName.equals("jdec")) {
             org.openjdk.asmtools.jdec.Main jdec = new org.openjdk.asmtools.jdec.Main(encodedFiles, encodeLog,
                     args.toArray(new String[0]));
+            setDetailedOutputOptions();
             rc = jdec.decode();
         } else if (toolName.equals("jdis")) {
             org.openjdk.asmtools.jdis.Main jdis = new org.openjdk.asmtools.jdis.Main(encodedFiles, encodeLog,
                     args.toArray(new String[0]));
+            setDetailedOutputOptions();
             rc = jdis.disasm();
         } else {
             fail(new IllegalArgumentException("Unknown tools name: " + toolName));
@@ -177,9 +139,11 @@ public class GenerateAction {
         StringLog encodeLog = new StringLog();
         if (toolName.equals("jdec")) {
             org.openjdk.asmtools.jdec.Main jdec = new org.openjdk.asmtools.jdec.Main(encodedFiles,encodeLog, toolInputs);
+            setDetailedOutputOptions();
             rc = jdec.decode(args.toArray(String[]::new)) ? Environment.OK : Environment.FAILED;
         } else if (toolName.equals("jdis")) {
             org.openjdk.asmtools.jdis.Main jdis = new org.openjdk.asmtools.jdis.Main(encodedFiles,encodeLog, toolInputs);
+            setDetailedOutputOptions();
             rc = jdis.disasm(args.toArray(String[]::new)) ? Environment.OK : Environment.FAILED;
         } else {
             fail(new IllegalArgumentException("Unknown tools name: " + toolName));
@@ -203,10 +167,12 @@ public class GenerateAction {
         if (toolName.equals("jdec")) {
             org.openjdk.asmtools.jdec.Main jdec = new org.openjdk.asmtools.jdec.Main(encodedFiles,encodeLog,
                     args.toArray(String[]::new));
+            setDetailedOutputOptions();
             rc = jdec.decode();
         } else if (toolName.equals("jdis")) {
             org.openjdk.asmtools.jdis.Main jdis = new org.openjdk.asmtools.jdis.Main(encodedFiles,encodeLog,
                     args.toArray(String[]::new));
+            setDetailedOutputOptions();
             rc = jdis.disasm();
         } else {
             fail(new IllegalArgumentException("Either unknown tools name or the tool doesn't return a text result: " + toolName));
@@ -228,10 +194,12 @@ public class GenerateAction {
         StringLog encodeLog = new StringLog();
         if (toolName.equals("jdec")) {
             org.openjdk.asmtools.jdec.Main jdec = new org.openjdk.asmtools.jdec.Main(encodedFiles,encodeLog, toolInputs);
+            setDetailedOutputOptions();
             rc = jdec.decode(args.toArray(String[]::new)) ? Environment.OK : Environment.FAILED;
         } else if (toolName.equals("jdis")) {
             org.openjdk.asmtools.jdis.Main jdis =
                     new org.openjdk.asmtools.jdis.Main(encodedFiles, encodeLog, toolInputs);
+            setDetailedOutputOptions();
             rc = jdis.disasm(args.toArray(String[]::new)) ? Environment.OK : Environment.FAILED;
         } else {
             fail(new IllegalArgumentException("Either unknown tools name or the tool doesn't return a text result: " + toolName));
@@ -260,4 +228,13 @@ public class GenerateAction {
         }
         return entry;
     }
+
+    private void setDetailedOutputOptions() {
+        if (detailedOutputOptions) {
+            Options.setDetailedOutputOptions();
+        } else {
+            Options.unsetDetailedOutputOptions();
+        }
+    }
+
 }
