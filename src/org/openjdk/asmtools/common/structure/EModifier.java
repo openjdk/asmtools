@@ -357,7 +357,7 @@ public enum EModifier {
         // ACC_TRANSITIVE ACC_SUPER ACC_SYNCHRONIZED ACC_OPEN ACC_IDENTITY
         if (isIdentity(flags)) {                          //  == isTransitive(flags) == isSynchronized(flags) == isOpen(flags) == isSuper(flags)
             switch (context) {
-                case CLASS, INNER_CLASS -> {
+                case CLASS -> {
                     // In Java SE 8, the ACC_SUPER semantics became mandatory,
                     // regardless of the setting of ACC_SUPER or the class file version number,
                     // and the flags no longer had any effect.
@@ -365,6 +365,7 @@ public enum EModifier {
                     // is used to distinguish value and identity classes.
                     flags = addTo(list, flags, isName, ACC_SUPER);
                 }
+                case INNER_CLASS -> flags = addTo(list, flags, isName, ACC_IDENTITY);
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_TRANSITIVE);
                 case METHOD -> flags = addTo(list, flags, isName, ACC_SYNCHRONIZED);
                 case MODULE -> flags = addTo(list, flags, isName, ACC_OPEN);
