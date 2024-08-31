@@ -472,10 +472,8 @@ public class CodeData extends MemberData<MethodData> {
                 pool.setPrintTAG(false);
                 return opLength;
             }
-            // Valhalla
             case opc_anewarray, opc_instanceof, opc_checkcast, opc_new, opc_putstatic, opc_getstatic, opc_putfield,
-                    opc_getfield, opc_invokevirtual, opc_invokespecial, opc_invokestatic, opc_withfield,
-                    opc_aconst_init ->   // Valhalla
+                    opc_getfield, opc_invokevirtual, opc_invokespecial, opc_invokestatic ->
                     {
                         int index = getUShort(pc + 1);
                         if (printCPIndex) {

@@ -242,7 +242,6 @@ public class ParserInstr extends ParseBase {
                     case opc_anewarray:
                     case opc_instanceof:
                     case opc_checkcast:
-                    case opc_aconst_init:  // Valhalla
                         arg = instructionParser.parseConstRef(ConstType.CONSTANT_CLASS);
                         break;
                     case opc_bipush:
@@ -260,7 +259,6 @@ public class ParserInstr extends ParseBase {
                     case opc_getstatic:
                     case opc_putfield:
                     case opc_getfield:
-                    case opc_withfield:     // Valhalla
                         arg = instructionParser.parseConstRef(ConstType.CONSTANT_FIELDREF);
                         break;
                     case opc_invokevirtual:

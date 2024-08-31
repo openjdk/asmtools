@@ -650,14 +650,8 @@ class Parser extends ParseBase {
                 case MANDATED:
                     nextmod = EModifier.ACC_MANDATED.getFlag();
                     break;
-                case VALUE:
-                    nextmod = EModifier.ACC_VALUE.getFlag();
-                    break;
-                case PERMITS_VALUE:
-                    nextmod = EModifier.ACC_PERMITS_VALUE.getFlag();
-                    break;
-                case PRIMITIVE:
-                    nextmod = EModifier.ACC_PRIMITIVE.getFlag();
+                case IDENTITY:
+                    nextmod = EModifier.ACC_IDENTITY.getFlag();
                     break;
                 default:
                     return nextmod;
@@ -785,7 +779,6 @@ class Parser extends ParseBase {
                         }
                         break;
                     case 'L':
-                    case 'Q':
                         for (; ; k++) {
                             if (k >= siglen) {
                                 errparam = 3;
@@ -819,8 +812,7 @@ class Parser extends ParseBase {
         ConstValue_UTF8 strConst = (ConstValue_UTF8) nameCell.ref;
         String name = strConst.value;
         boolean is_clinit = name.equals("<clinit>");
-        // TODO: not a good way to detect factories...
-        boolean is_init = name.equals("<init>") && !EModifier.isStatic(mod);
+        boolean is_init = name.equals("<init>");
         DefaultAnnotationAttr defAnnot = null;
 
         // check access modifiers:
@@ -1101,12 +1093,12 @@ class Parser extends ParseBase {
     }
 
     /**
-     * Parse a list of classes belonging to the [NestMembers | PermittedSubclasses | Preload]  entry
+     * Parse a list of classes belonging to the [NestMembers | PermittedSubclasses]  entry
      */
     private void parseClasses(Consumer<ArrayList<ConstCell>> classesConsumer) throws SyntaxError {
         ArrayList<ConstCell> classes = new ArrayList<>();
         // Parses in the form:
-        // (NESTMEMBERS|PERMITTEDSUBCLASSES|PRELOAD)? IDENT(, IDENT)*;
+        // (NESTMEMBERS|PERMITTEDSUBCLASSES)? IDENT(, IDENT)*;
         traceMethodInfoLn("Begin");
         while (true) {
             ConstCell<?> cell = parseConstantClassInfo(true);
@@ -1118,6 +1110,27 @@ class Parser extends ParseBase {
             if (scanner.token != COMMA) {
                 scanner.expect(SEMICOLON);
                 classesConsumer.accept(classes);
+                return;
+            }
+            scanner.scan();
+        }
+    }
+
+    /**
+     * Parse a list of names belonging to the LoadableDescriptors entry
+     */
+    private void parseNames(Consumer<ArrayList<ConstCell>> namesConsumer) throws SyntaxError {
+        ArrayList<ConstCell> names = new ArrayList<>();
+        // Parses in the form:
+        // LOADABLE_DESCRIPTORS? NAME(, NAME)*;
+        traceMethodInfoLn("Begin");
+        while (true) {
+            ConstCell<?> cell = parseName();
+            names.add(cell);
+            traceMethodInfoLn("Added cell: " + cell);
+            if (scanner.token != COMMA) {
+                scanner.expect(SEMICOLON);
+                namesConsumer.accept(names);
                 return;
             }
             scanner.scan();
@@ -2053,13 +2066,13 @@ class Parser extends ParseBase {
                     scanner.scan();
                     parseRecord();
                 }
-                case PRELOAD -> {
-                    if (classData.preloadAttributeExists()) {
-                        environment.error(scanner.pos, "err.extra.attribute", PRELOAD.parseKey(), "ClassData");
+                case LOADABLE_DESCRIPTORS -> {      // JEP 401
+                    if (classData.loadableDescriptorsAttributeExists()) {
+                        environment.error(scanner.pos, "err.extra.attribute", LOADABLE_DESCRIPTORS.parseKey(), "ClassData");
                         throw new SyntaxError();
                     }
                     scanner.scan();
-                    parseClasses(list -> classData.addPreloads(list));
+                    parseNames(list -> classData.addLoadableDescriptors(list));
                 }
                 default -> {
                     environment.error(scanner.pos, "err.field.expected");

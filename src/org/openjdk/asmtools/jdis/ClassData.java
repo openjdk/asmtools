@@ -124,8 +124,8 @@ public class ClassData extends MemberData<ClassData> {
 
     protected SourceDebugExtensionData sourceDebugExtensionData;
 
-    // Valhalla
-    protected PreloadData preloadData;
+    // JEP 401
+    protected LoadableDescriptorsData loadableDescriptorsData;
 
     // source file data
     private TextLines sourceLines = null;
@@ -264,9 +264,9 @@ public class ClassData extends MemberData<ClassData> {
             case ATT_PermittedSubclasses ->
                 // Read PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
                     permittedSubclassesData = new PermittedSubclassesData(this).read(in, attributeLength);
-            case ATT_Preload ->
-                // Valhalla
-                    preloadData = new PreloadData(this).read(in, attributeLength);
+            case ATT_LoadableDescriptors ->
+                // JEP 401
+                    loadableDescriptorsData = new LoadableDescriptorsData(this).read(in, attributeLength);
             default -> handled = false;
         }
         return handled;
@@ -518,7 +518,7 @@ public class ClassData extends MemberData<ClassData> {
                     nestHost,                       // Print the NestHost (since class file: 55.0)
                     nestMembers,                    // Print the NestMembers (since class file: 55.0)
                     innerClasses,
-                    preloadData,
+                    loadableDescriptorsData,
                     bootstrapMethods,
                     sourceDebugExtensionData
             );

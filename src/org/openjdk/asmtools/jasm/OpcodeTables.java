@@ -304,9 +304,6 @@ public class OpcodeTables {
         // JVMS: The third reserved opcode, number 202 (0xca), has the mnemonic breakpoint and is intended to be used
         // by debuggers to implement breakpoints.
         opc_breakpoint(202, "breakpoint", 1),
-        // Valhalla instructions:     aconst_init, withfield
-        opc_aconst_init(203, "aconst_init", 3),
-        opc_withfield(204, "withfield", 3),
 
         /* Pseudo-instructions */
         opc_bytecode(210, "bytecode", 1),

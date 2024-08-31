@@ -78,8 +78,8 @@ class ClassData extends MemberData<JasmEnvironment> {
     //
     // JEP 360 - PermittedSubclasses attribute since class file 59.65535
     private PermittedSubclassesAttr permittedSubclassesAttr;
-    // Valhalla
-    private PreloadAttr preloadAttr;
+    // JEP 401
+    private LoadableDescriptorsAttr loadableDescriptorsAttr;
 
     /**
      * @param environment The error reporting environment.
@@ -131,28 +131,28 @@ class ClassData extends MemberData<JasmEnvironment> {
      * Predicate that describes if this class has an access flag indicating that it is an
      * interface.
      *
-     * @return True if the classes access flag indicates it is an interface.
+     * @return True if the class's access flag indicates it is an interface.
      */
     public final boolean isInterface() {
         return EModifier.isInterface(access);
     }
 
     /**
-     * Predicate that describes if this class has a primitive flag indicating that it is the primitive class.
-     *
-     * @return True if the classes access flag indicates it is the primitive class.
-     */
-    public final boolean isPrimitive() {
-        return EModifier.isPrimitive(access);
-    }
-
-    /**
      * Predicate that describes if this class has an abstract flag indicating that it is the abstract class.
      *
-     * @return True if the classes access flag indicates it is the abstract class.
+     * @return True if the class's access flag indicates it is an abstract class.
      */
     public final boolean isAbstract() {
         return EModifier.isAbstract(access);
+    }
+
+    /**
+     * Predicate that describes if this class has an identity flag indicating that it is an identity class.
+     *
+     * @return True if the classes access flag indicates it is an identity class.
+     */
+    public final boolean isIdentity() {
+        return EModifier.isIdentity(access);
     }
 
     /*
@@ -361,9 +361,9 @@ class ClassData extends MemberData<JasmEnvironment> {
         permittedSubclassesAttr = new PermittedSubclassesAttr(pool, classes);
     }
 
-    public void addPreloads(List<ConstCell> classes) {
-        environment.traceln("addPreloads");
-        preloadAttr = new PreloadAttr(pool, classes);
+    public void addLoadableDescriptors(List<ConstCell> descriptors) {
+        environment.traceln("addLoadableDescriptors");
+        loadableDescriptorsAttr = new LoadableDescriptorsAttr(pool, descriptors);
     }
 
     public void endClass() {
@@ -518,7 +518,7 @@ class ClassData extends MemberData<JasmEnvironment> {
                     bootstrapMethodsAttr,
                     nestHostAttr, nestMembersAttr,                  // since class version 55.0
                     permittedSubclassesAttr,                        // since class version 59.65535 (JEP 360)
-                    preloadAttr                                     // Valhalla
+                    loadableDescriptorsAttr                         // JEP 401
             );
         }
     }
@@ -563,8 +563,8 @@ class ClassData extends MemberData<JasmEnvironment> {
         return recordData != null;
     }
 
-    public boolean preloadAttributeExists() {
-        return preloadAttr != null;
+    public boolean loadableDescriptorsAttributeExists() {
+        return loadableDescriptorsAttr != null;
     }
 
     /**

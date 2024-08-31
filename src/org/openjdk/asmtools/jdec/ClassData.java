@@ -996,12 +996,27 @@ class ClassData {
                 //    u2 number_of_classes;
                 //    u2 classes[number_of_classes];
                 //  }
-                // Valhalla
-                case ATT_NestMembers, ATT_PermittedSubclasses, ATT_Preload -> {
+                case ATT_NestMembers, ATT_PermittedSubclasses -> {
                     int nsubtypes = in.readUnsignedShort();
                     startArrayCmt(nsubtypes, "classes");
                     try {
                         decodeTypes(in, nsubtypes);
+                    } finally {
+                        out_end("}");
+                    }
+                }
+                // JEP 401
+                // LoadableDescriptors_attribute {
+                //     u2 attribute_name_index;
+                //     u4 attribute_length;
+                //     u2 number_of_descriptors;
+                //     u2 descriptors[number_of_descriptors];
+                // }
+                case ATT_LoadableDescriptors -> {
+                    int ndescriptors = in.readUnsignedShort();
+                    startArrayCmt(ndescriptors, "descriptors");
+                    try {
+                        decodeNames(in, ndescriptors);
                     } finally {
                         out_end("}");
                     }
@@ -1274,6 +1289,20 @@ class ClassData {
             String s = "#" + type_cpx + ";";
             if (environment.printDetailsFlag) {
                 String name = (String) cpool[(int) cpool[type_cpx]];
+                out_println(s + " // " + name + getStringPos());
+            } else {
+                environment.println(s);
+            }
+        }
+    }
+
+    private void decodeNames(DataInputStream in, int count) throws IOException {
+        for (int i = 0; i < count; i++) {
+            int name_cpx = in.readUnsignedShort();
+            environment.traceln("jdec.trace.type", i, name_cpx);
+            String s = "#" + name_cpx + ";";
+            if (environment.printDetailsFlag) {
+                String name = (String) cpool[name_cpx];
                 out_println(s + " // " + name + getStringPos());
             } else {
                 environment.println(s);

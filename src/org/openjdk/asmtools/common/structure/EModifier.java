@@ -45,6 +45,7 @@ public enum EModifier {
 
     ACC_FINAL(0x0010, "final", CLASS, INNER_CLASS, FIELD, METHOD, METHOD_PARAMETERS),
 
+    ACC_IDENTITY(0x0020, "identity", CLASS, INNER_CLASS),
     ACC_SUPER(0x0020, "super", CLASS),   // although this seems to be easily ignored, but not including it to the class, where it originally was,
                                                       // will cause running hotswap to fail, with
                                                       //java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
@@ -56,20 +57,17 @@ public enum EModifier {
     ACC_VOLATILE(0x0040, "volatile", FIELD),
     ACC_BRIDGE(0x0040, "bridge", METHOD),
     ACC_STATIC_PHASE(0x0040, "static", REQUIRES),
-    ACC_PERMITS_VALUE(0x0040, "permits_value", CLASS, INNER_CLASS),       // valhalla
 
     ACC_TRANSIENT(0x0080, "transient", FIELD),
     ACC_VARARGS(0x0080, "varargs", METHOD),
 
     ACC_NATIVE(0x0100, "native", METHOD),
-    ACC_VALUE(0x0100, "value", CLASS, INNER_CLASS),                         // valhalla
 
     ACC_INTERFACE(0x0200, "interface", CLASS, INNER_CLASS),
 
     ACC_ABSTRACT(0x0400, "abstract", CLASS, INNER_CLASS, METHOD),
 
-    ACC_STRICT(0x0800, "strict", METHOD),
-    ACC_PRIMITIVE(0x0800, "primitive", CLASS, INNER_CLASS),                  // valhalla
+    ACC_STRICT(0x0800, "strict", FIELD, METHOD),
 
     ACC_SYNTHETIC(0x1000, "synthetic", CLASS, INNER_CLASS, FIELD, METHOD, MODULE, REQUIRES, EXPORTS, OPENS, METHOD_PARAMETERS),
 
@@ -88,9 +86,9 @@ public enum EModifier {
             ACC_SYNCHRONIZED, ACC_BRIDGE, ACC_VARARGS, ACC_NATIVE, ACC_ABSTRACT,
             ACC_STRICT, ACC_SYNTHETIC};
     // Class access and property modifiers (Table 4.1-A)
-    public static final EModifier[] MM_CLASS = {ACC_PUBLIC, ACC_FINAL, ACC_SUPER,
-            ACC_PRIMITIVE, ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC,
-            ACC_ANNOTATION, ACC_ENUM, ACC_MODULE, ACC_VALUE, ACC_PERMITS_VALUE, ACC_PRIMITIVE};
+    public static final EModifier[] MM_CLASS = {ACC_PUBLIC, ACC_FINAL, ACC_IDENTITY, ACC_SUPER,
+            ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC,
+            ACC_ANNOTATION, ACC_ENUM, ACC_MODULE};
 
     // Valid interface flags.
     public static final EModifier[] MM_INTERFACE = {ACC_PUBLIC, ACC_INTERFACE,
@@ -98,7 +96,7 @@ public enum EModifier {
     // Field access and property flags (Table 4.5-A)
     public static final EModifier[] MM_FIELD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
             ACC_STATIC, ACC_FINAL, ACC_VOLATILE, ACC_TRANSIENT,
-            ACC_SYNTHETIC, ACC_ENUM};
+            ACC_STRICT, ACC_SYNTHETIC, ACC_ENUM};
     // Abstract method
     public static final EModifier[] MM_ABSTRACT_METHOD = {ACC_PUBLIC, ACC_PROTECTED, ACC_BRIDGE, ACC_VARARGS, ACC_ABSTRACT,
             ACC_SYNTHETIC};
@@ -107,7 +105,7 @@ public enum EModifier {
             ACC_STRICT, ACC_STATIC};
     //  Nested class access and property flags  (Table 4.7.6-A)
     public static final EModifier[] MM_NESTED_CLASS = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED, ACC_STATIC, ACC_FINAL,
-            ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC, ACC_ANNOTATION, ACC_ENUM};
+            ACC_IDENTITY, ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC, ACC_ANNOTATION, ACC_ENUM};
     // Interface method
     private static final EModifier[] MM_INTERFACE_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_STATIC, ACC_BRIDGE, ACC_VARARGS,
             ACC_ABSTRACT, ACC_STRICT, ACC_SYNTHETIC};
@@ -234,16 +232,8 @@ public enum EModifier {
         return (flags & DEPRECATED_ATTRIBUTE.flag) != 0;
     }
 
-    public static boolean isValue(int flags) {
-        return (flags & ACC_VALUE.flag) != 0;
-    }
-
-    public static boolean isPermitsValue(int flags) {
-        return (flags & ACC_PERMITS_VALUE.flag) != 0;
-    }
-
-    public static boolean isPrimitive(int flags) {
-        return (flags & ACC_PRIMITIVE.flag) != 0;
+    public static boolean isIdentity(int flags) {
+        return (flags & ACC_IDENTITY.flag) != 0;
     }
 
     public static boolean hasPseudoMod(int flags) {
@@ -364,15 +354,15 @@ public enum EModifier {
         if (isFinal(flags) && context.isOneOf(CLASS, INNER_CLASS, FIELD, METHOD, METHOD_PARAMETERS)) {
             flags = addTo(list, flags, isName, ACC_FINAL);
         }
-        // ACC_TRANSITIVE ACC_SUPER ACC_SYNCHRONIZED ACC_OPEN
-        if (isSuper(flags)) {                          //  == isTransitive(flags) == isSynchronized(flags) == isOpen(flags)
+        // ACC_TRANSITIVE ACC_SUPER ACC_SYNCHRONIZED ACC_OPEN ACC_IDENTITY
+        if (isIdentity(flags)) {                          //  == isTransitive(flags) == isSynchronized(flags) == isOpen(flags) == isSuper(flags)
             switch (context) {
-                case CLASS -> {
+                case CLASS, INNER_CLASS -> {
                     // In Java SE 8, the ACC_SUPER semantics became mandatory,
                     // regardless of the setting of ACC_SUPER or the class file version number,
                     // and the flags no longer had any effect.
-                    // still we have to keep it in here (if it was here), as if the new class is used for hotswap, it s absence would casue
-                    // java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
+                    // In JEP 401, the class flag is renamed ACC_IDENTITY, and
+                    // is used to distinguish value and identity classes.
                     flags = addTo(list, flags, isName, ACC_SUPER);
                 }
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_TRANSITIVE);
@@ -380,13 +370,12 @@ public enum EModifier {
                 case MODULE -> flags = addTo(list, flags, isName, ACC_OPEN);
             }
         }
-        // ACC_VOLATILE ACC_BRIDGE ACC_STATIC_PHASE ACC_PERMITS_VALUE
-        if (isVolatile(flags)) {                         // == isBridge(flags) ==isStaticPhase(flags) == isPermitsValue(flags)
+        // ACC_VOLATILE ACC_BRIDGE ACC_STATIC_PHASE
+        if (isVolatile(flags)) {                         // == isBridge(flags) ==isStaticPhase(flags)
             switch (context) {
                 case FIELD -> flags = addTo(list, flags, isName, ACC_VOLATILE);
                 case METHOD -> flags = addTo(list, flags, isName, ACC_BRIDGE);
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_STATIC_PHASE);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_PERMITS_VALUE);
             }
         }
         // ACC_TRANSIENT ACC_VARARGS
@@ -396,12 +385,9 @@ public enum EModifier {
                 case METHOD -> flags = addTo(list, flags, isName, ACC_VARARGS);
             }
         }
-        // ACC_NATIVE    ACC_VALUE
-        if (isNative(flags)) {                           // == isValue(flags)
-            switch (context) {
-                case METHOD -> flags = addTo(list, flags, isName, ACC_NATIVE);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_VALUE);
-            }
+        // ACC_NATIVE
+        if (isNative(flags) && context == METHOD) {
+            flags = addTo(list, flags, isName, ACC_NATIVE);
         }
         // ACC_INTERFACE
         if (isInterface(flags) && context.isOneOf(CLASS, INNER_CLASS)) {
@@ -416,12 +402,9 @@ public enum EModifier {
             flags = addTo(list, flags, isName, ACC_ABSTRACT);
         }
 
-        // ACC_STRICT ACC_PRIMITIVE
-        if (isStrict(flags)) {                          // == isPrimitive(flags)
-            switch (context) {
-                case METHOD -> flags = addTo(list, flags, isName, ACC_STRICT);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_PRIMITIVE);
-            }
+        // ACC_STRICT
+        if (isStrict(flags) && context.isOneOf(FIELD, METHOD)) {
+            flags = addTo(list, flags, isName, ACC_STRICT);
         }
         // ACC_SYNTHETIC
         if (isSynthetic(flags) && context.belongToContextOf(ACC_SYNTHETIC)) {

@@ -89,8 +89,8 @@ public enum EAttribute {
     //    u2 classes[number_of_classes];
     // }
     ATT_PermittedSubclasses(35, "ATT_PermittedSubclasses", "PermittedSubclasses", CONSTANT_CLASS),
-    // Valhalla
-    ATT_Preload(36, "ATT_Preload", "Preload", CONSTANT_CLASS);
+    // JEP 401
+    ATT_LoadableDescriptors(36, "ATT_LoadableDescriptors", "LoadableDescriptors", CONSTANT_UTF8);
 
     private final Integer value;
     private final String printVal;

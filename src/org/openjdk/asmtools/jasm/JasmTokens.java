@@ -401,12 +401,9 @@ public class JasmTokens {
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
         TYPE_ARGUMENT_TYPEPATH (193, TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),    TypeAnnotationTypes.EPathKind.TYPE_ARGUMENT.parseKey(),
                                                                              EnumSet.of(TokenType.TYPE_PATH_KIND, TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        // Valhalla
-        VALUE                   (200, "VALUE",     "value",     EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME, TokenType.JASM_IDENT), KeywordType.KEYWORD),
-        PERMITS_VALUE           (201, "PERMITS_VALUE", "permits_value", EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD),
-        PRIMITIVE               (202, "PRIMITIVE", "primitive", EnumSet.of(TokenType.MODIFIER, TokenType.CLASS_NAME, TokenType.MODULE_NAME, TokenType.JASM_IDENT ), KeywordType.KEYWORD),
-        // Valhalla  Declaration keyword(s)
-        PRELOAD                 (203, "PRELOAD",    "Preload",  EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD);
+        // JEP 401
+        IDENTITY            (200, "IDENTITY", "identity", EnumSet.of(TokenType.MODIFIER, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME), KeywordType.KEYWORD),
+        LOADABLE_DESCRIPTORS(201, "LOADABLE_DESCRIPTORS", "LoadableDescriptors", EnumSet.of(TokenType.DECLARATION, TokenType.JASM_IDENT, TokenType.CLASS_NAME, TokenType.MODULE_NAME ), KeywordType.KEYWORD);
 
         final static EnumSet<Token> ALL_TOKENS = EnumSet.allOf(Token.class);
         // Misc Keywords

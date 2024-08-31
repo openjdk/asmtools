@@ -110,8 +110,8 @@ public class Checker {
                 scanner.environment.warning(scanner.pos, "warn.invalid.modifier.int.abs",
                         EModifier.asNames(mod, ClassFileContext.CLASS));
             }
-            // If the ACC_INTERFACE flag is set, the ACC_FINAL, ACC_PRIMITIVE, ACC_ENUM, and ACC_MODULE flags must not be set.
-            if (anyOf(mod, ACC_FINAL, ACC_PRIMITIVE, ACC_ENUM, ACC_MODULE)) {
+            // If the ACC_INTERFACE flag is set, the ACC_FINAL, ACC_IDENTITY, ACC_ENUM, and ACC_MODULE flags must not be set.
+            if (anyOf(mod, ACC_FINAL, ACC_IDENTITY, ACC_ENUM, ACC_MODULE)) {
                 scanner.environment.warning(scanner.pos, "warn.invalid.modifier.interface.set",
                         EModifier.asNames(mod, ClassFileContext.CLASS));
             }
@@ -170,15 +170,10 @@ public class Checker {
                 environment.warning(pos, "warn.invalid.modifier.fiva",
                         EModifier.asNames(mod, ClassFileContext.FIELD));
             }
-            // In a primitive class, each field must have at least one of its ACC_STATIC or ACC_FINAL flags set.
-            if (classData.isPrimitive()) {
-                if (!EModifier.anyOf(mod, ACC_STATIC, ACC_FINAL) || !EModifier.both(mod, ACC_STATIC, ACC_FINAL)) {
-                    environment.warning(pos, "warn.invalid.modifier.primitive.flags",
-                            EModifier.asNames(mod, ClassFileContext.FIELD));
-                }
-                // In an abstract class, each field must have its ACC_STATIC flag set.
-                if (classData.isAbstract() && !isStatic(mod)) {
-                    environment.warning(pos, "warn.invalid.modifier.primitive.abstract",
+            // In a value class, each field must have at least one of its ACC_STATIC or ACC_FINAL flags set.
+            if (!classData.isIdentity()) {
+                if (!EModifier.anyOf(mod, ACC_STATIC, ACC_FINAL)) {
+                    environment.warning(pos, "warn.invalid.modifier.value.flags",
                             EModifier.asNames(mod, ClassFileContext.FIELD));
                 }
             }
