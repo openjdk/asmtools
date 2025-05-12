@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,50 +23,37 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.Pair;
-import org.openjdk.asmtools.common.structure.StackMap;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.FRAMETYPE;
 import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode;
-import static org.openjdk.asmtools.jdis.StackMapData.EAttributeType.STACKMAPTABLE;
 
 /**
  * instruction attributes
  */
 class InstructionAttr extends MemberData<MethodData> {
-
     short lineNum = 0;
     boolean referred = false;               // from some other instruction
-    ArrayList<CodeData.LocVarData> vars;
-    ArrayList<CodeData.LocVarData> endVars;
+    ArrayList<LocalVariableData> vars;
+    ArrayList<LocalVariableTypeData> types;
+    ArrayList<LocalVariableData> endVars;
+    ArrayList<LocalVariableTypeData> endTypes;
     ArrayList<TrapData> handlers;
     ArrayList<TrapData> traps;
     ArrayList<TrapData> endTraps;
+    List<StackMapData> stackMapWrappers;
     StackMapData stackMapEntry;
     ClassData classData;
+    private int attributeOffset;
 
     public InstructionAttr(MethodData methodData) {
         super(methodData);
         this.classData = methodData.data;
-    }
-
-    void addVar(CodeData.LocVarData var) {
-        if (vars == null) {
-            vars = new ArrayList<>(4);
-        }
-        vars.add(var);
-    }
-
-    void addEndVar(CodeData.LocVarData endVar) {
-        if (endVars == null) {
-            endVars = new ArrayList<>(4);
-        }
-        endVars.add(endVar);
     }
 
     void addTrap(TrapData trap) {
@@ -90,49 +77,258 @@ class InstructionAttr extends MemberData<MethodData> {
         handlers.add(endHandler);
     }
 
-    public void printEnds(int shift) throws IOException {
-// prints additional information for instruction:
-//  end of local variable and trap scopes;
-        if ((endVars != null) && data.printLocalVars) {
-            print(enlargedIndent(PadRight(Opcode.opc_endvar.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
+    public void printBegins(int shift) {
+        this.attributeOffset = shift;
+        // Prints additional information for instruction:
+        // source line number;
+        printInlinedLineNumber();
+        // begin of exception handler;
+        printBeginOfExceptionHandlers(shift);
+        // begin of trap scores;
+        printBeginOfTrapScores(shift);
+        // begin of locVar and locVarTypes
+        printBeginOfLocVars(shift);
+    }
+
+    public void printEnds(int shift) {
+        // Prints additional information for instruction:
+        // end of local variables, local variable types and trap scopes;
+        if (endTypes != null && !tableFormat) {
+            print(enlargedIndent(PadRight(Opcode.opc_endtype.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
+            println(endTypes.stream().map(ev -> Short.toString(ev.slot)).collect(Collectors.joining(",")) + ";");
+        }
+        if (endVars != null && !tableFormat) {
+            print(enlargedIndent(PadRight(Opcode.opc_endvar.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
             println(endVars.stream().map(ev -> Short.toString(ev.slot)).collect(Collectors.joining(",")) + ";");
         }
         if (endTraps != null) {
-            print(enlargedIndent(PadRight(Opcode.opc_endtry.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
+            print(enlargedIndent(PadRight(Opcode.opc_endtry.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
             println(endTraps.stream().map(TrapData::id).collect(Collectors.joining(",")) + ";");
         }
     }
 
-    public void printBegins(int shift) {
-// prints additional information for instruction:
-// source line number;
-// start of exception handler;
-// begin of locVar and trap scopes;
-        boolean eitherOpt = data.printLineTable || data.printSourceLines;
-        boolean bothOpt = data.printLineTable && data.printSourceLines;
+    /**
+     * @param shift how is shifted a list of verification types of locals_map/stack_map
+     * @return true if something is printed
+     */
+    public boolean printStackMap_Table(int shift) {
+        // will the stackmap(table) be printed as table if the table is chosen?
+        if (tableFormat || (stackMapEntry == null && stackMapWrappers == null)) {
+            return false;
+        } else if (stackMapEntry != null) {
+            return stackMapEntry.belongsToStackMapTable() ? printStackMapTable(shift) : printStackMap(shift);
+        } else {
+            return stackMapWrappers.getFirst().belongsToStackMapTable() ? printStackMapTable(shift) : printStackMap(shift);
+        }
+    }
+
+    private boolean printStackMapTable(int shift) {
+        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH;
+        boolean wrapped = stackMapWrappers != null;
+        String opCodeName = Opcode.opc_stack_frame_type.parseKey();
+        String prefix = "";
+        String listPrefix = INDENT_STRING;
+        // print wrappers if found
+        if (wrapped) {
+            for (int i = 0; i < stackMapWrappers.size(); i++) {
+                StackMapData smd = stackMapWrappers.get(i);
+                if (i > 0) {
+                    opCodeName = Opcode.opc_frame_type.parseKey();
+                    prefix = INDENT_STRING;
+                    listPrefix = prefix + INDENT_STRING;
+                }
+                printPadRight(prefix + opCodeName, STACKMAP_TYPE_PLACEHOLDER_LENGTH);
+                if (printCPIndex && !skipComments) {
+                    print(PadRight(smd.stackEntryType.tagName() + ";", mapShift)).
+                            println(" // %s %s".formatted(FRAMETYPE.parseKey(), smd.stackEntryTypeValue));
+                } else {
+                    println(smd.stackEntryType.tagName() + ";");
+                }
+                int[] unsetFields = smd.unsetFields;
+                printFields(unsetFields, shift);
+                if ((unsetFields == null) || (unsetFields.length == 0)) {
+                    println(this.enlargedIndent(listPrefix + Opcode.opc_unset_fields.parseKey() + ";", shift));
+                }
+                print(enlargedIndent(attributeOffset));
+            }
+        }
+        opCodeName = Opcode.opc_stack_frame_type.parseKey();
+        // print StackMap entry
+        if (stackMapEntry != null) {
+            if (wrapped) {
+                opCodeName = Opcode.opc_frame_type.parseKey();
+                prefix += INDENT_STRING;
+//              println("{").print(enlargedIndent(attributeOffset));
+            }
+            listPrefix = prefix + INDENT_STRING;;
+            printPadRight(prefix + opCodeName, STACKMAP_TYPE_PLACEHOLDER_LENGTH);
+            if (printCPIndex && !skipComments) {
+                print(PadRight(stackMapEntry.stackEntryType.tagName() + ";", mapShift)).
+                        println(" // %s %s".formatted(FRAMETYPE.parseKey(), stackMapEntry.stackEntryTypeValue));
+            } else {
+                println(stackMapEntry.stackEntryType.tagName() + ";");
+            }
+
+            int[] lockMap = stackMapEntry.lockMap;
+            if ((lockMap == null) || (lockMap.length == 0)) {
+                if (stackMapEntry.stackEntryType.hasLocalMap()) {
+                    println(this.enlargedIndent(listPrefix + Opcode.opc_locals_map.parseKey() + ";", shift));
+                }
+            } else {
+                mapShift = printEntries(stackMapEntry.getMapListAsString(lockMap, ""),
+                        listPrefix + Opcode.opc_locals_map.parseKey(), shift, mapShift);
+            }
+
+            int[] stackMap = stackMapEntry.stackMap;
+            if ((stackMap == null) || (stackMap.length == 0)) {
+                if (stackMapEntry.stackEntryType.hasStackMap()) {
+                    println(this.enlargedIndent(listPrefix + Opcode.opc_stack_map.parseKey() + ";", shift));
+                }
+            } else {
+                printEntries(stackMapEntry.getMapListAsString(stackMap, ""),
+                        listPrefix + Opcode.opc_stack_map.parseKey(), shift, mapShift);
+            }
+//        if (wrapped) {
+//            println(enlargedIndent(attributeOffset) + "}");
+//        }
+        }
+        return stackMapWrappers != null || stackMapEntry != null;
+    }
+
+    private boolean printStackMap(int shift) {
+        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH;
+        printPadRight(Opcode.opc_stack_map_frame.parseKey() + ";", STACKMAP_TYPE_PLACEHOLDER_LENGTH);
+        if (printCPIndex && !skipComments) {
+            print(PadRight(" ", mapShift)).println(" // offset " + stackMapEntry.frame_pc);
+        } else {
+            println();
+        }
+        mapShift = printEntries(stackMapEntry.getMapListAsString(stackMapEntry.lockMap, ""),
+                Opcode.opc_locals_map.parseKey(), shift, mapShift);
+        printEntries(stackMapEntry.getMapListAsString(stackMapEntry.stackMap, ""),
+                Opcode.opc_stack_map.parseKey(), shift, mapShift);
+        return true;
+    }
+
+    private void printFields(int[] unsetFields, int shift) {
+        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH;
+        if (unsetFields != null && (unsetFields.length > 0)) {
+            final int limit = unsetFields.length - 1;
+            Pair<List<String>, List<String>> line = stackMapEntry.getFieldListAsString(unsetFields);
+            String left = line.first.stream().collect(Collectors.joining(", ")).concat(";");
+            String right = line.second.stream().collect(Collectors.joining(", ")).concat(";");
+            String title = enlargedIndent(PadRight(INDENT_STRING + Opcode.opc_unset_fields.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift);
+            print(title);
+            // empties the title to use it as indent.
+            title = nCopies(title.length());
+            if (printCPIndex) {
+                if (skipComments) {
+                    println(left);
+                } else {
+                    if (limit == 0) {
+                        print(PadRight(left, mapShift)).println(" // " + right);
+                    } else {
+                        print(PadRight(line.first.get(0).concat(","), mapShift)).println(" // " + line.second.get(0).concat(","));
+                        for (int i = 1; i <= limit; i++) {
+                            String delim = i == limit ? ";" : ",";
+                            String id = line.first.get(i).concat(delim);
+                            String field = line.second.get(i).concat(delim);
+                            print(title).print(PadRight(id, mapShift)).println(" // " + field);
+                        }
+                    }
+                }
+            } else {
+                if (limit == 0) {
+                    println(right);
+                } else {
+                    println(line.second.getFirst().concat(","));
+                    for (int i = 1; i <= limit; i++) {
+                        String delim = i == limit ? ";" : ",";
+                        String field = line.second.get(i).concat(delim);
+                        print(title).println(field);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private int printEntries(Pair<String, String> entriesLine, String title, int shift, int mapShift) {
+        if (entriesLine != null) {
+            print(this.enlargedIndent(PadRight(title, STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
+            if (printCPIndex) {
+                if (skipComments) {
+                    println(entriesLine.first);
+                } else {
+                    print(PadRight(entriesLine.first, mapShift));
+                    mapShift = max(mapShift, entriesLine.first.length());
+                    print(" // ");
+                }
+            }
+            if (!printCPIndex || (printCPIndex && !skipComments)) {
+                println(entriesLine.second);
+            }
+        }
+        return mapShift;
+    }
+
+    void addVar(LocalVariableData var) {
+        if (vars == null) {
+            vars = new ArrayList<>(4);
+        }
+        vars.add(var);
+    }
+
+    void addType(LocalVariableTypeData type) {
+        if (types == null) {
+            types = new ArrayList<>(4);
+        }
+        types.add(type);
+    }
+
+
+    void addEndType(LocalVariableTypeData endType) {
+        if (endTypes == null) {
+            endTypes = new ArrayList<>(4);
+        }
+        endTypes.add(endType);
+    }
+
+    void addEndVar(LocalVariableData endVar) {
+        if (endVars == null) {
+            endVars = new ArrayList<>(4);
+        }
+        endVars.add(endVar);
+    }
+
+    private void printInlinedLineNumber() {
+        boolean eitherOpt = data.printLineTableNumbers || data.printLineTableLines;
+        boolean bothOpt = data.printLineTableNumbers && data.printLineTableLines;
         if (eitherOpt && (lineNum != 0)) {
             decIndent();
             if (bothOpt) {
                 String srcLine = classData.getSrcLine(lineNum);
                 printIndentLn("// " + lineNum + (srcLine != null ? "# " + srcLine : ""));
-            } else if (data.printLineTable) {
+            } else if (data.printLineTableNumbers) {
                 printIndentLn("// %d#", lineNum);
-            } else if (data.printSourceLines) {
+            } else if (data.printLineTableLines) {
                 String srcLine = classData.getSrcLine(lineNum);
                 printIndentLn(srcLine != null ? "// " + srcLine : "");
             }
             incIndent();
         }
+    }
 
+    private void printBeginOfExceptionHandlers(int shift) {
         if (handlers != null) {
             for (TrapData line : handlers) {
-                print(this.enlargedIndent(PadRight(Opcode.opc_catch.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
+                print(this.enlargedIndent(PadRight(Opcode.opc_catch.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
                 if (printCPIndex) {
-                    if( skipComments ) {
+                    if (skipComments) {
                         println("%s #%d;", line.id(), line.catch_cpx);
                     } else {
                         print(PadRight(format("%s #%d;", line.id(), line.catch_cpx),
-                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
+                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH));
                         println(" // " + (line.catch_cpx == 0 ? "any" : data.pool.getClassName(line.catch_cpx)));
                     }
                 } else {
@@ -140,21 +336,25 @@ class InstructionAttr extends MemberData<MethodData> {
                 }
             }
         }
+    }
 
+    private void printBeginOfTrapScores(int shift) {
         if (traps != null) {
-            print(this.enlargedIndent(PadRight(Opcode.opc_try.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
+            print(this.enlargedIndent(PadRight(Opcode.opc_try.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
             println(traps.stream().map(TrapData::id).collect(Collectors.joining(", ")) + ";");
         }
+    }
 
-        if ((vars != null) && data.printLocalVars) {
-            for (CodeData.LocVarData line : vars) {
-                print(this.enlargedIndent(PadRight(Opcode.opc_var.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
+    private void printBeginOfLocVars(int shift) {
+        if ((vars != null) && !tableFormat) {
+            for (LocalVariableData line : vars) {
+                print(this.enlargedIndent(PadRight(Opcode.opc_var.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
                 if (printCPIndex) {
-                    if( skipComments ) {
+                    if (skipComments) {
                         println("%d #%d:#%d;", line.slot, line.name_cpx, line.sig_cpx);
                     } else {
                         print(PadRight(format("%d #%d:#%d;", line.slot, line.name_cpx, line.sig_cpx),
-                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep()));
+                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH));
                         println(" // %s:%s", data.pool.getName(line.name_cpx), data.pool.getName(line.sig_cpx));
                     }
                 } else {
@@ -162,121 +362,21 @@ class InstructionAttr extends MemberData<MethodData> {
                 }
             }
         }
-    }
-
-    public Pair<String, String> getMapListAsString(int[] map) {
-        StringBuilder left = new StringBuilder();
-        StringBuilder right = new StringBuilder();
-        for (int k = 0; k < map.length; k++) {
-            int fullMapType = map[k];
-            int mtVal = fullMapType & 0xFF;
-            StackMap.VerificationType mapVerificationType = StackMap.getVerificationType(mtVal,
-                    Optional.of((s)-> environment.printErrorLn(s)));
-            String prefix = k == 0 ? "" : " ";
-            int argument = fullMapType >> 8;
-            switch (mapVerificationType) {
-                case ITEM_Object -> {
-                    if (data.printCPIndex) {
-                        left.append(prefix).append("#").append(argument);
+        if (types != null && !tableFormat) {
+            for (LocalVariableTypeData type : types) {
+                print(this.enlargedIndent(PadRight(Opcode.opc_type.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
+                if (printCPIndex) {
+                    if (skipComments) {
+                        println("%d #%d:#%d;", type.slot, type.name_cpx, type.sig_cpx);
+                    } else {
+                        print(PadRight(format("%d #%d:#%d;", type.slot, type.name_cpx, type.sig_cpx),
+                                getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH));
+                        println(" // %s:%s", data.pool.getName(type.name_cpx), data.pool.getName(type.sig_cpx));
                     }
-                    right.append(prefix).append(data.pool.ConstantStrValue(argument));
-                }
-                case ITEM_NewObject -> {
-                    if (data.printCPIndex) {
-                        left.append(prefix).append(mtVal);
-                        left.append(" ").append(data.lP).append(argument);
-                    }
-                    right.append(prefix).append(mapVerificationType.printName());
-                    right.append(" ").append(data.lP).append(argument);
-                }
-                default -> {
-                    if (data.printCPIndex) {
-                        left.append(prefix).append(mtVal);
-                    }
-                    right.append(prefix).append(mapVerificationType.printName());
-                }
-            }
-            if (data.printCPIndex) {
-                left.append((k == (map.length - 1) ? ';' : ','));
-            }
-            right.append((k == (map.length - 1) ? ';' : ','));
-        }
-        return new Pair<>(left.toString(), right.toString());
-    }
-
-    /**
-     * @param shift how are shifted a list of verification types of locals_map/stack_map
-     * @return true if something is printed
-     */
-    public boolean printStackMap(int shift) {
-        if (stackMapEntry == null) {
-            return false;
-        }
-        boolean printed = false;
-        int mapShift = getCommentOffset() - STACKMAP_TYPE_PLACEHOLDER_LENGTH - getIndentStep();
-        if (stackMapEntry.stackFrameType != null) {
-            printPadRight(Opcode.opc_stack_frame_type.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1);
-            if( printCPIndex && !skipComments ) {
-                print(PadRight(stackMapEntry.stackFrameType.tagName() + ";", mapShift)).
-                        println(" // frame_type " + stackMapEntry.stackFrameTypeValue);
-            } else {
-                println(stackMapEntry.stackFrameType.tagName() + ";");
-            }
-            printed = true;
-        }
-        int[] map = stackMapEntry.lockMap;
-        if ((map != null) && (map.length > 0)) {
-            Pair<String, String> line = getMapListAsString(map);
-            if (stackMapEntry.type == STACKMAPTABLE) {  // StackMapTable exists
-                print(this.enlargedIndent(PadRight(Opcode.opc_locals_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
-            } else {                                    // == StackMap version < 50 Class file has an implicit stack map attribute
-                print(PadRight(Opcode.opc_locals_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1));
-            }
-            if (printCPIndex) {
-                if( skipComments ) {
-                    println(line.first);
                 } else {
-                    print(PadRight(line.first, mapShift));
-                    mapShift = max(mapShift, line.first.length());
-                    print(" // ");
+                    println("%d %s:%s;", type.slot, data.pool.getName(type.name_cpx), data.pool.getName(type.sig_cpx));
                 }
             }
-            if( !printCPIndex || (printCPIndex && !skipComments) ) {
-                println(line.second);
-            }
-            printed = true;
         }
-        map = stackMapEntry.stackMap;
-        if ((map != null) && (map.length > 0)) {
-            Pair<String, String> line = getMapListAsString(map);
-            if (stackMapEntry.type == STACKMAPTABLE) {
-                print(this.enlargedIndent(
-                        PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
-            } else {   // version < 50 Class file has an implicit stack map attribute
-                print(this.enlargedIndent(
-                        PadRight(Opcode.opc_stack_map.parseKey(), STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1), shift));
-            }
-            if (printCPIndex) {
-                if( skipComments ) {
-                    println(line.first);
-                } else {
-                    print(PadRight(line.first, mapShift));
-                    print(" // ");
-                }
-            }
-            if( !printCPIndex || (printCPIndex && !skipComments) ) {
-                println(line.second);
-            }
-            printed = true;
-        }
-        if (!printed) {
-            // empty attribute should be printed anyway - it should not be eliminated after jdis/jasm cycle
-            if (stackMapEntry.type == STACKMAPTABLE) {
-                println(this.enlargedIndent(Opcode.opc_locals_map.parseKey() + ";", STACKMAP_TYPE_PLACEHOLDER_LENGTH + 1));
-            } else {
-                println(Opcode.opc_locals_map.parseKey() + ";");
-            }
-        }
-        return true;
     }
 }

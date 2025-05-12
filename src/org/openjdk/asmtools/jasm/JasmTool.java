@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,14 @@
  */
 package org.openjdk.asmtools.jasm;
 
+import org.openjdk.asmtools.common.Compiler;
 import org.openjdk.asmtools.common.Tool;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.jasm.JasmEnvironment.JasmBuilder;
 
-public abstract class JasmTool extends Tool<JasmEnvironment> {
+public abstract class JasmTool extends Compiler<JasmEnvironment> {
 
     protected JasmTool(ToolOutput toolOutput) {
         super(toolOutput, new StderrLog());

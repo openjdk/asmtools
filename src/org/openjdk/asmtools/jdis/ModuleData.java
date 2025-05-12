@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,14 +32,14 @@ import java.util.Set;
 
 import static org.openjdk.asmtools.jdis.ConstantPool.TAG.CONSTANT_CLASS;
 import static org.openjdk.asmtools.jdis.ConstantPool.TAG.CONSTANT_MODULE;
-import static org.openjdk.asmtools.jdis.Options.PR.CPX;
+import static org.openjdk.asmtools.jdis.Options.PrintOption.CP_INDEX;
 
 /**
  * The module attribute data.
  */
-public class ModuleData extends MemberData<ClassData>{
+public class ModuleData extends MemberData<ClassData> {
 
-    protected final boolean printCPIndex = Options.contains(CPX);
+    protected final boolean printCPIndex = Options.contains(CP_INDEX);
     private ModuleContent moduleContent;
 
     public ModuleData(ClassData classData) {
@@ -95,7 +95,7 @@ public class ModuleData extends MemberData<ClassData>{
     public void read(DataInputStream in) throws FormatError {
         int index, moduleFlags, versionIndex;
         String moduleName, version;
-        ModuleContent.Builder builder;
+        ModuleContent.Builder builder = null;
         try {
             // u2 module_name_index;
             index = in.readUnsignedShort();
@@ -107,13 +107,17 @@ public class ModuleData extends MemberData<ClassData>{
             // u2 module_version_index;
             versionIndex = in.readUnsignedShort();
             version = pool.getString(versionIndex, ind -> null);
-
             builder = new ModuleContent.Builder(index, moduleName, moduleFlags, version);
-
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_header");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_header");
+                if (builder == null) {
+                    return;
+                }
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_header");
+            }
         }
-
         try {
             int requires_count = in.readUnsignedShort();
             for (int i = 0; i < requires_count; i++) {
@@ -126,7 +130,11 @@ public class ModuleData extends MemberData<ClassData>{
                 builder.require(index, moduleName, requiresFlags, version);
             }
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_requires");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_requires");
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_requires");
+            }
         }
 
         try {
@@ -150,7 +158,11 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_exports");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_exports");
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_exports");
+            }
         }
 
         try {
@@ -174,7 +186,11 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_opens");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_opens");
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_opens");
+            }
         }
 
         try {
@@ -187,7 +203,11 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_uses");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_uses");
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_uses");
+            }
         }
 
         try {
@@ -206,14 +226,18 @@ public class ModuleData extends MemberData<ClassData>{
                 }
             }
         } catch (IOException ioe) {
-            throw new FormatError(environment.getLogger(), "err.invalid_provides");
+            if (bestEffort) {
+                environment.getLogger().error("err.invalid_provides");
+            } else {
+                throw new FormatError(environment.getLogger(), "err.invalid_provides");
+            }
         }
         moduleContent = builder.build();
     }
 
     /* Print Module Content */
     public void print() {
-        if (moduleContent != null ) {
+        if (moduleContent != null) {
             String s = moduleContent.toString();
             if (!s.isEmpty()) {
                 println(s);

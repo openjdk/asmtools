@@ -24,7 +24,7 @@ package org.openjdk.asmtools.transform;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.ext.CaptureSystemOutput;
+import org.openjdk.asmtools.lib.ext.CaptureSystemOutput;
 import org.openjdk.asmtools.lib.transform.ResultChecker;
 import org.openjdk.asmtools.lib.transform.TransformLoader;
 
@@ -34,9 +34,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.openjdk.asmtools.lib.action.EAsmTools.JDEC;
-import static org.openjdk.asmtools.lib.action.EAsmTools.JDIS;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.*;
+import static org.openjdk.asmtools.lib.action.EAsmTool.JDEC;
+import static org.openjdk.asmtools.lib.action.EAsmTool.JDIS;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.*;
 import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.*;
 
 /**
@@ -59,7 +59,7 @@ class case8302260Tests extends ResultChecker {
     public void setClassLoader() {
         transformLoader = new TransformLoader(case8302260Tests.class.getClassLoader()).
                 setTransformFilter(className -> className.contains("org.openjdk.asmtools.transform.case8302260.")).
-                clearOptions().setDeleteInterimFile(false).setDEBUG(false);
+                clearOptions().setDeleteInterimFile(false);
     }
 
     @Test
@@ -96,6 +96,14 @@ class case8302260Tests extends ResultChecker {
         transformLoader.setTransformRule(CLASS_TO_JCOD_TO_CLASS_LOAD).setToolsOptions(JDEC, "-g");
         commonTestCase(outputCapture, transformLoader);
     }
+
+    @Test
+    @CaptureSystemOutput(value = BOTH, mute = true)
+    void systemOutputCheck_CLASS_TO_JCOD_TO_CLASS_LOAD_DETAILED_TABLE(CaptureSystemOutput.OutputCapture outputCapture) {
+        transformLoader.setTransformRule(CLASS_TO_JCOD_TO_CLASS_LOAD).setToolsOptions(JDEC, "-g", "-table");
+        commonTestCase(outputCapture, transformLoader);
+    }
+
 
     @Test
     @CaptureSystemOutput(value = BOTH, mute = true)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.asmutils.Range;
 import org.openjdk.asmtools.asmutils.StringUtils;
+import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
 
 import java.io.DataInputStream;
@@ -34,11 +35,15 @@ import java.util.function.Function;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.TableFormatModel.Token.CONSTANT_POOL;
 
 /**
  * Class representing the Constant Pool
  */
 public class ConstantPool extends Indenter {
+
+    public static final Function<Integer, String> funcInvalidCPIndex =
+            index -> "??? Invalid constant_pool reference #%d".formatted(index);
 
     private static final Hashtable<Byte, TAG> tagHash = new Hashtable<>();
     private static final Hashtable<Byte, SUBTAG> subTagHash = new Hashtable<>();
@@ -80,7 +85,7 @@ public class ConstantPool extends Indenter {
      * Reference to the class data
      */
     private final ClassData classData;
-    private JdisEnvironment environment;
+    private Environment environment;
 
     /**
      * The actual pool of Constants
@@ -99,6 +104,7 @@ public class ConstantPool extends Indenter {
         super(classData.toolOutput);
         this.classData = classData;
         this.environment = classData.environment;
+        tableToken = CONSTANT_POOL;
         pool = new ArrayList<>(size);
     }
 
@@ -124,7 +130,7 @@ public class ConstantPool extends Indenter {
     /**
      * decodes a ConstantPool and it's constants from a data stream.
      */
-    void read(DataInputStream in) throws IOException {
+    ConstantPool read(DataInputStream in) throws IOException {
         // constant_pool_count
         //The value of the constant_pool_count item is equal to the number of entries in the constant_pool table plus one.
         int constant_pool_count = in.readUnsignedShort();
@@ -138,7 +144,7 @@ public class ConstantPool extends Indenter {
             if (tag == null) {
                 throw new ClassFormatError(
                         format("Error while reading constant pool for %s: unexpected tag at #%d: %d",
-                                environment.getInputFile(), i, tagByte));
+                                environment.getToolInput(), i, tagByte));
             }
             tagSize = tag.size();
             environment.traceln("\tCP entry #" + i + " tag[" + tagByte + "]\t=\t" + tag);
@@ -158,26 +164,21 @@ public class ConstantPool extends Indenter {
                 }
                 case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHODTYPE, CONSTANT_PACKAGE, CONSTANT_MODULE ->
                         pool.add(i, new CPX(tag, in.readUnsignedShort()));
-                case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD, CONSTANT_NAMEANDTYPE, CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD, CONSTANT_NAMEANDTYPE, CONSTANT_DYNAMIC,
+                     CONSTANT_INVOKEDYNAMIC ->
                         pool.add(i, new CPX2(tag, in.readUnsignedShort(), in.readUnsignedShort()));
                 case CONSTANT_METHODHANDLE -> pool.add(i, new CPX2(tag, in.readUnsignedByte(), in.readUnsignedShort()));
                 default -> throw new ClassFormatError("invalid constant type: " + (int) tagByte);
             }
         }
-    }
-
-    /**
-     * bounds-check a CP index.
-     */
-    private boolean inbounds(int cpx) {
-        return !(cpx == 0 || cpx >= pool.size());
+        return this;
     }
 
     /**
      * Public getter - Safely gets a Constant from the CP at a given index.
      */
     public Constant getConst(int cpx) {
-        if (inbounds(cpx)) {
+        if (inRange(cpx)) {
             return pool.get(cpx);
         } else {
             return null;
@@ -187,12 +188,12 @@ public class ConstantPool extends Indenter {
     /**
      * Safely gets the string representation of a ConstantUTF8 from the CP at a given index.
      * <p>
-     * Returns either the Java Module name, or a default ConstantUTF8 built by CP index
+     * Returns either the UTF8 string, or a default ConstantUTF8 built by CP index
      * with the function funcGetDefaultString like: index-> "#" + index
      */
     public String getString(int cpx, Function<Integer, String> funcGetDefaultString) {
         String str = funcGetDefaultString.apply(cpx);
-        if (inbounds(cpx)) {
+        if (inRange(cpx)) {
             Constant cns = pool.get(cpx);
             if (cns != null && cns.tag == TAG.CONSTANT_UTF8) {
                 CP_Str cns1 = (CP_Str) cns;
@@ -210,7 +211,7 @@ public class ConstantPool extends Indenter {
      */
     public String getModuleName(int cpx, Function<Integer, String> funcGetDefaultModuleName) {
         String str = funcGetDefaultModuleName.apply(cpx);
-        if (inbounds(cpx)) {
+        if (inRange(cpx)) {
             Constant cns = pool.get(cpx);
             if (cns != null && cns.tag == TAG.CONSTANT_MODULE) {
                 str = cns.stringVal();
@@ -231,7 +232,7 @@ public class ConstantPool extends Indenter {
      */
     public String getPackageName(int cpx, Function<Integer, String> funcGetDefaultPackageName) {
         String str = funcGetDefaultPackageName.apply(cpx);
-        if (inbounds(cpx)) {
+        if (inRange(cpx)) {
             Constant cns = pool.get(cpx);
             if (cns != null && cns.tag == TAG.CONSTANT_PACKAGE) {
                 str = cns.stringVal();
@@ -266,6 +267,48 @@ public class ConstantPool extends Indenter {
         return getClassName(cpx, index -> "#" + index);
     }
 
+    public String getMethodName(int cpx) {
+        Constant<?> cns = pool.get(cpx);
+        if (cns != null && cns instanceof CPX2 cpx2) {
+            return cpx2.stringVal();
+        } else {
+            return cns.stringVal();
+        }
+    }
+
+    /**
+     * Gets a string representation of the constant_pool entry at the specified index,
+     * pointing to a CONSTANT_NameAndType_info structure with a field descriptor.
+     *
+     * @param cpx the constant_pool index pointing to CONSTANT_NameAndType_info
+     * @return a string presentation of the CONSTANT_NameAndType_info structure
+     */
+    public String getFieldNameTypeAsString(int cpx) {
+        Constant<?> cns = pool.get(cpx);
+        if (cns == null || (cns.tag != TAG.CONSTANT_NAMEANDTYPE) || referredBy(cpx, TAG.CONSTANT_METHOD,
+                TAG.CONSTANT_INTERFACEMETHOD, TAG.CONSTANT_METHODHANDLE, TAG.CONSTANT_DYNAMIC, TAG.CONSTANT_INVOKEDYNAMIC)) {
+            String msg = environment.getLogger().getResourceString("warn.field.nametype.required", cpx);
+            return (printCPIndex) ? msg : "??? #%d %s".formatted(cpx, msg);
+        }
+        return cns.stringVal();
+    }
+
+    public boolean referredBy(int cpx, TAG... tags) {
+        Optional<Constant> cns = pool.stream().filter(item -> item != null &&
+                item.tag.belongsTo(tags)).filter(c -> ((CPX2) c).value2 == cpx).findFirst();
+        return cns.isPresent();
+    }
+
+    /**
+     * Safely gets a Java class name from a ConstantClass from the CP at a given index.
+     * <p>
+     * Returns either the Java class name, or a message string formatted by cpx: formatString.formatted(cpx)
+     */
+    public String getJavaClassName(int cpx, String formatString) {
+        String str = getClassName(cpx, index -> null);
+        return (str == null) ? formatString.formatted(cpx) : str.replace('/', '.');
+    }
+
     /**
      * Safely gets a Java class name from a ConstantClass from the CP at a given index.
      * <p>
@@ -273,15 +316,22 @@ public class ConstantPool extends Indenter {
      * with the function funcGetDefaultClassName like: index-> "#" + index
      */
     public String getClassName(int cpx, Function<Integer, String> funcGetDefaultClassName) {
-        String res = funcGetDefaultClassName.apply(cpx);
-        if (cpx == 0 || !inbounds(cpx)) {
-            return res;
+        Constant cns = getConstantOfClassName(cpx);
+        if (cns == null) {
+            return funcGetDefaultClassName.apply(cpx);
+        }
+        return getClassName((CPX) cns);
+    }
+
+    public Constant getConstantOfClassName(int cpx) {
+        if (!inRange(cpx)) {
+            return null;
         }
         Constant cns = pool.get(cpx);
         if (cns == null || cns.tag != TAG.CONSTANT_CLASS) {
-            return res;
+            return null;
         }
-        return getClassName((CPX) cns);
+        return cns;
     }
 
     /**
@@ -309,19 +359,19 @@ public class ConstantPool extends Indenter {
      */
     private String _getClassName(int nameIndex) {
         String res = "#" + nameIndex;
-        if (!inbounds(nameIndex)) {
+        if (!inRange(nameIndex)) {
             return res;
         }
-        Constant nameconst = pool.get(nameIndex);
-        if (nameconst == null || nameconst.tag != TAG.CONSTANT_UTF8) {
+        Constant nameConst = pool.get(nameIndex);
+        if (nameConst == null || nameConst.tag != TAG.CONSTANT_UTF8) {
             return res;
         }
-        CP_Str name = (CP_Str) nameconst;
+        CP_Str name = (CP_Str) nameConst;
 
         String classname = name.value;
 
         if (Utils.isClassArrayDescriptor(classname)) {
-            classname = "\"" + classname + "\"";
+            classname = "\"%s\"".formatted(classname);
         }
         return classname;
     }
@@ -384,26 +434,23 @@ public class ConstantPool extends Indenter {
      * Safely gets the string value of any Constant at any CP index.
      */
     public String StringValue(int cpx) {
-        if (cpx == 0) {
-            return "#0";
-        }
-        if (!inbounds(cpx)) {
-            return "<Incorrect CP index:" + cpx + ">";
+        if (!inRange(cpx)) {
+            return "<invalid constant pool index: %d>".formatted(cpx);
         }
         Constant cnst = pool.get(cpx);
         if (cnst == null) {
-            return "<NULL>";
+            return "<null>";
         }
         return cnst.stringVal();
     }
 
     /**
      * Safely gets the string value of any Constant at any CP index. This string is either
-     * a Constant's String value, or a CP index reference string. The Constant string has
+     * a Constant's String value or a CP index reference string. The Constant string has
      * a tag descriptor in the beginning.
      */
     public String ConstantStrValue(int cpx) {
-        if (cpx == 0 || !inbounds(cpx)) {
+        if (cpx == 0 || !inRange(cpx)) {
             return "#" + cpx;
         }
         Constant cns = pool.get(cpx);
@@ -418,42 +465,93 @@ public class ConstantPool extends Indenter {
         return cns.tag.tagName + " " + StringValue(cpx);
     }
 
-    /**
-     * prints the entire constant pool.
-     */
-    public void print() throws IOException {
+    @Override
+    public boolean isTableOutput() {
+        return tableFormat;
+    }
+
+    @Override
+    protected void jasmPrint() {
         int size;
-        int nSpaces = pool.size() > 100 ? 4 : 3;
-        int tagPadding = getTagPadding();
+        if (extraDetailedOutput && !skipComments) {
+            printIndentLn("// %s:".formatted(tableToken.printKey()));
+        }
         for (int idx = 1; idx < pool.size(); idx += size) {
             Constant cns = pool.get(idx);
-            printIndent("const %s = ", PadRight("#" + idx, nSpaces));
+            printIndent(this.CPXPlaceHolder, idx);
             if (cns == null) {
                 size = 0;
-                println("null;");
+                printIndentLn("null;");
             } else {
                 size = cns.size();
                 cns.setCommentPadding(getCommentPadding());
-                cns.print(toolOutput, tagPadding);
+                // simple printing
+                cns.jasmPrint(toolOutput, this.tagPadding);
+
             }
         }
         printIndentLn();
     }
 
-    private int getTagPadding() {
-        return pool.stream().mapToInt(elem -> (elem == null) ? 4 : elem.tag.tagName().length()).max().orElse(10) + 1;
-    }
-
-    private int getCommentPadding() {
-        return max(COMMENT_PADDING, getTagPadding());
-    }
-
     @Override
-    public int getCommentOffset() {
+    protected void tablePrint() {
+        int size;
+        if (extraDetailedOutput && !skipComments) {
+            printIndentLn("// %s:".formatted(tableToken.printKey()));
+        }
+        for (int idx = 1; idx < pool.size(); idx += size) {
+            Constant cns = pool.get(idx);
+            printIndent(this.CPXPlaceHolder, idx);
+            if (cns == null) {
+                size = 0;
+                printIndentLn("null;");
+            } else {
+                size = cns.size();
+                cns.setCommentPadding(getCommentPadding());
+                // extended printing
+                cns.tablePrint(toolOutput, this.tagPadding);
+            }
+        }
+        printIndentLn();
+    }
+
+    private String CPXPlaceHolder = "";
+    private int CPXPlaceHolderLength = 0;
+    private int CPXLength = 0;
+    private int tagPadding = 0;
+
+    /**
+     * Initialize printing data once the pool was read.
+     * Prepare offsets, paddings, etc. needed for printing
+     */
+    protected ConstantPool InitializePrintData() {
+        int maxTagNameLength = pool.stream().mapToInt(elem -> (elem == null) ? 4 :
+                elem.tag.getPrintWidth(tableFormat)).max().orElse(10);
+        this.CPXLength = pool.size() > 100 ? 4 : 3;
+        // similar to javap format like this:
+        // Constant pool:
+        //    #1 = Methodref          #2.#3         // java/lang/Object."<init>":()V
+        //    #2 = Class              #4            // java/lang/Object
+        // if (javap-like format) ::
+        // int maxTagAliasLength = pool.stream().mapToInt(elem -> (elem == null) ? 4 :
+        //      elem.tag.tagAlias().length()).max().orElse(10);
+        //      this.tagPadding = maxTagAliasLength + 1;
+        //      this.CPXPlaceHolder = "%" + CPXLength + "s = ".formatted("#%d");
+        this.tagPadding = maxTagNameLength + 1;
+        this.CPXPlaceHolder = "const #%-" + CPXLength + "d = ";
+        this.CPXPlaceHolderLength = this.CPXPlaceHolder.formatted(pool.size()).length();
         // --const #XX = --TagPadding-|--commentPadding---//
         // --const #25 = class--------|#34;---------------// TesterInfo$Priority
+        // --#XX       =
+        // IIhhhhhhhhhhhhTTTTTTTTTTTTTCCCCCCCCCCCCCCCCCCCC
         // 123456789012345678901234567890123 4567890123456789012
-        return getIndentSize() + max(String.valueOf(pool.size()).length(), 2) + 10 + getTagPadding() + getCommentPadding();
+        //     II              + hhhhhhhhhhhhhhhhhhhhhhhh  + TTTTTTTTTT + CCCCCCCCCCCCCCCCCCC
+        this.commentOffset = getIndentSize() + this.CPXPlaceHolderLength + tagPadding + this.getCommentPadding();
+        return this;
+    }
+
+    public int getCommentPadding() {
+        return max(COMMENT_PADDING, tagPadding);
     }
 
     public List<IOException> getIssues() {
@@ -462,6 +560,27 @@ public class ConstantPool extends Indenter {
                 toList();
     }
 
+    public CPX2 getCPX2(TAG tag) {
+        return new CPX2(tag);
+    }
+
+    public boolean CheckEntryType(int cpIndex, TAG... tags) {
+        Constant cell = getConst(cpIndex);
+        if (cell != null) {
+            return cell.tag.belongsTo(tags);
+        }
+        return false;
+    }
+
+    public TAG getTag(int cpIndex) {
+        Constant cell = getConst(cpIndex);
+        if (cell != null) {
+            return cell.tag;
+        }
+        return null;
+    }
+
+
     /**
      * TAG - A Tag descriptor of constants in the constant pool
      */
@@ -469,15 +588,15 @@ public class ConstantPool extends Indenter {
         CONSTANT_NULL((byte) 0, "null", "CONSTANT_NULL", 1),
         CONSTANT_UTF8((byte) 1, "Utf8", "CONSTANT_UTF8", 1),
         // Obsolete CONSTANT_UNICODE((byte) 2, "unicode", "CONSTANT_UNICODE", 1),
-        CONSTANT_INTEGER((byte) 3, "int", "CONSTANT_INTEGER", 1),
-        CONSTANT_FLOAT((byte) 4, "float", "CONSTANT_FLOAT", 1),
-        CONSTANT_LONG((byte) 5, "long", "CONSTANT_LONG", 2),
-        CONSTANT_DOUBLE((byte) 6, "double", "CONSTANT_DOUBLE", 2),
-        CONSTANT_CLASS((byte) 7, "class", "CONSTANT_CLASS", 1),
+        CONSTANT_INTEGER((byte) 3, "int", "Integer", "CONSTANT_INTEGER", 1),
+        CONSTANT_FLOAT((byte) 4, "float", "Float", "CONSTANT_FLOAT", 1),
+        CONSTANT_LONG((byte) 5, "long", "Long", "CONSTANT_LONG", 2),
+        CONSTANT_DOUBLE((byte) 6, "double", "Double", "CONSTANT_DOUBLE", 2),
+        CONSTANT_CLASS((byte) 7, "class", "Class", "CONSTANT_CLASS", 1),
         CONSTANT_STRING((byte) 8, "String", "CONSTANT_STRING", 1),
-        CONSTANT_FIELD((byte) 9, "Field", "CONSTANT_FIELD", 1),
-        CONSTANT_METHOD((byte) 10, "Method", "CONSTANT_METHOD", 1),
-        CONSTANT_INTERFACEMETHOD((byte) 11, "InterfaceMethod", "CONSTANT_INTERFACEMETHOD", 1),
+        CONSTANT_FIELD((byte) 9, "Field", "Fieldref", "CONSTANT_FIELD", 1),
+        CONSTANT_METHOD((byte) 10, "Method", "Methodref", "CONSTANT_METHOD", 1),
+        CONSTANT_INTERFACEMETHOD((byte) 11, "InterfaceMethod", "InterfaceMethodref", "CONSTANT_INTERFACEMETHOD", 1),
         CONSTANT_NAMEANDTYPE((byte) 12, "NameAndType", "CONSTANT_NAMEANDTYPE", 1),
         CONSTANT_METHODHANDLE((byte) 15, "MethodHandle", "CONSTANT_METHODHANDLE", 1),
         CONSTANT_METHODTYPE((byte) 16, "MethodType", "CONSTANT_METHODTYPE", 1),
@@ -488,14 +607,40 @@ public class ConstantPool extends Indenter {
 
         private final Byte value;
         private final String tagName;
+        private final String tagAlias;
         private final String printValue;
         private final int size;
 
         TAG(byte value, String tagName, String printValue, int size) {
             this.value = value;
             this.tagName = tagName;
+            this.tagAlias = "";
             this.printValue = printValue;
             this.size = size;
+        }
+
+        TAG(byte value, String tagName, String tagAlias, String printValue, int size) {
+            this.value = value;
+            this.tagName = tagName;
+            this.tagAlias = tagAlias;
+            this.printValue = printValue;
+            this.size = size;
+        }
+
+        public String printValue() {
+            String[] strings = this.name().split("_");
+            return strings[0] + "_" +
+                    strings[1].substring(0, 1).toUpperCase() +
+                    strings[1].substring(1).toLowerCase();
+        }
+
+        public boolean belongsTo(TAG... tags) {
+            for (TAG tag : tags) {
+                if (this.value.equals(tag.value)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public byte value() {
@@ -504,6 +649,15 @@ public class ConstantPool extends Indenter {
 
         public String tagName() {
             return tagName;
+        }
+
+        public int getPrintWidth(boolean tableFormat) {
+            String str = tableFormat ? this.tagAlias() : this.tagName;
+            return str.length();
+        }
+
+        public String tagAlias() {
+            return tagAlias.isEmpty() ? tagName : tagAlias;
         }
 
         public int size() {
@@ -570,8 +724,12 @@ public class ConstantPool extends Indenter {
             this.value = value;
         }
 
-        public void print(ToolOutput out, int spacePadding) {
+        public void jasmPrint(ToolOutput out, int spacePadding) {
             out.prints(PadRight(tag.tagName(), spacePadding));
+        }
+
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            out.prints(PadRight(tag.tagAlias(), spacePadding));
         }
 
         public int size() {
@@ -591,7 +749,7 @@ public class ConstantPool extends Indenter {
         }
 
         public String stringVal() {
-            return "";
+            return String.valueOf(value);
         }
 
         @Override
@@ -612,7 +770,7 @@ public class ConstantPool extends Indenter {
 
         @Override
         public String toString() {
-            return "<CONSTANT " + tag.toString() + " " + stringVal() + ">";
+            return "<CONSTANT %s %s>".formatted(tag, stringVal());
         }
     }
 
@@ -625,14 +783,21 @@ public class ConstantPool extends Indenter {
             super(tag, value);
         }
 
-        @Override
         public String stringVal() {
             return StringUtils.Utf8ToString(value, "\"");
         }
 
+
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            out.printlns(stringVal() + ";");
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            // out.printlns(StringUtils.Utf8ToString(value));
             out.printlns(stringVal() + ";");
         }
     }
@@ -652,8 +817,15 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            out.printlns(stringVal() + ";");
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            // out.printlns(stringVal());
             out.printlns(stringVal() + ";");
         }
     }
@@ -673,9 +845,17 @@ public class ConstantPool extends Indenter {
             return classData.printHEX ? HexUtils.toHex(value) + 'l' : value.toString() + 'l';
         }
 
+
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            out.printlns(stringVal() + ";");
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            // out.printlns(stringVal());
             out.printlns(stringVal() + ";");
         }
 
@@ -707,9 +887,17 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
             out.printlns(stringVal() + ";");
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            // out.printlns(stringVal());
+            out.printlns(stringVal() + ";");
+
         }
     }
 
@@ -736,8 +924,15 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            out.printlns(stringVal() + ";");
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            // out.printlns(stringVal());
             out.printlns(stringVal() + ";");
         }
 
@@ -748,7 +943,7 @@ public class ConstantPool extends Indenter {
     }
 
     /**
-     * CPX- Constant entries that contain a single constant-pool index. Usually, this includes:
+     * CPX - Constant entries that contain a single constant-pool index. Usually, this includes:
      * CONSTANT_CLASS CONSTANT_METHODTYPE CONSTANT_STRING CONSTANT_MODULE CONSTANT_PACKAGE
      */
     class CPX extends Constant<Integer> {
@@ -772,20 +967,32 @@ public class ConstantPool extends Indenter {
         }
 
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            print();
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            print();
+        }
+
+        // Identical printing part for both JASM (simple) and extended (table) formats.
+        private void print() {
             switch (tag) {
                 case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_METHODTYPE, CONSTANT_PACKAGE, CONSTANT_MODULE -> {
                     if (skipComments) {
                         println("#" + value + ";");
                     } else {
-                        printPadRight("#" + value + ";", commentPadding).println("// " + stringVal());
+                        printPadRight("#" + value + ";", commentPadding).println(" // " + stringVal());
                     }
                 }
                 default -> {
                 }
             }
         }
+
     }
 
     /**
@@ -793,7 +1000,7 @@ public class ConstantPool extends Indenter {
      * CONSTANT_FIELD CONSTANT_METHOD CONSTANT_INTERFACEMETHOD CONSTANT_NAMEANDTYPE
      * CONSTANT_METHODHANDLE CONSTANT_DYNAMIC CONSTANT_INVOKEDYNAMIC
      */
-    class CPX2 extends Constant<Integer> {
+    public class CPX2 extends Constant<Integer> {
 
         protected final int value2;
 
@@ -803,6 +1010,11 @@ public class ConstantPool extends Indenter {
         CPX2(TAG tag, int cpx1, int cpx2) {
             super(tag, cpx1);
             this.value2 = cpx2;
+        }
+
+        CPX2(TAG tag) {
+            super(tag, 0);
+            this.value2 = 0;
         }
 
         @Override
@@ -857,74 +1069,112 @@ public class ConstantPool extends Indenter {
                         return "<Invalid bootstrap method index:" + bsmAttributeIndex + ">";
                     }
                     int bsm_ref = bsmData.bsmRef;
-                    str = StringValue(bsm_ref) + ":" + StringValue(nameTypeIndex) + bsmArgsAsString(bsmData);
+                    str = "%s:%s%s".formatted(StringValue(bsm_ref),
+                            StringValue(nameTypeIndex),
+                            bsmArgsAsString(bsmData, "{", "}"));
                 default:
                     break;
             }
             return str;
         }
 
-        private String bsmArgsAsString(BootstrapMethodData bsmData) {
+        public String bsmArgsAsString(BootstrapMethodData bsmData) {
+            return bsmArgsAsString(bsmData, "", "");
+        }
+
+        public String bsmArgsAsString(BootstrapMethodData bsmData, String LeftBracket, String RightBracket) {
             StringBuilder sb = new StringBuilder();
             int bsmArgsLen = bsmData.bsmArguments.size();
             if (bsmArgsLen > 0) {
-                sb.append("{");
+                sb.append(LeftBracket);
                 for (int i = 0; i < bsmArgsLen; i++) {
-                    int bsm_arg_idx = bsmData.bsmArguments.get(i);
-                    Constant cnt = pool.get(bsm_arg_idx);
-                    if (stack.search(this) == -1) {
-                        stack.push(this);
-                        sb.append(ConstantStrValue(bsm_arg_idx)).append((i + 1 < bsmArgsLen) ? ARGUMENT_DELIMITER : "");
-                        stack.pop();
-                    } else {
-                        String ref;
-                        if (cnt instanceof CPX2) {
-                            ref = format("%-8s %d:#%d; ", cnt.tag.tagName(), cnt.value, ((CPX2) cnt).value2);
-                        } else {
-                            ref = format("%-8s #%d; ", cnt.tag.tagName(), cnt.value);
-                        }
-                        String msg = "circular reference to " + cnt.tag.tagName() + " #" + bsm_arg_idx;
-                        if (printCPIndex) {
-                            sb.append(ref).append("<").append(msg).append(">").
-                                    append((i + 1 < bsmArgsLen) ? ARGUMENT_DELIMITER : "");
-                        } else {
-                            sb.append(ref).append(" // <").append(msg).append(">").
-                                    append((i + 1 < bsmArgsLen) ? LINE_SPLITTER : "");
-                        }
-                        cnt.setIssue(new IOException(msg));
-                    }
+                    int bsmArgIdx = bsmData.bsmArguments.get(i);
+                    boolean notLastIdx = i != bsmArgsLen - 1;
+                    sb.append(bsmArgAsString(bsmArgIdx, notLastIdx));
                 }
-                sb.append("}");
+                sb.append(RightBracket);
             }
             return sb.toString();
         }
 
+        public String bsmArgAsString(int bsmArgIdx, boolean notLastIdx) {
+            return bsmArgAsString(bsmArgIdx, notLastIdx ? ARGUMENT_DELIMITER : "", notLastIdx ? LINE_SPLITTER : "");
+        }
+
+        public String bsmArgWithoutDelimitersAsString(int bsmArgIdx, boolean notLastIdx) {
+            return bsmArgAsString(bsmArgIdx, "", notLastIdx ? LINE_SPLITTER : "");
+        }
+
+
+        public String bsmArgAsString(int bsmArgIdx, String argDelimiter, String lineSplitter) {
+            String str = "";
+            if (inRange(bsmArgIdx)) {
+                Constant cnt = pool.get(bsmArgIdx);
+                if (stack.search(this) == -1) {
+                    stack.push(this);
+                    str = str.concat(ConstantStrValue(bsmArgIdx)).concat(argDelimiter);
+                    stack.pop();
+                } else {
+                    String ref;
+                    if (cnt instanceof CPX2) {
+                        ref = format("%-8s %d:#%d; ", cnt.tag.tagName(), cnt.value, ((CPX2) cnt).value2);
+                    } else {
+                        ref = format("%-8s #%d; ", cnt.tag.tagName(), cnt.value);
+                    }
+                    String msg = "circular reference to " + cnt.tag.tagName() + " #" + bsmArgIdx;
+                    if (printCPIndex) {
+                        str = str.concat(PadRight(ref, CIRCULAR_COMMENT_OFFSET)).concat("<").concat(msg).concat(">").concat(argDelimiter);
+                    } else {
+                        str = str.concat(PadRight(ref, CIRCULAR_COMMENT_OFFSET)).concat(" // <").concat(msg).concat(">").concat(lineSplitter);
+                    }
+                    cnt.setIssue(new IOException(msg));
+                }
+            } else {
+                str = environment.getInfo("info.corrupted_cp_entry");
+            }
+            return str;
+        }
+
         @Override
-        public void print(ToolOutput out, int spacePadding) {
-            super.print(out, spacePadding);
+        public void jasmPrint(ToolOutput out, int spacePadding) {
+            super.jasmPrint(out, spacePadding);
+            print();
+        }
+
+        @Override
+        public void tablePrint(ToolOutput out, int spacePadding) {
+            super.tablePrint(out, spacePadding);
+            print();
+        }
+
+        // Identical printing part for both JASM (simple) and extended (table) formats.
+        private void print() {
             if (skipComments) {
                 switch (tag) {
-                    case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD -> println("#%d.#%d;", value, value2);
-                    case CONSTANT_METHODHANDLE, CONSTANT_NAMEANDTYPE, CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
-                            println("#%d:#%d;", value, value2);
+                    case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD ->
+                            println("#%d.#%d;", value, value2);
+                    case CONSTANT_METHODHANDLE, CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
+                            println("%d:#%d;", value, value2);
+                    case CONSTANT_NAMEANDTYPE -> println("#%d:#%d;", value, value2);
                     default ->
-                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// unknown tag: " + tag.tagName);
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println(" // unknown tag: " + tag.tagName);
                 }
             } else {
                 switch (tag) {
                     case CONSTANT_FIELD, CONSTANT_METHOD, CONSTANT_INTERFACEMETHOD ->
-                            printPadRight(format("#%d.#%d;", value, value2), commentPadding).println("// " + stringVal());
+                            printPadRight(format("#%d.#%d;", value, value2), commentPadding).println(" // " + stringVal());
                     case CONSTANT_METHODHANDLE ->
-                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println(" // " + stringVal());
                     case CONSTANT_NAMEANDTYPE ->
-                            printPadRight(format("#%d:#%d;", value, value2), commentPadding).println("// " + stringVal());
+                            printPadRight(format("#%d:#%d;", value, value2), commentPadding).println(" // " + stringVal());
                     case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
-                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// #%d:%s", value, StringValue(value2));
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println(" // #%d:%s", value, StringValue(value2));
                     default ->
-                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println("// unknown tag: " + tag.tagName);
+                            printPadRight(format("%d:#%d;", value, value2), commentPadding).println(" // unknown tag: " + tag.tagName);
                 }
             }
         }
+
 
         public boolean refersClassMember() {
             return tag == TAG.CONSTANT_FIELD || tag == TAG.CONSTANT_METHOD || tag == TAG.CONSTANT_INTERFACEMETHOD;

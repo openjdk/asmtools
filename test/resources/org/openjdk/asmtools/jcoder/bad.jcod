@@ -1,0 +1,69 @@
+class negative/bad {
+  0xCAFEBA;                                // -- 0xCAFEBABE
+  3;                                       // minor version
+  45;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Class #12;                             // #1
+    Class #6;                              // #2
+    Method #1 #4;                          // #3
+    NameAndType #14 #15;                   // #4
+    Utf8 "ConstantValue";                  // #5
+    Utf8 "negative/bad";                   // #6
+    Utf8 "Exceptions";                     // #7
+    Utf8 "LineNumberTable";                // #8
+    Utf8 "SourceFile";                     // #9
+    Utf8 "LocalVariables";                 // #10
+    Utf8 "Code";                           // #11
+    Utf8 "java/lang/Object";               // #12
+    Utf8 "attr003.jcod";                   // #13
+    Utf8 "<init>";                         // #14
+    Utf8 "()V";                            // #15
+  }
+
+  0x0001;                                  // access
+  #2;                                      // this_cpx
+  #1;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #14;                                 // name_index
+      #15;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#11) {                        // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x03 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+        ;
+        Attr(#11) {                        // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x03 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+  }                                        // end of Attributes
+}

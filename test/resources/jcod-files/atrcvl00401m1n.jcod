@@ -1,0 +1,51 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00401m1/atrcvl00401m1n {
+  0xCAFEBABE;
+  0;                                       // minor version
+  67;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Class #2;                              // #1
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00401m1/atrcvl00401m1n";  // #2
+    Class #4;                              // #3
+    Utf8 "java/lang/Object";               // #4
+    Utf8 "get_i1";                         // #5
+    Utf8 "()I";                            // #6
+    Utf8 "get_i2";                         // #7
+    Utf8 "SourceFile";                     // #8
+    Utf8 "atrcvl00401m1n.java";            // #9
+  }
+
+  0x0600;                                  // access
+  #1;                                      // this_cpx
+  #3;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0401;                              // access
+      #5;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0401;                              // access
+      #7;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#8) {                             // SourceFile
+      #9;
+    }                                      // end of SourceFile
+  }                                        // end of Attributes
+}

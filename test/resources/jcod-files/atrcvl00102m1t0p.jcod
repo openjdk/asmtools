@@ -1,0 +1,89 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl001/atrcvl00102m1t/atrcvl00102m1t0p {
+  0xCAFEBABE;
+  0;                                       // minor version
+  50;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Class #22;                             // #1
+    Method #9 #5;                          // #2
+    Field #18 #8;                          // #3
+    Method #1 #5;                          // #4
+    NameAndType #20 #16;                   // #5
+    Utf8 "Code";                           // #6
+    Utf8 "ConstantValue";                  // #7
+    NameAndType #12 #19;                   // #8
+    Class #21;                             // #9
+    Utf8 "StackMapTable";                  // #10
+    Utf8 "Exceptions";                     // #11
+    Utf8 "ifi";                            // #12
+    Utf8 "atrcvl00102m1t0p.jasm";          // #13
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl001/atrcvl00102m1t/atrcvl00102m1t0p";  // #14
+    Integer 0x00030D40;                    // #15
+    Utf8 "()V";                            // #16
+    Utf8 "SourceFile";                     // #17
+    Class #14;                             // #18
+    Utf8 "I";                              // #19
+    Utf8 "<init>";                         // #20
+    Utf8 "java/lang/Object";               // #21
+    Utf8 "java/lang/Exception";            // #22
+  }
+
+  0x0001;                                  // access
+  #18;                                     // this_cpx
+  #9;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+    {                                      // field
+      0x0000;                              // access
+      #12;                                 // name_index
+      #19;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#7) {                         // ConstantValue
+          #15;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #20;                                 // name_index
+      #16;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#11) {                        // Exceptions
+          [] {                             // Exceptions
+            #1;
+          }
+        }                                  // end of Exceptions
+        ;
+        Attr(#6) {                         // Code
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x02 0x2A 0xB4 0x00 0x03 0x99 0x00 0x0B 0xBB;
+            0x00 0x01 0x59 0xB7 0x00 0x04 0xBF 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#10) {                    // StackMapTable
+              [] {                         // 
+                255b, 19, []{O,#18}, []{};  // full_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#17) {                            // SourceFile
+      #13;
+    }                                      // end of SourceFile
+  }                                        // end of Attributes
+}

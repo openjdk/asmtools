@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,12 +59,13 @@ public class ByteOutput extends NamedToolOutput {
     }
 
     @Override
-    public void finishClass(String fqn) throws IOException {
-        if (!getCurrentClassName().equals(fqn)) {
-            throw new RuntimeException("Ended different class - " + fqn + " - then started - " + super.fqn);
+    public void finishClass(String fullyQualifiedName) throws IOException {
+        if (!getCurrentClassName().equals(fullyQualifiedName)) {
+            throw new RuntimeException("Ended different class: %s then was started %s".
+                    formatted(fullyQualifiedName, super.fullyQualifiedName));
         }
-        outputs.add(new NamedBinary(fqn, currentClass.toByteArray()));
-        super.fqn = null;
+        outputs.add(new NamedBinary(fullyQualifiedName, currentClass.toByteArray()));
+        super.fullyQualifiedName = null;
         currentClass = null;
 
     }
@@ -95,6 +96,11 @@ public class ByteOutput extends NamedToolOutput {
     @Override
     public void flush() {
 
+    }
+
+    @Override
+    public String getName() {
+        return "byte stream";
     }
 
     public class NamedBinary {

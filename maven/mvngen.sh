@@ -35,13 +35,11 @@ PRODUCT_VERSION=$(readProperty "PRODUCT_VERSION")
 PRODUCT_MILESTONE=$(readProperty "PRODUCT_MILESTONE")
 PRODUCT_BUILDNUMBER=$(readProperty "PRODUCT_BUILDNUMBER")
 PRODUCT_NAME_LONG=$(readProperty "PRODUCT_NAME_LONG")
-TARGET=$(readProperty "javac.target.version" "$BUILD_INFO")
-SOURCE=$(readProperty "javac.source.version" "$BUILD_INFO")
+RELEASE=$(readProperty "javac.release.version" "$BUILD_INFO")
 
 echo "Generating $SCRIPT_DIR/pom.xml for $PRODUCT_NAME $PRODUCT_VERSION $PRODUCT_MILESTONE $PRODUCT_BUILDNUMBER ($PRODUCT_NAME_LONG)"
 cat "$SCRIPT_DIR/pom.xml.in" | \
-sed "s/\[TARGET\]/$TARGET/g" | \
-sed "s/\[SOURCE\]/$SOURCE/g" | \
+sed "s/\[RELEASE\]/$RELEASE/g" | \
 sed "s/\[PRODUCT_NAME\]/$PRODUCT_NAME/g" | \
 sed "s/\[PRODUCT_VERSION\]/$PRODUCT_VERSION/g" | \
 sed "s/\[PRODUCT_MILESTONE\]/$PRODUCT_MILESTONE/g" | \

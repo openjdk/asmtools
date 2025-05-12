@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023,2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,16 +26,18 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.openjdk.asmtools.lib.LogAndBinResults;
-import org.openjdk.asmtools.lib.LogAndTextResults;
-import org.openjdk.asmtools.lib.action.CompileAction;
-import org.openjdk.asmtools.lib.action.GenerateAction;
+import org.openjdk.asmtools.lib.action.EToolArguments;
+import org.openjdk.asmtools.lib.action.Jasm;
+import org.openjdk.asmtools.lib.action.Jdis;
+import org.openjdk.asmtools.lib.log.LogAndBinResults;
+import org.openjdk.asmtools.lib.log.LogAndTextResults;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This is the test for the issue CODETOOLS-7903031 (https://bugs.openjdk.org/browse/CODETOOLS-7903031)
@@ -47,8 +49,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TransformationTest {
 
     private final String[] jasmFiles = new String[]{"module-info.class.g.jasm", "module-info.class.jasm"};
-    private CompileAction compiler;
-    private GenerateAction generator;
 
     @BeforeAll
     public void init() throws IOException {
@@ -57,23 +57,29 @@ public class TransformationTest {
             File resourceDir = new File(this.getClass().getResource(fileName).getFile()).getParentFile();
             jasmFiles[i] = resourceDir + File.separator + fileName;
         }
-        compiler = new CompileAction();
-        generator = new GenerateAction();
     }
 
     @Test
     public void moduleInfoTest() {
         for (int i = 0; i < jasmFiles.length; i++) {
-            //jasm to class
-            LogAndBinResults binResult = compiler.getJasmResult(List.of(jasmFiles[i]));
-            // class to jasm
-            LogAndTextResults textResult = generator.setToolArgs("-g").getJdisResult(binResult.getAsByteInput());
-            // Check that it is a module-info.jasm with removed spaces, tabs and new lines
-            String jasmOutput = textResult.getResultAsString(s -> s.replaceAll("[ \t\n]*", ""));
-            assertThat(jasmOutput, Matchers.allOf(Matchers.startsWith("module#6/*java.base*/version65:0"),
-                    Matchers.matchesRegex(".*const#.*=class#.*;..module-info.*"),
-                    Matchers.matchesRegex(".*exports#.*java.util.spi..;.*"),
-                    Matchers.matchesRegex(".*provides#.*java.util.random.RandomGenerator..with.*")));
+            try {
+                //jasm to class
+                LogAndBinResults binResult = new Jasm().compile(List.of(jasmFiles[i]));
+                // class to jasm
+                LogAndTextResults textResult = new Jdis().setArgs(EToolArguments.JDIS_G).decode(binResult.getAsByteInput());
+
+                // Check that it is a module-info.jasm with removed spaces, tabs and new lines
+                String jasmOutput = textResult.getResultAsString(s -> s.replaceAll("[ \t\n]*", ""));
+                assertThat(jasmOutput, Matchers.allOf(
+                        Matchers.startsWith("module#6/*java.base*/version65"),
+                        Matchers.matchesRegex(".*const#100.*"),
+                        Matchers.matchesRegex(".*const.*[Cc]lass.*"),
+                        Matchers.matchesRegex(".*const.*Package.*"),
+                        Matchers.matchesRegex(".*uses.*java.text.spi.DateFormatSymbolsProvider.*"),
+                        Matchers.matchesRegex(".*provides.*java.nio.file.spi.FileSystemProvider.*")));
+            } catch (Exception ex) {
+                fail("Unexpected exception: " + ex);
+            }
         }
     }
 }

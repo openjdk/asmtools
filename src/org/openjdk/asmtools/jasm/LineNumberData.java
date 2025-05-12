@@ -37,9 +37,10 @@ import java.io.IOException;
  */
 class LineNumberData implements DataWriter {
 
-    int start_pc, line_number;
+    int start_pc;
+    long line_number;
 
-    public LineNumberData(int start_pc, int line_number) {
+    public LineNumberData(int start_pc, long line_number) {
         this.start_pc = start_pc;
         this.line_number = line_number;
     }
@@ -52,6 +53,6 @@ class LineNumberData implements DataWriter {
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
         out.writeShort(start_pc);
-        out.writeShort(line_number);
+        out.writeShort((int)line_number);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,8 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
+import static org.openjdk.asmtools.Main.*;
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.common.outputs.FSOutput.FSDestination.DIR;
 import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
@@ -119,6 +121,7 @@ public class Main extends JcoderTool {
         environment.usage(List.of(
                 "info.usage",
                 "info.opt.d",
+                "info.opt.w",
                 "info.opt.nowrite",
                 "info.opt.ignore",
                 "info.opt.fixcv",
@@ -129,20 +132,15 @@ public class Main extends JcoderTool {
         ));
     }
 
-    // Run jcoder compiler with args
-    public synchronized boolean compile(String... argv) {
-        parseArgs(argv);
-        return this.compile() == OK;
-    }
-
     // Run jcoder compiler when args already parsed
+    @Override
     public synchronized int compile() {
         macros.put("VERSION", "3;45");
         // compile all input files
         int rc = OK;
         try {
             for (ToolInput inputFileName : fileList) {
-                environment.setInputFile(inputFileName);
+                environment.setToolInput(inputFileName);
                 Jcoder parser = new Jcoder(environment, macros);
                 parser.parseFile();
                 if (noWriteFlag || (environment.getErrorCount() > 0 && !ignoreFlag)) {
@@ -175,9 +173,15 @@ public class Main extends JcoderTool {
                         setVerboseFlag(true);
                         setTraceFlag(true);
                     }
-                    case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
-                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
-                            environment.setOutputs(new DualOutputStreamOutput());
+                    case DIR_SWITCH -> {
+                        setFSDestination(DIR, ++i, argv);
+                    }
+                    case WRITE_SWITCH -> {                              // -w
+                        environment.setIgnorePackage(true);
+                        setFSDestination(DIR, ++i, argv);
+                    }
+                    case DUAL_LOG_SWITCH -> environment.setOutputs(new DualOutputStreamOutput());
+                    // TODO: restore using macro's
                     case "-m" -> {
                         if ((i + 1) >= argv.length) {
                             environment.error("err.m_requires_macro");
@@ -199,7 +203,7 @@ public class Main extends JcoderTool {
                     }
                     case "-nowrite" -> noWriteFlag = true;
                     case "-ignore" -> ignoreFlag = true;
-                    case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
+                    case VERSION_SWITCH -> {
                         environment.println(FULL_VERSION);
                         System.exit(OK);
                     }
@@ -207,7 +211,7 @@ public class Main extends JcoderTool {
                         usage();
                         System.exit((OK));
                     }
-                    case org.openjdk.asmtools.Main.STDIN_SWITCH -> {
+                    case STDIN_SWITCH -> {
                         addStdIn();
                     }
                     // overrides cf version even if it's defined in the source file.
@@ -229,12 +233,12 @@ public class Main extends JcoderTool {
                                 }
                                 Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versionsThreshold[0]),
                                         Integer.parseInt(versionsThreshold[1]));
-                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                     throw new NumberFormatException();
                                 }
                                 environment.cfv.setThreshold(versionsPair.first, versionsPair.second);
                                 versionsPair = new Pair<>(Integer.parseInt(versionsUpdate[0]), Integer.parseInt(versionsUpdate[1]));
-                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                     throw new NumberFormatException();
                                 }
                                 environment.cfv.setVersion(versionsPair.first, versionsPair.second).setByParameter(true).setFrozen(true);
@@ -242,7 +246,7 @@ public class Main extends JcoderTool {
                                 String[] versions = cfvArg.split("[.:]+", 2);
                                 if (versions.length == 2) {
                                     Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versions[0]), Integer.parseInt(versions[1]));
-                                    if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                    if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                         throw new NumberFormatException();
                                     }
                                     environment.cfv.setVersion(Integer.parseInt(versions[0]), Integer.parseInt(versions[1])).
@@ -252,7 +256,7 @@ public class Main extends JcoderTool {
                                 }
                             }
                         } catch (PatternSyntaxException | NumberFormatException exception) {
-                                environment.error("err.invalid_threshold_major_minor_param");
+                            environment.error("err.invalid_threshold_major_minor_param");
                             usage();
                             throw new IllegalArgumentException();
                         }

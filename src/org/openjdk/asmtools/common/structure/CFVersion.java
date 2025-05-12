@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,6 +22,8 @@
  */
 package org.openjdk.asmtools.common.structure;
 
+import static org.openjdk.asmtools.common.structure.ClassFileContext.VALUE_OBJECTS;
+
 /*
  * Class File Version
  */
@@ -36,6 +38,9 @@ public class CFVersion {
     public static final int UNDEFINED_VERSION = -1;
     /* The version of a class file since which the compact format of stack map is necessary */
     public static final int SPLIT_VERIFIER_CFV = 50;
+    // Vlahalla: Value Classes and Objects
+    public static final int VALUE_OBJECTS_MAJOR_VERSION = 69;
+    public static final int VALUE_OBJECTS_MINOR_VERSION = 65535;
 
     private int major_version;
     private int minor_version;
@@ -49,18 +54,27 @@ public class CFVersion {
     private boolean isSetByParameter;
 
     public CFVersion() {
-        frozen = false;
-        isSetByParameter = false;
-        major_version = UNDEFINED_VERSION;
-        minor_version = UNDEFINED_VERSION;
+        setVersion(UNDEFINED_VERSION, UNDEFINED_VERSION);
         threshold_major_version = UNDEFINED_VERSION;
         threshold_minor_version = UNDEFINED_VERSION;
+        isSetByParameter = false;
+        frozen = false;
+    }
+
+    public CFVersion(CFVersion other) {
+        this.setVersion(other.major_version, other.minor_version);
+        threshold_major_version = other.threshold_major_version;
+        threshold_minor_version = other.threshold_minor_version;
+        this.isSetByParameter = other.isSetByParameter;
+        this.frozen = other.frozen;
     }
 
     public CFVersion(int major_version, int minor_version) {
-        frozen = false;
         this.major_version = major_version;
         this.minor_version = minor_version;
+        if (isValueObjectContext()) {
+            EModifier.setGlobalContext(VALUE_OBJECTS);
+        }
     }
 
     public CFVersion setFrozen(boolean frozen) {
@@ -77,6 +91,9 @@ public class CFVersion {
     public CFVersion setVersion(int major_version, int minor_version) {
         this.major_version = major_version;
         this.minor_version = minor_version;
+        if (isValueObjectContext()) {
+            EModifier.setGlobalContext(VALUE_OBJECTS);
+        }
         return this;
     }
 
@@ -91,20 +108,21 @@ public class CFVersion {
                 return this;
             }
         }
-        this.major_version = major_version;
-        this.minor_version = minor_version;
-        return this;
+        return setVersion(major_version, minor_version);
     }
 
 
     public CFVersion setMajorVersion(int major_version) {
-        if (!frozen)
-            this.major_version = major_version;
+        if (!frozen) {
+            setVersion(major_version, this.minor_version);
+        }
         return this;
     }
 
     public CFVersion setMinorVersion(int minor_version) {
-        if (!frozen) this.minor_version = minor_version;
+        if (!frozen) {
+            setVersion(this.major_version, minor_version);
+        }
         return this;
     }
 
@@ -150,33 +168,47 @@ public class CFVersion {
     }
 
     public CFVersion initModuleDefaultVersion() {
-        major_version = (major_version == UNDEFINED_VERSION) ? DEFAULT_MODULE_MAJOR_VERSION : major_version;
-        minor_version = (minor_version == UNDEFINED_VERSION) ? DEFAULT_MODULE_MINOR_VERSION : minor_version;
+        if (!isSet()) {
+            setVersion(DEFAULT_MODULE_MAJOR_VERSION, DEFAULT_MODULE_MINOR_VERSION);
+        }
         return this;
     }
 
     public CFVersion initClassDefaultVersion() {
-        major_version = (major_version == UNDEFINED_VERSION) ? DEFAULT_MAJOR_VERSION : major_version;
-        minor_version = (minor_version == UNDEFINED_VERSION) ? DEFAULT_MINOR_VERSION : minor_version;
+        if (!isSet()) {
+            if (EModifier.GlobalContext() == VALUE_OBJECTS) {
+                setVersion(VALUE_OBJECTS_MAJOR_VERSION, VALUE_OBJECTS_MINOR_VERSION);
+            } else {
+                setVersion(DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION);
+            }
+        }
         return this;
     }
 
     public static CFVersion copyOf(CFVersion cfv) {
-        CFVersion cfVersion = new CFVersion();
-        cfVersion.major_version = cfv.major_version;
-        cfVersion.minor_version = cfv.minor_version;
-        cfVersion.threshold_major_version = cfv.threshold_major_version;
-        cfVersion.threshold_minor_version = cfv.threshold_minor_version;
-        cfVersion.isSetByParameter = cfv.isSetByParameter;
-        cfVersion.frozen = cfv.frozen;
+        CFVersion cfVersion = new CFVersion(cfv);
         return cfVersion;
     }
 
     public int minor_version() {
-            return this.minor_version;
+        return this.minor_version;
     }
 
     public int major_version() {
         return this.major_version;
+    }
+
+    public boolean isValueObjectContext() {
+        return major_version > VALUE_OBJECTS_MAJOR_VERSION ||
+                (major_version == VALUE_OBJECTS_MAJOR_VERSION && minor_version == VALUE_OBJECTS_MINOR_VERSION);
+    }
+
+    public static boolean isValueObjectContext(int major_version, int minor_version) {
+        return major_version > VALUE_OBJECTS_MAJOR_VERSION ||
+                (major_version == VALUE_OBJECTS_MAJOR_VERSION && minor_version == VALUE_OBJECTS_MINOR_VERSION);
+    }
+
+    public static CFVersion ValueObjectsVersion() {
+        return new CFVersion(VALUE_OBJECTS_MAJOR_VERSION, VALUE_OBJECTS_MINOR_VERSION);
     }
 }

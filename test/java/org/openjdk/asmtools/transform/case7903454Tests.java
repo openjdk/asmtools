@@ -22,16 +22,17 @@
  */
 package org.openjdk.asmtools.transform;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.ext.CaptureSystemOutput;
+import org.openjdk.asmtools.lib.ext.CaptureSystemOutput;
 import org.openjdk.asmtools.lib.transform.ResultChecker;
 import org.openjdk.asmtools.lib.transform.TransformLoader;
 
-import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.ERROR;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.OUTPUT;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.ERROR;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.OUTPUT;
 import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.JASM_TO_CLASS_LOAD;
 import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.JCOD_TO_CLASS_LOAD;
 
@@ -54,7 +55,12 @@ public class case7903454Tests extends ResultChecker {
     @Test
     @CaptureSystemOutput(value = OUTPUT, mute = true)
     void systemOutputCheck_JCOD_TO_CLASS_LOAD_Positive(CaptureSystemOutput.OutputCapture outputCapture) {
-        outputCapture.expect(matchesPattern("(?s).*test 4.*A.*"));
+        outputCapture.useStringTransformer(s -> s.replaceAll("[ \t\n]*", "")).
+                expect(Matchers.allOf(
+                        containsString("test4"),
+                        matchesPattern(".*A.BC.D.E..FGH.*"),
+                        matchesPattern(".*test4.*test4.*")
+                ));
         transformLoader.setTransformRule(JCOD_TO_CLASS_LOAD);
         try {
             Class<?> cl = transformLoader.loadClass("org.openjdk.asmtools.transform.case7903454.TestRunner", true);
@@ -70,7 +76,12 @@ public class case7903454Tests extends ResultChecker {
     @Test
     @CaptureSystemOutput(value = OUTPUT, mute = true)
     void systemOutputCheck_JASM_TO_CLASS_LOAD_Positive(CaptureSystemOutput.OutputCapture outputCapture) {
-        outputCapture.expect(matchesPattern("(?s).*test 4.*A.*"));
+        outputCapture.useStringTransformer(s -> s.replaceAll("[ \t\n]*", "")).
+                expect(Matchers.allOf(
+                        containsString("test4"),
+                        matchesPattern(".*A.BC.D.E..FGH.*"),
+                        matchesPattern(".*test4.*test4.*")
+                        ));
         transformLoader.setTransformRule(JASM_TO_CLASS_LOAD);
         try {
             Class<?> cl = transformLoader.loadClass("org.openjdk.asmtools.transform.case7903454.TestRunner", true);

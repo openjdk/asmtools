@@ -1,0 +1,520 @@
+class org/openjdk/asmtools/attribute/StackMapTable/data/StackMapData {
+  0xCAFEBABE;
+  0;                                       // minor version
+  69;                                      // version
+  [149] {                                  // Constant Pool
+    ;                                      // first element is empty
+    Method #2 #3;                          // #1     at 0x0A
+    Class #4;                              // #2     at 0x0F
+    NameAndType #5 #6;                     // #3     at 0x12
+    Utf8 "java/lang/Object";               // #4     at 0x17
+    Utf8 "<init>";                         // #5     at 0x2A
+    Utf8 "()V";                            // #6     at 0x33
+    String #8;                             // #7     at 0x39
+    Utf8 "string";                         // #8     at 0x3C
+    Field #10 #11;                         // #9     at 0x45
+    Class #12;                             // #10     at 0x4A
+    NameAndType #13 #14;                   // #11     at 0x4D
+    Utf8 "org/openjdk/asmtools/attribute/StackMapTable/data/StackMapData";  // #12     at 0x52
+    Utf8 "fldS";                           // #13     at 0x93
+    Utf8 "Ljava/lang/String;";             // #14     at 0x9A
+    Field #10 #16;                         // #15     at 0xAF
+    NameAndType #17 #14;                   // #16     at 0xB4
+    Utf8 "fldFS";                          // #17     at 0xB9
+    Method #2 #19;                         // #18     at 0xC1
+    NameAndType #20 #21;                   // #19     at 0xC6
+    Utf8 "toString";                       // #20     at 0xCB
+    Utf8 "()Ljava/lang/String;";           // #21     at 0xD6
+    Class #23;                             // #22     at 0xED
+    Utf8 "java/lang/ArithmeticException";  // #23     at 0xF0
+    Field #25 #26;                         // #24     at 0x0110
+    Class #27;                             // #25     at 0x0115
+    NameAndType #28 #29;                   // #26     at 0x0118
+    Utf8 "java/lang/System";               // #27     at 0x011D
+    Utf8 "out";                            // #28     at 0x0130
+    Utf8 "Ljava/io/PrintStream;";          // #29     at 0x0136
+    String #31;                            // #30     at 0x014E
+    Utf8 "frame";                          // #31     at 0x0151
+    Method #33 #34;                        // #32     at 0x0159
+    Class #35;                             // #33     at 0x015E
+    NameAndType #36 #37;                   // #34     at 0x0161
+    Utf8 "java/io/PrintStream";            // #35     at 0x0166
+    Utf8 "println";                        // #36     at 0x017C
+    Utf8 "(Ljava/lang/String;)V";          // #37     at 0x0186
+    Float 0x42C80000;                      // #38     at 0x019E
+    Method #40 #41;                        // #39     at 0x01A3
+    Class #42;                             // #40     at 0x01A8
+    NameAndType #43 #44;                   // #41     at 0x01AB
+    Utf8 "java/lang/Math";                 // #42     at 0x01B0
+    Utf8 "round";                          // #43     at 0x01C1
+    Utf8 "(F)I";                           // #44     at 0x01C9
+    InvokeDynamic 0s #46;                  // #45     at 0x01D0
+    NameAndType #47 #48;                   // #46     at 0x01D5
+    Utf8 "makeConcatWithConstants";        // #47     at 0x01DA
+    Utf8 "(I)Ljava/lang/String;";          // #48     at 0x01F4
+    Float 0x4048F5C3;                      // #49     at 0x020C
+    InvokeDynamic 1s #46;                  // #50     at 0x0211
+    Float 0x41200000;                      // #51     at 0x0216
+    Float 0x42DC0000;                      // #52     at 0x021B
+    Double 0x4059000000000000;;            // #53     at 0x0220
+    Method #40 #56;                        // #55     at 0x0229
+    NameAndType #43 #57;                   // #56     at 0x022E
+    Utf8 "(D)J";                           // #57     at 0x0233
+    InvokeDynamic 2s #59;                  // #58     at 0x023A
+    NameAndType #47 #60;                   // #59     at 0x023F
+    Utf8 "(J)Ljava/lang/String;";          // #60     at 0x0244
+    Double 0x4058FF5C28F5C28F;;            // #61     at 0x025C
+    InvokeDynamic 3s #64;                  // #63     at 0x0265
+    NameAndType #47 #65;                   // #64     at 0x026A
+    Utf8 "(D)Ljava/lang/String;";          // #65     at 0x026F
+    String #67;                            // #66     at 0x0287
+    Utf8 "chop_frame";                     // #67     at 0x028A
+    String #69;                            // #68     at 0x0297
+    Utf8 "_frame_";                        // #69     at 0x029A
+    Method #33 #71;                        // #70     at 0x02A4
+    NameAndType #36 #72;                   // #71     at 0x02A9
+    Utf8 "(D)V";                           // #72     at 0x02AE
+    String #74;                            // #73     at 0x02B5
+    Utf8 "n_frame";                        // #74     at 0x02B8
+    InvokeDynamic 4s #76;                  // #75     at 0x02C2
+    NameAndType #47 #77;                   // #76     at 0x02C7
+    Utf8 "(Ljava/lang/String;CI)Ljava/lang/String;";  // #77     at 0x02CC
+    Class #79;                             // #78     at 0x02F7
+    Utf8 "java/lang/String";               // #79     at 0x02FA
+    Method #2 #81;                         // #80     at 0x030D
+    NameAndType #82 #83;                   // #81     at 0x0312
+    Utf8 "hashCode";                       // #82     at 0x0317
+    Utf8 "()I";                            // #83     at 0x0322
+    Class #85;                             // #84     at 0x0328
+    Utf8 "java/lang/RuntimeException";     // #85     at 0x032B
+    String #87;                            // #86     at 0x0348
+    Utf8 "Test exception";                 // #87     at 0x034B
+    Method #84 #89;                        // #88     at 0x035C
+    NameAndType #5 #37;                    // #89     at 0x0361
+    String #91;                            // #90     at 0x0366
+    Utf8 "positive";                       // #91     at 0x0369
+    String #93;                            // #92     at 0x0374
+    Utf8 "non-positive";                   // #93     at 0x0377
+    String #95;                            // #94     at 0x0386
+    Utf8 "Computing result";               // #95     at 0x0389
+    Method #10 #3;                         // #96     at 0x039C
+    Method #10 #98;                        // #97     at 0x03A1
+    NameAndType #99 #100;                  // #98     at 0x03A6
+    Utf8 "generateFrames";                 // #99     at 0x03AB
+    Utf8 "(I)V";                           // #100     at 0x03BC
+    String #102;                           // #101     at 0x03C3
+    Utf8 "test";                           // #102     at 0x03C6
+    Method #10 #104;                       // #103     at 0x03CD
+    NameAndType #105 #106;                 // #104     at 0x03D2
+    Utf8 "complexMethod";                  // #105     at 0x03D7
+    Utf8 "(ILjava/lang/Object;)I";         // #106     at 0x03E7
+    Method #10 #108;                       // #107     at 0x0400
+    NameAndType #109 #110;                 // #108     at 0x0405
+    Utf8 "generateFullFrame";              // #109     at 0x040A
+    Utf8 "(I)I";                           // #110     at 0x041E
+    Field #10 #112;                        // #111     at 0x0425
+    NameAndType #113 #114;                 // #112     at 0x042A
+    Utf8 "fldL";                           // #113     at 0x042F
+    Utf8 "J";                              // #114     at 0x0436
+    Utf8 "fldI";                           // #115     at 0x043A
+    Utf8 "I";                              // #116     at 0x0441
+    Utf8 "ConstantValue";                  // #117     at 0x0445
+    Integer 0x00000000;                    // #118     at 0x0455
+    Utf8 "Code";                           // #119     at 0x045A
+    Utf8 "StackMapTable";                  // #120     at 0x0461
+    Class #122;                            // #121     at 0x0471
+    Utf8 "java/lang/Throwable";            // #122     at 0x0474
+    Utf8 "main";                           // #123     at 0x048A
+    Utf8 "([Ljava/lang/String;)V";         // #124     at 0x0491
+    Utf8 "<clinit>";                       // #125     at 0x04AA
+    Utf8 "BootstrapMethods";               // #126     at 0x04B5
+    String #128;                           // #127     at 0x04C8
+    Utf8 "item_frame\u0001";               // #128     at 0x04CB
+    String #130;                           // #129     at 0x04D9
+    Utf8 "item_frame_\u0001";              // #130     at 0x04DC
+    String #132;                           // #131     at 0x04EB
+    Utf8 "_frame: \u0001";                 // #132     at 0x04EE
+    String #134;                           // #133     at 0x04FA
+    Utf8 "Before chop_frame: \u0001";      // #134     at 0x04FD
+    String #136;                           // #135     at 0x0514
+    Utf8 "\u0001: \u0001\u0001";           // #136     at 0x0517
+    MethodHandle 6b #138;                  // #137     at 0x051F
+    Method #139 #140;                      // #138     at 0x0523
+    Class #141;                            // #139     at 0x0528
+    NameAndType #47 #142;                  // #140     at 0x052B
+    Utf8 "java/lang/invoke/StringConcatFactory";  // #141     at 0x0530
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";  // #142     at 0x0557
+    Utf8 "InnerClasses";                   // #143     at 0x05F2
+    Class #145;                            // #144     at 0x0601
+    Utf8 "java/lang/invoke/MethodHandles$Lookup";  // #145     at 0x0604
+    Class #147;                            // #146     at 0x062C
+    Utf8 "java/lang/invoke/MethodHandles";  // #147     at 0x062F
+    Utf8 "Lookup";                         // #148     at 0x0650
+  }                                        // end of Constant Pool
+
+  0x0021;                                  // access [ ACC_PUBLIC, ACC_SUPER  ]
+  #10;                                     // this_cpx
+  #2;                                      // super_cpx
+
+  [0] {                                    // Interfaces
+  }                                        // end of Interfaces
+
+  [4] {                                    // Fields
+    {                                      // field at 0x0663
+      0x0018;                              // access
+      #115;                                // name_index       : fldI
+      #116;                                // descriptor_index : I
+      [1] {                                // Attributes
+        Attr(#117, 2) {                    // ConstantValue at 0x066B
+          #118;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field at 0x0673
+      0x0008;                              // access
+      #113;                                // name_index       : fldL
+      #114;                                // descriptor_index : J
+      [0] {                                // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field at 0x067B
+      0x0004;                              // access
+      #13;                                 // name_index       : fldS
+      #14;                                 // descriptor_index : Ljava/lang/String;
+      [0] {                                // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field at 0x0683
+      0x0011;                              // access
+      #17;                                 // name_index       : fldFS
+      #14;                                 // descriptor_index : Ljava/lang/String;
+      [1] {                                // Attributes
+        Attr(#117, 2) {                    // ConstantValue at 0x068B
+          #7;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+  }                                        // end of Fields
+
+  [6] {                                    // Methods
+    {                                      // method at 0x0695
+      0x0001;                              // access
+      #5;                                  // name_index       : <init>
+      #6;                                  // descriptor_index : ()V
+      [1] {                                // Attributes
+        Attr(#119, 29) {                   // Code at 0x069D
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[17]{
+            0x2A 0xB7 0x00 0x01 0x2A 0x12 0x07 0xB5 0x00 0x09 0x2A 0x12;
+            0x07 0xB5 0x00 0x0F 0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [0] {                            // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x06C0
+      0x0001;                              // access
+      #99;                                 // name_index       : generateFrames
+      #100;                                // descriptor_index : (I)V
+      [1] {                                // Attributes
+        Attr(#119, 724) {                  // Code at 0x06C8
+          5;                               // max_stack
+          10;                              // max_locals
+          Bytes[513]{
+            0x03 0x3D 0x01 0x4E 0x04 0x1C 0x6C 0x3D 0x2D 0xB6 0x00 0x12;
+            0x57 0xA7 0x00 0x1F 0x3A 0x04 0xBB 0x00 0x02 0x59 0xB7 0x00;
+            0x01 0x4E 0x2D 0xB6 0x00 0x12 0x57 0xA7 0x00 0x0D 0x3A 0x05;
+            0x2D 0xB6 0x00 0x12 0x57 0x19 0x05 0xBF 0x1C 0x9A 0x00 0x05;
+            0x01 0x4E 0x1C 0xAB 0x00 0x00 0x00 0x24 0x00 0x00 0x00 0x02;
+            0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x19 0x00 0x00 0x00 0x02;
+            0x00 0x00 0x00 0x24 0xBB 0x00 0x02 0x59 0xB7 0x00 0x01 0x4E;
+            0xA7 0x00 0x03 0x1B 0x9A 0x00 0x0B 0xB2 0x00 0x18 0x12 0x1E;
+            0xB6 0x00 0x20 0x1B 0x04 0xA0 0x00 0x1A 0x10 0x2A 0x36 0x04;
+            0xB2 0x00 0x18 0x15 0x04 0x12 0x26 0xB8 0x00 0x27 0x68 0xBA;
+            0x00 0x2D 0x00 0x00 0xB6 0x00 0x20 0x1B 0x05 0xA0 0x00 0x37;
+            0x03 0x36 0x04 0x03 0x36 0x05 0x15 0x05 0x11 0x0B 0xB8 0xA2;
+            0x00 0x1C 0x12 0x31 0x38 0x06 0x15 0x04 0x17 0x06 0x12 0x26;
+            0xB8 0x00 0x27 0x86 0x6A 0x8B 0x60 0x36 0x04 0x84 0x05 0x01;
+            0xA7 0xFF 0xE2 0xB2 0x00 0x18 0x15 0x04 0xBA 0x00 0x32 0x00;
+            0x00 0xB6 0x00 0x20 0x12 0x33 0xB8 0x00 0x27 0x36 0x04 0x1B;
+            0x06 0xA0 0x00 0x27 0x12 0x34 0xB8 0x00 0x27 0x36 0x05 0x14;
+            0x00 0x35 0xB8 0x00 0x37 0x37 0x06 0xB2 0x00 0x18 0x15 0x05;
+            0x85 0x16 0x06 0x61 0x15 0x04 0x85 0x69 0xBA 0x00 0x3A 0x00;
+            0x00 0xB6 0x00 0x20 0x1B 0x07 0xA0 0x00 0x27 0x10 0x32 0x15;
+            0x04 0x68 0x36 0x05 0x14 0x00 0x3D 0x15 0x04 0x87 0x6B 0x39;
+            0x06 0xB2 0x00 0x18 0x15 0x05 0x87 0x18 0x06 0x63 0xBA 0x00;
+            0x3F 0x00 0x00 0xB6 0x00 0x20 0xA7 0x00 0x0B 0xB2 0x00 0x18;
+            0x12 0x42 0xB6 0x00 0x20 0x1B 0x08 0xA0 0x00 0x60 0x03 0x36;
+            0x05 0x03 0x36 0x06 0x15 0x06 0x11 0x09 0xC4 0xA2 0x00 0x1D;
+            0x12 0x31 0x38 0x07 0x15 0x05 0x17 0x07 0x15 0x06 0x86 0xB8;
+            0x00 0x27 0x86 0x6A 0x8B 0x60 0x36 0x05 0x84 0x06 0x01 0xA7;
+            0xFF 0xE1 0x15 0x05 0x10 0x64 0xA4 0x00 0x0E 0xB2 0x00 0x18;
+            0x12 0x44 0xB6 0x00 0x20 0xA7 0x00 0x26 0x15 0x05 0x10 0x32;
+            0xA2 0x00 0x1F 0x10 0x32 0x15 0x04 0x68 0x36 0x06 0x14 0x00;
+            0x3D 0x15 0x04 0x87 0x6B 0x39 0x07 0xB2 0x00 0x18 0x15 0x06;
+            0x87 0x18 0x07 0x63 0xB6 0x00 0x46 0x1B 0x10 0x06 0xA0 0x00;
+            0x20 0x12 0x49 0x3A 0x05 0x10 0x46 0x36 0x06 0x10 0x64 0x36;
+            0x07 0xB2 0x00 0x18 0x19 0x05 0x15 0x06 0x15 0x07 0xBA 0x00;
+            0x4B 0x00 0x00 0xB6 0x00 0x20 0x03 0x36 0x05 0x01 0x3A 0x06;
+            0x04 0x15 0x05 0x6C 0x36 0x05 0x19 0x06 0xB6 0x00 0x12 0x57;
+            0xA7 0x00 0x22 0x3A 0x07 0xBB 0x00 0x02 0x59 0xB7 0x00 0x01;
+            0x3A 0x06 0x19 0x06 0xB6 0x00 0x12 0x57 0xA7 0x00 0x0E 0x3A;
+            0x09 0x19 0x06 0xB6 0x00 0x12 0x57 0x19 0x09 0xBF 0x15 0x05;
+            0x9A 0x00 0x06 0x01 0x3A 0x06 0x1C 0xAB 0x00 0x00 0x00 0x25;
+            0x00 0x00 0x00 0x02 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x19;
+            0x00 0x00 0x00 0x02 0x00 0x00 0x00 0x25 0xBB 0x00 0x02 0x59;
+            0xB7 0x00 0x01 0x3A 0x06 0xA7 0x00 0x03 0xB1;
+          }
+          [8] {                            // Traps
+               4    8   16  22;            // at 0x08E1
+               4    8   34   0;            // at 0x08E9
+              16   26   34   0;            // at 0x08F1
+              34   36   34   0;            // at 0x08F9
+             420  426  435  22;            // at 0x0901
+             420  426  455   0;            // at 0x0909
+             435  446  455   0;            // at 0x0911
+             455  457  455   0;            // at 0x0919
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#120, 129) {              // StackMapTable at 0x091B
+              [25] {                       // 
+                246b, [2]{#11; #16}, {     // early_larval_frame
+                  255b, 16, [4]{7b,#10; 1b; 1b; 7b,#2}, [1]{7b,#22};  // full_frame
+                };
+                246b, [2]{#11; #16}, {     // early_larval_frame
+                  81b, [1]z{7b,#121};      // same_locals_1_stack_item_frame
+                };
+                246b, [2]{#26; #16}, {     // early_larval_frame
+                  9b;                      // same_frame
+                };
+                5b;                        // same_frame
+                25b;                       // same_frame
+                10b;                       // same_frame
+                11b;                       // same_frame
+                27b;                       // same_frame
+                246b, [0]{}, {             // early_larval_frame
+                  253b, 10, [2]z{1b; 1b};  // append_frame 2
+                };
+                250b, 32;                  // chop_frame 1
+                250b, 12;                  // chop_frame 1
+                252b, 47, [1]z{1b};        // append_frame 1
+                40b;                       // same_frame
+                7b;                        // same_frame
+                253b, 10, [2]z{1b; 1b};    // append_frame 2
+                246b, [0]{}, {             // early_larval_frame
+                  250b, 33;                // chop_frame 1
+                };
+                17b;                       // same_frame
+                250b, 34;                  // chop_frame 1
+                34b;                       // same_frame
+                255b, 20, [7]{7b,#10; 1b; 1b; 7b,#2; 1b; 1b; 7b,#2}, [1]{7b,#22};  // full_frame
+                83b, [1]z{7b,#121};        // same_locals_1_stack_item_frame
+                10b;                       // same_frame
+                7b;                        // same_frame
+                25b;                       // same_frame
+                246b, [4]{#11; #16; #26; #112}, {  // early_larval_frame
+                  11b;                     // same_frame
+                };
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x09A2
+      0x0001;                              // access
+      #105;                                // name_index       : complexMethod
+      #106;                                // descriptor_index : (ILjava/lang/Object;)I
+      [1] {                                // Attributes
+        Attr(#119, 204) {                  // Code at 0x09AA
+          3;                               // max_stack
+          7;                               // max_locals
+          Bytes[123]{
+            0x03 0x3E 0x04 0x36 0x04 0x01 0x3A 0x05 0x1B 0x9E 0x00 0x26;
+            0x1B 0x04 0x60 0x3E 0x2C 0xC1 0x00 0x4E 0x99 0x00 0x13 0x2C;
+            0xC0 0x00 0x4E 0x3A 0x05 0x19 0x05 0xB6 0x00 0x50 0x36 0x04;
+            0x15 0x04 0xAC 0x1D 0x05 0x68 0x36 0x04 0xA7 0x00 0x3C 0x1B;
+            0x02 0xA0 0x00 0x15 0x1B 0x74 0x3E 0x1D 0x06 0x60 0x36 0x04;
+            0xBB 0x00 0x54 0x59 0x12 0x56 0xB7 0x00 0x58 0xBF 0x03 0x36;
+            0x06 0x15 0x06 0x05 0xA2 0x00 0x1C 0x1D 0x15 0x06 0x60 0x3E;
+            0x1D 0x04 0xA4 0x00 0x0C 0x1D 0x15 0x06 0x64 0x36 0x04 0xA7;
+            0x00 0x09 0x84 0x06 0x01 0xA7 0xFF 0xE4 0xA7 0x00 0x0E 0x3A;
+            0x06 0x19 0x06 0x3A 0x05 0x1D 0x08 0x60 0x36 0x04 0x1D 0x15;
+            0x04 0x60 0xAC;
+          }
+          [2] {                            // Traps
+               8   38  107  84;            // at 0x0A3D
+              39  104  107  84;            // at 0x0A45
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#120, 47) {               // StackMapTable at 0x0A47
+              [8] {                        // 
+                254b, 39, [3]z{1b; 1b; 7b,#2};  // append_frame 3
+                7b;                        // same_frame
+                22b;                       // same_frame
+                246b, [4]{#11; #16; #26; #112}, {  // early_larval_frame
+                  252b, 2, [1]z{1b};       // append_frame 1
+                };
+                24b;                       // same_frame
+                250b, 5;                   // chop_frame 1
+                246b, [4]{#11; #16; #26; #112}, {  // early_larval_frame
+                  66b, [1]z{7b,#84};       // same_locals_1_stack_item_frame
+                };
+                10b;                       // same_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0A7C
+      0x0001;                              // access
+      #109;                                // name_index       : generateFullFrame
+      #110;                                // descriptor_index : (I)I
+      [1] {                                // Attributes
+        Attr(#119, 150) {                  // Code at 0x0A84
+          3;                               // max_stack
+          6;                               // max_locals
+          Bytes[72]{
+            0x03 0x3D 0x01 0x4E 0x03 0x36 0x04 0x1B 0x9E 0x00 0x11 0x12;
+            0x5A 0x4E 0x04 0x36 0x04 0x2D 0xB6 0x00 0x50 0x3D 0xA7 0x00;
+            0x11 0x1B 0x05 0x68 0x3D 0xBB 0x00 0x54 0x59 0x12 0x5C 0xB7;
+            0x00 0x58 0xBF 0xA7 0x00 0x0E 0x3A 0x05 0x19 0x05 0x4E 0x03;
+            0x36 0x04 0x1B 0x74 0x3D 0x15 0x04 0x99 0x00 0x07 0x1C 0x04;
+            0x60 0xAC 0xB2 0x00 0x18 0x12 0x5E 0xB6 0x00 0x20 0x1C 0xAC;
+          }
+          [1] {                            // Traps
+               7   39   42  84;            // at 0x0AE4
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#120, 52) {               // StackMapTable at 0x0AE6
+              [5] {                        // 
+                246b, [4]{#11; #16; #26; #112}, {  // early_larval_frame
+                  254b, 25, [3]z{1b; 7b,#2; 1b};  // append_frame 3
+                };
+                246b, [3]{#11; #16; #26}, {  // early_larval_frame
+                  13b;                     // same_frame
+                };
+                246b, [2]{#11; #16}, {     // early_larval_frame
+                  66b, [1]z{7b,#84};       // same_locals_1_stack_item_frame
+                };
+                246b, [1]{#11}, {          // early_larval_frame
+                  10b;                     // same_frame
+                };
+                246b, [0]{}, {             // early_larval_frame
+                  8b;                      // same_frame
+                };
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0B20
+      0x0009;                              // access
+      #123;                                // name_index       : main
+      #124;                                // descriptor_index : ([Ljava/lang/String;)V
+      [1] {                                // Attributes
+        Attr(#119, 76) {                   // Code at 0x0B28
+          3;                               // max_stack
+          3;                               // max_locals
+          Bytes[43]{
+            0xBB 0x00 0x0A 0x59 0xB7 0x00 0x60 0x4C 0x03 0x3D 0x1C 0x10;
+            0x06 0xA3 0x00 0x0E 0x2B 0x1C 0xB6 0x00 0x61 0x84 0x02 0x01;
+            0xA7 0xFF 0xF2 0x2B 0x03 0x12 0x65 0xB6 0x00 0x67 0x57 0x2B;
+            0x10 0x17 0xB6 0x00 0x6B 0x57 0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#120, 15) {               // StackMapTable at 0x0B65
+              [2] {                        // 
+                246b, [0]{}, {             // early_larval_frame
+                  253b, 10, [2]z{7b,#10; 1b};  // append_frame 2
+                };
+                250b, 16;                  // chop_frame 1
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0B7A
+      0x0008;                              // access
+      #125;                                // name_index       : <clinit>
+      #6;                                  // descriptor_index : ()V
+      [1] {                                // Attributes
+        Attr(#119, 17) {                   // Code at 0x0B82
+          2;                               // max_stack
+          0;                               // max_locals
+          Bytes[5]{
+            0x0A 0xB3 0x00 0x6F 0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [0] {                            // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [2] {                                    // Attributes
+    Attr(#126, 32) {                       // BootstrapMethods at 0x0B9B
+      [5] {                                // bootstrap_methods
+        {                                  // bootstrap_method
+          #137;                            // bootstrap_method_ref
+          [1] {                            // bootstrap_arguments
+            #127;                          // at 0x0BA9
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #137;                            // bootstrap_method_ref
+          [1] {                            // bootstrap_arguments
+            #129;                          // at 0x0BAF
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #137;                            // bootstrap_method_ref
+          [1] {                            // bootstrap_arguments
+            #131;                          // at 0x0BB5
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #137;                            // bootstrap_method_ref
+          [1] {                            // bootstrap_arguments
+            #133;                          // at 0x0BBB
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #137;                            // bootstrap_method_ref
+          [1] {                            // bootstrap_arguments
+            #135;                          // at 0x0BC1
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+      }
+    }                                      // end of BootstrapMethods
+    ;
+    Attr(#143, 10) {                       // InnerClasses at 0x0BC1
+      [1] {                                // classes
+         #144  #146  #148  25;             // access [ ACC_PUBLIC, ACC_STATIC, ACC_FINAL  ]
+      }
+    }                                      // end of InnerClasses
+  }                                        // end of Attributes
+}                                          // end of class org/openjdk/asmtools/attribute/StackMapTable/data/StackMapData

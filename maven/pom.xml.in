@@ -8,7 +8,7 @@
 <!-- substituted from build/productinfo.properties -->
     <artifactId>[PRODUCT_NAME]</artifactId>
     <version>[PRODUCT_VERSION].b[PRODUCT_BUILDNUMBER]-[PRODUCT_MILESTONE]</version>
-<!--eg:      7.0.b10-ea-->
+    <!-- eg:9.0.b03-ea -->
     <packaging>jar</packaging>
 
     <name>[PRODUCT_NAME]</name>
@@ -60,8 +60,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>[SOURCE]</source>
-                    <target>[TARGET]</target>
+                     <release>[RELEASE]</release>
                 </configuration>
             </plugin>
             <plugin>

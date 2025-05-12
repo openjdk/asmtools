@@ -31,7 +31,7 @@ public class StringInput extends ByteInput {
     }
 
     @Override
-    public String getFileName() {
+    public String getName() {
         //get parent is used
         return "string/string";
     }

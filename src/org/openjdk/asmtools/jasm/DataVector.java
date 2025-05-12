@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class DataVector<T extends DataWriter> implements Iterable<T> {
 
@@ -49,6 +51,10 @@ public class DataVector<T extends DataWriter> implements Iterable<T> {
 
     public void addAll(List<T> collection) {
         elements.addAll(collection);
+    }
+
+    public Optional<T> findFirst(Predicate<T> filter) {
+        return elements.stream().filter(filter).findFirst();
     }
 
     // full length of the attribute conveyor
@@ -90,4 +96,3 @@ public class DataVector<T extends DataWriter> implements Iterable<T> {
         return elements.get(k);
     }
 }// end class DataVector
-

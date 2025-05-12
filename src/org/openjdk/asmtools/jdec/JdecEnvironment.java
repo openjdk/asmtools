@@ -24,8 +24,8 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import static java.lang.String.format;
 

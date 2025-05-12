@@ -1,8 +1,8 @@
 package org.openjdk.asmtools.jdec;
 
 import org.junit.jupiter.api.Assertions;
-import org.openjdk.asmtools.BruteForceHelper;
-import org.openjdk.asmtools.ThreeStringWriters;
+import org.openjdk.asmtools.lib.helper.BruteForceHelper;
+import org.openjdk.asmtools.lib.helper.ThreeStringWriters;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,4 +72,3 @@ class JdecJcod {
         }
     }
 }
-

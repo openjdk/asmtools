@@ -23,17 +23,18 @@
 package org.openjdk.asmtools.lib.transform;
 
 import org.junit.jupiter.api.Assertions;
-import org.openjdk.asmtools.lib.action.EAsmTools;
-import org.openjdk.asmtools.common.FileUtils;
 import org.openjdk.asmtools.common.inputs.ByteInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
+import org.openjdk.asmtools.lib.action.EAsmTool;
+import org.openjdk.asmtools.lib.utility.FileUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,8 +42,8 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.nio.file.StandardOpenOption.*;
-import static org.openjdk.asmtools.lib.action.EAsmTools.*;
-import static org.openjdk.asmtools.common.FileUtils.findFile;
+import static org.openjdk.asmtools.lib.action.EAsmTool.*;
+import static org.openjdk.asmtools.lib.utility.FileUtils.findFile;
 
 public class TransformLoader extends ClassLoader {
 
@@ -51,16 +52,31 @@ public class TransformLoader extends ClassLoader {
         JASM_TO_CLASS_LOAD,
         JCOD_TO_CLASS_LOAD,
         // 2 rules are tightened by the restriction -
-        // a class, jasm and jacob files are placed in the same directory.
+        // a class, jasm and jcov files are placed in the same directory.
         CLASS_TO_JASM_TO_CLASS_LOAD,
-        CLASS_TO_JCOD_TO_CLASS_LOAD }
+        CLASS_TO_JCOD_TO_CLASS_LOAD
+    }
+
+    private static boolean debug;
 
     static {
         registerAsParallelCapable();
+        // might affect a test result - Must be false once a development is done
+        String str = System.getenv("DEBUG");
+        str = str == null ? "false" : str;
+        debug = List.of("true", "on", "yes").stream().anyMatch(str::equalsIgnoreCase);
     }
 
-    public TransformLoader setToolsOptions(EAsmTools tool, String... options) {
-        if( options != null && options.length > 0 ) {
+    public static void debugOn() {
+        debug = true;
+    }
+
+    public static void debugOff() {
+        debug = false;
+    }
+
+    public TransformLoader setToolsOptions(EAsmTool tool, String... options) {
+        if (options != null && options.length > 0) {
             toolsOptions.putIfAbsent(tool, options);
         }
         return this;
@@ -71,7 +87,7 @@ public class TransformLoader extends ClassLoader {
         return this;
     }
 
-    Map<EAsmTools,String[]> toolsOptions = new HashMap<>();
+    Map<EAsmTool, String[]> toolsOptions = new HashMap<>();
 
     static String MSG_PREFIX = ResultChecker.OUT_LINE_PREFIXES_TO_IGNORE[0];
     private TransformRules transformRule = TransformRules.CLASS_LOAD;
@@ -79,11 +95,8 @@ public class TransformLoader extends ClassLoader {
     // List of class names that should be loaded in a general way without transformation
     private final List<String> excludeList = new ArrayList<>();
 
-    // might affect a test result - Must be false once a development is done
-    private boolean DEBUG = false;
-
     // Directory for dumping "problem" files created while transforming
-    private String    dumpDir;
+    private String dumpDir;
 
     /**
      * Specifies whether to delete an interim jcod/jasm file for rules CLASS_TO_JCOD_TO_CLASS_LOAD,
@@ -113,14 +126,6 @@ public class TransformLoader extends ClassLoader {
 
     public TransformLoader setTransformRule(TransformRules transformRule) {
         this.transformRule = transformRule;
-        return this;
-    }
-
-    public TransformLoader setDEBUG(boolean DEBUG) {
-        this.DEBUG = DEBUG;
-        if( dumpDir == null && DEBUG) {
-            dumpDir = Paths.get("").toAbsolutePath().toString();
-        }
         return this;
     }
 
@@ -158,14 +163,16 @@ public class TransformLoader extends ClassLoader {
                     loadedCode = findLoadedClass(name);
                     if (loadedCode == null) {
                         String fileName = name.replace('.', File.separatorChar);
-                        if(  excludeList.contains(name) ) {
+                        if (excludeList.contains(name)) {
                             loadedCode = loadClassFromClassFile(name, checkFile(fileName + ".class"));
                         } else {
                             loadedCode = switch (transformRule) {
                                 case JCOD_TO_CLASS_LOAD -> loadClassFromResourceJcodFile(name);
                                 case JASM_TO_CLASS_LOAD -> loadClassFromResourceJasmFile(name);
-                                case CLASS_TO_JASM_TO_CLASS_LOAD -> loadClassFromGeneratedJasmFile(name, checkFile(fileName + ".class"));
-                                case CLASS_TO_JCOD_TO_CLASS_LOAD -> loadClassFromGeneratedJcodFile(name, checkFile(fileName + ".class"));
+                                case CLASS_TO_JASM_TO_CLASS_LOAD ->
+                                        loadClassFromGeneratedJasmFile(name, checkFile(fileName + ".class"));
+                                case CLASS_TO_JCOD_TO_CLASS_LOAD ->
+                                        loadClassFromGeneratedJcodFile(name, checkFile(fileName + ".class"));
                                 case CLASS_LOAD -> loadClassFromClassFile(name, checkFile(fileName + ".class"));
                             };
                         }
@@ -192,13 +199,44 @@ public class TransformLoader extends ClassLoader {
         }
     }
 
+    /**
+     * Loads a class from a byte buffer and optionally instantiates it.
+     *
+     * @param name        The name of the class.
+     * @param buffer      The byte buffer containing the class definition.
+     * @param instantiate Whether to instantiate the class.
+     * @param <T>         The type of the class.
+     * @return An Optional containing the class or an instance of the class.
+     */
+    public <T> Optional<T> loadClassFromBuffer(String name, byte[] buffer, boolean instantiate) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        if (name == null || buffer == null) {
+            throw new IllegalArgumentException("Name and buffer must not be null");
+        }
+
+        try {
+            long byteCount = buffer.length;
+            Class<?> clazz = defineClass(name, buffer);
+            println("[Loaded {%s} from buffer ({%d} bytes)]".formatted(name, byteCount));
+
+            if (instantiate) {
+                T instance = (T) clazz.getDeclaredConstructor().newInstance();
+                return Optional.of(instance);
+            } else {
+                return Optional.of((T) clazz);
+            }
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
+            throw e;
+        }
+    }
+
     public TransformLoader setClassDir(String classDir) {
         this.classDir = Paths.get(classDir).toAbsolutePath().toString();
         return this;
     }
 
     public TransformLoader setDumpDir(String dumpDir) {
-        if( DEBUG ) {
+        if (TransformLoader.debug) {
             this.dumpDir = dumpDir;
         }
         return this;
@@ -322,16 +360,20 @@ public class TransformLoader extends ClassLoader {
         long byteCount = buffer.length;
         try {
             c = defineClass(name, buffer, 0, (int) byteCount);
+        } catch (ClassFormatError cfe) {
+            if (TransformLoader.debug)
+                printError("ClassFormatError: " + cfe.getMessage());
+            throw cfe;
         } catch (ClassCircularityError e) {
             printError("ClassCircularityError is caught!");
             throw e;
         } catch (LinkageError e) {
             println("Linkage error during defining class \"" + name + "\": ");
-            printError( e.getClass().getName() + ": " + e.getMessage());
+            printError(e.getClass().getName() + ": " + e.getMessage());
             // dump binaries
-            if( DEBUG ) {
+            if (TransformLoader.debug) {
                 int idx = name.lastIndexOf('.');
-                Path dumpFile = Path.of(dumpDir, name.substring(idx == -1 ? 0 : idx+1) + ".class.dump");
+                Path dumpFile = Path.of(dumpDir, name.substring(idx == -1 ? 0 : idx + 1) + ".class.dump");
                 try {
                     Files.write(dumpFile, buffer, CREATE, WRITE, TRUNCATE_EXISTING);
                 } catch (IOException ex) {
@@ -372,7 +414,7 @@ public class TransformLoader extends ClassLoader {
      * Print error message with the prefix to filter out while analysing System error log
      */
     private void printError(String s) {
-        System.err.println( (DEBUG ? MSG_PREFIX : "") + s);
+        System.err.println((TransformLoader.debug ? MSG_PREFIX : "") + s);
         System.err.flush();
     }
 
@@ -380,7 +422,7 @@ public class TransformLoader extends ClassLoader {
      * Print debug message with the prefix to filter out while analysing System output log
      */
     private void println(String s) {
-        if (DEBUG) {
+        if (TransformLoader.debug) {
             System.out.printf("%s %s: %s%n", MSG_PREFIX, Thread.currentThread().getName(), s);
             System.out.flush();
         }

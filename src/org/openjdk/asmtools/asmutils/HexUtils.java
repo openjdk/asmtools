@@ -40,6 +40,17 @@ public class HexUtils {
         return "0x" + (s.isEmpty() ? "0" : s);
     }
 
+    public static String toHex(byte val) {
+        int width;
+        for (width = 2; width > 0; width--) {
+            if ((val >> (width - 1) * 4) != 0) {
+                break;
+            }
+        }
+        return toHex(val, width);
+    }
+
+
     public static String toHex(long val) {
         int width;
         for (width = 16; width > 0; width--) {

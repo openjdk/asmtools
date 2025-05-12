@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jasm;
 
 
+import java.util.function.Supplier;
 
 /**
  * Base helper class for a Parser.
@@ -59,13 +60,19 @@ public class ParseBase {
     }
 
     protected void traceMethodInfoLn() {
-        traceMethodInfoLn(null);
+        traceMethodInfoLn(() -> null);
     }
 
     protected void traceMethodInfoLn(String str) {
+        traceMethodInfoLn(() -> str);
+    }
+
+    protected void traceMethodInfoLn(Supplier<String> supplier) {
         if (debugFlag) {
+            String str = supplier.get();
             StackTraceElement elem = Thread.currentThread().getStackTrace()[str == null ? 3 : 2];
-            String msg = String.format("%s::%s[%d]%s", elem.getClassName().substring(elem.getClassName().lastIndexOf('.') + 1),
+            String msg = String.format("%s::%s[%d]%s",
+                    elem.getClassName().substring(elem.getClassName().lastIndexOf('.') + 1),
                     elem.getMethodName(), elem.getLineNumber(), str == null ? "" : " " + str);
             environment.traceln(msg);
         }

@@ -24,14 +24,14 @@ package org.openjdk.asmtools.transform;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.ext.CaptureSystemOutput;
+import org.openjdk.asmtools.lib.ext.CaptureSystemOutput;
 import org.openjdk.asmtools.lib.transform.ResultChecker;
 import org.openjdk.asmtools.lib.transform.TransformLoader;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.ERROR;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.OUTPUT;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.ERROR;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.OUTPUT;
 import static org.openjdk.asmtools.lib.transform.TransformLoader.TransformRules.JCOD_TO_CLASS_LOAD;
 
 /**
@@ -74,17 +74,10 @@ public class case7902820Tests extends ResultChecker {
     void systemOutputCheck_JCOD_TO_CLASS_LOAD_Negative(CaptureSystemOutput.OutputCapture errorCapture) {
         transformLoader.setTransformRule(JCOD_TO_CLASS_LOAD);
         errorCapture.expect(
-                containsString("Warning: expected attribute length \"2,147,483,647\" do not match real" +
-                        " length \"6\"; expected length written"));
+                containsString("Warning: Expected attribute length \"2,147,483,647\" does not match the actual length \"6\"; expected length written"));
         errorCapture.expect(
-                containsString("Warning: expected attribute length \"2\" do not match real length \"6\";" +
-                        " expected length written"));
-        errorCapture.expect(
-                containsString("java.lang.ClassFormatError: Extra bytes at the end of class file" +
-                        " org/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionNegative01"));
-        errorCapture.expect(
-                containsString("java.lang.ClassFormatError: Extra bytes at the end of class file" +
-                        " org/openjdk/asmtools/transform/case7902820/data/SourceDebugExtensionNegative02"));
+                containsString("Warning: Expected attribute length \"2\" does not match the actual length \"6\"; expected length written"));
+        errorCapture.expect(containsString("1 warning(s)"));
         try {
             Class<?> cl = transformLoader.
                     loadClass("org.openjdk.asmtools.transform.case7902820.TestRunnerNegative", true);

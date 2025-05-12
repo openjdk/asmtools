@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,21 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.jasm.TableFormatModel;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Formatter;
-import java.util.function.Supplier;
+import java.util.*;
 
-import static org.openjdk.asmtools.jdis.Options.PR.*;
+import static java.lang.System.lineSeparator;
+import static org.openjdk.asmtools.jdis.Options.PrintOption.*;
 
-public class Indenter implements Printable {
+public abstract class Indenter implements Printable {
+    public static final int UNDEFINED = -1;
 
     public static final int INDENT_STEP = 2;
     public static final int INDENT_OFFSET = 2;
-    public static final String INDENT_STRING =  " ";
+    public static final String INDENT_CHAR = " ";
+    public static final String INDENT_STRING = INDENT_CHAR.repeat(INDENT_STEP);
 
     // Global formatting strings
     public static final String ARGUMENT_DELIMITER = "^";
@@ -45,31 +46,109 @@ public class Indenter implements Printable {
     // Global numbers
     public static final int PROGRAM_COUNTER_PLACEHOLDER_LENGTH = 7;
     public static final int INSTR_PREFIX_LENGTH = 7;
-    public static final int STACKMAP_TYPE_PLACEHOLDER_LENGTH = 17;
+    public static final int STACKMAP_TYPE_PLACEHOLDER_LENGTH = 18;
     public static final int OPERAND_PLACEHOLDER_LENGTH = 17;
-    public static final int COMMENT_PADDING = 16;
-    public static final int COMMENT_OFFSET = 0;     // Initial offset that will be dynamically updated
+    public static int TABLE_PADDING = OPERAND_PLACEHOLDER_LENGTH + INSTR_PREFIX_LENGTH + 1;
+    public static final int COMMENT_PADDING = (Options.contains(TABLE)) ? 16 : 20;
+    public static final int INITIAL_COMMENT_OFFSET = 0;     // Initial offset that will be dynamically updated
+
+    public static final int CIRCULAR_COMMENT_OFFSET = 25;
+
+    protected final boolean tableFormat = Options.contains(TABLE);
+    protected final boolean sysInfo = Options.contains(SYSINFO);
+    protected final boolean detailedOutput = Options.contains(DETAILED_Output);
+    protected final boolean extraDetailedOutput = Options.contains(EXTRA_DETAILED_Output);
+    protected final boolean bestEffort = Options.contains(BEST_EFFORT);
+
+    // Discard printing attributes
+    protected final boolean dropSourceFile = Options.contains(DROP_Source);
+    protected final boolean dropClasses = Options.contains(DROP_Classes);
+    protected final boolean dropSignatures = Options.contains(DROP_Signatures);
+    protected final boolean dropCharacterRange = Options.contains(DROP_CharacterRange);
+
+    // Extra printing instruction
+    protected final boolean printLocalVariables = Options.contains(LOCAL_VARIABLE_All, LOCAL_VARIABLE_Vars);
+    protected final boolean printLocalVariableTypes = Options.contains(LOCAL_VARIABLE_All, LOCAL_VARIABLE_Types);
+    protected final boolean printLineNumber = Options.contains(LINE_NUMBER_TABLE_Numbers, LINE_NUMBER_TABLE_Lines, LINE_NUMBER_TABLE_Table, TABLE);
 
     // internal references
-    protected final boolean printCPIndex = Options.contains(CPX);
-    protected final boolean skipComments = Options.contains(NC);
-    protected final boolean printProgramCounter = Options.contains(PC);
-    protected final boolean printLabelAsIdentifiers = Options.contains(LABS) && !printProgramCounter;
-    protected final boolean printConstantPool = Options.contains(CP);
-    protected final boolean printSourceLines = Options.contains(SRC);
-    protected final boolean printLocalVars = Options.contains(VAR);
-    protected final boolean printLineTable = Options.contains(LNT);
+    protected final boolean printCPIndex = Options.contains(CP_INDEX);
+    protected final boolean skipComments = Options.contains(NO_COMMENTS);
+    protected final boolean printProgramCounter = Options.contains(PRINT_BCI);
+    protected final boolean printLabelAsIdentifiers = Options.contains(LABELS) && !printProgramCounter;
+    protected final boolean printConstantPool = Options.contains(CONSTANT_POOL);
+    protected final boolean printSourceLines = Options.contains(LINE_NUMBER_TABLE_Lines);
+    protected final boolean printLineTable = Options.contains(LINE_NUMBER_TABLE_Table);
+    protected final boolean printLineTableLines = Options.contains(LINE_NUMBER_TABLE_Lines);
+    protected final boolean printLineTableNumbers = Options.contains(LINE_NUMBER_TABLE_Numbers);
     protected final boolean printHEX = Options.contains(HEX);
+    //
+    protected boolean printable = true;
+    // indicated that an entity has a size in a collection
+    protected boolean hasSize = false;
+    protected TableFormatModel.Token tableToken = TableFormatModel.Token.NOT_SUPPORTED;
+    //
+    // the maximum size of the same elements in the collection to calculate printing bounds
+    // applies only to entities that implement Measurable interface.
+    protected int maxSize = 0;
+    protected boolean maxSizeCalculated = false;
     //
     protected ToolOutput toolOutput;
     //
-    private int commentOffset = COMMENT_OFFSET;
+    private final String LabelPrefix = printLabelAsIdentifiers ? "L" : "";
+    //
+    protected int commentOffset = INITIAL_COMMENT_OFFSET;
     private int length, offset, step;
     private String fillString;
 
+    /**
+     * If a table format is supported and the tool option TABLE is set, prints an object as a table entry.
+     */
     public void print() throws IOException {
-        throw new RuntimeException("not yet implemented");
+        if (isTableOutput()) {
+            tablePrint();
+        } else {
+            jasmPrint();
+        }
     }
+
+    public boolean isTableOutput() {
+        return this.tableFormatSupported() && tableFormat;
+    }
+
+    @Override
+    public boolean tableFormatSupported() {
+        return tableToken.isExtendedPrintingSupported();
+    }
+
+    protected String getTitle() {
+        throw new NotImplementedException(this.getClass().getName());
+    }
+
+    protected void tablePrint() throws IOException {
+        throw new NotImplementedException(this.getClass().getName());
+    }
+
+    protected void jasmPrint() throws IOException {
+        throw new NotImplementedException(this.getClass().getName());
+    }
+
+    protected void tablePrint(int index, int size) throws IOException {
+        throw new NotImplementedException(this.getClass().getName());
+    }
+
+    protected void jasmPrint(int index, int size) throws IOException {
+        throw new NotImplementedException(this.getClass().getName());
+    }
+
+    public void print(int index, int size) throws IOException {
+        if (isTableOutput()) {
+            tablePrint(index, size);
+        } else {
+            jasmPrint(index, size);
+        }
+    }
+
 
     public Indenter(ToolOutput toolOutput) {
         this();
@@ -80,7 +159,11 @@ public class Indenter implements Printable {
         this.length = 0;
         this.step = INDENT_STEP;
         this.offset = INDENT_OFFSET;
-        this.fillString = INDENT_STRING;
+        this.fillString = INDENT_CHAR;
+    }
+
+    protected String getLabelPrefix() {
+        return LabelPrefix;
     }
 
     public Indenter printIndentLn(String s) {
@@ -108,7 +191,8 @@ public class Indenter implements Printable {
     }
 
     public Indenter printIndent(String s) {
-        toolOutput.prints(Indent(s));
+        String str = Indent(s);
+        toolOutput.prints(str);
         return this;
     }
 
@@ -132,6 +216,11 @@ public class Indenter implements Printable {
         return this;
     }
 
+    public Indenter printIndentPadLeft(String str, int totalWidth) {
+        toolOutput.prints(IndentPadLeft(str, totalWidth));
+        return this;
+    }
+
     public Indenter print(String s) {
         toolOutput.prints(s);
         return this;
@@ -152,13 +241,12 @@ public class Indenter implements Printable {
         return this;
     }
 
-    public Indenter println(Supplier<Boolean> isPrint) {
-        if(isPrint.get()) {
+    public Indenter println(boolean isPrint) {
+        if (isPrint) {
             toolOutput.printlns("");
         }
         return this;
     }
-
 
     public Indenter println(String format, Object... args) {
         toolOutput.printlns(new Formatter().format(format, args).toString());
@@ -166,12 +254,20 @@ public class Indenter implements Printable {
     }
 
     public Indenter incIndent() {
-        length += step;
-        return this;
+        return incIndent(1);
     }
 
     public Indenter decIndent() {
-        length -= step;
+        return decIndent(1);
+    }
+
+    public Indenter incIndent(int count) {
+        length += step * count;
+        return this;
+    }
+
+    public Indenter decIndent(int count) {
+        length -= step * count;
         if (length < 0) {
             length = 0;
         }
@@ -186,15 +282,11 @@ public class Indenter implements Printable {
         return this;
     }
 
-    public Indenter resetIndent() {
-        return initIndent(INDENT_OFFSET);
-    }
-
     public Indenter initIndent(int initialOffset) {
         this.length = 0;
         this.step = INDENT_STEP;
         this.offset = initialOffset;
-        this.fillString = INDENT_STRING;
+        this.fillString = INDENT_CHAR;
         return this;
     }
 
@@ -204,7 +296,7 @@ public class Indenter implements Printable {
 
     public String nCopies(int n) {
         // create a string made up of n copies of string fillString
-        return String.join("", Collections.nCopies(n, this.fillString));
+        return String.join("", Collections.nCopies(n < 0 ? 0 : n, this.fillString));
     }
 
     /**
@@ -313,5 +405,129 @@ public class Indenter implements Printable {
     public Indenter setOffset(int offset) {
         this.offset = offset;
         return this;
+    }
+
+    /**
+     * Calculates offsets for Class's attributes:
+     * <p>
+     * 12AAAAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCC
+     * SourceFile                 #126;             // TestMethods0.java
+     * 12       - Indent
+     * AAA.A   - getPrintAttributeKeyPadding()
+     * CCC.C   - getPrintAttributeCommentPadding()
+     *
+     * @return
+     */
+    protected int getPrintAttributeKeyPadding() {
+        int instructionOffset = (printProgramCounter) ? PROGRAM_COUNTER_PLACEHOLDER_LENGTH : INSTR_PREFIX_LENGTH;
+        int attributeOffset = (printProgramCounter) ? instructionOffset : (instructionOffset - getIndentStep());
+        return instructionOffset + attributeOffset + OPERAND_PLACEHOLDER_LENGTH - getIndentSize() * 2;
+    }
+
+    protected int getPrintAttributeCommentPadding() {
+        return getCommentOffset() - getPrintAttributeKeyPadding();
+    }
+
+    public Indenter setHasSize(boolean hasSize) {
+        this.hasSize = hasSize;
+        return this;
+    }
+
+    protected final static Map<Integer, List<Integer>> InvokeDynamicBreakPositions = Map.of(
+            0, List.of(2, 3),
+            1, List.of(3),
+            2, List.of(3));
+    protected final static Map<Integer, List<Integer>> LdwBreakPositions = Map.of(
+            0, List.of(3),
+            1, List.of(3),
+            2, List.of(3));
+    protected final static Map<Integer, List<Integer>> BootstrapMethodBreakPositions = Map.of(0, List.of(2, 3));
+    protected final static Map<Integer, List<Integer>> BootstrapArgumentsBreakPositions = Map.of(0, List.of(3));
+
+    /**
+     * Formats invokedynamic/ldc dynamic operand line and Bootstrap arguments
+     *
+     * @param str            non-formatted operand line
+     * @param offset         indent for new lines
+     * @param prefix         prefix placed upfront new lines
+     * @param breakPositions numbers where after ":" a lineSeparator is added to wrap a very long operand lines
+     * @return formatted operand line
+     */
+    protected String formatOperandLine(String str, int offset, String prefix, Map<Integer, List<Integer>> breakPositions) {
+        StringTokenizer st = new StringTokenizer(str, ":\"{}\\" + ARGUMENT_DELIMITER + LINE_SPLITTER, true);
+        StringBuilder sb = new StringBuilder(80);
+        boolean processTokens = true;
+        String prevToken = "";
+        int nItems = 0, nLevel = 0;
+        while (st.hasMoreTokens()) {
+            String token = st.nextToken();
+            List<Integer> breaks = breakPositions.getOrDefault(nLevel, Collections.emptyList());
+            switch (token) {
+                case ":":
+                    sb.append(token);
+                    if (processTokens) {
+                        nItems++;
+                        if (breaks.contains(nItems)) {
+                            sb.append(lineSeparator()).append(nCopies(offset)).append(prefix).
+                                    append(nCopies(getIndentStep() * nLevel));
+                        }
+                    }
+                    break;
+                case "}":
+                    if (processTokens) {
+                        nLevel = (nLevel == 0) ? nLevel : nLevel - 1;
+                        nItems = 0;
+                        sb.append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel)).append(token);
+                    } else
+                        sb.append(token);
+                    break;
+                case "{":
+                    if (processTokens) {
+                        nLevel++;
+                        nItems = 0;
+                        sb.append(" {").append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                    } else {
+                        sb.append(token);
+                    }
+                    break;
+                case "\"":
+                    if (!prevToken.equals("\\"))
+                        processTokens = !processTokens;
+                    sb.append(token);
+                    break;
+                case ARGUMENT_DELIMITER:
+                    if (processTokens) {
+                        sb.append(',').append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                        nItems = 0;
+                    } else {
+                        sb.append(ARGUMENT_DELIMITER);
+                    }
+                    break;
+                case LINE_SPLITTER:
+                    if (processTokens) {
+                        sb.append(lineSeparator()).append(nCopies(offset)).
+                                append(prefix).append(nCopies(getIndentStep() * nLevel));
+                    } else {
+                        sb.append(ARGUMENT_DELIMITER);
+                    }
+                    break;
+                default:
+                    sb.append(token);
+                    break;
+            }
+            prevToken = token;
+        }
+        return sb.toString();
+    }
+
+    public static class NotImplementedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        public NotImplementedException(String where) {
+            super("".formatted(where));
+        }
     }
 }

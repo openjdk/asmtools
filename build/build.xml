@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2014, 2022, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2014, 2025, Oracle and/or its affiliates. All rights reserved.
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 
 This code is free software; you can redistribute it and/or modify it
@@ -30,7 +30,7 @@ questions.
     <!--Property & FileSet Definitions					                -->
     <!--****************************************************************-->
     <!-- this order of property files -->
-    <property file="productinfo.properties" />
+    <property file="productinfo.properties"/>
     <property file="build.properties"/>
 
     <property name="proj.build.product.version" value="${PRODUCT_VERSION}"/>
@@ -42,19 +42,21 @@ questions.
     <!-- workspace dirs -->
     <property name="ws.top.dir" location=".."/>
     <property name="ws.src.dir" location="${ws.top.dir}/src"/>
+    <property name="ws.test.dir" location="${ws.top.dir}/test"/>
+    <property name="ws.doc.dir" location="${ws.top.dir}/doc"/>
+    <property name="ws.mvn.dir" location="${ws.top.dir}/maven"/>
     <property name="ws.src.classes.dir" location="${ws.src.dir}"/>
-    <property name="ws.doc.dir" location="${ws.src.dir}/doc"/>
-    <property name="ws.test.dir" location="${ws.src.dir}/test"/>
 
     <!-- Build output area -->
-    <property name="build.base.dir" location="${BUILD_DIR}" />
+    <property name="build.base.dir" location="${BUILD_DIR}"/>
 
     <!-- BuildProduct Area -->
-    <property name="buildprod.dir" location="${BUILD_DIR}" />
+    <property name="buildprod.dir" location="${BUILD_DIR}"/>
     <tstamp>
-        <format  pattern="MM-dd-yyyy_hh-mm-aa" property="touch.time"/>
+        <format pattern="MM-dd-yyyy_hh-mm-aa" property="touch.time"/>
     </tstamp>
-    <property name="buildprod.tmp.dir" location="${java.io.tmpdir}/${proj.build.product.name}-${proj.build.product.version}-build-${touch.time}"/>
+    <property name="buildprod.tmp.dir"
+              location="${java.io.tmpdir}/${proj.build.product.name}-${proj.build.product.version}-build-${touch.time}"/>
 
     <property name="buildprod.image.dir" location="${buildprod.dir}/dist"/>
 
@@ -81,6 +83,9 @@ questions.
     <property name="release.doc.dir" location="${releaseArea.dir}/doc"/>
     <property name="release.src.dir" location="${releaseArea.dir}/src"/>
 
+    <!-- Testing area-->
+    <property name="pom.file" value="${ws.mvn.dir}/pom.xml"/>
+
     <!--set up compile class path-->
     <path id="compileClassPath">
         <pathelement location="${build.classes.dir}"/>
@@ -98,19 +103,22 @@ questions.
 
     <target name="help" description="Describes the top-level targets for this build.">
         <echo>
-Usage:
-     ant &lt;TARGET&gt; -D&lt;OPTIONS&gt;
+            Usage:
+            ant &lt;TARGET&gt; -D&lt;OPTIONS&gt;
 
-where TARGET is:
-     build (default):        builds all binaries, doc and distributions.
-     clean:                  removes all generated files and directories.
-     clean-build:            cleans then builds the project
-     help:                   prints a usage message (this message).
+            where TARGET is:
+            all                 cleans, tests, and builds if no issues are found.
+            build (default):    builds all binaries, doc and distributions.
+            clean:              removes all generated files and directories.
+            cleanAndBuild:      cleans, then builds the project.
+            help:               prints a usage message (this message).
 
-Other values for TARGET are:
-     devbuild:               produces binaries and javadocs.
-     javadoc:                produces javadocs.
-     test:                   runs sanity tests. (not currently available)
+            Other values for TARGET are:
+            devbuild:           produces binaries and javadocs.
+            javadoc:            produces javadocs.
+            test:               runs tests.
+            cleanAndTest:       cleans test artifacts, then tests the project.
+            clean-test:         cleans tests artifacts.
         </echo>
     </target>
 
@@ -118,8 +126,8 @@ Other values for TARGET are:
     <!-- Clean Targets                                                          -->
     <!--************************************************************************-->
 
-    <target name="clean" description="Remove all generated files.">
-        <delete dir="${build.base.dir}" />
+    <target name="clean" description="Remove all generated files." depends="clean-maven">
+        <delete dir="${build.base.dir}"/>
     </target>
 
     <!--========================================================================-->
@@ -127,23 +135,24 @@ Other values for TARGET are:
     <!--========================================================================-->
 
     <!-- Make build area dir and temp dir -->
-    <target name="prepare" depends="prepare-build-area,prepare-release-area" description="Prepares the build generation areas." />
+    <target name="prepare" depends="prepare-build-area,prepare-release-area"
+            description="Prepares the build generation areas."/>
 
     <target name="prepareGenArea">
-	    <!--set up compile class path-->
-	    <path id="compileClassPath">
-		    <pathelement location="${buildArea.dir}/classes"/>
-	    </path>
+        <!--set up compile class path-->
+        <path id="compileClassPath">
+            <pathelement location="${buildArea.dir}/classes"/>
+        </path>
 
-	    <!--make temp dirs-->
-	    <mkdir dir="${buildprod.dir}"/>
-	    <mkdir dir="${buildprod.tmp.dir}"/>
-	    <mkdir dir="${buildprod.image.dir}"/>
+        <!--make temp dirs-->
+        <mkdir dir="${buildprod.dir}"/>
+        <mkdir dir="${buildprod.tmp.dir}"/>
+        <mkdir dir="${buildprod.image.dir}"/>
     </target>
 
     <!-- Make build area dir and temp dir					-->
-    <target name="prepare-build-area" depends="prepareGenArea" >
-	    <!--make temp dirs-->
+    <target name="prepare-build-area" depends="prepareGenArea">
+        <!--make temp dirs-->
         <mkdir dir="${buildArea.dir}"/>
         <mkdir dir="${build.tmp.dir}"/>
         <mkdir dir="${build.classes.dir}"/>
@@ -151,38 +160,39 @@ Other values for TARGET are:
         <mkdir dir="${build.lib.dir}"/>
         <mkdir dir="${build.doc.dir}"/>
 
-        <mkdir dir="${build.src.dir}" />
+        <mkdir dir="${build.src.dir}"/>
         <copy todir="${build.src.dir}">
-            <fileset dir="${ws.src.classes.dir}/" includes="**/*" />
+            <fileset dir="${ws.src.classes.dir}/" includes="**/*"/>
         </copy>
         <copy file="${ws.top.dir}/LICENSE" todir="${buildArea.dir}"/>
         <copy file="${ws.top.dir}/README.html" todir="${buildArea.dir}"/>
     </target>
 
     <!-- Make build area dir and temp dir					-->
-    <target name="prepare-release-area" depends="prepareGenArea" >
-	    <!--make temp dirs-->
-	    <mkdir dir="${releaseArea.dir}"/>
-	    <mkdir dir="${release.tmp.dir}"/>
-	    <mkdir dir="${release.lib.dir}"/>
-	    <mkdir dir="${release.doc.dir}"/>
-	    <mkdir dir="${release.bin.dir}"/>
-            <copy file="${ws.top.dir}/LICENSE" todir="${releaseArea.dir}"/>
-            <copy file="${ws.top.dir}/README.html" todir="${releaseArea.dir}"/>
+    <target name="prepare-release-area" depends="prepareGenArea">
+        <!--make temp dirs-->
+        <mkdir dir="${releaseArea.dir}"/>
+        <mkdir dir="${release.tmp.dir}"/>
+        <mkdir dir="${release.lib.dir}"/>
+        <mkdir dir="${release.doc.dir}"/>
+        <mkdir dir="${release.bin.dir}"/>
+
+        <copy file="${ws.top.dir}/LICENSE" todir="${releaseArea.dir}"/>
+        <copy file="${ws.top.dir}/README.html" todir="${releaseArea.dir}"/>
     </target>
 
     <target name="-check-java-version?">
         <echo></echo>
         <condition property="check-java-version.passed">
-          <or>
-            <matches pattern=".*1[789]+.*" string="${ant.java.version}"/>
-            <matches pattern=".*2\d.*" string="${ant.java.version}"/>
-          </or>
+            <or>
+                <matches pattern=".*2[123456789]+.*" string="${ant.java.version}"/>
+                <matches pattern=".*3\d.*" string="${ant.java.version}"/>
+            </or>
         </condition>
         <fail unless="check-java-version.passed">
-.${line.separator}${line.separator}
-Current java version is ${ant.java.version}
-The build should be started by java 17 or above
+            ...${line.separator}${line.separator}
+            Current Java version is ${ant.java.version}
+            The build should be started by Java 21 or above
         </fail>
     </target>
 
@@ -212,13 +222,15 @@ The build should be started by java 17 or above
     <!-- Build Sub Targets                                                      -->
     <!--========================================================================-->
 
-    <target name="build"  depends="-check-java-version?, release" description="Build the asmtools product." />
+    <target name="all" description="cleans, tests, and builds if no issues are found" depends="clean-test,clean-build"/>
 
-    <target name="release" depends="devbuild, examples, release-product"/>
+    <target name="build" depends="-check-java-version?, release" description="Build the asmtools product."/>
 
-    <target name="devbuild"  depends="prepare, replace-tokens, jar, javadoc, -create-release-file"/>
+    <target name="release" depends="devbuild, examples, release-product, cleanGenArea"/>
 
-    <target name="clean-build"  depends="clean, build" description="Clean then build the asmtools product." />
+    <target name="devbuild" depends="prepare, replace-tokens, jar, javadoc, -create-release-file"/>
+
+    <target name="clean-build" depends="clean, build" description="Clean then build the asmtools product."/>
 
     <!--========================================================================-->
     <!-- Binaries / Libraries                                                   -->
@@ -240,10 +252,10 @@ The build should be started by java 17 or above
             </not>
         </condition>
         <echo file="${buildArea.dir}/release">
-SOURCE="git:${git.revision}"
-VERSION="${PRODUCT_VERSION}_${PRODUCT_BUILDNUMBER}"
-VERSION_DATE="${build.date}"
-MILESTONE="${PRODUCT_MILESTONE}"
+            SOURCE="git:${git.revision}"
+            VERSION="${PRODUCT_VERSION}_${PRODUCT_BUILDNUMBER}"
+            VERSION_DATE="${build.date}"
+            MILESTONE="${PRODUCT_MILESTONE}"
         </echo>
         <copy file="${buildArea.dir}/release" todir="${releaseArea.dir}" failonerror="false"/>
     </target>
@@ -268,19 +280,18 @@ MILESTONE="${PRODUCT_MILESTONE}"
     <target name="compileClasses" depends="prepare">
         <mkdir dir="${build.classes.dir}"/>
         <javac fork="true"
-            target="${javac.target.version}"
-            source="${javac.source.version}"
-            srcdir="${build.src.classes.dir}"
-            destdir="${build.classes.dir}"
-            debug="${javac.debug}"
-            verbose="${javac.verbose}"
-            deprecation="${javac.deprecation}"
-            encoding="UTF8"
-            includeantruntime="false"
-            classpathref="compileClassPath">
+               release="${javac.release.version}"
+               srcdir="${build.src.classes.dir}"
+               destdir="${build.classes.dir}"
+               debug="${javac.debug}"
+               verbose="${javac.verbose}"
+               deprecation="${javac.deprecation}"
+               encoding="UTF8"
+               includeantruntime="false"
+               classpathref="compileClassPath">
         </javac>
         <copy todir="${build.classes.dir}">
-            <fileset dir="${build.src.classes.dir}" excludes="**/*.java" />
+            <fileset dir="${build.src.classes.dir}" excludes="**/*.java"/>
         </copy>
     </target>
 
@@ -290,22 +301,24 @@ MILESTONE="${PRODUCT_MILESTONE}"
     <!--========================================================================-->
     <!-- Release                                                                -->
     <!--========================================================================-->
-    <target name="release-product" depends="prepare-release-area,prepare-release" description="Bundle the asmtools product.">
-	    <property name="bundle.name" value="${proj.build.product.name}-${proj.build.product.version}.zip"/>
-	    <basename property="bundle.prefix" file="${proj.build.product.name}-${proj.build.product.version}" suffix=".zip"/>
+    <target name="release-product" depends="prepare-release-area,prepare-release"
+            description="Bundle the asmtools product.">
+        <property name="bundle.name" value="${proj.build.product.name}-${proj.build.product.version}.zip"/>
+        <basename property="bundle.prefix" file="${proj.build.product.name}-${proj.build.product.version}"
+                  suffix=".zip"/>
 
-	    <zip destfile="${release.tmp.dir}/${bundle.name}" >
-		    <zipfileset dir="${releaseArea.dir}" includes="**/*" prefix="${bundle.prefix}"/>
-	    </zip>
+        <zip destfile="${release.tmp.dir}/${bundle.name}">
+            <zipfileset dir="${releaseArea.dir}" includes="**/*" prefix="${bundle.prefix}"/>
+        </zip>
 
-	    <move file="${release.tmp.dir}/${bundle.name}" todir="${buildprod.image.dir}"/>
+        <move file="${release.tmp.dir}/${bundle.name}" todir="${buildprod.image.dir}"/>
     </target>
 
     <target name="prepare-release" description="Build and Bundle the product.">
-        <mkdir dir="${releaseArea.dir}" />
-        <mkdir dir="${release.lib.dir}" />
+        <mkdir dir="${releaseArea.dir}"/>
+        <mkdir dir="${release.lib.dir}"/>
         <copy todir="${release.lib.dir}">
-            <fileset dir="${build.lib.dir}/" includes="**/*"  excludes="**/exclude.jar" />
+            <fileset dir="${build.lib.dir}/" includes="**/*" excludes="**/exclude.jar"/>
         </copy>
     </target>
 
@@ -318,7 +331,6 @@ MILESTONE="${PRODUCT_MILESTONE}"
                 author="false"
                 version="false"
                 Encoding="UTF8"
-                source="${javac.source.version}"
                 additionalparam="-breakiterator -Xdoclint:none -quiet">
             <bottom><![CDATA[
            ]]>
@@ -326,5 +338,60 @@ MILESTONE="${PRODUCT_MILESTONE}"
         </javadoc>
     </target>
 
-</project>
+    <target name="cleanGenArea">
+        <delete dir="${buildprod.tmp.dir}" failonerror="false" deleteonexit="true"/>
+    </target>
 
+    <!--========================================================================-->
+    <!-- Tests                                                                  -->
+    <!--========================================================================-->
+
+    <target name="clean-test" description="cleans test artifacts, then tests the project" depends="clean-maven, test"/>
+
+    <target name="test" description="run maven test" depends="-check-maven?, -check-pom-file?">
+        <exec executable="mvn" failonerror="false" resultproperty="maven.run.test.exit.code">
+            <arg value="-f"/>
+            <arg value="${pom.file}"/>
+            <arg value="test"/>
+        </exec>
+        <condition property="maven.run.passed">
+            <equals arg1="${maven.run.test.exit.code}" arg2="0"/>
+        </condition>
+        <fail message="...${line.separator}${line.separator}The test suite has not passed."
+              if="maven.run.test.exit.code"
+              unless="maven.run.passed"/>
+    </target>
+
+    <target name="clean-maven" description="cleans test artifacts">
+        <delete>
+            <fileset dir="${ws.mvn.dir}">
+                <include name="src"/>
+                <include name="target"/>
+                <include name="pom.xml"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="-check-maven?">
+        <exec executable="mvn" failonerror="false" resultproperty="maven.exit.code">
+            <arg value="-version"/>
+        </exec>
+        <condition property="maven.present">
+            <equals arg1="${maven.exit.code}" arg2="0"/>
+        </condition>
+        <fail message="Maven not found" if="maven.exit.code" unless="maven.present"/>
+    </target>
+
+    <target name="-check-pom-file?">
+        <condition property="pom.file.exists">
+            <available file="${pom.file}"/>
+        </condition>
+        <antcall target="-create-pom-file"/>
+    </target>
+
+    <target name="-create-pom-file" unless="pom.file.exists">
+        <exec executable="/bin/bash" failonerror="true">
+            <arg value="${ws.mvn.dir}/mvngen.sh"/>
+        </exec>
+    </target>
+</project>

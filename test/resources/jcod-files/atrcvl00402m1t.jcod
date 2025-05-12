@@ -1,0 +1,507 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00402m1/atrcvl00402m1t {
+  0xCAFEBABE;
+  3;                                       // minor version
+  45;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Field #112 #54;                        // #1
+    Field #112 #56;                        // #2
+    Field #112 #109;                       // #3
+    Field #112 #38;                        // #4
+    Field #112 #50;                        // #5
+    Field #112 #89;                        // #6
+    Field #112 #105;                       // #7
+    Field #112 #61;                        // #8
+    Field #112 #47;                        // #9
+    Field #112 #74;                        // #10
+    Field #112 #110;                       // #11
+    Field #112 #136;                       // #12
+    Field #112 #77;                        // #13
+    Field #112 #101;                       // #14
+    Field #112 #113;                       // #15
+    Field #112 #76;                        // #16
+    Field #112 #124;                       // #17
+    Field #112 #85;                        // #18
+    Field #112 #96;                        // #19
+    Field #112 #57;                        // #20
+    Field #112 #60;                        // #21
+    Field #112 #95;                        // #22
+    Field #112 #42;                        // #23
+    Field #112 #43;                        // #24
+    Method #46 #106;                       // #25
+    Field #112 #98;                        // #26
+    Field #112 #68;                        // #27
+    Field #112 #119;                       // #28
+    Field #112 #102;                       // #29
+    Field #112 #111;                       // #30
+    Field #112 #84;                        // #31
+    Field #112 #127;                       // #32
+    Field #112 #37;                        // #33
+    Utf8 "sfByteMirror";                   // #34
+    Utf8 "sfChar";                         // #35
+    Utf8 "sLongMirror";                    // #36
+    NameAndType #94 #116;                  // #37
+    NameAndType #83 #128;                  // #38
+    Utf8 "ConstantValue";                  // #39
+    Utf8 "B";                              // #40
+    Utf8 "sBooleanMirror";                 // #41
+    NameAndType #70 #81;                   // #42
+    NameAndType #73 #134;                  // #43
+    Utf8 "sfLong";                         // #44
+    Float 0x40C00000;                      // #45
+    Class #92;                             // #46
+    NameAndType #71 #135;                  // #47
+    Integer 0x00000004;                    // #48
+    Utf8 "sfString";                       // #49
+    NameAndType #66 #128;                  // #50
+    Integer 0x0000000E;                    // #51
+    Utf8 "sfBoolean";                      // #52
+    Utf8 "sfDouble";                       // #53
+    NameAndType #93 #81;                   // #54
+    Utf8 "sByte";                          // #55
+    NameAndType #41 #125;                  // #56
+    NameAndType #107 #135;                 // #57
+    Utf8 "sfDoubleMirror";                 // #58
+    Utf8 "J";                              // #59
+    NameAndType #34 #40;                   // #60
+    NameAndType #91 #59;                   // #61
+    Utf8 "sfFloatMirror";                  // #62
+    Double 0x401C000000000000;;            // #63
+    Integer 0x00000002;                    // #65
+    Utf8 "sDoubleMirror";                  // #66
+    Utf8 "Code";                           // #67
+    NameAndType #75 #116;                  // #68
+    Utf8 "sFloatMirror";                   // #69
+    Utf8 "sShort";                         // #70
+    Utf8 "sChar";                          // #71
+    Integer 0x0000000C;                    // #72
+    Utf8 "sString";                        // #73
+    NameAndType #121 #134;                 // #74
+    Utf8 "sFloat";                         // #75
+    NameAndType #117 #125;                 // #76
+    NameAndType #49 #134;                  // #77
+    Long 0x0000000000000005;;              // #78
+    Integer 0x00000001;                    // #80
+    Utf8 "S";                              // #81
+    String #49;                            // #82
+    Utf8 "sDouble";                        // #83
+    NameAndType #118 #134;                 // #84
+    NameAndType #132 #59;                  // #85
+    Long 0x000000000000000F;;              // #86
+    Utf8 "sfShort";                        // #88
+    NameAndType #120 #135;                 // #89
+    Integer 0x0000000B;                    // #90
+    Utf8 "sLong";                          // #91
+    Utf8 "java/lang/Object";               // #92
+    Utf8 "sfShortMirror";                  // #93
+    Utf8 "sfFloat";                        // #94
+    NameAndType #126 #81;                  // #95
+    NameAndType #133 #40;                  // #96
+    Utf8 "()V";                            // #97
+    NameAndType #58 #128;                  // #98
+    Integer 0x00000000;                    // #99
+    Utf8 "<clinit>";                       // #100
+    NameAndType #52 #125;                  // #101
+    NameAndType #44 #59;                   // #102
+    Double 0x4031000000000000;;            // #103
+    NameAndType #62 #116;                  // #105
+    NameAndType #108 #97;                  // #106
+    Utf8 "sfCharMirror";                   // #107
+    Utf8 "<init>";                         // #108
+    NameAndType #53 #128;                  // #109
+    NameAndType #129 #125;                 // #110
+    NameAndType #35 #135;                  // #111
+    Class #131;                            // #112
+    NameAndType #36 #59;                   // #113
+    Utf8 "atrcvl00402m1t.jasm";            // #114
+    Float 0x41800000;                      // #115
+    Utf8 "F";                              // #116
+    Utf8 "sBoolean";                       // #117
+    Utf8 "sfStringMirror";                 // #118
+    NameAndType #55 #40;                   // #119
+    Utf8 "sCharMirror";                    // #120
+    Utf8 "sStringMirror";                  // #121
+    Utf8 "SourceFile";                     // #122
+    String #73;                            // #123
+    NameAndType #88 #81;                   // #124
+    Utf8 "Z";                              // #125
+    Utf8 "sShortMirror";                   // #126
+    NameAndType #69 #116;                  // #127
+    Utf8 "D";                              // #128
+    Utf8 "sfBooleanMirror";                // #129
+    Utf8 "sfByte";                         // #130
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00402m1/atrcvl00402m1t";  // #131
+    Utf8 "sfLongMirror";                   // #132
+    Utf8 "sByteMirror";                    // #133
+    Utf8 "Ljava/lang/String;";             // #134
+    Utf8 "C";                              // #135
+    NameAndType #130 #40;                  // #136
+  }
+
+  0x0000;                                  // access
+  #112;                                    // this_cpx
+  #46;                                     // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+    {                                      // field
+      0x0018;                              // access
+      #49;                                 // name_index
+      #134;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #82;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #118;                                // name_index
+      #134;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #73;                                 // name_index
+      #134;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #123;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #121;                                // name_index
+      #134;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #52;                                 // name_index
+      #125;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #80;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #129;                                // name_index
+      #125;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #117;                                // name_index
+      #125;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #99;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #41;                                 // name_index
+      #125;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #88;                                 // name_index
+      #81;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #65;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #93;                                 // name_index
+      #81;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #70;                                 // name_index
+      #81;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #72;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #126;                                // name_index
+      #81;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #35;                                 // name_index
+      #135;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #80;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #107;                                // name_index
+      #135;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #71;                                 // name_index
+      #135;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #90;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #120;                                // name_index
+      #135;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #130;                                // name_index
+      #40;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #48;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #34;                                 // name_index
+      #40;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #55;                                 // name_index
+      #40;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #51;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #133;                                // name_index
+      #40;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #44;                                 // name_index
+      #59;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #78;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #132;                                // name_index
+      #59;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #91;                                 // name_index
+      #59;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #86;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #36;                                 // name_index
+      #59;                                 // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #94;                                 // name_index
+      #116;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #45;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #62;                                 // name_index
+      #116;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #75;                                 // name_index
+      #116;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #115;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #69;                                 // name_index
+      #116;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0018;                              // access
+      #53;                                 // name_index
+      #128;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #63;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #58;                                 // name_index
+      #128;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #83;                                 // name_index
+      #128;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#39) {                        // ConstantValue
+          #103;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field
+      0x0008;                              // access
+      #66;                                 // name_index
+      #128;                                // descriptor_index
+      [] {                                 // Attributes
+      }                                    // end of Attributes
+    }
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0000;                              // access
+      #108;                                // name_index
+      #97;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#67) {                        // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x19 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0008;                              // access
+      #100;                                // name_index
+      #97;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#67) {                        // Code
+          2;                               // max_stack
+          0;                               // max_locals
+          Bytes[]{
+            0xB2 0x00 0x0D 0xB3 0x00 0x1F 0xB2 0x00 0x18 0xB3 0x00 0x0A;
+            0xB2 0x00 0x0E 0xB3 0x00 0x0B 0xB2 0x00 0x10 0xB3 0x00 0x02;
+            0xB2 0x00 0x11 0xB3 0x00 0x01 0xB2 0x00 0x17 0xB3 0x00 0x16;
+            0xB2 0x00 0x1E 0xB3 0x00 0x14 0xB2 0x00 0x09 0xB3 0x00 0x06;
+            0xB2 0x00 0x0C 0xB3 0x00 0x15 0xB2 0x00 0x1C 0xB3 0x00 0x13;
+            0xB2 0x00 0x1D 0xB3 0x00 0x12 0xB2 0x00 0x08 0xB3 0x00 0x0F;
+            0xB2 0x00 0x21 0xB3 0x00 0x07 0xB2 0x00 0x1B 0xB3 0x00 0x20;
+            0xB2 0x00 0x03 0xB3 0x00 0x1A 0xB2 0x00 0x04 0xB3 0x00 0x05;
+            0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#122) {                           // SourceFile
+      #114;
+    }                                      // end of SourceFile
+  }                                        // end of Attributes
+}

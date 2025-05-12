@@ -1,7 +1,6 @@
 package org.openjdk.asmtools.jdec;
-
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,13 +24,16 @@ package org.openjdk.asmtools.jdec;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.ClassPathClassWork;
-import org.openjdk.asmtools.ThreeStringWriters;
+import org.openjdk.asmtools.lib.action.Jcoder;
+import org.openjdk.asmtools.lib.helper.ClassPathClassWork;
+import org.openjdk.asmtools.lib.helper.ThreeStringWriters;
+import org.openjdk.asmtools.lib.log.LogAndBinResults;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 class MainTest extends ClassPathClassWork {
 
@@ -56,6 +58,23 @@ class MainTest extends ClassPathClassWork {
     }
 
     @Test
+    public void main3StreamsCorruptedFileError() throws IOException {
+        ThreeStringWriters outs = new ThreeStringWriters();
+        String badJcodFile = getFile("/org/openjdk/asmtools/jcoder/bad.jcod");
+        // jcod to class
+        LogAndBinResults compileResult = new Jcoder().compile(List.of(badJcodFile));
+        // class to jcod
+        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), compileResult.getAsByteInput());
+        int i = decoder.decode();
+        outs.flush();
+        Assertions.assertEquals(1, i);
+        Assertions.assertTrue(outs.getErrorBos().contains("jdec   - ERROR: Invalid constant type: 0 for element 1"));
+        Assertions.assertTrue(outs.getErrorBos().contains("1 error(s) in the file: bytes/bytes"));
+        Assertions.assertTrue(outs.getToolBos().contains("0xCA 0xFE 0xBA 0x00 0x03 0x00 0x2D 0x00;"));
+        Assertions.assertTrue(outs.getLoggerBos().isEmpty());
+    }
+
+    @Test
     public void main3StreamsFileInCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
         Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), classFile);
@@ -71,7 +90,7 @@ class MainTest extends ClassPathClassWork {
     @Test
     public void main3StreamsStdinCorrectStream() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
-        File in =  new File(classFile);
+        File in = new File(classFile);
         InputStream is = System.in;
         try {
             System.setIn(new FileInputStream(in));
@@ -83,7 +102,7 @@ class MainTest extends ClassPathClassWork {
             Assertions.assertTrue(outs.getErrorBos().isEmpty());
             Assertions.assertTrue(outs.getLoggerBos().isEmpty());
             Assertions.assertTrue(outs.getToolBos().contains("0xCAFEBABE"));
-        }finally {
+        } finally {
             System.setIn(is);
         }
     }

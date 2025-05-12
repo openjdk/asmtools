@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,27 +26,27 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.openjdk.asmtools.lib.LogAndReturn;
-import org.openjdk.asmtools.lib.action.CompileAction;
+import org.openjdk.asmtools.lib.action.Jasm;
+import org.openjdk.asmtools.lib.log.LogAndReturn;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.openjdk.asmtools.lib.action.EAsmTools.Tool.TOOL_PASSED;
+import static org.openjdk.asmtools.common.Environment.OK;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class NegativeJasmTests {
 
-    CompileAction compiler;
-    File resourceDir;
-    String resName = "ifge_overflow.jasm";
+    private final Jasm jasm = new Jasm();
+
+    private File resourceDir;
+    private String resName = "ifge_overflow.jasm";
 
     @BeforeAll
     public void init() throws IOException {
         File file = new File(this.getClass().getResource(resName).getFile());
         resourceDir = file.getParentFile();
-        compiler = new CompileAction();
     }
 
     /**
@@ -72,10 +72,9 @@ public class NegativeJasmTests {
      */
     @Test
     public void testIfgeOverflow_7903405() {
-        final LogAndReturn logAndReturn = compiler.jasm(
-                List.of(resourceDir + File.separator + resName));
+        final LogAndReturn logAndReturn = jasm.compile(List.of(resourceDir + File.separator + resName));
         final List<String> warns = logAndReturn.getLogStringsByPrefix("WARN:");
-        Assertions.assertEquals(logAndReturn.result, TOOL_PASSED);
+        Assertions.assertEquals(logAndReturn.result, OK);
         Assertions.assertEquals(warns.size(), 1);
         String warn = warns.get(0);
         // expected substrings

@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.*;
 
@@ -49,7 +50,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     // For hashing by value
     private final ArrayList<ConstCell<?>> pool = new ArrayList<>(40);
     public JasmEnvironment environment;
-    Hashtable<ConstValue<?>, ConstCell<?>> ConstantPoolHashByValue = new Hashtable<>(40);
+    public LinkedHashMap<ConstValue<?>, ConstCell<?>> ConstantPoolHashByValue = new LinkedHashMap<>(40);
 
     private final CPVisitor indexFixerConstantPool = new CPVisitor() {
         @Override
@@ -101,17 +102,17 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     protected void handleClassRef(ConstValue_Cell cell) {
         ConstCell refCell = (ConstCell) cell.value;
         if (handleRefCell(refCell)) {
-            environment.traceln("FIXED ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
+            environment.traceln(() -> "FIXED ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
         }
     }
 
     protected void handleMemberRef(ConstValue_Pair cv) {
         Pair<ConstCell, ConstCell> pair = (Pair<ConstCell, ConstCell>) cv.value;
         if (handleRefCell(pair.first)) {
-            environment.traceln("FIXED Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
+            environment.traceln(() -> "FIXED Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
         }
         if (handleRefCell(pair.second)) {
-            environment.traceln("FIXED Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
+            environment.traceln(() -> "FIXED Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
         }
     }
 
@@ -136,17 +137,17 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     protected void handleClassIndex(ConstValue_Cell cell) {
         ConstCell refCell = (ConstCell) cell.value;
         if (handleIndexCell(refCell)) {
-            environment.traceln("FIXED Index of ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
+            environment.traceln(() -> "FIXED Index of ConstPool[" + refCell.cpIndex + "](" + cell.tag.toString() + ") = " + cell.value);
         }
     }
 
     protected void handleMemberIndex(ConstValue_Pair cv) {
         Pair<ConstCell, ConstCell> pair = (Pair<ConstCell, ConstCell>) cv.value;
         if (handleIndexCell(pair.first)) {
-            environment.traceln("FIXED Index of Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
+            environment.traceln(() -> "FIXED Index of Left:ConstPool[" + pair.first.cpIndex + "](" + cv.tag.toString() + ") = " + pair.first.ref);
         }
         if (handleIndexCell(pair.second)) {
-            environment.traceln("FIXED Index of Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
+            environment.traceln(() -> "FIXED Index of Right:ConstPool[" + pair.second.cpIndex + "](" + cv.tag.toString() + ") = " + pair.second.ref);
         }
     }
 
@@ -242,8 +243,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     public void printPool() {
         int i = 0;
         for (ConstCell item : pool) {
-            environment.traceln("^^^^^^^^^^^^^  const #" + i + ": " + item);
-            i++;
+            environment.traceln(" const #%4d: %s".formatted(i++, item));
         }
     }
 
@@ -259,14 +259,18 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     private void cpool_set(int cpx, ConstCell cell, int sz) {
-        environment.traceln("cpool_set1: " + cpx + " " + cell);
-        environment.traceln("param_size: " + sz);
-        environment.traceln("pool_size : " + pool.size());
+        environment.traceln(() -> "cpool_set1: " + cpx + " " + cell);
+        environment.traceln(() -> "param_size: " + sz);
+        environment.traceln(() -> "pool_size : " + pool.size());
         cell.cpIndex = cpx;
         if (cpx + sz >= pool.size()) {
-            environment.traceln("calling ensureCapacity( " + (cpx + sz + 1) + " )");
+            environment.traceln(() -> "calling ensureCapacity( " + (cpx + sz + 1) + " )");
             int low = pool.size();
             int high = cpx + sz;
+            if (high - low > sz) {
+                String msg = (low == high - sz - 1) ? "#%d".formatted(low) : "#%d-#%d".formatted(low, high - sz - 1);
+                environment.warning("warn.const.fill", msg);
+            }
             for (int i = 0; i < high - low; i++) {
                 pool.add(nullConst);
             }
@@ -275,16 +279,16 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         if (sz == 2) {
             pool.set(cpx + 1, new ConstCell(cpx + 1, emptyConstValue));
         }
-        environment.traceln("cpool_set2: " + cpx + " " + cell);
+        environment.traceln(() -> "cpool_set2: " + cpx + " " + cell);
     }
 
     private void delete(int cpx) {
-        environment.traceln("delete cell(" + cpx + ")");
+        environment.traceln(() -> "delete cell(" + cpx + ")");
         Consumer<ConstCell<?>> op = cell -> {
             if (cell.getFlag() == NON_PROCESSED) {
                 if (cell.cpIndex > cpx) {
                     cell.cpIndex--;
-                    environment.traceln("\tcell from " + (cell.cpIndex + 1) + " to " + cell);
+                    environment.traceln(() -> "\tcell from " + (cell.cpIndex + 1) + " to " + cell);
                 }
                 cell.setFlag(PROCESSED);
             }
@@ -308,10 +312,11 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
                 if (constValue != null) {
                     switch (constValue.tag) {
                         case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_MODULE, CONSTANT_PACKAGE, CONSTANT_METHODTYPE,
-                                CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> {
+                             CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> {
                             traverseConstantCell((ConstCell<?>) constValue.value, op);
                         }
-                        case CONSTANT_METHODHANDLE, CONSTANT_NAMEANDTYPE, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACEMETHODREF -> {
+                        case CONSTANT_METHODHANDLE, CONSTANT_NAMEANDTYPE, CONSTANT_FIELDREF, CONSTANT_METHODREF,
+                             CONSTANT_INTERFACEMETHODREF -> {
                             Pair<ConstCell<?>, ConstCell<?>> pair = (Pair<ConstCell<?>, ConstCell<?>>) constValue.value;
                             traverseConstantCell(pair.first, op);
                             traverseConstantCell(pair.second, op);
@@ -348,13 +353,12 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
             environment.warning("warn.const0.redecl");
         } else {
             if ((getConstPollCellByIndex(cpx) != null) || ((sz == 2) && (getConstPollCellByIndex(cpx + 1) != null))) {
-                String name = "#" + cpx;
-                environment.error("err.const.redecl", name);
+                environment.error("err.const.redecl", "#" + cpx, "#" + max(cpx - 1, 0));
                 return;
             }
             if (cell.isSet() && (cell.cpIndex != cpx)) {
                 cell = new ConstCell(value);
-                environment.traceln("setCell: new ConstCell %s", cell.toString());
+                environment.traceln("setCell: new ConstCell " + cell);
             }
         }
         cpool_set(cpx, cell, sz);
@@ -375,7 +379,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
                 filter(v -> v.isSet() &&
                         v.getType() == value.tag &&
                         v.ref.equalsByValue(value)).
-                findAny();
+                findFirst();
     }
 
     private ConstCell<?> itemizeCell(ConstCell<?> cell) {
@@ -422,6 +426,21 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         return index;
     }
 
+    public <T extends ConstValue> boolean cellFound(final T ref) {
+        if (ref == null) {
+            environment.throwErrorException("err.constcell.is.null");
+        }
+        ConstCell cell = ConstantPoolHashByValue.get(ref);
+        if (cell != null) {
+            // If we found a cached ConstValue
+            ConstValue value = cell.ref;
+            if (value.equals(ref)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public <T extends ConstValue> ConstCell<T> findCell(final T ref) {
         if (ref == null) {
             environment.throwErrorException("err.constcell.is.null");
@@ -443,6 +462,10 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         return cell;
     }
 
+    public ConstCell findNameAndTypeCell(ConstantPool.ConstValue_NameAndType ref) {
+        return findCell(ref);
+    }
+
     public ConstCell findIntegerCell(Integer value) {
         return findCell(new ConstValue_Integer(CONSTANT_INTEGER, value));
     }
@@ -456,7 +479,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     }
 
     public ConstCell findDoubleCell(Long value) {
-        return findCell(new ConstValue_Long(value));
+        return findCell(new ConstValue_Double(value));
     }
 
     public ConstCell findUTF8Cell(String value) {
@@ -466,7 +489,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
     public ConstCell lookupUTF8Cell(Function<String, Boolean> rule) {
         return ConstantPoolHashByValue.entrySet().stream().
                 filter(entry -> entry.getKey().tag == CONSTANT_UTF8 && rule.apply((String) (entry.getKey().value))).
-                findAny().map(entry -> entry.getValue()).
+                findFirst().map(entry -> entry.getValue()).
                 orElse(null);
     }
 
@@ -522,7 +545,7 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
         int length = pool.size();
         out.writeShort(length);
         int i;
-        environment.traceln("wr.pool:size=" + length);
+        environment.traceln(() -> "wr.pool:size=" + length);
         for (i = 1; i < length; ) {
             ConstCell cell = pool.get(i);
             ConstValue value = cell.ref;
@@ -618,6 +641,11 @@ public class ConstantPool implements Iterable<ConstCell<?>> {
 
         public ConstValue_UTF8(String value) {
             super(CONSTANT_UTF8, value);
+        }
+
+        @Override
+        public String asString() {
+            return value;
         }
 
         @Override

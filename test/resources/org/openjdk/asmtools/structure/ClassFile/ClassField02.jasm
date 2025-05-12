@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+package javasoft/sqe/tests;
+
+// Fields of interfaces must have their ACC_PUBLIC, ACC_STATIC, and ACC_FINAL flags set;
+// they may have their ACC_STRICT_INIT or ACC_SYNTHETIC flag set,
+// and must not have any of the other flags in Table 4.5-A set (JLS §9.3):
+// ACC_PUBLIC	    0x0001	Declared public; may be accessed from outside its package.
+// ACC_PRIVATE	    0x0002	Declared private; accessible only within the defining class and other classes belonging to the same nest (5.4.4).
+// ACC_PROTECTED	0x0004	Declared protected; may be accessed within subclasses.
+// ACC_STATIC	    0x0008	Declared static.
+// ACC_FINAL	    0x0010	Declared final; never directly assigned to after object construction (JLS §17.5).
+// ACC_VOLATILE	    0x0040	Declared volatile; cannot be cached.
+// ACC_TRANSIENT	0x0080	Declared transient; not written or read by a persistent object manager.
+// ACC_STRICT_INIT	0x0800	A strictly-initialized field; must be initialized before it can be read.
+// ACC_SYNTHETIC	0x1000	Declared synthetic; not present in the source code.
+// ACC_ENUM	        0x4000	Declared as an element of an enum class.
+
+
+abstract interface class ClassField04 version 69:65535
+{
+   // OK
+   static public final strict    Field field0:"I";
+   static public final synthetic Field field1:"I";
+   // negative
+   static public final synthetic enum Field field2:"I";
+   static public final transient Field field3:"I";
+   static final strict Field field4:"I";
+
+   Method "init":"()V"
+     stack 4 locals 1
+   {
+        aload_0;
+        invokespecial    Method java/lang/Object."<init>":"()V";
+        return;
+        stack_map class ClassField04, float;
+        putfield  Field field:"I";
+        return;
+   }
+}

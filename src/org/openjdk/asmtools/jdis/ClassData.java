@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,57 +24,66 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.HexUtils;
 import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.DecompilerLogger;
+import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.inputs.FileInput;
+import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.structure.CFVersion;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.common.structure.EModifier;
+import org.openjdk.asmtools.jdis.notations.Type;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.text.DateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static org.openjdk.asmtools.common.structure.ClassFileContext.CLASS;
-import static org.openjdk.asmtools.common.structure.ClassFileContext.MODULE;
+import static org.openjdk.asmtools.common.structure.ClassFileContext.*;
 import static org.openjdk.asmtools.common.structure.EModifier.ACC_ABSTRACT;
+import static org.openjdk.asmtools.common.structure.EModifier.ACC_SUPER;
 import static org.openjdk.asmtools.jasm.ClassFileConst.JAVA_MAGIC;
+import static org.openjdk.asmtools.jdis.ClassData.COMPILATION_UNIT.MODULE_INFO;
 
 /**
  * Central class data for of the Java Disassembler
  */
 public class ClassData extends MemberData<ClassData> {
 
-    // -----------------------------------------------------------------------------------------------
-    // Header Info
-    // -----------------------------------------------------------------------------------------------
+    // internal status of the class data
+    private boolean alreadyPrinted = false;
+    private boolean canBePrinted = false;           // Sufficient class info has been read and is now ready to be printed
+
     // Version info
     protected CFVersion cfVersion = new CFVersion();
 
     // Constant Pool index to this class
     protected int this_cpx;
+    // Constant Pool index to this classes parent (super)
+    protected int super_cpx;
 
     // Pre-initialized Constant Pool names calculated by this_cpx
     protected String className = "";
     protected String packageName = "";
     protected String classShortName = "";
 
-    // Constant Pool index to this classes parent (super)
-    protected int super_cpx;
-
-    // -----------------------------------------------------------------------------------------------
-    // Interfaces, Fields, Methods && Attributes
-    // -----------------------------------------------------------------------------------------------
     // The interfaces this class implements
     protected int[] interfaces;
 
     // The fields of this class
-    protected Container<FieldData> fields;
+    protected Container<FieldData, ClassData> fields;
 
     // The methods of this class
-    protected Container<MethodData> methods;
+    protected Container<MethodData, ClassData> methods;
 
     /**
      * Attributes:
@@ -97,18 +106,22 @@ public class ClassData extends MemberData<ClassData> {
      * RuntimeInvisibleTypeAnnotations              52.0
      */
 
-    // The SourceFile Attribute
+    private int totalAttributes = 0;
+
+    // The SourceFile Attribute (since 45.3)
     protected SourceFileData sourceFileData;
 
-    // The inner-classes of this class
-    protected Container<InnerClassData> innerClasses;
+    // The inner-classes of this class (since 45.3)
+    protected Container<InnerClassData, ClassData> innerClasses;
+
+    // The EnclosingMethod Attribute (since 49.0)
+    protected EnclosingMethodData enclosingMethodData;
 
     // The record attribute of this class (since class file 58.65535)
     protected RecordData recordData;
 
-
     // The bootstrap methods this class implements
-    protected Container<BootstrapMethodData> bootstrapMethods;
+    protected Container<BootstrapMethodData, ClassData> bootstrapMethods;
 
     //The module this class file presents
     protected ModuleData moduleData;
@@ -125,13 +138,13 @@ public class ClassData extends MemberData<ClassData> {
     protected SourceDebugExtensionData sourceDebugExtensionData;
 
     // Valhalla
-    protected PreloadData preloadData;
+    protected LoadableDescriptorsData loadableDescriptorsData;
 
     // source file data
     private TextLines sourceLines = null;
     private Path classFile = null;
 
-    public ClassData(JdisEnvironment environment) {
+    public <E extends Environment<DecompilerLogger>> ClassData(E environment) {
         super(environment);
         memberType = "ClassData";
         super.environment = environment;
@@ -140,16 +153,8 @@ public class ClassData extends MemberData<ClassData> {
         super.init(this);
     }
 
-    public void read(File inputFile) throws IOException {
-        try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFile))) {
-            read(dis, inputFile.toPath());
-        }
-    }
-
-    public void read(String inputFileName) throws IOException {
-        try (DataInputStream dis = new DataInputStream(new FileInputStream(inputFileName))) {
-            read(dis, Paths.get(inputFileName));
-        }
+    public boolean isDetailedOutput() {
+        return detailedOutput || extraDetailedOutput;
     }
 
     /**
@@ -158,7 +163,7 @@ public class ClassData extends MemberData<ClassData> {
     protected void readFields(DataInputStream in) throws IOException {
         int nFields = in.readUnsignedShort();
         environment.traceln("fields=#" + nFields);
-        fields = new Container<>(nFields);
+        fields = new Container<>(this, FieldData.class, nFields);
         for (int k = 0; k < nFields; k++) {
             FieldData field = new FieldData(this);
             environment.traceln("  FieldData: #" + k);
@@ -173,7 +178,7 @@ public class ClassData extends MemberData<ClassData> {
     protected void readMethods(DataInputStream in) throws IOException {
         int nMethods = in.readUnsignedShort();
         environment.traceln("methods=#" + nMethods);
-        methods = new Container<>(nMethods);
+        methods = new Container<>(this, MethodData.class, nMethods);
         for (int k = 0; k < nMethods; k++) {
             MethodData method = new MethodData(this);
             environment.traceln("MethodData: #" + k);
@@ -204,6 +209,7 @@ public class ClassData extends MemberData<ClassData> {
     protected boolean handleAttributes(DataInputStream in, EAttribute attributeTag, int attributeLength) throws IOException {
         // Read the Attributes
         boolean handled = true;
+        totalAttributes++;
         switch (attributeTag) {
             case ATT_Signature -> {
                 if (signature != null) {
@@ -212,29 +218,38 @@ public class ClassData extends MemberData<ClassData> {
                 signature = new SignatureData(this).read(in, attributeLength);
             }
             case ATT_SourceFile -> {
-                // Read SourceFile Attr
-                if (attributeLength != 2) {
-                    throw new FormatError(environment.getLogger(),
-                            "err.invalid.attribute.length", "SourceFile_attribute", attributeLength);
-                }
+                // Read SourceFile attribute
                 if (sourceFileData != null) {
                     environment.warning("warn.one.attribute.required", "SourceFile", "ClassFile");
                 }
                 sourceFileData = new SourceFileData(this).read(in, attributeLength);
             }
-            case ATT_SourceDebugExtension -> {
-                sourceDebugExtensionData = new SourceDebugExtensionData(this).read(in, attributeLength);
+            case ATT_EnclosingMethod -> {
+                // Read EnclosingMethod attribute
+                if (enclosingMethodData != null) {
+                    environment.warning("warn.one.attribute.required", "EnclosingMethod", "ClassFile");
+                }
+                enclosingMethodData = new EnclosingMethodData(this).read(in, attributeLength);
             }
+            case ATT_SourceDebugExtension ->
+                    sourceDebugExtensionData = new SourceDebugExtensionData(this).read(in, attributeLength);
             case ATT_InnerClasses -> {
                 // Read InnerClasses Attr
                 int count = in.readUnsignedShort();
                 if (2 + count * 8 != attributeLength) {
-                    throw new FormatError(environment.getLogger(),
-                            "err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
+                    if (bestEffort) {
+                        environment.getLogger().error(
+                                "err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
+                    } else {
+                        throw new FormatError(environment.getLogger(),
+                                "err.invalid.attribute.length", "InnerClasses_attribute", attributeLength);
+                    }
                 }
-                innerClasses = new Container<>(count);
+                innerClasses = new Container<>(this, InnerClassData.class, count).
+                        setHasSize(!isTableOutput() && !skipComments && !tableFormat);
+                innerClasses.setCommentOffset(this.getCommentOffset());
                 for (int j = 0; j < count; j++) {
-                    InnerClassData innerClass = new InnerClassData(this);
+                    InnerClassData innerClass = new InnerClassData(this, innerClasses);
                     innerClass.read(in);
                     innerClasses.add(innerClass);
                 }
@@ -242,9 +257,10 @@ public class ClassData extends MemberData<ClassData> {
             case ATT_BootstrapMethods -> {
                 // Read BootstrapMethods Attr
                 int count = in.readUnsignedShort();
-                bootstrapMethods = new Container<BootstrapMethodData>(count).setPrintable(printCPIndex);
+                bootstrapMethods = new Container<>(this, BootstrapMethodData.class, count);
+                bootstrapMethods.setCommentOffset(this.getCommentOffset());
                 for (int j = 0; j < count; j++) {
-                    BootstrapMethodData bsmData = new BootstrapMethodData(this);
+                    BootstrapMethodData bsmData = new BootstrapMethodData(this, bootstrapMethods);
                     bsmData.read(in);
                     bootstrapMethods.add(bsmData);
                 }
@@ -264,9 +280,9 @@ public class ClassData extends MemberData<ClassData> {
             case ATT_PermittedSubclasses ->
                 // Read PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
                     permittedSubclassesData = new PermittedSubclassesData(this).read(in, attributeLength);
-            case ATT_Preload ->
+            case ATT_LoadableDescriptors ->
                 // Valhalla
-                    preloadData = new PreloadData(this).read(in, attributeLength);
+                    loadableDescriptorsData = new LoadableDescriptorsData(this).read(in, attributeLength);
             default -> handled = false;
         }
         return handled;
@@ -280,17 +296,16 @@ public class ClassData extends MemberData<ClassData> {
         // Read the header
         try {
             int magic = in.readInt();
-
             if (magic != JAVA_MAGIC) {
-                throw new ClassCastException("wrong magic: " + HexUtils.toHex(magic) + ", expected " + HexUtils.toHex(JAVA_MAGIC));
+                environment.warning("warn.wrong.magic", HexUtils.toHex(JAVA_MAGIC), HexUtils.toHex(magic));
             }
-
-            cfVersion.setMinorVersion( in.readUnsignedShort());
-            cfVersion.setMajorVersion( in.readUnsignedShort());
+            cfVersion.setMinorVersion(in.readUnsignedShort());
+            cfVersion.setMajorVersion(in.readUnsignedShort());
 
             // Read the constant pool
-            pool.read(in);
-            access = in.readUnsignedShort(); // & MM_CLASS; // Q
+            pool.read(in).InitializePrintData();
+
+            access = in.readUnsignedShort();
             this_cpx = in.readUnsignedShort();
             super_cpx = in.readUnsignedShort();
 
@@ -314,8 +329,13 @@ public class ClassData extends MemberData<ClassData> {
             initClassNames(this_cpx);
             //
             environment.traceln("\n<< Reading is done >>");
+            // Final initialization based on just read class data.
+            if (cfVersion.isValueObjectContext()) {
+                EModifier.setGlobalContext(VALUE_OBJECTS);
+            }
+
         } catch (EOFException eofException) {
-            throw new FormatError(environment.getLogger(), "err.eof");
+            environment.error("err.eof");
         }
     }
 
@@ -336,7 +356,7 @@ public class ClassData extends MemberData<ClassData> {
             this.classShortName = className;
         }
         if (sourceFileData != null) {
-            sourceFileData.setSourceName();
+            sourceFileData.getName();
         }
     }
 
@@ -346,7 +366,11 @@ public class ClassData extends MemberData<ClassData> {
      * @return true if the package exists for this class
      */
     public boolean hasPackage() {
-        return this.packageName.length() != 0;
+        return !this.packageName.isEmpty();
+    }
+
+    public String getClassName() {
+        return className;
     }
 
     /**
@@ -365,29 +389,37 @@ public class ClassData extends MemberData<ClassData> {
         return line;
     }
 
-    @SafeVarargs
-    private <T extends AnnotationData> void printAnnotations(List<T>... annotationLists) throws IOException {
-        if (annotationLists != null) {
-            for (List<T> list : annotationLists) {
-                if (list != null) {
-                    for (T annotation : list) {
-                        annotation.initIndent(0);
-                        annotation.print();
-                        println();
-                    }
+    @Override
+    protected <T extends AnnotationData> void printAnnotations(List<T>... annotationLists) throws IOException {
+        for (List<T> list : annotationLists) {
+            if (list != null) {
+                for (T annotation : list) {
+                    annotation.initIndent(0);
+                    annotation.print();
+                    println();
                 }
             }
         }
     }
 
     /**
-     * Print asm file.
+     * Prints the JASM file as much as it was read if exceptions occur during reading.
+     */
+    public void postPrint() {
+        if (!alreadyPrinted && canBePrinted) {
+            try {
+                this.print();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /**
+     * Print jasm file in simple/table format.
      */
     @Override
     public void print() throws IOException {
-        // Number of read corrupted attributes if any
-        int numCorruptedAttributes = 0;
-        if (className.endsWith("module-info") || EModifier.isModule(access)) {          // module-info compilation unit
+        if (COMPILATION_UNIT.get(className, access) == MODULE_INFO) {           // module-info compilation unit
             // Print the Annotations
             printAnnotations(visibleAnnotations, invisibleAnnotations);
             // Print Module Header
@@ -402,6 +434,7 @@ public class ClassData extends MemberData<ClassData> {
             if (printConstantPool) {
                 pool.print();
             }
+            canBePrinted = true;
             // Print module attributes
             moduleData.print();
             //
@@ -409,31 +442,205 @@ public class ClassData extends MemberData<ClassData> {
             if (moduleData.getModuleVersion() != null)
                 print("@" + moduleData.getModuleVersion());
             println();
-        } else if (className.endsWith("package-info")) {    // package-info compilation unit
-            if (printConstantPool) {
-                pool.print();
-            }
+
             // Print the Annotations
             printAnnotations(visibleAnnotations, invisibleAnnotations);
             printAnnotations(visibleTypeAnnotations, invisibleTypeAnnotations);
             if (hasPackage()) {
                 println(String.format("package %s version %s;", packageName, cfVersion.asString()));
             }
-        } else {                                            // class/interface compilation unit
-            if (hasPackage()) {
-                println(format("package %s;%n", packageName));
+        } else {                                                                // class/interface compilation unit
+            // Print either extended(table) or Jasm-formatted Annotations, Header, and ConstantPool.
+            printClassIntroduction();
+            canBePrinted = true;
+            // Load source file info.
+            if (printSourceLines && (sourceFileData != null)) {
+                String sourceName = sourceFileData.calculateName();
+                if (sourceName != null) {
+                    sourceLines = new TextLines(classFile.getParent(), sourceName);
+                }
             }
-            // Print the Annotations
-            printAnnotations(visibleAnnotations, invisibleAnnotations);
-            printAnnotations(visibleTypeAnnotations, invisibleTypeAnnotations);
+
+            // get the list of attributes that would be printed. it might be empty.
+            final List<? extends Printable> printableAttributes = getListOfPrintableAttributes(
+                    signature,
+                    sourceFileData,
+                    enclosingMethodData,
+                    sourceDebugExtensionData,
+                    recordData,                     // Print the Record (since class file 58.65535 JEP 359)
+                    nestHost,                       // Print the NestHost (since class file: 55.0)
+                    innerClasses,
+                    nestMembers,                    // Print the NestMembers (since class file: 55.0)
+                    permittedSubclassesData,        // Print PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
+                    loadableDescriptorsData,
+                    bootstrapMethods
+            );
+
+            int commentOffset = getCommentOffset();
+
+            // Print the fields
+            if (printMemberDataList(fields, commentOffset) && isPrintable(methods) && !printableAttributes.isEmpty()) {
+                println();
+            }
+
+            setCommentOffset(commentOffset -= getIndentSize());
+
+            // Print the methods
+            if (printMemberDataList(methods, commentOffset) && !printableAttributes.isEmpty()) {
+                println();
+            }
+
+            // Print the attributes
+            printAttributes(printableAttributes, commentOffset);
+
+            if (skipComments) {
+                println("}");
+            } else {
+                println(format("} // end Class %s%s",
+                        className,
+                        sourceFileData != null ? " compiled from \"" + sourceFileData.calculateName() + "\"" : ""));
+            }
+            alreadyPrinted = true;
+        }
+
+        List<IOException> issues = pool.getIssues();
+        if (!issues.isEmpty()) {
+            for (IOException ioe : issues) {
+                environment.error(ioe);
+            }
+            throw new RuntimeException();
+        }
+    }
+
+    protected void printClassIntroduction() throws IOException {
+        printSysInfo();
+        if (hasPackage()) {
+            println(format("package %s;%n", packageName));
+        }
+        // Print class annotations
+        printAnnotations(visibleAnnotations, invisibleAnnotations);
+        printAnnotations(visibleTypeAnnotations, invisibleTypeAnnotations);
+        // Print ClassDeclaration
+        printJasmClassDeclaration();
+        println("{");
+        int thisCommentOffset = pool.getCommentOffset();
+        // Print the constant pool
+        if (printConstantPool) {
+            pool.print();
+            setCommentOffset(thisCommentOffset);
+        }
+        // Print (this|super)_class
+        if (extraDetailedOutput && !dropClasses) {
+            if (printCPIndex) {
+                if (skipComments) {
+                    printIndentLn("this_class:  #%d;".formatted(this_cpx), thisCommentOffset);
+                    printIndentLn("super_class: #%d;".formatted(super_cpx), thisCommentOffset);
+                } else {
+                    thisCommentOffset -= getIndentSize();
+                    printIndent(PadRight("this_class:  #%d;".formatted(this_cpx), thisCommentOffset)).
+                            println(" // " + pool.getClassName(this_cpx, cpx -> "invalid index into the constant_pool table"));
+                    printIndent(PadRight("super_class: #%d;".formatted(super_cpx), thisCommentOffset)).
+                            println(" // " + pool.getClassName(super_cpx, cpx -> "invalid index into the constant_pool table"));
+                }
+            } else {
+                printIndentLn("this_class:  %s;".
+                        formatted(pool.getClassName(this_cpx, cpx -> "invalid index into the constant_pool table")));
+                printIndentLn("super_class: %s;".
+                        formatted(pool.getClassName(super_cpx, cpx -> "invalid index into the constant_pool table")));
+            }
+            println();
+        }
+    }
+
+    @Override
+    protected void printSysInfo() {
+        if (sysInfo) {
+            ToolInput toolInput = environment.getToolInput();
+            String thisClassName = pool.getJavaClassName(this_cpx, "<invalid this_cpx #%d>");
+            boolean isClass = !EModifier.isInterface(access);
+            Date lm;
+            String prefix = " *  ";
+            println("/**");
+            if (toolInput instanceof FileInput) {
+                println(prefix + "Classfile " + classFile.toAbsolutePath());
+                lm = new Date(classFile.toFile().lastModified());
+            } else {
+                String name = classFile.toString();
+                println(prefix + "Classfile " + name.substring(name.lastIndexOf('/') + 1));
+                lm = Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant());
+            }
+            DateFormat df = DateFormat.getDateInstance();
+            int length = toolInput.getSize();
+            if (length > 0) {
+                println(prefix + INDENT_STRING + "Last modified %s; size %d bytes", df.format(lm), length);
+            } else {
+                println(prefix + INDENT_STRING + "Last modified %s", df.format(lm));
+            }
+            MessageDigest msd = toolInput.getMessageDigest();
+            if (msd != null) {
+                byte[] digest = msd.digest();
+                if (digest != null) {
+                    StringBuilder sb = new StringBuilder();
+                    for (byte b : digest)
+                        sb.append(String.format("%02x", b));
+                    println(prefix + INDENT_STRING + msd.getAlgorithm() + " checksum " + sb);
+                }
+            }
+            if (sourceFileData != null) {
+                println(prefix + INDENT_STRING + "Compiled from \"%s\"".formatted(sourceFileData.calculateName()));
+            }
+            // Print java descriptor of a class/interface
+            if (isClass) {
+                print(prefix + EModifier.asKeywords(access & ~ACC_SUPER.getFlag(), CLASS) +
+                        "class " + thisClassName);
+            } else {
+                print(prefix + EModifier.asKeywords(access & ~ACC_ABSTRACT.getFlag() & ~ACC_SUPER.getFlag(), CLASS) +
+                        "interface " + thisClassName);
+            }
+            if (signature == null) {
+                // use info from class file header
+                if (isClass && super_cpx != 0) {
+                    String superClassName = pool.getJavaClassName(this_cpx, "<invalid super_cpx #%d>");
+                    if (!superClassName.equals("java.lang.Object")) {
+                        print(" extends " + superClassName);
+                    }
+                }
+                for (int i = 0; i < interfaces.length; i++) {
+                    print(i == 0 ? (isClass ? " implements " : " extends ") : ",");
+                    print(pool.getJavaClassName(interfaces[i], "<invalid interface_cpx #%d>"));
+                }
+                println();
+            } else {
+                Type signType = signature.getSignatureType();
+                String sign = signature.getJavaSignature();
+                if (signType instanceof Type.ClassSigType)
+                    print(sign);
+                else if (!signType.isObject()) {
+                    print(" extends " + sign);
+                }
+                println();
+            }
+            println(prefix + INDENT_STRING + "minor version: " + cfVersion.minor_version());
+            println(prefix + INDENT_STRING + "major version: " + cfVersion.major_version());
+            println(prefix + INDENT_STRING + "flags: (0x%04x) %s".formatted(access, EModifier.asNames(access, CLASS)));
+            println(prefix + INDENT_STRING + "this_class:  %s".formatted(pool.getClassName(this_cpx, cpx -> "invalid index into the constant_pool table")));
+            println(prefix + INDENT_STRING + "super_class: %s".formatted(pool.getClassName(super_cpx, cpx -> "invalid index into the constant_pool table")));
+
+            println(prefix + INDENT_STRING + "interfaces: %d, fields: %d, methods: %d, attributes: %d",
+                    interfaces.length, fields.size(), methods.size(), totalAttributes);
+            println(" */");
+        }
+    }
+
+    protected void printJasmClassDeclaration() {
+        {
+            String shortClassName = pool.inRange(this_cpx) ? pool.getShortClassName(this_cpx, this.packageName) : "?? invalid index";
             // In Java SE 8, the ACC_SUPER semantics became mandatory, regardless of the setting of ACC_SUPER or
             // the class file version number, and the flag no longer had any effect.
             // however, to not print it where it was, would cause hotswap of such class to
             // throw java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
-
-            String name = pool.inRange(this_cpx) ? pool.getShortClassName(this_cpx, this.packageName) : "?? invalid index";
             Pair<String, String> signInfo = (signature != null) ?
-                    signature.getPrintInfo((i) -> pool.inRange(i)) :
+                    signature.getJasmPrintInfo((i) -> pool.inRange(i)) :
                     new Pair<>("", "");
             // An interface is distinguished by the ACC_INTERFACE flag being set.
             if (EModifier.isInterface(access)) {       // interface compilation unit
@@ -441,9 +648,9 @@ public class ClassData extends MemberData<ClassData> {
                 print(printCPIndex ?
                         (skipComments ?
                                 format("interface #%d%s", this_cpx, signInfo.first) :
-                                format("interface #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second)
+                                format("interface #%d%s /* %s%s */", this_cpx, signInfo.first, shortClassName, signInfo.second)
                         ) :
-                        format("interface %s", name, signInfo.second)
+                        format("interface %s", shortClassName, signInfo.second)
                 );
             } else {                                    // class compilation unit
                 // add synthetic, deprecated if necessary
@@ -451,9 +658,9 @@ public class ClassData extends MemberData<ClassData> {
                 print(printCPIndex ?
                         (skipComments ?
                                 format("class #%d%s", this_cpx, signInfo.first) :
-                                format("class #%d%s /* %s%s */", this_cpx, signInfo.first, name, signInfo.second)
+                                format("class #%d%s /* %s%s */", this_cpx, signInfo.first, shortClassName, signInfo.second)
                         ) :
-                        format("class %s%s", name, signInfo.second)
+                        format("class %s%s", shortClassName, signInfo.second)
                 );
                 // if base class is not j.l.Object prints the "extends" statement
                 if (this_cpx < pool.size() && this_cpx > 0) {
@@ -485,7 +692,7 @@ public class ClassData extends MemberData<ClassData> {
                     String sIndexes = Arrays.stream(interfaces).
                             mapToObj(cpx -> format("#%d", cpx)).
                             collect(Collectors.joining(", "));
-                    if( skipComments ) {
+                    if (skipComments) {
                         statement = format("%simplements %s", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sIndexes);
                     } else {
                         statement = format("%simplements %s /* %s */", (numInterfaces > 1) ? "\n" + getIndentString() : " ", sIndexes, sNames);
@@ -496,66 +703,6 @@ public class ClassData extends MemberData<ClassData> {
                 print(statement);
             }
             println("%sversion %s", (numInterfaces > 1) ? "\n" + getIndentString() : " ", cfVersion.asString());
-            println("{");
-            if (printSourceLines && (sourceFileData != null)) {
-                String sourceName = sourceFileData.getSourceName();
-                if (sourceName != null) {
-                    sourceLines = new TextLines(classFile.getParent(), sourceName);
-                }
-            }
-
-            // Print the constant pool
-            if (printConstantPool) {
-                pool.print();
-                setCommentOffset(pool.getCommentOffset());
-            }
-
-            // get the list of attributes that would be printed. it might be empty.
-            final List<? extends Printable> printableAttributes = getListOfPrintableAttributes(
-                    sourceFileData,
-                    recordData,                     // Print the Record (since class file 58.65535 JEP 359)
-                    permittedSubclassesData,        // Print PermittedSubclasses Attribute (JEP 360 (Sealed types): class file 59.65535)
-                    nestHost,                       // Print the NestHost (since class file: 55.0)
-                    nestMembers,                    // Print the NestMembers (since class file: 55.0)
-                    innerClasses,
-                    preloadData,
-                    bootstrapMethods,
-                    sourceDebugExtensionData
-            );
-
-            // Print the fields
-            if (printMemberDataList(fields, getCommentOffset()) && isPrintable(methods) && !printableAttributes.isEmpty()) {
-                println();
-            }
-
-            // Print the methods
-            if (printMemberDataList(methods, getCommentOffset() - getIndentSize()) && !printableAttributes.isEmpty()) {
-                println();
-            }
-
-            // Print the attributes
-            numCorruptedAttributes = printAttributes(getCommentOffset() - getIndentSize(), printableAttributes);
-            if( skipComments ) {
-                println("}");
-            } else {
-                println(format("} // end Class %s%s",
-                        name,
-                        sourceFileData != null ? " compiled from \"" + sourceFileData.getSourceName() + "\"" : ""));
-            }
-        }
-
-        // TODO: This isn't necessary. The warning info is already inlined into the jasm code.
-        // TODO: Or the "-nowarn" option should be added.
-        // if( numCorruptedAttributes > 0 ) {
-        //      environment.warning("warn.corrupted_attributes", numCorruptedAttributes);
-        // }
-
-        List<IOException> issues = pool.getIssues();
-        if (!issues.isEmpty()) {
-            for (IOException ioe : issues) {
-                environment.error(ioe);
-            }
-            throw new RuntimeException();
         }
     }
 
@@ -565,46 +712,21 @@ public class ClassData extends MemberData<ClassData> {
 
     // Utility methods to check whether cottages of data would be printed
     private <P extends Printable> boolean isPrintable(P... attributes) {
-        for (P attribute : attributes)
-            if (attribute != null) {
-                if (attribute.isPrintable()) {
-                    if (attribute instanceof Container<?>) {
-                        Container<P> container = (Container<P>) attribute;
-                        for (P item : container) {
-                            if (item.isPrintable())
-                                return true;
-                        }
-                        return false;
-                    }
-                    return true;
-                }
-            }
-        return false;
+        return Arrays.stream(attributes).
+                anyMatch(attribute -> attribute != null && attribute.isPrintable());
     }
 
-    /**
-     * Returns number of corrupted attributes if any
-     */
-    private <P extends Printable> int printAttributes(int commentOffset, List<P> attributeList) throws
+    private <P extends Printable> void printAttributes(List<P> attributeList, int commentOffset) throws
             IOException {
         int len = attributeList.size();
         boolean printed = false;
         for (int i = 0; i < len; i++) {
             P attribute = attributeList.get(i);
             if (isPrintable(attribute)) {
-                if (Container.class.isAssignableFrom(attribute.getClass())) {
-                    for (P item : (Container<P>) attribute) {
-                        if (Indenter.class.isAssignableFrom(item.getClass())) {
-                            ((Indenter) item).setCommentOffset(commentOffset);
-                        }
-                        item.print();
-                    }
-                } else {
-                    if (Indenter.class.isAssignableFrom(attribute.getClass())) {
-                        ((Indenter) attribute).setCommentOffset(commentOffset);
-                    }
-                    attribute.print();
+                if (Indenter.class.isAssignableFrom(attribute.getClass())) {
+                    ((Indenter) attribute).setCommentOffset(commentOffset);
                 }
+                attribute.print();
                 printed = true;
             }
             if (printed && (i + 1 < len)) {
@@ -612,48 +734,36 @@ public class ClassData extends MemberData<ClassData> {
                 printed = false;
             }
         }
-        // Prints corrupted attributes if any.
-        List<AttrData> corruptedList = getCorruptedAttributes();
-        if (!corruptedList.isEmpty()) {
-            printIndentLn();
-            printIndentLn(format("// == Ignored %d corrupted attribute(s): ==", corruptedList.size()));
-            for (int i = 0; i < corruptedList.size(); i++) {
-                printIndentLn("// attribute_info {");
-                printIndentLn(format("//    u2 attribute_name_index: #%d;", corruptedList.get(i).getNameCpx()));
-                printIndentLn(format("//    u4 attribute_length:     %d;", corruptedList.get(i).getLength()));
-                printIndentLn("//    u1 info[attribute_length];");
-                printIndentLn("// }");
-            }
-            printIndentLn();
-        }
-        return corruptedList.size();
+        // TODO: Prints corrupted attributes if any.
     }
 
-    private List<AttrData> getCorruptedAttributes() {
-        return attributes.stream().filter(AttrData::isCorrupted).toList();
-    }
-
-    /**
-     * Prints list of either fields or methods
-     *
-     * @param list a list of fields or methods to be printed
-     * @return true if something were printed
-     * @throws IOException if something goes wrong
-     */
-    private boolean printMemberDataList(List<? extends MemberData> list, int commentOffset) throws IOException {
-        if (list != null) {
-            int count = list.size();
-            if (count > 0) {
-                for (int i = 0; i < count; i++) {
-                    MemberData md = list.get(i);
-                    md.setCommentOffset(commentOffset);
-                    if (i != 0 && md.getAnnotationsCount() > 0)
-                        println();
-                    md.print();
-                }
-                return true;
-            }
+    private boolean printMemberDataList(Container<? extends MemberData<ClassData>, ClassData> list,
+                                        int commentOffset) throws IOException {
+        if (list != null && list.size() > 0) {
+            list.setCommentOffset(commentOffset).print();
+            return true;
         }
         return false;
+    }
+
+    public enum COMPILATION_UNIT {
+        MODULE_INFO,
+        PACKAGE_INFO,
+        CLASS_UNIT;
+
+        /**
+         * @param className Pre-initialized Constant Pool name calculated by this_cpx
+         * @param access    access flags (modifiers)
+         * @return compilation unit
+         */
+        public static COMPILATION_UNIT get(String className, int access) {
+            if (className.endsWith("module-info") || EModifier.isModule(access)) {              // module-info compilation unit
+                return MODULE_INFO;
+            } else if (className.endsWith("package-info") && EModifier.isInterface(access)) {  // package-info compilation unit
+                return PACKAGE_INFO;
+            } else {
+                return CLASS_UNIT;
+            }
+        }
     }
 }

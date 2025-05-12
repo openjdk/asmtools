@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,8 +36,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static org.openjdk.asmtools.Main.*;
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.common.outputs.FSOutput.FSDestination.DIR;
 import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
@@ -85,6 +87,7 @@ public class Main extends JdecTool {
         environment.usage(List.of(
                 "info.usage",
                 "info.opt.d",
+                "info.opt.w",
                 "info.opt.g",
                 "info.opt.v",
                 "info.opt.version"));
@@ -106,19 +109,23 @@ public class Main extends JdecTool {
                     environment.setVerboseFlag(true);
                     environment.setTraceFlag(true);
                     break;
-                case org.openjdk.asmtools.Main.DIR_SWITCH:
-                    setDestDir(++i, argv);
+                case WRITE_SWITCH:                              // -w
+                    environment.setIgnorePackage(true);
+                    setFSDestination(DIR, ++i, argv);
                     break;
-                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
+                case DIR_SWITCH:
+                    setFSDestination(DIR, ++i, argv);
+                    break;
+                case DUAL_LOG_SWITCH:
                     this.environment.setOutputs(new DualOutputStreamOutput());
                     break;
-                case org.openjdk.asmtools.Main.VERSION_SWITCH:
+                case VERSION_SWITCH:
                     environment.println(FULL_VERSION);
                     System.exit(OK);
                 case "-h", "-help":
                     usage();
                     System.exit(OK);
-                case org.openjdk.asmtools.Main.STDIN_SWITCH:
+                case STDIN_SWITCH:
                     addStdIn();
                     break;
                 default:
@@ -141,38 +148,40 @@ public class Main extends JdecTool {
         environment.setPrintDetailsFlag(value);
     }
 
-    // Runs the decoder with args
-    public synchronized boolean decode(String... argv) {
-        parseArgs(argv);
-        return this.decode() == OK;
-    }
-
     /**
      * Runs the decoder
      */
+    @Override
     public synchronized int decode() {
-        for (ToolInput inputFileName : fileList) {
+        int rc = 0;
+        for (ToolInput toolInput : fileList) {
             try {
-                environment.setInputFile(inputFileName);
+                environment.setToolInput(toolInput);
                 ClassData classData = new ClassData(environment);
                 classData.decodeClass();
+                environment.getOutputs().flush();
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                environment.getLogger().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
                 environment.printException(fnf);
-                environment.error("err.not_found", inputFileName);
+                environment.error("err.not_found", toolInput);
+                rc = FAILED;
             } catch (IOException | ClassFormatError ioe) {
+                environment.error(ioe);
                 environment.printException(ioe);
-                if (!environment.getVerboseFlag())
-                    environment.printErrorLn(ioe.getMessage());
-                environment.error("err.fatal_error", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Error error) {
+                environment.error(error);
                 environment.printException(error);
-                environment.error("err.fatal_error", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Exception ex) {
+                environment.error(ex);
                 environment.printException(ex);
-                environment.error("err.fatal_exception", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             }
-            return FAILED;
+            environment.getLogger().flush();
+            return rc;
         }
         return OK;
     }

@@ -24,6 +24,7 @@ package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.CompilerConstants;
 import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.ELocation;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.IOException;
@@ -109,14 +110,14 @@ class MethodData extends MemberData<JasmEnvironment> {
         @Override
         public void write(CheckedDataOutputStream out) throws IOException {
             super.write(out);  // attr name, attr len
-            out.writeByte(paramsTotal); // number of parameters total (in byte)
+            out.writeByte(paramsTotal); // number of parameters(in byte)
 
             for (int i = 0; i < paramsTotal; i++) {
-                ArrayList<T> attrarray = get(i);
-                if (attrarray != null) {
+                ArrayList<T> list = get(i);
+                if (list != null) {
                     // write out the number of annotations for the current param
-                    out.writeShort(attrarray.size());
-                    for (T item : attrarray) {
+                    out.writeShort(list.size());
+                    for (T item : list) {
                         item.write(out); // write the current annotation
                     }
                 } else {
@@ -140,6 +141,7 @@ class MethodData extends MemberData<JasmEnvironment> {
     public MethodData(ClassData classData, int access, ConstCell<?> name, ConstCell<?> signature, ArrayList<ConstCell<?>> exc_table) {
         super(classData.pool, classData.getEnvironment(), access);
         this.classData = classData;
+        this.attributeLocation = ELocation.method_info;
         nameCell = name;
         sigCell = signature;
         if ((exc_table != null) && (!exc_table.isEmpty())) {

@@ -39,10 +39,10 @@ public interface ConstantPoolDataVisitor extends DataWriter {
             if (type.oneOf(CONSTANT_INTEGER, CONSTANT_FLOAT,
                     CONSTANT_LONG, CONSTANT_DOUBLE,
                     CONSTANT_UTF8)) {
-                data = (T) new ParserAnnotation.ConstElemValue(type.getAnnotationElementTypeValue(), cell);
+                data = (T) new ParseAnnotation.ConstElemValue(type.getAnnotationElementTypeValue(), cell);
 
             } else {
-                data = (T) new ParserAnnotation.ClassElemValue(cell);
+                data = (T) new ParseAnnotation.ClassElemValue(cell);
             }
 //        } else if (type.oneOf(CONSTANT_CLASS)) {
 //            data = (T) new ParserAnnotation.ClassElemValue(cell);

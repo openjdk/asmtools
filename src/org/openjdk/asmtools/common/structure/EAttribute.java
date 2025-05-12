@@ -57,7 +57,7 @@ public enum EAttribute {
     ATT_RuntimeVisibleAnnotations(16, "ATT_RuntimeVisibleAnnotations", "RuntimeVisibleAnnotations", CONSTANT_UNKNOWN),
     ATT_RuntimeInvisibleAnnotations(17, "ATT_RuntimeInvisibleAnnotations", "RuntimeInvisibleAnnotations", CONSTANT_UNKNOWN),
     ATT_RuntimeVisibleParameterAnnotations(18, "ATT_RuntimeVisibleParameterAnnotations", "RuntimeVisibleParameterAnnotations", CONSTANT_UNKNOWN),
-    ATT_RuntimeInvisibleParameterAnnotations(19, "ATT_RuntimeInvisibleParameterAnnotations", "RuntimeInvisibleParameterAnnotations",CONSTANT_UNKNOWN ),
+    ATT_RuntimeInvisibleParameterAnnotations(19, "ATT_RuntimeInvisibleParameterAnnotations", "RuntimeInvisibleParameterAnnotations", CONSTANT_UNKNOWN),
     ATT_AnnotationDefault(20, "ATT_AnnotationDefault", "AnnotationDefault", CONSTANT_UNKNOWN),
     ATT_BootstrapMethods(21, "ATT_BootstrapMethods", "BootstrapMethods", CONSTANT_METHODHANDLE),
     ATT_RuntimeVisibleTypeAnnotations(22, "ATT_RuntimeVisibleTypeAnnotations", "RuntimeVisibleTypeAnnotations", CONSTANT_UNKNOWN),
@@ -90,7 +90,7 @@ public enum EAttribute {
     // }
     ATT_PermittedSubclasses(35, "ATT_PermittedSubclasses", "PermittedSubclasses", CONSTANT_CLASS),
     // Valhalla
-    ATT_Preload(36, "ATT_Preload", "Preload", CONSTANT_CLASS);
+    ATT_LoadableDescriptors(36, "ATT_LoadableDescriptors", "LoadableDescriptors", CONSTANT_CLASS);
 
     private final Integer value;
     private final String printVal;
@@ -106,13 +106,26 @@ public enum EAttribute {
         this.constType = constType;
     }
 
+    public boolean isOneOf(EAttribute... attributes) {
+        for (EAttribute attribute : attributes) {
+            if (attribute == this) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String printValue() {
         return printVal;
     }
 
-    public String parseKey() { return parseKey; }
+    public String parseKey() {
+        return parseKey;
+    }
 
-    public ClassFileConst.ConstType getCPTypeOfIndex() { return constType; }
+    public ClassFileConst.ConstType getCPTypeOfIndex() {
+        return constType;
+    }
 
     public int value() {
         return value;

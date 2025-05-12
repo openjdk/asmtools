@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,10 +37,10 @@ import static java.lang.String.format;
 public class TextOutput extends NamedToolOutput {
 
     // decoration for text output
-    private BiFunction<String, String, String> namedSourceOrnament = null;
+    private BiFunction<String, String, String> namedSourceOrnament;
 
     private final ArrayList<NamedSource> outputs = new ArrayList<>();
-    private StringBuilder currentClass;
+    private StringBuilder curClsStringBuilder;
 
     public ArrayList<NamedSource> getOutputs() {
         return outputs;
@@ -59,17 +59,17 @@ public class TextOutput extends NamedToolOutput {
     @Override
     public void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException {
         super.startClass(fullyQualifiedName, suffix, logger);
-        currentClass = new StringBuilder();
+        curClsStringBuilder = new StringBuilder();
     }
 
     @Override
     public void finishClass(String fullyQualifiedName) throws IOException {
         if (!getCurrentClassName().equals(fullyQualifiedName)) {
-            throw new RuntimeException("Ended different class - " + fullyQualifiedName + " - then started - " + super.fqn);
+            throw new RuntimeException("Ended different class - " + fullyQualifiedName + " - then started - " + super.fullyQualifiedName);
         }
-        outputs.add(new NamedSource(fullyQualifiedName, currentClass.toString(), namedSourceOrnament));
-        super.fqn = null;
-        currentClass = null;
+        outputs.add(new NamedSource(fullyQualifiedName, curClsStringBuilder.toString(), namedSourceOrnament));
+        super.fullyQualifiedName = null;
+        curClsStringBuilder = null;
     }
 
     public TextOutput setNamedSourceOrnament(BiFunction<String, String, String> namedSourceOrnament) {
@@ -79,21 +79,26 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public void printlns(String line) {
-        currentClass.append(line).append("\n");
+        curClsStringBuilder.append(line).append("\n");
     }
 
     @Override
     public void prints(String line) {
-        currentClass.append(line);
+        curClsStringBuilder.append(line);
     }
 
     @Override
     public void prints(char line) {
-        currentClass.append(line);
+        curClsStringBuilder.append(line);
     }
 
     @Override
     public void flush() {
+    }
+
+    @Override
+    public String getName() {
+        return "string";
     }
 
     public class NamedSource {

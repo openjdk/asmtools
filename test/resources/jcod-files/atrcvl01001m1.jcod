@@ -1,0 +1,239 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl010/atrcvl01001m1/atrcvl01001m1 {
+  0xCAFEBABE;
+  0;                                       // minor version
+  67;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Method #2 #3;                          // #1
+    Class #4;                              // #2
+    NameAndType #5 #6;                     // #3
+    Utf8 "java/lang/Object";               // #4
+    Utf8 "<init>";                         // #5
+    Utf8 "()V";                            // #6
+    String #8;                             // #7
+    Utf8 "javasoft.sqe.tests.vm.classfmt.atr.atrcvl010.atrcvl01001m1.atrcvl01001m1p";  // #8
+    Method #10 #11;                        // #9
+    Class #12;                             // #10
+    NameAndType #13 #14;                   // #11
+    Utf8 "java/lang/Class";                // #12
+    Utf8 "forName";                        // #13
+    Utf8 "(Ljava/lang/String;)Ljava/lang/Class;";  // #14
+    Method #10 #16;                        // #15
+    NameAndType #17 #18;                   // #16
+    Utf8 "newInstance";                    // #17
+    Utf8 "()Ljava/lang/Object;";           // #18
+    Class #20;                             // #19
+    Utf8 "java/lang/Throwable";            // #20
+    Method #22 #23;                        // #21
+    Class #24;                             // #22
+    NameAndType #25 #26;                   // #23
+    Utf8 "java/lang/String";               // #24
+    Utf8 "valueOf";                        // #25
+    Utf8 "(Ljava/lang/Object;)Ljava/lang/String;";  // #26
+    InvokeDynamic 0s #28;                  // #27
+    NameAndType #29 #30;                   // #28
+    Utf8 "makeConcatWithConstants";        // #29
+    Utf8 "(Ljava/lang/String;)Ljava/lang/String;";  // #30
+    Method #32 #33;                        // #31
+    Class #34;                             // #32
+    NameAndType #35 #36;                   // #33
+    Utf8 "java/io/PrintStream";            // #34
+    Utf8 "println";                        // #35
+    Utf8 "(Ljava/lang/String;)V";          // #36
+    String #38;                            // #37
+    Utf8 "javasoft.sqe.tests.vm.classfmt.atr.atrcvl010.atrcvl01001m1.atrcvl01001m1n";  // #38
+    String #40;                            // #39
+    Utf8 "test atrcvl01001m1 failed to reject bad classfile atrcvl01001m1n";  // #40
+    Class #42;                             // #41
+    Utf8 "java/lang/ClassFormatError";     // #42
+    InvokeDynamic 1s #28;                  // #43
+    Field #45 #46;                         // #44
+    Class #47;                             // #45
+    NameAndType #48 #49;                   // #46
+    Utf8 "java/lang/System";               // #47
+    Utf8 "out";                            // #48
+    Utf8 "Ljava/io/PrintStream;";          // #49
+    Method #51 #52;                        // #50
+    Class #53;                             // #51
+    NameAndType #54 #55;                   // #52
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl010/atrcvl01001m1/atrcvl01001m1";  // #53
+    Utf8 "run";                            // #54
+    Utf8 "([Ljava/lang/String;Ljava/io/PrintStream;)I";  // #55
+    Method #45 #57;                        // #56
+    NameAndType #58 #59;                   // #57
+    Utf8 "exit";                           // #58
+    Utf8 "(I)V";                           // #59
+    Utf8 "Code";                           // #60
+    Utf8 "LineNumberTable";                // #61
+    Utf8 "StackMapTable";                  // #62
+    Utf8 "main";                           // #63
+    Utf8 "([Ljava/lang/String;)V";         // #64
+    Utf8 "SourceFile";                     // #65
+    Utf8 "atrcvl01001m1.java";             // #66
+    Utf8 "BootstrapMethods";               // #67
+    String #69;                            // #68
+    Utf8 "test atrcvl01001m1 failed to load or instantiate good classfile atrcvl01001m1p: \u0001";  // #69
+    String #71;                            // #70
+    Utf8 "test atrcvl01001m1 failed with unexpected loading exception: \u0001";  // #71
+    MethodHandle 6b #73;                   // #72
+    Method #74 #75;                        // #73
+    Class #76;                             // #74
+    NameAndType #29 #77;                   // #75
+    Utf8 "java/lang/invoke/StringConcatFactory";  // #76
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";  // #77
+    Utf8 "InnerClasses";                   // #78
+    Class #80;                             // #79
+    Utf8 "java/lang/invoke/MethodHandles$Lookup";  // #80
+    Class #82;                             // #81
+    Utf8 "java/lang/invoke/MethodHandles";  // #82
+    Utf8 "Lookup";                         // #83
+  }
+
+  0x0021;                                  // access
+  #51;                                     // this_cpx
+  #2;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #5;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+        Attr(#60) {                        // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x01 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#61) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   11;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #54;                                 // name_index
+      #55;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#60) {                        // Code
+          2;                               // max_stack
+          4;                               // max_locals
+          Bytes[]{
+            0x12 0x07 0xB8 0x00 0x09 0x4D 0x2C 0xB6 0x00 0x0F 0x4E 0xA7;
+            0x00 0x13 0x4D 0x2B 0x2C 0xB8 0x00 0x15 0xBA 0x00 0x1B 0x00;
+            0x00 0xB6 0x00 0x1F 0x05 0xAC 0x12 0x25 0xB8 0x00 0x09 0x4D;
+            0x2B 0x12 0x27 0xB6 0x00 0x1F 0x05 0xAC 0x4D 0xA7 0x00 0x13;
+            0x4D 0x2B 0x2C 0xB8 0x00 0x15 0xBA 0x00 0x2B 0x00 0x00 0xB6;
+            0x00 0x1F 0x05 0xAC 0x03 0xAC;
+          }
+          [] {                             // Traps
+               0   11   14  19;
+              30   43   44  41;
+              30   43   48  19;
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#61) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   16;
+                   6   17;
+                  11   21;
+                  14   18;
+                  15   19;
+                  28   20;
+                  30   24;
+                  36   25;
+                  42   26;
+                  44   27;
+                  45   32;
+                  48   29;
+                  49   30;
+                  62   31;
+                  64   34;
+              }
+            }                              // end of LineNumberTable
+            ;
+            Attr(#62) {                    // StackMapTable
+              [] {                         // 
+                78b, []z{O,#19};           // same_locals_1_stack_item_frame
+                15b;                       // same_frame
+                77b, []z{O,#41};           // same_locals_1_stack_item_frame
+                67b, []z{O,#19};           // same_locals_1_stack_item_frame
+                15b;                       // same_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #63;                                 // name_index
+      #64;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#60) {                        // Code
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB2 0x00 0x2C 0xB8 0x00 0x32 0x10 0x5F 0x60 0xB8 0x00;
+            0x38 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#61) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   38;
+                  13   39;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#65) {                            // SourceFile
+      #66;
+    }                                      // end of SourceFile
+    ;
+    Attr(#67) {                            // BootstrapMethods
+      [] {                                 // bootstrap_methods
+        {                                  // bootstrap_method
+          #72;                             // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #68;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #72;                             // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #70;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+      }
+    }                                      // end of BootstrapMethods
+    ;
+    Attr(#78) {                            // InnerClasses
+      [] {                                 // classes
+          #79   #81   #83  25;
+      }
+    }                                      // end of InnerClasses
+  }                                        // end of Attributes
+}

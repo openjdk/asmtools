@@ -310,7 +310,7 @@ public final class ModuleContent extends Indenter {
 
         @Override
         public String toString() {
-            return (Options.contains(Options.PR.CPX)) ? String.format("#%-4d /* %s */", getCPIndex(), name()) : name();
+            return (Options.contains(Options.PrintOption.CP_INDEX)) ? String.format("#%-4d /* %s */", getCPIndex(), name()) : name();
         }
     }
 

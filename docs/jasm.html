@@ -1,0 +1,2257 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--
+ Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
+ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+
+ This code is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License version 2 only, as
+ published by the Free Software Foundation.
+
+ This code is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ version 2 for more details (a copy is included in the LICENSE file that
+ accompanied this code).
+
+ You should have received a copy of the GNU General Public License version
+ 2 along with this work; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+
+ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ or visit www.oracle.com if you need additional information or have any
+ questions.
+-->
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Language" content="en-US">
+  <title>JASM Syntax</title>
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta name="Generator" content="XSolBook3.5 XML Custom XSLT Filter">
+  <meta name="keywords" content="AsmTools, AsmTools User's Guide">
+  <meta name="dc.title" content="Command Line Usage Examples">
+  <meta name="description"
+ content="This manual describes how to use the AsmTools.">
+  <meta name="identifier" content="000-0000-00">
+  <meta name="date" content="">
+  <meta name="issued" content="2009-02-20">
+  <meta name="revision" content="">
+  <meta name="publisher" content="Oracle, Inc.">
+  <meta name="collection" content="reference">
+  <meta name="robots" content="index, follow">
+<!--Inserts the stylesheet-->
+  <link rel="STYLESHEET" href="unx_str_styles.css" charset="ISO-8859-1"
+ type="text/css">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body class="HlpBdy" leftmargin="10" topmargin="10"
+ style="background-color: rgb(255, 255, 255);" marginheight="10"
+ marginwidth="10">
+<div class="navbar" align="center">
+<table dir="ltr"
+ summary="Navigation bar, includes the book title and navigation buttons"
+ border="0" cellpadding="0" cellspacing="0" width="100%">
+  <colgroup span="2" width="100%"><col id="t1" span="1" width="50%"><col
+ id="t2" span="1" width="50%"></colgroup><tbody>
+    <tr bgcolor="#cccccc">
+      <td class="navbartitle" rowspan="1" colspan="1" abbr="ChapTitle"
+ align="left"><a name="Z400013211728"></a>Java Assembler Tools
+(AsmTools) User's Guide</td>
+      <td rowspan="1" colspan="1" abbr="NavButtons" align="right"
+ valign="top"><a href="index.html"><img src="shared/toc01.gif"
+ title="Table Of Contents" alt="Table Of Contents" border="0"
+ height="26" width="30"></a><a href="chapter3.html"><img
+ src="shared/prev01.gif" title="Previous Chapter" alt="Previous Chapter"
+ border="0" height="26" width="30"></a><a href="appendix2.html"><img
+ src="shared/next01.gif" title="Next Chapter" alt="Next Chapter"
+ border="0" height="26" width="30"></a><a href="ix.html"><img
+ src="shared/index01.gif" title="Book Index" alt="Book Index" border="0"
+ height="26" width="30"></a></td>
+    </tr>
+  </tbody>
+</table>
+<p class="feedback">
+<script language="javascript" type="text/javascript" charset="UTF-8"
+ src="/app/css/oo_engine.js"></script><a>
+<script language="javascript" type="text/javascript" charset="UTF-8">
+O_GoT('<img src="/app/images/sm_3E6B8A_oo.gif" border="0" alt="Feedback link" title="Feedback">Feedback');
+</script></a></p>
+<br>
+<br>
+</div>
+<table dir="ltr" summary="Chapter Number" abbr="ChapNum" border="0"
+ width="100%">
+  <colgroup span="1" width="100%"><col id="ch1" span="1"></colgroup><tbody>
+    <tr>
+      <td class="ChapNumber" align="right"> <span class="ChapNumPrefix">APPENDIX</span>&nbsp;
+
+
+
+
+
+      <span class="ChapNumNum">A</span> <span class="ChapNumSuffix"></span></td>
+    </tr>
+  </tbody>
+</table>
+<hr noshade="1" size="7">
+<h1 class="chaptitle" align="right"><a name="d0e2098"></a><!-- ============ --><!-- MAIN CONTENT --></h1>
+<h1 class="ChapTitle" align="right"><a name="d0e2429"></a>JASM Syntax<br>
+</h1>
+<!-- END PAGETITLE ONE LINE -->
+<p>This chapter describes JASM syntax, and how to encode class files
+using this
+syntax. <span style="font-style: italic;">Jasm</span> is a java
+assembler that accepts text in the JASM
+format and produces a <code>.class</code> file for use
+with a Java Virtual Machine. <span style="font-style: italic;">Jasm</span>'s
+primary
+use
+is
+as
+a
+tool for producing specialized tests for testing a JVM
+implementation<br>
+</p>
+<p>
+This chapter describes JASM syntax in the following sections:
+</p>
+<ul type="square">
+  <li><a href="#gensyntax">General Syntax</a>
+    <ul>
+      <li><a href="#descrfrm">Description Formats</a></li>
+      <li><a href="#lex">Lexical Structure</a></li>
+    </ul>
+  </li>
+  <li><a href="#genstruct">General Class Structure</a></li>
+  <li><a href="#genmodule">General Module Structure</a></li>
+  <li><a href="#source">General Source File Structure</a></li>
+  <li><a href="#cp">The Constant Pool and Constant Elements</a></li>
+  <li><a href="#constant">Constant Declarations</a></li>
+  <li><a href="#field">Field Variables</a></li>
+  <li><a href="#method">Method Declarations</a></li>
+  <li><a href="#instructions">Instructions</a>
+    <ul>
+      <li><a href="#vminstructions">VM Instructions</a></li>
+      <li><a href="#invokedynamicinstructions">InvokeDynamic
+Instructions</a></li>
+      <li><a href="#pseudoinstructions">Pseudo Instructions</a>
+        <ul>
+          <li><a href="#codepseudo">Code Generating Pseudo Instructions</a></li>
+          <li><a href="#attrpseudo">Attribute Generating Pseudo
+Instructions</a> </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#innercl">Inner Class Declarations</a></li>
+  <li><a href="#annots">Annotation Declarations</a>
+    <ul>
+      <li><a href="#memberannots">Member Annotations</a></li>
+      <li><a href="#paramannots">Parameter Names and Parameter
+Annotations</a></li>
+      <li><a href="#defaultannots">Default Annotations</a></li>
+    </ul>
+  </li>
+  <li><a href="#module_properties">Module Properties</a>
+    <ul>
+      <li><a href="#module_requires">Requires</a></li>
+      <li><a href="#module_exports">Exports</a></li>
+      <li><a href="#module_opens">Opens</a></li>
+      <li><a href="#module_uses">Uses</a></li>
+      <li><a href="#module_provides">Provides</a></li>
+    </ul>
+  </li>
+  <li><a href="#pico">PicoJava Instructions</a></li>
+</ul>
+<p></p>
+<!-- MAIN CONTENT -->
+<!-- ============ --><!-- ============ --><!-- BEGIN PAGETITLE ONE LINE -->
+<hr noshade="noshade" size="7"><a name="gensyntax"></a>
+<h1 class="head1">General Syntax</h1>
+<p>
+JASM syntax can come in one of two variations: short-form or
+verbose-form.&nbsp; Short form uses Java-style names to refer to items
+in a constant-pool.&nbsp; Verbose form uses explicit constant-pool
+indexes to refer to items in the constant pool.&nbsp; The normal output
+from JDIS produces jasm files in the short-form.&nbsp; Using the -g
+option for JDIS (ie.&nbsp; jdis -g file.class) produces JASM source in
+the verbose-form.<br>
+</p>
+<p>The source text file can be free form (newlines are considered
+blanks)
+and may contain Java-style commenting.
+The first line of a JASM file represents the name of the resulting
+file in the destination directory. This name does not affect the
+content of
+the resulting file. This line has two forms:
+</p>
+<p>
+</p>
+<pre>file FILENAME <br></pre>
+or
+<pre>class CLASSNAME <br></pre>
+In the latter case, extension <code> .class </code> will be added to
+form FILENAME. Jasm's <code>-d option</code> allows you to define the
+destination
+directory. A list of structured dataWriter items follows the class name. The
+length (in bytes) of each item
+is determined by its representation.<br>
+<p></p>
+<blockquote>
+  <hr align="left" noshade="1" size="6" width="80%"><a name="descrfrm"></a>
+  <h2 class="head2">Description formats</h2>
+  <p>
+  <table>
+    <tbody>
+      <tr>
+        <td> TERM1|TERM2 </td>
+        <td>TERM1 or TERM2 (not both) </td>
+      </tr>
+      <tr>
+        <td> [TERM] </td>
+        <td> TERM is optional </td>
+      </tr>
+      <tr>
+        <td> TERM... </td>
+        <td> TERM repeated 1 or more times </td>
+      </tr>
+      <tr>
+        <td> [TERM...] </td>
+        <td> TERM repeated 0 or more times </td>
+      </tr>
+      <tr>
+        <td> "sequence of" </td>
+        <td>all the following terms are mandatory, in the order given. </td>
+      </tr>
+      <tr>
+        <td> "set of" </td>
+        <td> any of following terms, or none of them,
+may appear in any order. However, repetitions are not allowed. </td>
+      </tr>
+      <tr>
+        <td> "list of" </td>
+        <td> any of following terms, or none of them,
+may appear in any sequence. If more than one term appear, they are
+separated by commas (',') </td>
+      </tr>
+    </tbody>
+  </table>
+  </p>
+  <hr align="left" noshade="1" size="6" width="80%"><a name="lex"></a>
+  <h2 class="head2">Lexical Structure</h2>
+  <p>The source text file can be free form (newlines, tabs, and blank
+spaces are equivalent). Additionally, the source may contain standard
+Java
+and C++ comments. </p>
+  <p> <code>STRING</code>, <code>NUMBER</code>, and <code>IDENT</code>
+are treated the same as in
+the Java Language Specification. One difference is that LETTERs include
+also `/', `&lt;', `&gt;', `(', and `)' . </p>
+  <dl>
+    <dt><code><b><em>STRING</em></b></code>: </dt>
+    <dd><code>" [ STRING_CHARACTER... ] "</code> </dd>
+    <dt><code><b><em>NUMBER</em></b></code>: </dt>
+    <dd><code> DIGIT...</code> </dd>
+    <dt><code><b><em>IDENT</em></b></code>: </dt>
+    <dd><code>LETTER [ LETTER_OR_DIGIT ...]</code> </dd>
+    <dt><code><b><em>ACCESS</em></b></code> (depends on the context):
+set of </dt>
+    <dd><code>abstract final interface native private protected public
+static super synchronized transient volatile deprecated synthetic
+bridge varargs</code> </dd>
+  </dl>
+  <p> Not all access bits make sense for all declarations: for example,
+the
+"super" and "interface" access flags are applied to classes only. </p>
+  <p>If an access bit is used improperly,
+the assembler prints a warning, but places the bit in the access
+set. </p>
+  <p>Note that <code>deprecated</code> and <code>synthetic</code>
+keywords
+are not translated to access flags in the Java sense.
+For these jasm generates a corresponding <code>Deprecated</code>
+or <code>Synthetic</code> attributes instead of access bits. The <code>synthetic</code>
+access flag is used to mark compiler generated
+members not
+seen in the source (for example, a field reference to an anonymous
+outer class). </p>
+  <dl>
+    <dt><code><b><em>TAG</em></b></code>: one of </dt>
+    <dd><code>int float long double Asciz String class Field Method
+NameAndType InterfaceMethod MethodType MethodHandle InvokeDynamic Dynamic</code>
+    </dd>
+  </dl>
+Local names represent labels, rangePC-labels and local variables. Their
+scope is constrained by method parenthesis.
+  <dl>
+    <dt><code><b><em>LOCAL_NAME</em></b></code>: </dt>
+    <dd><code>IDENT</code> </dd>
+  </dl>
+  <p>&nbsp;</p>
+  <dl>
+    <dt><code><b><em>CONSTANT_INDEX</em></b></code>: </dt>
+    <dd><code>#NUMBER</code></dd>
+  </dl>
+  <p> Each CONSTANT_INDEX represents a reference into the constant pool
+at the specified location. </p>
+</blockquote>
+<hr noshade="noshade" size="7"><a name="genstruct"></a>
+<h1 class="head1">General Class Structure</h1>
+<dl>
+  <dt><code><b><em>INTERFACES</em></b></code>:list of </dt>
+  <dd><code>CONSTANT_CELL(class|@interface|interface)</code> </dd>
+  <dt><code><b><em>TOP_LEVEL_COMPONENT</em></b></code>: one of </dt>
+  <dd><code>CONSTANT_DECLARATION FIELD_DECLARATION METHOD_DECLARATION
+INNER_CLASS_DECLARATIONS</code> </dd>
+  <dt><code><b><em>CLASS</em></b></code>: sequence of </dt>
+  <dd><code>ANNOTATIONS CLASS_ACCESS CONSTANT_CELL(class|@interface|interface) [extends
+CONSTANT_CELL(class)]
+[implements INTERFACES] [version INTEGER:INTEGER] {
+[TOP_LEVEL_COMPONENT...] }</code></dd>
+  <dt><code><span style="font-weight: bold; font-style: italic;">CLASS_ACCESS</span>:
+list
+of</code></dt>
+  <dd><code>[public]</code><code>[final]</code><code></code><code>[super]</code><code></code><code>[interface]</code><code></code><code>[abstract]</code><code></code><code>[synthetic]</code><code></code><code>[annotation]</code><code></code><code>[enum]</code></dd>
+</dl>
+<p>
+The <code>extends CONSTANT_CELL(class)</code> clause places the
+"super" element of the
+class file. The <code>implements INTERFACES</code> clause places the
+table of interfaces.
+Since the assembler does not distinguish interfaces and ordinary
+classes
+(the only difference is one access bit), the table of interfaces of an
+interface class must be declared with <code>implements</code> keyword,
+and not <code>extends</code>, as in Java language.
+</p>
+<p>
+<b>Note:</b>The last two rules allow <code>TOP_LEVEL_COMPONENT</code>
+to appear in any order and number. For example, you can split constant
+pool table into several parts, mixing constants and method
+declarations.
+</p>
+<hr noshade="noshade" size="7"><a name="genmodule"></a>
+<h1 class="head1">General Module Structure</h1>
+<dl>
+  <dt><code><b><em>MODULE</em></b></code>: sequence of </dt>
+  <dd><code>ANNOTATIONS [MODULE_FLAGS] moduleContent CONSTANT_CELL(moduleContent) [version INTEGER:INTEGER] {[TOP_LEVEL_MODULE_PROPERTIES...]}</code></dd>
+  <dt><code><b><em>TOP_LEVEL_MODULE_PROPERTIES</em></b></code>: one of </dt>
+  <dd><code>MODULE_REQUIRES</code> <code>MODULE_EXPORTS</code> <code>MODULE_OPENS</code> <code>MODULE_USES</code> <code>MODULE_PROVIDES</code> </dd>
+  <dt><code><span style="font-weight: bold; font-style: italic;">MODULE_FLAGS</span>:set
+    of</code></dt>
+  <dd><code>[open]</code></dd>
+</dl>
+<hr noshade="noshade" size="7">
+<a name="source"></a>
+<h1 class="head1">General Source File Structure</h1>
+<dl>
+  <dt><code><b><em>PACKAGE_DECLARATION</em></b></code>: </dt>
+  <dd><code>package IDENT;</code> </dd>
+</dl>
+Package declaration can appear only once in source file.
+<dl>
+  <dt><code><b><em>CLASS_FILE</em></b></code>: sequence of </dt>
+  <dd><code>PACKAGE_DECLARATION CLASS...</code> </dd>
+</dl>
+<dl>
+  <dt><code><b><em>MODULE_FILE</em></b></code>: </dt>
+  <dd><code>MODULE...</code> </dd>
+</dl>
+<dl>
+  <dt><code><b><em>SOURCE_FILE</em></b></code>: </dt>
+  <dd><code>MODULE_FILE|CLASS_FILE</code> </dd>
+</dl>
+<hr noshade="noshade" size="7">
+<a name="cp"></a>
+<h1 class="head1">The Constant Pool and Constant Elements</h1>
+<p>
+A <code>CONSTANT_CELL</code> refers to an element in the constant
+pool.
+It may refer to the element either by its index or its value:
+</p>
+<dl>
+  <dt><code><b><em>CONSTANT_CELL</em></b></code>: </dt>
+  <dd><code>CONSTANT_INDEX</code> <br>
+    <code>TAGGED_CONSTANT_VALUE</code> </dd>
+</dl>
+Generic rule for TAGGED_CONSTANT_VALUE is:
+<dl>
+  <dt><code><b><em>TAGGED_CONSTANT_VALUE</em></b></code>: </dt>
+  <dd><code> [TAG] CONSTANT_VALUE</code> </dd>
+</dl>
+<p>
+A TAG may be omitted when the context only allows one kind of a tag.
+For example, the argument of an <code>anewarray</code> instruction
+should be a <code>CONSTANT_CELL</code> which represents a class, so
+instead of
+</p>
+<pre>    anewarray class java/lang/Object<br><br></pre>
+one may write:
+<pre>    anewarray java/lang/Object<br></pre>
+It is possible to write another tag, e.g.:
+<pre>    anewarray String java/lang/Object<br></pre>
+However, the resulting program will be incorrect.
+<p></p>
+<p>Another example of an implicit tag (eg. a context which implies tag)
+is the header of a class declaration. You may write:
+</p>
+<pre>    aClass {<br>    }<br></pre>
+which is equivalent to:
+<pre>    class aClass {<br>    }<br></pre>
+Below, the tag implied by context will be included in the rules, e.g.:
+<pre>    CONSTANT_VALUE(int).<br></pre>
+<p>
+The exact notation of <code>CONSTANT_VALUE</code> depends on the
+(explicit or implicit) <code>TAG.</code>
+</p>
+<dl>
+  <dt><code><b><em>TAGGED_CONSTANT_VALUE</em></b></code>: </dt>
+  <blockquote>
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><code> int </code> </td>
+          <td><code> INTEGER </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> long </code> </td>
+          <td><code> [INTEGER|LONG] </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> float </code> </td>
+          <td><code> [FLOAT|INTEGER] </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> float </code> </td>
+          <td><code> bits INTEGER </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> double </code> </td>
+          <td><code> [FLOAT|DOUBLE|INTEGER|LONG] </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> double </code> </td>
+          <td><code> [bits INTEGER | bits LONG] </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> Asciz </code> </td>
+          <td><code> EXTERNAL_NAME </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> class </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> String </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> NameAndType </code> </td>
+          <td><code> NAME_AND_TYPE </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> Field </code> </td>
+          <td><code> CONSTANT_FIELD </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> Method </code> </td>
+          <td><code> CONSTANT_FIELD </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> ReferenceIndex </code> </td>
+          <td><code> [Method|InterfaceMethod]</code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> MethodHandle </code> </td>
+          <td><code> [INVOKESUBTAG|INVOKESUBTAG_INDEX]</code></td>
+          <td><code> :</code></td>
+          <td><code> CONSTANT_FIELD&nbsp;|&nbsp;[FIELDREF|METHODREF|INTERFACEMETHODREF] </code></td>
+        </tr>
+        <tr>
+          <td><code> MethodType </code> </td>
+          <td colspan="3"><code> CONSTANT_NAME</code></td>
+        </tr>
+        <tr>
+          <td><a name="invokedynamicconstant"></a><code> InvokeDynamic </code>
+          </td>
+          <td><code> INVOKESUBTAG</code></td>
+          <td><code> :</code></td>
+          <td><code> CONSTANT_FIELD</code></td>
+          <td><code> :</code></td>
+          <td><code> NAME_AND_TYPE</code></td>
+          <td><code> [INVOKEDYNAMIC_STATIC_ARGS]</code></td>
+        </tr>
+        <tr>
+          <td><code> moduleContent </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+        <tr>
+          <td><code> package </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+          <td colspan="2"> &nbsp; </td>
+        </tr>
+      </tbody>
+    </table>
+  </blockquote>
+</dl>
+<blockquote>
+  <p><u><em>Note</em></u><br>
+When the JASM parser encounters an InvokeDynamic constant, it creates
+an entry in
+the <em>BootstrapMethods</em> attribute (the <em>BootstrapMethods</em>
+attribute is produced if it
+has not already been created). The entry contains a reference to the <em>MethodHandle</em>
+item
+in the constant pool, and, optionally, a sequence of references to
+additional static
+arguments (<em>ldc</em>-type constants) to the <em>bootstrap
+method</em> </p>
+</blockquote>
+<p>
+INVOKESUBTAGs for MethodHandle and (const) InvokeDynamic are defined as
+follows and can be presented as either an index or a tag:
+</p>
+<dl>
+  <dt><code><b><em>INVOKESUBTAG:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[INVOKESUBTAG_INDEX]</em></b></code></dt>
+  <blockquote>
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><code> REF_GETFIELD </code> </td>
+          <td><code> [1] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_GETSTATIC </code> </td>
+          <td><code> [2] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_PUTFIELD </code> </td>
+          <td><code> [3] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_PUTSTATIC </code> </td>
+          <td><code> [4] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_INVOKEVIRTUAL </code> </td>
+          <td><code> [5] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_INVOKESTATIC </code> </td>
+          <td><code> [6] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_INVOKESPECIAL </code> </td>
+          <td><code> [7] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_NEWINVOKESPECIAL</code> </td>
+          <td><code> [8] </code></td>
+        </tr>
+        <tr>
+          <td><code> REF_INVOKEINTERFACE </code> </td>
+          <td><code> [9] </code></td>
+        </tr>
+      </tbody>
+    </table>
+  </blockquote>
+</dl>
+<p>
+Static arguments for an InvokeDynamic constant are defined as follows:
+</p>
+<dl>
+  <dt><code><b><em>INVOKEDYNAMIC_STATIC_ARGUMENTS</em></b></code>: </dt>
+  <dd><code> INVOKEDYNAMIC_STATIC_ARG ',' ...</code> </dd>
+  <dt><code><b><em>INVOKEDYNAMIC_STATIC_ARG</em></b></code>: (one of)</dt>
+  <dd><code> INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE</code> </dd>
+</dl>
+<dl>
+  <dt><code><b><em>INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE</em></b></code>:
+
+
+
+
+  </dt>
+  <blockquote>
+    <table border="0">
+      <tbody>
+        <tr>
+          <td><code> int </code> </td>
+          <td><code> INTEGER </code></td>
+        </tr>
+        <tr>
+          <td><code> long</code> </td>
+          <td><code> [INTEGER|LONG] </code></td>
+        </tr>
+        <tr>
+          <td><code> float </code> </td>
+          <td><code> [FLOAT|INTEGER] </code></td>
+        </tr>
+        <tr>
+          <td><code> double </code> </td>
+          <td><code> [FLOAT|DOUBLE|INTEGER|LONG] </code></td>
+        </tr>
+        <tr>
+          <td><code> class </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+        </tr>
+        <tr>
+          <td><code> String </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+        </tr>
+        <tr>
+          <td><code> MethodHandle </code> </td>
+          <td><code> INVOKESUBTAG:CONSTANT_FIELD </code></td>
+        </tr>
+        <tr>
+          <td><code> MethodType </code> </td>
+          <td><code> CONSTANT_NAME </code></td>
+        </tr>
+      </tbody>
+    </table>
+  </blockquote>
+</dl>
+<p>
+<code>INTEGER</code>, <code>LONG</code>, <code>FLOAT</code>, and <code>DOUBLE</code>
+correspond to <code>IntegerLiteral</code>
+and <code>FloatingPointLiteral</code> as described in
+<a
+ href="https://docs.oracle.com/javase/specs/jls/se8/html/index.html">The
+Java
+Language
+Specification</a>. If a double-word constant (<code>LONG</code>
+or <code>DOUBLE</code>) is represented with a single-word value (<code>INTEGER</code>
+or <code>FLOAT</code>, respectively), single-word value
+is simply promoted to double-word, as described in
+<a
+ href="https://docs.oracle.com/javase/specs/jls/se8/html/index.html">The
+Java
+Language
+Specification</a>. If floating-point constant (<code>FLOAT</code>
+or <code>DOUBLE</code>) is represented with an integral value
+(<code>INTEGER</code> or <code>LONG</code>, respectively),
+the result depends on whether the integral number is preceded with the
+keyword
+"bits". If "bits" is not used, the result is a floating-point number
+closest in value to the decimal number. If the keyword "bits" is used,
+the floating-point constant takes bits of the integral value without
+conversion.
+</p>
+<p>
+Thus,
+</p>
+<pre>   <code>float 2;</code>
+<p>means the same as </p>
+   <code>float 2.0f;</code>
+<p>and the same as </p>
+   <code>float bits 0x40000000;</code>
+<p>while </p>
+   <code>float bits 2;</code>
+<p>actually means the same as </p>
+   <code>float bits 0x00000002;</code>
+<p>and the same as</p>
+   <code>float 2.8026e-45f</code>
+</pre>
+<p></p>
+<p>&nbsp;</p>
+<dl>
+  <dt><code><b><em>CONSTANT_NAME</em></b></code>: </dt>
+  <dd><code> CONSTANT_INDEX<br>
+EXTERNAL_NAME</code> </dd>
+  <dt><code><b><em>EXTERNAL_NAME</em></b></code>: </dt>
+  <dd><code> IDENT STRING</code> </dd>
+</dl>
+<p>
+External names are names of class, method, field, or type, which stay
+in resulting .class file, and may be represented both by
+<code>IDENT</code> or by <code>STRING</code> (which is useful when
+name contains non-letter characters).
+</p>
+<dl>
+  <dt><code><b><em>NAME_AND_TYPE</em></b></code>: </dt>
+  <dd><code>CONSTANT_INDEX</code><br>
+    <code>CONSTANT_NAME:CONSTANT_NAME</code> </dd>
+</dl>
+<p>
+In this second example, the first <code>CONSTANT_NAME</code> denotes
+the name of a field and second denotes its type.
+</p>
+<dl>
+  <dt><code><b><em>CONSTANT_FIELD</em></b></code>: </dt>
+  <dd><code> CONSTANT_INDEX</code><br>
+    <code>[CONSTANT_NAME.]NAME_AND_TYPE</code> </dd>
+</dl>
+<p>
+In this third example, <code>CONSTANT_NAME</code> denotes to the class
+of a field. If <code>CONSTANT_NAME</code> is omitted, the current
+class is
+assumed.
+</p>
+<hr noshade="noshade" size="7"><a name="constant"></a>
+<h1 class="head1">Constant Declarations</h1>
+<p>
+Constant declarations are demonstrated in the examples below:
+</p>
+<pre><br>	const #1=int 1234<br>	    , #2=String "a string"<br>	    , #3=Method get:I<br>	;<br></pre>
+<dl>
+  <dt><code><b><em>CONSTANT_DECLARATION</em></b></code>: </dt>
+  <dd><code> const CONSTANT_DECLARATORS ;</code> </dd>
+  <dt><code><b><em>CONSTANT_DECLARATORS</em></b></code>: list of </dt>
+  <dd><code>CONSTANT_DECLARATOR</code> </dd>
+  <dt><code><b><em>CONSTANT_DECLARATOR</em></b></code>: </dt>
+  <dd><code>CONSTANT_INDEX = TAGGED_CONSTANT_VALUE</code> </dd>
+</dl>
+<hr noshade="noshade" size="7">
+<a name="field"></a>
+<h1 class="head1">Field Variables</h1>
+<dl>
+  <dt><code><b><em>FIELD_DECLARATION</em></b></code>: </dt>
+  <dd><code>ANNOTATIONS </code><code>FIELD_ACCESS Field
+FIELD_DECLARATORS ;</code> </dd>
+  <dt><code><b><em>FIELD_DECLARATORS</em></b></code>: list of </dt>
+  <dd><code>FIELD_DECLARATOR</code> </dd>
+  <dt><code><b><em>FIELD_DECLARATOR</em></b></code>: </dt>
+  <dd><code>EXTERNAL_NAME:CONSTANT_NAME [:SIGNATURE] [ = TAGGED_CONSTANT_VALUE ]</code></dd>
+  <dt><code><span style="font-weight: bold; font-style: italic;">FIELD_ACCESS</span>:
+list
+of</code></dt>
+  <dd><code>[public|private|protected]</code><code>[final]</code><code></code><code>[static]</code><code></code><code>[volatile]</code><code></code><code>[transient]</code><code></code><code>[synthetic]</code><code>[enum]</code></dd>
+</dl>
+Example:
+<pre>	public static Field <br>	    field1:I = int 1234,<br>	    field2:"Ljava/lang/String;",<br>	    field3:"Ljava/util/List;":"Ljava/util/List<+Ljava/lang/String;>" <br>	;<br><br></pre>
+<p>Access bits (public and static) are applied both to field1 and
+field2.
+The <code>EXTERNAL_NAME</code> denotes the name of the field, <code>CONSTANT_NAME</code>
+denotes its type, <code>TAGGED_CONSTANT_VALUE</code>
+denotes initial value.
+</p>
+<hr noshade="noshade" size="7">
+<a name="method"></a>
+<h1 class="head1">Method Declarations</h1>
+<dl>
+  <dt><code><b><em>METHOD_DECLARATION</em></b></code>: sequence of </dt>
+  <dd><code>ANNOTATIONS </code><code>METHOD_ACCESS Method <br>
+EXTERNAL_NAME:CONSTANT_NAME <br>
+[THROWS] <br>
+STACK_SIZE <br>
+[LOCAL_VAR_SIZE] <br>
+{ INSTRUCTION_STATEMENT...<br>&nbsp;&nbsp;ANNOTATIONS  }</code> </dd>
+</dl>
+<p>
+The <code>EXTERNAL_NAME</code> denotes the name of the method, <code>CONSTANT_NAME</code>
+denotes its type.
+</p>
+<dl>
+  <dt><code><span style="font-weight: bold; font-style: italic;">METHOD_ACCESS</span>:
+list
+of</code></dt>
+  <dd><code>[public|private|protected]</code><code>[static][final]</code><code></code><code>[synthetic]</code><code></code><code>[bridge]</code><code></code><code>[varargs]</code><code></code><code>[native][abstract]</code><code></code><code>[strict]</code><code></code><code>[synthetic]</code></dd>
+</dl>
+<dl>
+  <dt><code><b><em>THROWS</em></b></code>: </dt>
+  <dd><code>throws EXCEPTIONS</code> </dd>
+  <dt><code><b><em>EXCEPTIONS</em></b></code>: list of </dt>
+  <dd><code>CONSTANT_CELL(class)</code> </dd>
+</dl>
+<p>
+The meaning of the <code>THROWS</code> clause is the same as in Java
+Language Specification - it forms Exceptions attribute of a method.
+Jasm itself does not use this attribute in any way.
+</p>
+<dl>
+  <dt><code><b><em>STACK_SIZE</em></b></code>: </dt>
+  <dd><code>stack NUMBER</code> </dd>
+</dl>
+<p>
+The <code>NUMBER</code> denotes maximum operand stack size of the
+method.
+</p>
+<dl>
+  <dt><code><b><em>LOCAL_VAR_SIZE</em></b></code>: </dt>
+  <dd><code>locals NUMBER</code> </dd>
+</dl>
+<p>
+The <code>NUMBER</code> denotes number of local variables of the
+method. If omitted, it is calculated by assembler according to the
+signature of
+the method and local variable declarations.
+</p>
+<hr noshade="noshade" size="7">
+<a name="instructions"></a>
+<h1 class="head1">Instructions</h1>
+<blockquote> <a name="vminstructions"></a>
+  <h2>VM Instructions</h2>
+  <dl>
+    <dt><code><b><em>INSTRUCTION_STATEMENT</em></b></code>: </dt>
+    <dd><code>[NUMBER] [LABEL:] INSTRUCTION|PSEUDO_INSTRUCTION ;</code>
+    </dd>
+  </dl>
+  <p>Jasm allows for a <code>NUMBER</code>
+(which is ignored) at the beginning of each line. This is allowed in
+order to remain consistent with the jdis disassembler. Jdis puts line
+numbers in disassembled code that may be reassembled using Jasm
+without any additional modifications. </p>
+  <dl>
+    <dt><code><b><em>INSTRUCTION</em></b></code>: </dt>
+    <dd><code>OPCODE [ARGUMENTS] </code> </dd>
+    <dt><code><b><em>ARGUMENTS</em></b></code>: list of </dt>
+    <dd><code>ARGUMENT</code> </dd>
+    <dt><code><b><em>ARGUMENT</em></b></code>: </dt>
+    <dd><code>NUMBER LABEL LOCAL_VARIABLE TRAP_IDENT CONSTANT_CELL
+SWITCHTABLE TYPE</code> </dd>
+    <dt><code><b><em>LABEL</em></b></code>: </dt>
+    <dd><code>NUMBER IDENT</code> </dd>
+    <dt><code><b><em>LOCAL_VARIABLE</em></b></code>: </dt>
+    <dd><code>NUMBER IDENT</code> </dd>
+    <dt><code><b><em>TRAP_IDENT</em></b></code>: </dt>
+    <dd><code>IDENT</code> </dd>
+    <dt><code><b><em>TYPE</em></b></code>: </dt>
+    <dd><code>NUMBER boolean byte char int float long double class</code>
+    </dd>
+    <dt><code><b><em>SWITCHTABLE</em></b></code>: </dt>
+    <dd><code>{ [NUMBER:LABEL...] [default:LABEL] }</code> </dd>
+  </dl>
+  <p>SWITCHTABLE example: Java_text </p>
+  <pre>     switch (x) {<br>     case 11:<br>	 x=1;<br>	 break;<br>     case 12:<br>	 x=2;<br>	 break;<br>     default:<br>	 x=3;<br>     }<br>
+  </pre>
+  <p>will be coded in assembler as follows: </p>
+  <pre>     tableswitch  {<br>	 11: L24;<br>	 12: L29;<br>	 default: L34<br>     }<br>L24: iconst_1; <br>     istore_1;<br>     goto  L36;<br>L29: iconst_2 ;<br>     istore_1;<br>     goto  L36;<br>L34: iconst_3; <br>     istore_1;<br>L36:    ....<br>
+  </pre>
+  <p>OPCODE is any mnemocode from the instruction set.
+If mnemocode needs an ARGUMENT, it cannot be omitted.
+Moreover, the kind (and number) of the argument(s) must match the kind
+(and number) required by the mnemocode: </p>
+  <p>
+  <table style="width: 847px; height: 651px;" border="1">
+    <tbody>
+      <tr>
+        <td>aload, astore, fload, fstore,
+iload, istore, lload, lstore,
+dload, dstore, ver, endvar: </td>
+        <td><code>LOCAL_VARIABLE</code> </td>
+      </tr>
+      <tr>
+        <td>iinc: </td>
+        <td><code>LOCAL_VARIABLE, NUMBER</code> </td>
+      </tr>
+      <tr>
+        <td>sipush, bipush, bytecode: </td>
+        <td><code>NUMBER</code> </td>
+      </tr>
+      <tr>
+        <td>tableswitch, lookupswitch: </td>
+        <td><code>SWITCHTABLE</code> </td>
+      </tr>
+      <tr>
+        <td>newarray: </td>
+        <td><code>TYPE</code> </td>
+      </tr>
+      <tr>
+        <td>jsr, goto,
+ifeq, ifge, ifgt, ifle, iflt, ifne,
+if_icmpeq, if_icmpne, if_icmpge,
+if_icmpgt, if_icmple, if_icmplt,
+if_acmpeq, if_acmpne, ifnull, ifnonnull,
+try, endtry: </td>
+        <td><code>LABEL</code> </td>
+      </tr>
+      <tr>
+        <td>jsr_w, goto_w: </td>
+        <td><code>LABEL</code> </td>
+      </tr>
+      <tr>
+        <td>ldc_w, ldc2_w, ldc: </td>
+        <td><code>CONSTANT_CELL</code> </td>
+      </tr>
+      <tr>
+        <td>new, anewarray, instanceof, checkcast, </td>
+        <td><code>CONSTANT_CELL(class)</code> </td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top;">multianewarray</td>
+        <td style="vertical-align: top;"><code>NUMBER, </code><code>CONSTANT_CELL(class)</code>
+        </td>
+      </tr>
+      <tr>
+        <td>putstatic, getstatic, putfield, getfield: </td>
+        <td><code>CONSTANT_CELL(Field)</code> </td>
+      </tr>
+      <tr>
+        <td>invokevirtual, invokenonvirtual, invokestatic: </td>
+        <td><code>CONSTANT_CELL(Method)</code> </td>
+      </tr>
+      <tr>
+        <td>invokeinterface: </td>
+        <td><code>NUMBER, CONSTANT_CELL(Method)</code> </td>
+      </tr>
+      <tr>
+        <td>invokedynamic: </td>
+        <td><code>CONSTANT_CELL(InvokeDynamic)</code> </td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top;">&nbsp;aaload,&nbsp;
+aastore,&nbsp; aconst_null,&nbsp; aload_0,&nbsp; aload_1,&nbsp;
+aload_2,&nbsp; aload_3,&nbsp; aload_w ,&nbsp; areturn,&nbsp;
+arraylength,&nbsp; astore_0,&nbsp; astore_1,&nbsp; astore_2,&nbsp;
+astore_3,&nbsp; astore_w,&nbsp; athrow,&nbsp; baload,&nbsp;
+bastore,&nbsp; caload,&nbsp; castore,&nbsp; d2f,&nbsp; d2i,&nbsp;
+d2l,&nbsp; dadd,&nbsp; daload,&nbsp; dastore,&nbsp; dcmpg,&nbsp;
+dcmpl,&nbsp; dconst_0,&nbsp; dconst_1,&nbsp; ddiv,&nbsp; dead,&nbsp;
+dload_0,&nbsp; dload_1,&nbsp; dload_2,&nbsp; dload_3,&nbsp; dload_w
+,&nbsp; dmul,&nbsp; dneg,&nbsp; drem,&nbsp; dreturn,&nbsp;
+dstore_0,&nbsp; dstore_1,&nbsp; dstore_2,&nbsp; dstore_3,&nbsp;
+dstore_w,&nbsp; dsub,&nbsp; dup,&nbsp; dup2,&nbsp; dup2_x1,&nbsp;
+dup2_x2,&nbsp; dup_x1,&nbsp; dup_x2,&nbsp; f2d,&nbsp; f2i,&nbsp;
+f2l,&nbsp; fadd,&nbsp; faload,&nbsp; fastore,&nbsp; fcmpg,&nbsp;
+fcmpl,&nbsp; fconst_0,&nbsp; fconst_1,&nbsp; fconst_2,&nbsp;
+fdiv,&nbsp; fload_0,&nbsp; fload_1,&nbsp; fload_2,&nbsp; fload_3,&nbsp;
+fload_w,&nbsp; fmul,&nbsp; fneg,&nbsp; frem,&nbsp; freturn ,&nbsp;
+fstore_0,&nbsp; fstore_1,&nbsp; fstore_2,&nbsp; fstore_3,&nbsp;
+fstore_w,&nbsp; fsub ,&nbsp; i2b,&nbsp; i2c,&nbsp; i2d,&nbsp;
+i2f,&nbsp; i2l,&nbsp; i2s,&nbsp; iadd,&nbsp; iaload,&nbsp; iand,&nbsp;
+iastore,&nbsp; iconst_0,&nbsp; iconst_1,&nbsp; iconst_2,&nbsp;
+iconst_3,&nbsp; iconst_4,&nbsp; iconst_5,&nbsp; iconst_m1,&nbsp;
+idiv,&nbsp; iinc_w,&nbsp; iload_0,&nbsp; iload_1,&nbsp; iload_2,&nbsp;
+iload_3,&nbsp; iload_w,&nbsp; imul,&nbsp; ineg,&nbsp; int2byte,&nbsp;
+int2char,&nbsp; int2short,&nbsp; ior,&nbsp; irem,&nbsp; ireturn,&nbsp;
+ishl,&nbsp; ishr,&nbsp; istore_0,&nbsp; istore_1,&nbsp; istore_2,&nbsp;
+istore_3,&nbsp; istore_w,&nbsp; isub,&nbsp; iushr,&nbsp; ixor,&nbsp;
+l2d,&nbsp; l2f,&nbsp; l2i,&nbsp; label,&nbsp; ladd,&nbsp; laload,&nbsp;
+land,&nbsp; lastore,&nbsp; lcmp,&nbsp; lconst_0,&nbsp; lconst_1,&nbsp;
+ldiv,&nbsp; lload_0,&nbsp; lload_1,&nbsp; lload_2,&nbsp; lload_3,&nbsp;
+lload_w,&nbsp; lmul,&nbsp; lneg,&nbsp; lor,&nbsp; lrem,&nbsp;
+lreturn,&nbsp; lshl,&nbsp; lshr,&nbsp; lstore_0,&nbsp; lstore_1,&nbsp;
+lstore_2,&nbsp; lstore_3,&nbsp; lstore_w,&nbsp; lsub,&nbsp;
+lushr,&nbsp; lxor,&nbsp; monitorenter,&nbsp; monitorexit,&nbsp;
+nonpriv,&nbsp; nop,&nbsp; pop,&nbsp; pop2,&nbsp; priv,&nbsp; ret,&nbsp;
+return,&nbsp; ret_w,&nbsp; saload,&nbsp; sastore,&nbsp;
+swap,&nbsp;&nbsp; wide<br>
+        </td>
+        <td style="vertical-align: top;"><code>&lt;No Arguments&gt; </code></td>
+      </tr>
+    </tbody>
+  </table>
+  </p>
+  <a name="invokedynamicinstructions"></a>
+  <h2>InvokeDynamic Instructions</h2>
+  <p> <em>InvokeDynamic instructions</em> are instructions that allow
+dynamic binding of methods to a call site. These instructions in JASM
+form are rather complex, and the JASM assembler does some of the
+necessary work to create a <em>BootstrapMethods</em> attribute for
+entries of binding methods. </p>
+  <blockquote> <code></code>
+    <pre>
+class Test
+      version 51:0
+{
+    Method m:"()V"
+      stack 0 locals 1
+    {
+       invokedynamic InvokeDynamic REF_invokeSpecial:bsmName:"()V"   // information about bootstrap method
+                                                    :methName:"(I)I" // dynamic call-site name ("methName") plus the argument and return types of the call ("(I)I")
+                                                     int 1, long 2l; // optional sequence of additional static arguments to the bootstrap method (ldc-type constants)
+    }
+} // end Class Test</pre>
+  </blockquote>
+  <p> This JASM code has an <em>invokedynamic</em> instruction of the
+form: <b><em> invokedynamic InvokeDynamic (CONSTANT_CELL(INVOKEDYNAMIC))</em></b>
+where the INVOKEDYNAMIC constant is represented as <a
+ href="#invokedynamicconstant">specified</a> <br>
+  <br>
+(i.e. <em> invokedynamic InvokeDynamic INVOKESUBTAG : CONSTANT_FIELD
+(bootstrapmethod signature) : NAME_AND_TYPE (CallSite) [Arguments
+(Optional)]</em> ). </p>
+  <p> The JASM assembler creates the appropriate constant entries and
+entries into the BootstrapMethods attribute in a resulting class file. </p>
+  <p>You can also create InvokeDynamic constants and BootstrapMethods
+explicitly: </p>
+  <blockquote> <code></code>
+    <pre>	#22; //class Test3<br>	version 51:0<br>{<br><br>const #1 = InvokeDynamic	0:#11;	//  REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l<br>const #2 = Asciz	"Test3";<br>const #3 = long	2l;<br>const #5 = class	#6;	//  java/lang/Object<br>const #6 = Asciz	"java/lang/Object";<br>const #7 = Asciz	"name";<br>const #8 = int	1;<br>const #9 = Asciz	"SourceFile";<br>const #10 = Asciz	"Test3.jasm";<br>const #11 = NameAndType	#7:#21;	//  name:"(I)I"<br>const #12 = Asciz	"()V";<br>const #13 = Method	#22.#17;	//  Test3.bsmName:"()V"<br>const #14 = Asciz	"Code";<br>const #15 = Asciz	"m";<br>const #16 = Asciz	"BootstrapMethods";<br>const #17 = NameAndType	#20:#12;	//  bsmName:"()V"<br>const #18 = Asciz	"LineNumberTable";<br>const #19 = MethodHandle	7:#13;	//  REF_invokeSpecial:Test3.bsmName:"()V"<br>const #20 = Asciz	"bsmName";<br>const #21 = Asciz	"(I)I";<br>const #22 = class	#2;	//  Test3<br>const #23 = class	#6;	//  java/lang/Object<br><br><br><br>Method #15:#12<br>	stack 0 locals 1<br>{<br>	0:	invokedynamic InvokeDynamic	#1; //	InvokeDynamic REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l;<br>}<br><br>BootstrapMethod #19 #8 #3;<br><br>} // end Class Test3<br></pre>
+  </blockquote>
+  <p>In this example, <code>const #1 = InvokeDynamic 0:#11;</code> is
+the
+InvokeDynamic constant that refers to BootstrapMethod at index '0' in
+the BootstrapMethods Attribute (<code>BootstrapMethod #19 #8
+#3;</code> which refers to the <em>MethodHandle</em> at const #19,
+plus 2 other static args (at const #8 and const #3). </p>
+</blockquote>
+<a name="pseudoinstructions"></a>
+<h2>Pseudo Instructions</h2>
+<blockquote>
+  <p>Pseudo instructions are 'assembler
+directives', and not really instructions (in the VM sense) They
+typically come in two forms: Code-generating Pseudo-Instructions,
+and Attribute-Generating Pseudo-Instructions. </p>
+  <a name="codepseudo"></a>
+  <h3>Code-Generating Pseudo-Instructions</h3>
+The <i>bytecode</i> directive
+instructs the assembler to put a collection of raw bytes into the code
+attribute of a methodK<br>
+  <br>
+  <dl>
+    <dt><code><b><em>bytecode NUMBERS</em></b></code> </dt>
+    <dd>NUMBERS is list of NUMBERs (divided by COMMA). <br>
+Insert bytes in place of the instruction. May have any number
+of numeric arguments, each of them to be converted into a byte and
+inserted in method's code. </dd>
+  </dl>
+  <a name="atrpseudo"></a>
+  <h3>Attribute-Generating Pseudo-Instructions</h3>
+  <p>The rest of pseudo_instructions do not produce any bytecodes, and
+are
+used to form tables: local variable table, exception table,<br>
+Stack Maps, and Stack Map Frames. Line Number Tables can not be
+specified, but they are constructed
+by the assembler itself. </p>
+  <blockquote>
+    <h4>Local Variable Table Attribute Generation</h4>
+    <dl>
+      <dt><code><b><em>var LOCAL_VARIABLE</em></b></code> </dt>
+      <dd>Starts local variable range </dd>
+      <dt><code><b><em>endvar LOCAL_VARIABLE</em></b></code> </dt>
+      <dd>Ends local variable range. LOCAL_VARIABLE means name or index
+of local variable table entry. </dd>
+    </dl>
+    <p><u>Example</u>:</p>
+    <pre>    static void main (String[] args) {<br>	Tester inst = new Tester();<br>        inst.callSub();<br>    }<br><br></pre>
+    <p>will be coded in assembler as
+follows: </p>
+    <blockquote>
+      <blockquote>
+        <blockquote>
+          <pre>static Method #8:#9	 // main:"([Ljava/lang/String;)V"<br>	stack 2 locals 2<br>{<br><span
+ style="font-style: italic; font-weight: bold;">4		var 0; // args:"[Ljava/lang/String;"</span><br>	0:	new	#1; //	class Tester;<br>	3:	dup;<br>	4:	invokespecial	#2; //	Method "&lt;init&gt;":"()V";<br>	7:	astore_1;<br><span
+ style="font-style: italic; font-weight: bold;">6		var 1; // inst:"LTester;"</span><br>	8:	aload_1;<br>	9:	invokevirtual	#3; //	Method callSub:"()V";<br>7	12:	return;<br><span
+ style="font-style: italic; font-weight: bold;">		endvar 0, 1;</span><br>	<br>}<br></pre>
+        </blockquote>
+      </blockquote>
+    </blockquote>
+    <h4>Exception Table Attribute Generation</h4>
+    <p>To generate exception table, three pseudo-instructions are used.
+    </p>
+    <blockquote>
+      <dl>
+        <dt><code><b><em>try TRAP_IDENT</em></b></code> </dt>
+        <dd>Starts rangePC range </dd>
+        <dt><code><b><em>endtry TRAP_IDENT</em></b></code> </dt>
+        <dd>Ends rangePC range </dd>
+        <dt><code><b><em>catch TRAP_IDENT CONSTANT_CELL(class)</em></b></code>
+        </dt>
+        <dd>Starts exception handler. </dd>
+      </dl>
+    </blockquote>
+    <p> <code>TRAP_IDENT</code> represents the
+name or number of an exception table entry. <code>CONSTANT_CELL</code>
+in "catch" pseudo_instruction means
+catch
+type. Each exception table entry contains 4 values:start-pc, end-pc,
+catch-pc, catch-type. In jasm, each entry is denoted with some (local)
+identifier, as an example: <code>TRAP_IDENT</code>. </p>
+    <p>To set start-pc, place "try TRAP_IDENT"
+before the instruction with the desirable program counter.
+Similarly, use "endtry TRAP_IDENT" for
+end-pc and "catch TRAP_IDENT, catch-type" for catch-pc and catch-type
+(which is usually a constant pool reference).
+Try, endtry, and catch pseudoinstructions may be placed in any order.
+The order of entries in exception table is significant (see JVM
+specification). However, the only way to control this order is to
+place catch-clauses in appropriate
+textual order: assembler adds an entry in the exception table each
+time it encounters a catch-clause. </p>
+    <p>Example: </p>
+    <pre>     try {<br>	     try {<br>		 	throw new Exception("EXC");<br>	     } catch (NullPointerException e){<br>		 	throw e;<br>	     } catch (Exception e){<br>		 	throw e;<br>	     }<br>	 } catch (Throwable e){<br>		 throw e;<br>	 }<br></pre>
+    <p>will be coded in assembler as follows: </p>
+    <blockquote>
+      <pre><br><span style="font-style: italic; font-weight: bold;">	try R1, R2; // single "try" or "endtry" can start several regions</span><br>		new	class java/lang/Exception;<br>		dup;<br>		ldc	String "EXC";<br>		invokespecial java/lang/Exception.&lt;init&gt;:"(Ljava/lang/String;)V";<br>		athrow;<br><span
+ style="font-style: italic; font-weight: bold;">	endtry R1;</span><br><span
+ style="font-style: italic; font-weight: bold;">	catch R1 java/lang/NullPointerException; // only one "catch" per entry allowed</span><br>		astore_1;<br>		aload_1;<br>		athrow;<br><span
+ style="font-style: italic; font-weight: bold;">	catch R1 java/lang/Exception; // same region (R1) can appear in different catches</span><br>		astore_1;<br>		aload_1;<br>		athrow;<br><span
+ style="font-style: italic; font-weight: bold;">	endtry R2;</span><br><span
+ style="font-style: italic; font-weight: bold;">	catch R2 java/lang/Throwable;</span><br>		astore_1;<br>		aload_1;<br>		athrow;<br>
+      </pre>
+    </blockquote>
+    <h4>StackMap Table Attribute Generation</h4>
+    <p>Stack Maps are denoted by the pseudo-op opcode <i>stack_map,
+and they can be identified by three basic items: </i></p>
+    <dl>
+      <dt><code><b><em>StackMapStatement = </em></b></code>stack_map <code><b><em>(stackMap_Item_MapType
+|stackMap_Item_Object
+|
+stackMap_Item_NewObject)
+
+        </em></b></code></dt>
+    </dl>
+    <code><b><em>stackMap_Item_MapType =
+(</em></b></code>bogus | int | float | double | long | null | this | CP<code><b><em>)
+
+
+
+
+    </em></b></code> <br>
+    <br>
+    <code><b><em>stackMap_Item_Object = CONSTANT_CELL_CLASS</em></b></code>
+    <br>
+    <code><b><em>stackMap_Item_NewObject = </em></b></code>at<code><b><em>
+LABEL </em></b></code>
+    <p> All stack_map directives are collected
+by the assembler, and are used to create a StackMap Table attribute. </p>
+    <span style="text-decoration: underline;">Example 1 (MapType):</span>
+    <br>
+    <pre>public Method "&lt;init&gt;":"()V"<br>&nbsp;&nbsp;&nbsp; stack 1 locals 1<br>{<br> &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; aload_0;<br> &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; invokespecial&nbsp;&nbsp;&nbsp; Method java/lang/Object."&lt;init&gt;":"()V";<br>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return;<br>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; stack_frame_type full;<br><span
+ style="font-style: italic; font-weight: bold;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; stack_map bogus;</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>}</pre>
+    <br>
+    <u>Example 2 (Object):</u><br>
+    <br>
+    <span style="font-family: monospace;">public Method
+"&lt;init&gt;":"()V"<br>
+&nbsp;&nbsp; &nbsp;stack 2 locals 1<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>
+    <i><b>&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;
+&nbsp;stack_map
+class
+java/lang/Object;</b></i><br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; nop;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return;<br>
+}<br>
+    </span><br>
+    <u>Example 3 (NewObject):</u><br>
+    <br>
+    <span style="font-family: monospace;">public Method
+"&lt;init&gt;":"()V"<br>
+&nbsp;&nbsp; &nbsp;stack 2 locals 1<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>
+    <i><b>&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; stack_map at L5;</b></i><br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; nop;<br>
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; return;<br>
+}<br>
+    <br>
+    </span><br>
+    <h4>StackFrameType Table Attribute Generation</h4>
+    <p>StackFrameTypes are similar assembler directives as StackMap.
+These directives can appear anywhere in
+the code, and the assembler will collect them to produce a
+StackFrameType attribute. </p>
+    <dl>
+      <dt><code><em><b>StackFrameStatement = </b></em><b></b></code>stack_frame_type<code><b><em>
+frame_type</em></b></code></dt>
+    </dl>
+    <code><b><em>frame_type = (</em></b></code>
+same
+|
+stack1
+|
+stack1_ex
+|
+chop1
+|
+chop2
+|
+chop3 | same_ex | append | full <code><b><em>)</em></b></code> <br>
+    <br>
+    <u>Example 1 (full <i>stack frame type</i>):</u><br>
+    <pre>public Method "&lt;init&gt;":"()V"<br>&nbsp;&nbsp;&nbsp; stack 1 locals 1<br>{<br> &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; aload_0;<br> &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; invokespecial&nbsp;&nbsp;&nbsp; Method java/lang/Object."&lt;init&gt;":"()V";<br>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return;<br><i><b>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; stack_frame_type full;</b></i><br>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; stack_map bogus;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>}</pre>
+    <u>Example 2 (append, chop2, and same <i>stack frame types</i>):</u><br>
+    <pre>public Method foo:"(Z)V"<br>	stack 2 locals 5<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>		iload_2;<br>		iconst_2;<br>		if_icmpge	L30;<br><span
+ style="font-style: italic; font-weight: bold;">	L27:	stack_frame_type append;</span><br>		locals_map int, int;<br>		iconst_2;<br>		istore	4;<br><span
+ style="font-style: italic; font-weight: bold;">	L30:	stack_frame_type chop2;</span><br>		goto	L9;<br><span
+ style="font-style: italic; font-weight: bold;">	L33:	stack_frame_type same;</span><br>		getstatic	Field java/lang/System.out:"Ljava/io/PrintStream;";<br>		ldc	String "Chop2 attribute test";<br>		invokevirtual	Method java/io/PrintStream.println:"(Ljava/lang/String;)V";<br>		return;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>}</pre>
+    <h4>LocalsMap Table </h4>
+    <p> Locals Maps are typically associated with a <i>stack_frame_type</i>,
+and
+are
+accumulated
+per
+stack
+frame. They typically follow a <i>stack_frame_type</i>
+directive. </p>
+    <dl>
+      <dt><code><em><b>LocalsMapStatement = </b></em><b></b></code>locals_map<code><b><em>
+locals_type (, locals_type
+)*</em></b></code></dt>
+    </dl>
+    <code><b><em>locals_type =
+stackMap_Item_MapType
+|
+CONSTANT_CELL_CLASS </em></b></code> <br>
+    <br>
+    <u>Example (a <i>locals map</i> specifying 2 ints):</u>
+    <pre>public Method foo:"(Z)V"<br>	stack 2 locals 5<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>		iload_2;<br>		iconst_2;<br>		if_icmpge	L30;<br>	L27:	stack_frame_type append;<br><span
+ style="font-style: italic; font-weight: bold;">		locals_map int, int;</span><br>		iconst_2;<br>		istore	4;<br>	L30:	stack_frame_type chop2;<br>		goto	L9;<br>	L33:	stack_frame_type same;<br>		getstatic	Field java/lang/System.out:"Ljava/io/PrintStream;";<br>		ldc	String "Chop2 attribute test";<br>		invokevirtual	Method java/io/PrintStream.println:"(Ljava/lang/String;)V";<br>		return;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...<br>}</pre>
+  </blockquote>
+</blockquote>
+<hr noshade="noshade" size="7"><a name="innercl"></a>
+<h1 class="head1">Inner Class Declarations</h1>
+<dl>
+  <dt><code><b><em>INNER_CLASS_DECLARATIONS</em></b></code>: list of </dt>
+  <dd><code>INNER_CLASS_DECLARATION</code> </dd>
+  <dt><code><b><em>INNER_CLASS_DECLARATION</em></b></code>: </dt>
+  <dd><code>INNER_CLASS_ACCESS <b>InnerClass</b>
+[INNER_CLASS_NAME<b>=</b>]?
+INNER_CLASS_INFO
+[<b>of</b> OUTER_CLASS_INFO]? ;</code> </dd>
+  <dt><code><b><em>INNER_CLASS_NAME</em></b></code>: </dt>
+  <dd><code>IDENT | CPX_name</code> </dd>
+  <dt><code><b><em>INNER_CLASS_INFO</em></b></code>: </dt>
+  <dd><code>CONSTANT_CELL(class)&nbsp;</code> </dd>
+  <dt><code><b><em>OUTER_CLASS_INFO</em></b></code>: </dt>
+  <dd><code>CONSTANT_CELL(class)</code></dd>
+  <dt><code><b><i>INNER_CLASS_ACCESS</i></b>: list of</code></dt>
+  <dd><code>[public|protected|private][static][final][interface][abstract][synthetic][annotation][enum]</code></dd>
+</dl>
+Example:
+<pre>    InnerClass InCl=class test$InCl of class test;</pre>
+<p> &nbsp; </p>
+<hr noshade="noshade" size="7"><a name="annots"></a>
+<h1 class="head1">Annotation Declarations</h1>
+<a name="memberannots"></a>
+<h2 class="head2">Member Annotations</h2>
+<p>
+Member annotations are a subset of the basic annotations support
+provided in JDK 5.0 (1.5). These are annotations that
+ornament Packages, Classes, and Members either visibly (accessible at
+runtime) or invisibly (not accessible at
+runtime). In JASM, visible annotations are denoted by the token <b>@</b>,
+while
+invisible
+annotations
+are
+denoted
+by the token <b>@-</b>.
+</p>
+<h4 class="head4"><u>Synopsis</u></h4>
+<dl>
+  <dt><code><b><em>ANNOTATIONS</em></b></code>: <br>
+  </dt>
+  <dd><code>[ANNOTATION_DECLARATION]+</code>; </dd>
+  <dt><code><b><em>ANNOTATION_DECLARATION</em></b></code>: </dt>
+  <dd><code><b>@+</b>|<b>@-</b> ANNOTATION_NAME
+[ANNOTATION_VALUE_DECLARATIONS]</code></dd>
+</dl>
+<p>
+The '<b>@+</b>' token identifies a
+Runtime Visible Annotation, where the '<b>@-'
+token identifies a Runtime Invisible Annotation.
+</b></p>
+<dl>
+  <dt><code><b><em>ANNOTATION_NAME</em></b></code>: </dt>
+  <dd><code>IDENT</code> </dd>
+  <dt><code><b><em>ANNOTATION_VALUE_DECLARATIONS</em></b></code>: list
+of (comma separated)<br>
+  </dt>
+  <dd><code>ANNOTATION_VALUE_DECLARATION</code> </dd>
+  <dt><code><b><em>ANNOTATION_VALUE_DECLARATION</em></b></code>: </dt>
+  <dd><code>[ANNOTATION_VALUE_IDENT=] [ANNOTATION_VALUE]</code></dd>
+  <dt><code><b><em>ANNOTATION_VALUE_IDENT</em></b></code>: </dt>
+  <dd><code>IDENT</code> </dd>
+  <dt><code><b><em>ANNOTATION_VALUE</em></b></code>: </dt>
+  <dd><code>ANNOTATION_VALUE_PRIMITIVE | Array of
+ANNOTATION_VALUE_PRIMITIVE</code> </dd>
+  <dt><code><b><em>ANNOTATION_VALUE_PRIMITIVE</em></b></code>: </dt>
+  <dd><code>PRIMITIVE_TYPE | STRING | CLASS | ENUM |
+ANNOTATION_DECLARATION</code></dd>
+</dl>
+<dl>
+  <dt><code><b><em>CLASS</em></b></code>: </dt>
+  <dd><code><b>class</b> CONSTANT_CELL(class)</code> </dd>
+</dl>
+<dl>
+  <dt><code><b><em>ENUM</em></b></code>: </dt>
+  <dd><code><b>enum CONSTANT_CELL(class) CONSTANT_CELL(string) (where
+string is Enum type name)</b></code> </dd>
+</dl>
+<dl>
+  <dt><code><b><em>PRIMITIVE_TYPE</em></b></code>: </dt>
+  <dd><code>BOOLEAN | BYTE | CHAR | SHORT | INTEGER | LONG | FLOAT |
+DOUBLE</code></dd>
+</dl>
+<b><i><u>Note</u></i></b>
+<br>
+&nbsp;&nbsp;&nbsp; Types (Boolean, Byte, Char, and Short) are
+normalized into Integer's within the constant pool.<br>
+&nbsp;&nbsp;&nbsp; Annotation values with these types may be identified
+with a keyword in front of an integer value.<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; eg.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>boolean</b>
+true (or: boolean 1)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>byte</b> 20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>char</b> 97<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<b>short</b> 2130<br>
+<br>
+&nbsp;&nbsp;&nbsp; Other primitive types are parsed according to normal
+prefix and suffix
+conventions <br>
+&nbsp;&nbsp;&nbsp;
+(eg. Double = xxx.x<b>d</b>, Float = xxx.x<b>f</b>, Long = xxx<b>L</b>).&nbsp;
+<br>
+&nbsp;&nbsp;&nbsp; Strings are identified and delimited by '"'
+(quotation marks).<br>
+<br>
+&nbsp;&nbsp;
+Keywords '<b>class</b>' and '<b>enum</b>' identify those annotation
+types explicitly. Values within classes and enums may<br>
+&nbsp;&nbsp; either be identifiers (strings) or Constant Pool IDs.<br>
+<br>
+&nbsp;&nbsp; Annotations specified as the value of an Annotation field
+are identified by the JASM annotation keywords '<b>@+</b>' and '<b>@-</b>'.<br>
+<br>
+&nbsp;&nbsp;
+Arrays are delimited by '{' and '}' marks, with individual elements
+delimited by ',' (comma).<br>
+<h4 class="head4"><u>Examples</u></h4>
+<div style="margin-left: 40px;"><u>Example 1 (Class Annotation, Visible)</u><br>
+  <pre>@+ClassPreamble { <br>     author = "John Doe", <br>     date = "3/17/2002", <br>     currentRevision = 6, <br>     lastModified = "4/12/2004", <br>     lastModifiedBy = "Jane Doe", <br>     reviewers = {<br>        "Alice",<br>        "Bob",<br>        "Cindy"}<br>}<br></pre>
+  <pre>super public class MyClass<br>	version 50:0<br>{<br>&nbsp;...</pre>
+  <br>
+</div>
+<div style="margin-left: 40px;"><span
+ style="text-decoration: underline;">Example 2 (Field Annotation,
+Invisible)</span><br>
+<br>
+<pre>@-FieldPreamble {<br>    &nbsp;author = "Mustafa", <br>     date = "3/17/2009", <br>     currentRevision = 4<br>}<br>Field foo:I;<br></pre>
+...<br>
+<br>
+<br>
+<span style="text-decoration: underline;">Example 3 (Field Annotation,
+All subtypes)</span><br>
+<br>
+<pre><br>@+FieldPreamble { <br>	boolAnnot      = boolean 1, 					// Boolean<br>	charBear       = char 97, 					// Char<br>	sharkByte      = byte 17, 					// Byte<br>	shortCircuit   = short 4386,					// Short <br>	integerHead    = 42,						// Int <br>	longJohnSilver = 55l,						// Long <br>	floatBoat      = 1.0f,						// Float <br>	doubleDip      = 10.0d,						// Double <br>	stringBeans    = "foo",						// String <br>	severity       = enum FieldPreamble$Severity IMPORTANT,   	// Enum<br>	classAnnot     = class FieldPreamble$FooBall,			// Class<br>	tm = @+Trademark { description = "embedded", owner = "ktl"}	// Annotation<br>}<br>Field foo:I;<br></pre>
+...<br>
+</div>
+<div style="margin-left: 40px;"><u>Example 4 (Module Annotation, Visible)</u><br>
+  <pre>@+java/lang/Deprecated { <br>     since = "9", <br>     forRemoval = boolean true <br>}</pre>
+  <pre>moduleContent my.moduleContent<br>	version 53:0<br>{<br>&nbsp;...</pre>
+  <br>
+</div>
+<p>
+Note:<br>
+&nbsp;JASM does not enforce the annotation value declarations like a
+compiler would.&nbsp; It only checks to see that an annotation
+structure is well-formed.<br>
+</p>
+<h2 class="head2">Type Annotations</h2>
+<p>
+Member annotations are a subset of the basic annotations support
+provided in JDK 7.0 (1.7). These are annotations that
+ornament Packages, Classes, and Members either visibly (accessible at
+runtime) or invisibly (not accessible at
+runtime). In JASM, visible annotations are denoted by the token <b>@T+</b>,
+while
+invisible
+annotations
+are
+denoted
+by the token <b>@T-</b>.</p>
+<h4 class="head4"><u>Synopsis</u></h4>
+<font size="+1"><code><dt><code><b><em>TYPE_ANNOTATION_DECLARATION</em></b></code>:
+</dt>
+<dd><code><b>@T+</b>|<b>@T-</b> ANNOTATION_NAME
+[TYPE_ANNOTATION_VALUE_DECLARATIONS]</code></dd>
+</code></font><br>
+<br>
+<font size="+1"><code><dt><code><b><em>TYPE_ANNOTATION_VALUE_DECLARATIONS</em></b></code>:
+list
+of
+(comma
+separated)<br>
+</dt>
+<dd><code>TYPE_ANNOTATION_VALUE_DECLARATION</code> </dd>
+</code></font><br>
+<br>
+<code><dt><code><b><em>TYPE_ANNOTATION_VALUE_DECLARATION</em></b></code>:
+</dt>
+<dd><code><code><b>{</b> </code></code><code><b>{</b>
+ANNOTATION_VALUE_DECLARATION</code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code></code><code><b><sup>+</sup></b></code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code>
+  <b>}</b> TARGET PATH</code><code><code> <b>}</b></code></code></dd>
+<dt><br>
+</dt>
+<dt><br>
+</dt>
+<dt><code><b><em>TARGET</em></b></code>: </dt>
+<code><dd><code><b>{</b> TARGET_TYPE TARGET_INFO <b>}</b> <br>
+  </code></dd>
+<dt><br>
+</dt>
+</code> <dt><code><b><em></em></b></code><code></code><br>
+</dt>
+<dt><code><code><b><em>TARGET_TYPE</em></b></code>: </code></dt>
+</code><code><code></code></code><code><code> <dd><code><code><font
+ size="+1"><code><code></code></code></font></code></code><font
+ size="+1"><code><code></code></code></font><br>
+</dd>
+</code></code><code><code><dt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+
+
+  <br>
+</dt>
+</code></code>
+<table border="0">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><big><code><code><code><b><em>TARGET_TYPE</em></b></code>:</code></code></big></td>
+      <td style="vertical-align: top;"><big><code><code><code><b><em>TARGET_INFO_TYPE</em></b></code>:</code></code></big></td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CLASS_TYPE_PARAMETER&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEPARAM</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></font></font></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td> <span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_TYPE_PARAMETER
+
+
+
+
+
+
+      </span><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEPARAM</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></font></font></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td> <span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CLASS_EXTENDS</span><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>SUPERTYPE</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></font></font></font></font></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CLASS_TYPE_PARAMETER_BOUND&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>TYPEPARAM_BOUND</code></code></font></code></code></b><code><code><font
+ size="+1"><code><code><b><em></em></b></code></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_TYPE_PARAMETER_BOUND</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>TYPEPARAM_BOUND</code></code></font></code></code></b><code><code><font
+ size="+1"><code><code><b><em></em></b></code></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">FIELD&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><code><code><font size="+1"><code><code><code><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><b><code><code><font
+ size="+1"><code><code>EMPTY</code></code></font></code></code></b><code><code><font
+ size="+1"><code></code></font></code></code></code></font></code></code></font></font></code></code></code></code></code></code></font></code></code></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_RETURN&nbsp;</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><code><code><font size="+1"><code><code><code><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><b><code><code><font
+ size="+1"><code><code>EMPTY</code></code></font></code></code></b><code><code><font
+ size="+1"><code></code></font></code></code></code></font></code></code></font></font></code></code></code></code></code></code></font></code></code></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></code></code></code>|<br>
+      </td>
+    </tr>
+    <tr>
+      <td><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_RECEIVER</span></code></code>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><code><code><font size="+1"><code><code><code><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><b><code><code><font
+ size="+1"><code><code>EMPTY</code></code></font></code></code></b><code><code><font
+ size="+1"><code></code></font></code></code></code></font></code></code></font></font></code></code></code></code></code></code></font></code></code></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></code></code></code>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_FORMAL_PARAMETER</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><b><code><code><font size="+1"><code><code>METHODPARAM</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">THROWS</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><code><font
+ size="+1"><code></code></font></code></code></font><code><code></code></code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><b>EXCEPTION<code><code><font
+ size="+1"><code><code></code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">LOCAL_VARIABLE</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><code><code><font
+ size="+1"><code><code><b><em>LOCALVAR</em></b></code></code></font></code></code></code></font></code></code></font></font></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">RESOURCE_VARIABLE</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><code><code><font
+ size="+1"><code><code><b><em>LOCALVAR</em></b></code></code></font></code></code></code></font></code></code></font></font></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">EXCEPTION_PARAM</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font
+ size="+1"><font size="+1"><code><code><b><code><code><font size="+1"><code><code>CATCH</code></code></font></code></code></b><code><code><font
+ size="+1"><code></code></font></code></code></code></code></font></font></code></code><code><code><font
+ size="+1"><code></code></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">INSTANCEOF</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><font
+ size="+1"><code><code><font size="+1"><code><code><b><em>OFFSET</em></b></code></code></font></code></code></font></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">NEW</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><font
+ size="+1"><code><code><font size="+1"><code><code><b><em>OFFSET</em></b></code></code></font></code></code></font></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CONSTRUCTOR_REFERE
+CE_RECEIVER</span></code></code><br>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><font
+ size="+1"><code><code><font size="+1"><code><code><b><em>OFFSET</em></b></code></code></font></code></code></font></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_REFERENCE_RECEIVER</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><font
+ size="+1"><code><code><font size="+1"><code><code><b><em>OFFSET</em></b></code></code></font></code></code></font></code></code>&nbsp;
+
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CAST</span></code></code><br>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT</span></code></code><br>
+      </td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_INVOCATION_TYPE_ARGUMENT</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><code><code><span
+ style="font-size: 8pt; font-family: 'NimbusMonL-Regu-Extend_850';">METHOD_REFERENCE_TYPE_ARGUMENT</span></code></code></td>
+      <td style="vertical-align: top; font-style: italic;"><code><code><code><font><font><font><font><font><font><font><font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b></code></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></font></font></font></font></font></font></font></font></code></code></code></td>
+    </tr>
+  </tbody>
+</table>
+<p><code><dt><br>
+</dt>
+<dt><code><big><code><b><em>TARGET_INFO</em></b></code><span
+ style="font-weight: bold;">_TYPE</span>:</big> </code></dt>
+<code> <dd><font size="+1"><code><code>TYPEPARAM | SUPERTYPE |
+TYPEPARAM_BOUND
+| EMPTY | METHODPARAM | EXCEPTION | LOCALVAR | CATCH |</code></code></font><font
+ size="+1"><code><code> OFFSET
+|&nbsp; TYPEARG</code></code></font></dd>
+</code></code> </p>
+<code><dt><code><b><em></em></b></code><font size="+1"><code></code></font><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"></font></font></code></code></font></font></code></code><br>
+</dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><b><code><code><font
+ size="+1"><code><code>TYPEPARAM</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code> </font></font></font></font></dt>
+<dd><code><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><code><code></code><code>paramIndex(</code><i><code>INTEGER</code></i><code>)</code>
+  </code></font></font></font></font></font></code></dd>
+<font size="+1"><font size="+1"><font size="+1"><font size="+1"> <code><br>
+<code><dt><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code></code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code><br>
+</dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><code><code><font size="+1"><code><br>
+  </code></font></code></code></font> <font size="+1"><font size="+1">
+  </font></font></font></font></font></font></font></font></font></font></dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>SUPERTYPE</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code> </font></font></font></font></font></font></font></font></font></font></dt>
+<dd><code><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><code><code>typeIndex(<i>INTEGER</i>)</code></code></font></font></font></font></font></font></font></font></font></font></font></code><code><code><code><code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code>typeIndex(</code><code>INTEGER</code><code>)</code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code>
+  </font></font></font></font></font></font></font></font></font></font></font></code></code></code></code></dd>
+<font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"> </font></font></font></font></font></font></font></font></font></font></code></code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"></font></font></font></font></font></font></font></font></font></font></font></font></code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"></font></font></font></font></font></font><font
+ size="+1"><font size="+1"><font size="+1"><code><font size="+1"><code></code></font></code>
+</font></font></font> <dt><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code></code></code></font></font></code></code></font></font></code><br>
+</dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><code><code><font size="+1"><code><br>
+  </code></font></code></code></font> <font size="+1"><font size="+1">
+  </font></font></font></font></font></font></dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>TYPEPARAM_BOUND</code></code></font></code></code></b><code><code><font
+ size="+1"><code><code><b><em></em></b></code>: <br>
+  </code></font></code></code> </font></font></font></font></font></font></dt>
+<dd><code><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><code><code></code></code></font></font></font></font></font></font></font></code><code><code><code><code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><font size="+1"><code><code></code><code>paramIndex(</code><i><code>INTEGER</code></i><code>)
+
+
+
+
+
+  </code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></font></font></font></font></font></font></code></code></code></code><code><code><code><code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><font size="+1"><code><code></code><code>boundIndex(</code><i><code>INTEGER</code></i><code>)</code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></font></font></font></font></font></font></code></code></code></code><code><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><code><code></code><code></code>
+  </code></font></font></font></font></font></font></font></code></dd>
+<font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"> <code><br>
+<code><dt><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code><br>
+</dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><br>
+  </font></font></font></font></font></font></font></font></font></font></font></font></font></font></font></font></font></font><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code><code><code><font
+ size="+1"><code><code><code><code><code><code></code></code></code></code></code></code></font></code></code></dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><code><code><font
+ size="+1"><code><b><code><code><font size="+1"><code><code>EMPTY</code></code></font></code></code></b><code><code><font
+ size="+1"><code>:</code></font></code></code></code></font></code></code></font></font>
+  </font></dt>
+<dt><font size="+1"><font size="+1"><font size="+1"><code><code><font
+ size="+1"><code><code><code><font size="+1"><code>&nbsp;<br>
+  </code></font></code></code></code></font></code></code></font></font>
+  </font></dt>
+<dd><font size="+1"><br>
+  <font size="+1"><font size="+1"><code></code></font></font></font></dd>
+<dd><br>
+  <b><code><code><font size="+1"><code><code>METHODPARAM</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code> </dd>
+<dd><code><font size="+1"><code><code></code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code>index(</code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></font></code><code><code><code><code><code><code><code><code><code><code><code></code><code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code><font
+ size="+1"></font></code></code></code></font></code></code><font
+ size="+1"></font></code></code></dd>
+</code></code></font></font><code><font size="+1"><code><code>paramIndex(<i>INTEGER</i>)</code></code></font></code>
+<dt><font size="+1"><code><code><font size="+1"><code><br>
+  </code></font></code></code></font><code><code></code></code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><b>EXCEPTION<code><code><font
+ size="+1"><code><code></code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code></code></font></code></code></font></font><font
+ size="+1"><font size="+1"> </font></font></dt>
+<dd><code><font size="+1"><font size="+1"><font size="+1"><code><code></code><code>typeIndex(</code><i><code>INTEGER</code></i><code>)</code><i><code>&nbsp;</code></i><code></code>
+  </code></font></font></font></code></dd>
+<font size="+1"><font size="+1"> <code><br>
+<code><dt><code><b><em></em></b></code><br>
+</dt>
+</code></code></font></font><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><font
+ size="+1"><code><code><font size="+1"><code></code></font></code></code></font><code><code></code></code><code><code><font
+ size="+1"><font size="+1"><code><code><code><code><code><code><font
+ size="+1"><code><code><code></code></code></code></font></code></code></code></code><b><code><code><font
+ size="+1"><code><code></code></code></font></code></code></b></code></code></font></font></code></code><br>
+</font></font></font></font></font></font> </font></font><font
+ size="+1"><font size="+1"><code><code><font size="+1"><code><code><code><font
+ size="+1"><code><code><b><em>LOCALVAR</em></b></code>: <br>
+</code></font></code></code></code></font></code></code></font></font><font
+ size="+1"><font size="+1"> <dd><code><font size="+1"><code><code><span
+ style="font-weight: bold;">{</span></code></code></font></code><code><font
+ size="+1"><code><code><b> LVENTRY }</b></code><code><b><sup>+numEntries</sup></b></code>
+  </code></font></code></dd>
+<code><br>
+<code> <dt><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><br>
+</dt>
+<dt><font size="+1"><font size="+1"><code><code><font size="+1"><code><code><code><font
+ size="+1"><code><code><b><em>LVENTRY</em></b></code>: <br>
+  </code></font></code></code></code></font></code></code></font></font></dt>
+<font size="+1"><font size="+1"> <dd><code style="font-weight: bold;"><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code><code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code><code><font
+ size="+1"><code><code>startpc(</code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code><i><code>INTEGER)
+
+
+
+
+
+  </code></i><code>length</code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code>(</code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code><i><code>INTEGER)
+
+
+
+
+
+  </code></i></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code>index(</code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code><i><code>INTEGER)<span
+ style="font-weight: bold;"></span></code></i></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><font
+ size="+1"><code><code></code><code></code> </code></font></code></dd>
+<code><br>
+<code></code></code></font></font></code></code></font></font><dt><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><font
+ size="+1"><code><code><font size="+1"><code><code><code><code><code></code></code></code></code></code></font></code></code></font><br>
+</dt>
+<dt><code><code><font size="+1"><font size="+1"><code><code><b><code><code><font
+ size="+1"><code><code>CATCH</code></code></font></code></code></b><code><code><font
+ size="+1"><code></code></font></code></code></code></code></font></font></code></code><code><code><font
+ size="+1"><code>: <br>
+  </code></font></code></code> </dt>
+<dd><code><font size="+1"><code><code></code></code></font></code><code><code><font
+ size="+1"><font size="+1"><code><code><code><code></code></code></code></code></font></font></code></code><br>
+</dd>
+<dd><code><code><code><code><font size="+1"><font><font><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><font size="+1"><code><code>catch(</code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code><i><code>INTEGER)</code></i></code></font></code></code></code></code></code></font></code></code></code></code></font></font></code></code></font></font></code></code></code></font></code></code></code></code></code></font></font></font></font></font></font></font></font></code></code></code></code></dd>
+<font size="+1"> </font><code><font size="+1"><code><code></code> </code></font></code>
+<code><br>
+</code><dt><br>
+</dt>
+<dt><br>
+</dt>
+<dt><code></code><br>
+</dt>
+<dt><font size="+1"><code><code><font size="+1"><code><code><b><em>OFFSET</em></b></code>:
+
+
+
+
+
+  <br>
+  </code></font></code></code></font></dt>
+<font size="+1"><code><font size="+1"><code> <dd><code></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code>offset(</code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code><i><code>INTEGER)</code></i></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code></code>
+</dd>
+</code></font></code></font><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><dt><font size="+1"><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></font><br>
+</dt>
+</code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1"><code><code><font
+ size="+1"><font size="+1"><code><code><font size="+1"><font size="+1">
+<dt><b><code><code><font size="+1"><code><code>TYPEARG</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code></dt>
+<dd><code><font size="+1"><code><code></code></code></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code>offset(</code><i><code>INTEGER</code></i><code>)
+  </code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code></code><code>typeIndex(</code><i><code>INTEGER</code></i><code>)</code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><font
+ size="+1"><code><code></code><code></code> </code></font></code></dd>
+<code><br>
+<code><dt><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code><br>
+</dt>
+<dt><font size="+1"><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></font><br>
+</dt>
+</code></code></font></font></code></code></font></font></code></code></font></font></code></code></font></font></code></code><dt><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><br>
+  </code></code></font></code></code></code></code></code></font></code></code></code></code></dt>
+<font size="+1"><code><code><b><em>PATH</em></b></code>: list
+of (space separated)<br>
+</code></font><font size="+1"><code> <dd><code><code><code><b>{</b></code></code></code><i><code>
+  <span style="font-weight: bold;">PATH_ENTRY</span></code></i><sup><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code><b>+</b></code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></sup><code><code>
+  <b>}</b></code></code></dd>
+<dt><br>
+</dt>
+</code></font> <dt><code><code></code></code><br>
+</dt>
+<dt><font size="+1"><code><code><font size="+1"><code><code><b><em>PATH_ENTRY</em></b></code>:
+  <br>
+  </code></font></code></code></font></dt>
+<font size="+1"><code><font size="+1"><code> <dd><code></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><font
+ size="+1"><code><code><span style="font-style: italic;">{ <span
+ style="font-weight: bold;">PATH_KIND PATH_INDEX }</span></span></code></code></font></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><code><font
+ size="+1"><font size="+1"><code><font size="+1"><code><code></code></code></font></code></font></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code></code></code></font></code></code></code></code></code></font></code></code></code></code><br>
+</dd>
+</code></font></code></font> <code></code>
+<p><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></p>
+<code><code><font size="+1"><font size="+1"><code><code><dt><code></code><br>
+</dt>
+<dt><code><code><b><em>PATH_KIND</em></b></code>: </code></dt>
+<code> <dd><font size="+1"><code><code>ARRAY | INNER_TYPE | WILDCARD
+| TYPE_ARGUMENT</code></code></font></dd>
+</code></code><font size="+1"><font size="+1"><br>
+<code><code><dt><font size="+1"><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></font><code><code><code><font
+ size="+1"><font size="+1"><code><code></code></code></font></font></code></code></code><br>
+</dt>
+<dt><font><font><font><font><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><b><code><code><font size="+1"><code><code>PATH_INDEX</code></code></font></code></code></b><code><code><font
+ size="+1"><code><b><code><em></em></code></b>: <br>
+  </code></font></code></code></font></font></font></font></font></font></font></font></dt>
+<font size="+1"><dd><code><font><font><font><font><font size="+1"><font
+ size="+1"><font size="+1"><font size="+1"><font size="+1"><code><code></code><code></code><i><code>INTEGER</code></i><code></code>
+  </code></font></font></font></font></font></font></font></font></font></code></dd>
+<code><font><font><font><font><font size="+1"><font size="+1"><font
+ size="+1"><font size="+1"><br>
+</font></font></font></font></font></font></font></font></code><br>
+</font><font size="+1"><font size="+1"><code><code><dt><font size="+1"><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code></code></font></code></code></code></code><br>
+  </code></font></code></code></font></dt>
+</code></code></font></font></code></code></font></font></code></font></font></code><font
+ size="+1"><font size="+1"></font></font></code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><br>
+<code></code></code></code></font></code></code></code></code></code></font></code></code></code></code><dt><font
+ size="+1"><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></font><br>
+</dt>
+<dt><font size="+1"><font size="+1"><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code></code></font></code></code></code></code></code></font></code></code></font></font><font
+ size="+1"><font size="+1"><code><code></code></code></font></font><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code><code><code><code><code><code><code><font
+ size="+1"><code><code><code><code><code><font size="+1"><code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code></code></code></font></code></code></code><br>
+</dt>
+<code><code><font size="+1"><code><code><code><code><code><code><font
+ size="+1"><font size="+1"><code><code><dt><code><b><em></em></b></code><br>
+</dt>
+</code></code></font></font></code></code></code></code></code></code></font></code></code><br>
+<code><b><em></em></b></code>
+<a name="paramannots"></a>
+<h2 class="head2">Parameter Names and Parameter Annotations</h2>
+<p>Parameter annotations are another subset of the basic annotations
+support provided in JDK 5.0 (1.5). These are annotations that
+ornament Parameters to methods either visibly (accessible at runtime)
+or invisibly (not accessible at
+runtime). In JASM, visible parameter annotations are denoted by the
+token <b>@+</b>, while invisible parameter annotations are denoted
+by the token <b>@-</b>.<br>
+</p>
+<p>Parameter names come from an attribute introduced in JDK 8.0
+(1.8).&nbsp; These are fixed parameter names that are used to ornament
+parameters on methods.&nbsp; In Jasm, parameter names are identified by
+the token # followed by { } braclets<br>
+</p>
+<h4 class="head4"><u>Synopsis</u></h4>
+<dl>
+  <dt><code><b><em>METHOD DECLARATION</em></b></code>: <br>
+  </dt>
+  <dd><code>MODIFIERS Method METHOD_NAME:"METHOD_SIGNATURE"
+[STACK_DECL] [LOCALS_DECL] [PARAMETERS_DECL] {[CODE]}</code></dd>
+  <dd><br>
+  </dd>
+  <dt><code><b><em>PARAMETERS_DECL</em></b></code>: <br>
+  </dt>
+  <dd><code>[PARAMETER_DECL]<sup>N</sup> (where N &lt; number of params
+in method, each N is a unique param number)</code></dd>
+  <dd><br>
+  </dd>
+  <dt><code><b><em>PARAMETER_DECL</em></b></code>: <br>
+  </dt>
+  <dd><code>PARAM_NUM : [PARAM_NAME_DECL] [ANNOTATION_DECLARATIONS]</code></dd>
+</dl>
+<dl>
+  <dt><code><b><em>PARAM_NAME_DECL</em></b></code>: <br>
+  </dt>
+  <dd><code>#{ name PARAM_ACCESS}</code></dd>
+  <dt><br>
+  </dt>
+  <dt><code><b><i>PARAM_ACCESS</i></b>: list of</code></dt>
+  <dd><code>[final][synthetic][mandated]</code></dd>
+</dl>
+<h4 style="text-decoration: underline;" class="head4">Examples</h4>
+<div style="margin-left: 40px;"><u>Example 1 (Parameter Annotation)</u><br>
+<b><i><u>Java Code</u></i></b><br>
+<pre>public class MyClass2 {<br>	<br> ...<br><br>    public int doSomething(<br>	@VisParamPreamble ( author = "gummy" )  @InVisParamPreamble ( author = "bears" )  int barber,<br>	boolean of, <br>        @VisParamPreamble ( author = "sour" )  @InVisParamPreamble ( author = "worms" )    int seville,<br>        @InVisParamPreamble1 ( reviewers = {"Dilbert", "Garfield"} ) boolean pastrami) { <br>         ...<br>    }<br> ...<br>}<br></pre>
+<br>
+<b><i><u>JASM Code</u></i></b><br>
+<br>
+<span style="text-decoration: underline;">Note</span>:&nbsp; The first
+two parameters are named ('P0'- 'P3').&nbsp; Since this is a compiler
+controlled option, there is no way to specify parameter naming in Java
+source.<br>
+<pre>super public class MyClass2<br>	version 50:0<br>{<br> ...<br><br>  public Method doSomething:"(IZIZ)I"<br>	stack 2 locals 5<br><br>	0: #{P0 mandated} @+VisParamPreamble { author = "gummy" } @-InVisParamPreamble { author = "bears" } <br>	1: #{P1 final synthetic mandated}<br>&nbsp;       2: #{P2 mandated} @+VisParamPreamble { author = "sour" } @-InVisParamPreamble { author = "worms" } <br>	3: #{P3 mandated} @-InVisParamPreamble1 { reviewers = {  "Dilbert",  "Garfield"} } <br>   {<br>	...<br>   }<br><br>} // end Class MyClass2</pre>
+</div>
+<br>
+<a name="paramannots"></a>
+<h2 class="head2">Default Annotations</h2>
+<p>&nbsp; Default annotations are another subset of the basic
+annotations
+support provided in JDK 5.0 (1.5). These are annotations that
+ornament Annotations either visibly (accessible at runtime)
+or invisibly (not accessible at
+runtime). Default annotations specify a default value for a given
+annotation field. <br>
+</p>
+<h4 class="head4"><u>Synopsis</u></h4>
+<dl>
+  <dt><code><b><em>ANNOTATION INTERFACE DECLARATION</em></b></code>: <br>
+  </dt>
+  <dd><code>@interface ANNOTATION_NAME { ANNOTATION_FIELD_DECL<sup>+</sup>
+} <br>
+    </code></dd>
+  <dd><br>
+  </dd>
+  <dt><code><b><em>ANNOTATION_FIELD_DECL</em></b></code>: <br>
+  </dt>
+  <dd><code>ANNOT_FIELD_TYPE ANNOTATION_NAME
+[ANNOTATION_DEFAULT_VALUE_DECL];<br>
+    </code></dd>
+  <dd><br>
+  </dd>
+  <dt><code><b><em>ANNOTATION_DEFAULT_VALUE_DECL</em></b></code>: <br>
+  </dt>
+  <dd><code>default ANNOTATION_VALUE (where value must be of the type
+ANNOT_FIELD_TYPE)<br>
+    </code></dd>
+</dl>
+<h4 class="head4"><u>Examples</u></h4>
+<div style="margin-left: 40px;"><u>Example 1 (Default Annotation)</u><br>
+<b><i><u>Java Code</u></i></b><br>
+<pre>import java.lang.annotation.*; <br>@Retention(RetentionPolicy.RUNTIME)</pre>
+<pre>@interface Meth2Preamble {<br>&nbsp;&nbsp; String author() default "John Steinbeck";<br>}</pre>
+<br>
+<b><i><u>JASM Code</u></i></b><br>
+<pre>interface&nbsp; Meth2Preamble<br>&nbsp;&nbsp; &nbsp;implements java/lang/annotation/Annotation<br>&nbsp;&nbsp; &nbsp;version 50:0</pre>
+<pre>{<br>  &nbsp;public abstract Method author:"()Ljava/lang/String;" default { "John Steinbeck" } ;<br>} // end Class Meth2Preamble</pre>
+</div>
+<hr noshade="noshade" size="7">
+<a name="module_properties"></a>
+<h1 class="head1">Module properties</h1>
+<a name="module_requires"></a>
+<h2 class="head2">Requires</h2>
+<dl>
+  <dt><code><b><em>MODULE_REQUIRES</em></b></code>: sequence of </dt>
+  <dd>requires <code>REQUIRES_FLAGS</code> <code>CONSTANT_CELL(moduleContent)</code>; </dd>
+  <dt><code><b><em>REQUIRES_FLAGS</em></b></code>: set of </dt>
+  <dd>[<code>transitive</code>] [<code>static</code>] </dd>
+</dl>
+Example:
+<pre>        requires transitive static foo.bar;</pre>
+<a name="module_exports"></a>
+<h2 class="head2">Exports</h2>
+<dl>
+  <dt><code><b><em>MODULE_EXPORTS</em></b></code>: sequence of </dt>
+  <dd>exports <code>CONSTANT_CELL(package)</code> [to <code>EXPORT_TO_MODULES</code>]; </dd>
+  <dt><code><b><em>EXPORT_TO_MODULES</em></b></code>: list of </dt>
+  <dd><code>CONSTANT_CELL(moduleContent)</code> </dd>
+</dl>
+Example:
+<pre>        exports com/foo/bar to <br>            foo2.bar2,<br>            foo3.bar3;
+</pre>
+<pre>        exports org/foo/bar;</pre>
+<a name="module_opens"></a>
+<h2 class="head2">Opens</h2>
+<dl>
+  <dt><code><b><em>MODULE_OPENS</em></b></code>: sequence of </dt>
+  <dd>opens <code>CONSTANT_CELL(package)</code> [to <code>OPENS_TO_MODULES</code>]; </dd>
+  <dt><code><b><em>OPENS_TO_MODULES</em></b></code>: list of </dt>
+  <dd><code>CONSTANT_CELL(moduleContent)</code> </dd>
+</dl>
+Example:
+<pre>        opens com/foo/bar to <br>            foo2.bar2,<br>            foo3.bar3;
+</pre>
+<pre>        opens org/foo/bar;</pre>
+<a name="module_uses"></a>
+<h2 class="head2">Uses</h2>
+<dl>
+  <dt><code><b><em>MODULE_USES</em></b></code>: sequence of </dt>
+  <dd>uses <code>CONSTANT_CELL(class)</code>; </dd>
+</dl>
+Example:
+<pre>        uses com/foo/bar;
+</pre>
+<a name="module_provides"></a>
+<h2 class="head2">Provides</h2>
+<dl>
+  <dt><code><b><em>MODULE_PROVIDES</em></b></code>: sequence of </dt>
+  <dd>provides <code>CONSTANT_CELL(class)</code> [with <code>MODULE_PROVIDES_WITH_CLASSES</code>]; </dd>
+  <dt><code><b><em>MODULE_PROVIDES_WITH_CLASSES</em></b></code>: list of </dt>
+  <dd><code>CONSTANT_CELL(class)</code></dd>
+</dl>
+Example:
+<pre>        provides com/foo/bar with <br>            foo2.bar2,<br>            foo3.bar3;</pre>
+<pre>        provides com/foo/bar;</pre>
+<hr noshade="noshade" size="7"><a name="pico"></a>
+<h1 class="head1">PicoJava Instructions</h1>
+These instructions takes 2 bytes: prefix (254 for non-privileged
+variant and 255 for privileged) and the opcode itself.
+These instructions can be coded in assembler in 2 ways:
+as single mnemocode identical to the description or
+using "priv" and "nonpriv" instructions followed with an integer
+representing the opcode.
+<p class="paragraph"><br>
+</p>
+<!-- =================== --><!-- END OF MAIN CONTENT --><!-- END OF MAIN CONTENT --><!-- =================== --><!--Begin SiteCatalyst code version: G.5.-->
+<script language="Javascript" src="/s_code_remote.js"></script><!--End SiteCatalyst code version: G.5.--><br>
+<br>
+<center>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <col width="45"> <col width="25"> <col width="30"> <tbody>
+    <tr bgcolor="#cccccc">
+      <td>
+      <p align="left">Java Assembler Tools (AsmTools) User's Guide</p>
+      </td>
+      <td>
+      <p align="right">000-0000-00</p>
+      </td>
+      <td valign="top">
+      <p align="right"><a href="index.html"><img src="shared/toc01.gif"
+ name="graphics5" alt="Table Of Contents" align="bottom" border="0"
+ height="26" width="30"></a> <a href="chapter3.html"><img
+ src="shared/prev01.gif" name="graphics6" alt="Previous Chapter"
+ align="bottom" border="0" height="26" width="30"></a><a
+ href="appendix2.html"><img src="shared/next01.gif" name="graphics7"
+ alt="Next Chapter" align="bottom" border="0" height="26" width="30"></a><a
+ href="ix.html"><img src="shared/index01.gif" name="graphics8"
+ alt="Book Index" align="bottom" border="0" height="26" width="30"></a></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</center>
+<p class="copyrightlink">
+<script language="javascript">
+       O_GoT('<img src="/app/images/sm_3E6B8A_oo.gif" border="0" alt="Feedback link" title="Feedback">Feedback'); </script></p>
+<hr noshade="noshade" size="7">
+<center>
+Copyright &copy; 2012, 2017, Oracle and/or its affiliates. All rights reserved.
+</center>
+</body>
+</html>

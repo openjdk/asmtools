@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,8 +23,8 @@
 package org.openjdk.asmtools.common;
 
 import org.openjdk.asmtools.common.inputs.ToolInput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -32,6 +32,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public abstract class Environment<T extends ToolLogger> implements ILogger {
 
@@ -41,11 +43,19 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     T toolLogger;
 
+    //-w <directory> Specify where to place generated class files, without considering the classpath.
+    // If not specified, output will be directed to <stdout>.
+    private boolean ignorePackage = false;
+
     // processed input file or stdin
-    private ToolInput inputFileName;
+    private ToolInput toolInput;
     private ToolOutput toolOutput;
     // checks output verbosity
     private boolean verboseFlag;
+
+    public boolean isTraceFlag() {
+        return traceFlag;
+    }
 
     private boolean traceFlag;
 
@@ -57,9 +67,9 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         this.toolLogger = (T) builder.toolLogger;
     }
 
-    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
-        this.inputFileName = inputFileName;
-        toolLogger.setInputFileName(inputFileName);
+    public void setToolInput(ToolInput toolInput) throws IOException, URISyntaxException {
+        this.toolInput = toolInput;
+        toolLogger.setInputFileName(toolInput);
     }
 
     public void setTraceFlag(boolean flag) {
@@ -74,7 +84,19 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         toolLogger.strictWarnings = true;
     }
 
-    public String getSimpleInputFileName() { return toolLogger.getSimpleInputFileName(); }
+
+    public boolean isIgnorePackage() {
+        return ignorePackage;
+    }
+
+    public Environment<T> setIgnorePackage(boolean ignorePackage) {
+        this.ignorePackage = ignorePackage;
+        return this;
+    }
+
+    public String getSimpleInputFileName() {
+        return toolLogger.getSimpleInputFileName();
+    }
 
     /**
      * Returns the name of the source file that is used by the tool to assemble the SourceFile attribute
@@ -89,20 +111,28 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
         return sourceName;
     }
 
-    public ToolInput getInputFile() { return inputFileName; }
+    public ToolInput getToolInput() {
+        return toolInput;
+    }
 
     /**
      * @return DataInputStream or null if the method can't read a file
      */
     protected DataInputStream getDataInputStream() throws URISyntaxException, IOException {
-        Objects.requireNonNull(this.inputFileName, "Input must be defined.");
-        return inputFileName.getDataInputStream(Optional.of(this));
+        Objects.requireNonNull(this.toolInput, "Input must be defined.");
+        return toolInput.getDataInputStream(Optional.of(this));
     }
 
     @Override
     public void traceln(String id, Object... args) {
         if (traceFlag)
             ILogger.super.traceln(id, args);
+    }
+
+    public void traceln(Supplier<String> supplier) {
+        if (traceFlag) {
+            ILogger.super.traceln(supplier.get());
+        }
     }
 
     @Override
@@ -117,6 +147,17 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
     }
 
     @Override
+    public void error(Throwable exception) {
+        toolLogger.error(exception);
+    }
+
+    public void trace(Supplier<String> supplier) {
+        if (traceFlag) {
+            ILogger.super.trace(supplier.get());
+        }
+    }
+
+    @Override
     public void info(String id, Object... args) {
         toolLogger.info(id, args);
     }
@@ -127,7 +168,10 @@ public abstract class Environment<T extends ToolLogger> implements ILogger {
 
     public void usage(List<String> ids) {
         toolLogger.usage(ids);
+    }
 
+    public void usage(List<String> ids, Function<String, String> func) {
+        toolLogger.usage(ids, func);
     }
 
     @Override

@@ -45,8 +45,8 @@ public class EscapedPrintStreamOutput extends PrintWriterOutput {
     }
 
     @Override
-    public void finishClass(String fqn) throws IOException {
-        super.finishClass(fqn);
+    public void finishClass(String fullyQualifiedName) throws IOException {
+        super.finishClass(fullyQualifiedName);
         originalStream.flush();
     }
 }

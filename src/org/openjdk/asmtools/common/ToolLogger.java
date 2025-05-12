@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static org.openjdk.asmtools.Main.sharedI18n;
@@ -40,7 +41,7 @@ import static org.openjdk.asmtools.common.EMessageKind.INFO;
 public abstract class ToolLogger implements ILogger {
 
     protected boolean ignoreWarnings = false;         // do not print / ignore warnings
-    protected boolean strictWarnings  = false;        // consider warnings as errors
+    protected boolean strictWarnings = false;        // consider warnings as errors
 
     class ToolResources {
         private final static HashMap<String, I18NResourceBundle> resources = new HashMap<>();
@@ -89,6 +90,7 @@ public abstract class ToolLogger implements ILogger {
         this.outerLog = outerLog;
     }
 
+    @Override
     public String getResourceString(String id, Object... args) {
         String resString;
         toolResources.setWarn(false);
@@ -101,16 +103,16 @@ public abstract class ToolLogger implements ILogger {
             resString = sharedI18n.getString(id, args);
         }
         if (resString == null || resString.equals(id)) {
-            //to get proper error message
+            //to get a proper error message
             resString = toolResources.getString(id, args);
         }
         return resString;
     }
 
     public void setInputFileName(ToolInput inputFileName) throws IOException {
-        this.inputFileName = inputFileName.getFileName();
-        this.simpleInputFileName = Paths.get(inputFileName.getFileName()).getFileName().toString();
-        // content of the input file will be loaded only if the file will be parsed by jasm/jcoder
+        this.inputFileName = inputFileName.getName();
+        this.simpleInputFileName = Paths.get(inputFileName.getName()).getFileName().toString();
+        // the content of the input file will be loaded only if the file is parsed by jasm/jcoder
     }
 
     public Message getResourceString(EMessageKind kind, String id, Object... args) {
@@ -151,16 +153,13 @@ public abstract class ToolLogger implements ILogger {
 
     public abstract void usage(List<String> ids);
 
-    @FunctionalInterface
-    private interface TriFunction<A, B, C, R> {
-        R apply(A a, B b, C c);
-    }
+    public abstract void usage(List<String> ids, Function<String, String> func);
 
     public enum EMessageFormatter {
         SHORT((severity, name, message) -> format("%s", message)),
         LONG((severity, name, message) -> format("%s: %s", severity.longForm(), message)),
-        VERBOSE((severity, name, message) -> severity == INFO ? message : format("%-7s-%6s: %s",
-                name, severity.shortForm(), message));
+        VERBOSE((severity, name, message) -> severity == INFO ? message :
+                format("%-7s-%6s: %s", name, severity.shortForm(), message));
         final private TriFunction<EMessageKind, String, String, String> triFunc;
 
         EMessageFormatter(TriFunction<EMessageKind, String, String, String> func) {

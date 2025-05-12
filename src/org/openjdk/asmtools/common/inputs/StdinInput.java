@@ -29,7 +29,7 @@ public class StdinInput extends StreamInput {
     }
 
     @Override
-    public String getFileName() {
+    public String getName() {
         //get parent is used
         return "stdin/stdin";
     }

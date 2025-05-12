@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,15 +22,15 @@
  */
 package org.openjdk.asmtools.jdec;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.Decoder;
 import org.openjdk.asmtools.common.outputs.EscapedPrintStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
 import java.io.PrintStream;
 
-public abstract class JdecTool extends Tool<JdecEnvironment> {
+public abstract class JdecTool extends Decoder<JdecEnvironment> {
 
     protected JdecTool(ToolOutput toolOutput, DualStreamToolOutput log) {
         super(toolOutput, log);

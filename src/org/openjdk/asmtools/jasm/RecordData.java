@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.ELocation;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.IOException;
@@ -88,6 +89,7 @@ public class RecordData extends AttrData {
 
         public ComponentData(ClassData classData, FieldData field) {
             super(classData.pool, classData.getEnvironment());
+            this.attributeLocation = ELocation.record_component_info;
             this.classData = classData;
             this.field = field;
         }

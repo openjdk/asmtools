@@ -107,7 +107,7 @@ public class ConstCell<V extends ConstValue> extends Indexer implements Constant
         if (this.ref == constCell.ref) return true;
         if (this.ref != null && ref instanceof ConstValue) {
             if (constCell.ref instanceof ConstValue) {
-                return ((ConstValue) this.ref).equalsByValue(constCell.ref);
+                return this.ref.equalsByValue(constCell.ref);
             }
             return false;
         } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,8 +61,8 @@ public class PrintWriterOutput extends NamedToolOutput {
     }
 
     @Override
-    public void finishClass(String fqn) throws IOException {
-        super.finishClass(fqn);
+    public void finishClass(String fullyQualifiedName) throws IOException {
+        super.finishClass(fullyQualifiedName);
         os.flush();
     }
 
@@ -76,5 +76,8 @@ public class PrintWriterOutput extends NamedToolOutput {
         throw new NotImplementedException("Use EscapedPrintStreamOutput");
     }
 
-
+    @Override
+    public String getName() {
+        return "text-output stream";
+    }
 }

@@ -39,11 +39,8 @@ public class FormatError extends ClassFormatError {
     }
 
     public <T extends ToolLogger> FormatError(T logger, String id, Object... args) {
-        super(
-                logger.getResourceString(id, args) == null
-                        ? FormatError.getResourceMsg(id, args) == null ?
-                        "(i18n.properties) The message '" + id + "' not found" :
-                        FormatError.getResourceMsg(id, args)
+        super( logger.getResourceString(id, args) == null ?
+                        (FormatError.getResourceMsg(id, args) == null ?  "(i18n.properties) The message '" + id + "' not found" : FormatError.getResourceMsg(id, args))
                         : logger.getResourceString(id, args));
     }
 }

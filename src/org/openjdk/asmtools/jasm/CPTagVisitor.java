@@ -38,34 +38,38 @@ public abstract class CPTagVisitor<R> implements CompilerConstants {
             case CONSTANT_UTF8, CONSTANT_ASCIZ -> {
                 return visitUTF8();
             }
-            case CONSTANT_INTEGER, CONSTANT_INTEGER_BYTE, CONSTANT_INTEGER_BOOLEAN, CONSTANT_INTEGER_CHAR, CONSTANT_INTEGER_SHORT -> {
+            case CONSTANT_INTEGER, CONSTANT_INT,
+                 CONSTANT_BYTE, CONSTANT_C_BYTE,
+                 CONSTANT_CHAR, CONSTANT_C_CHAR,
+                 CONSTANT_SHORT, CONSTANT_C_SHORT,
+                 CONSTANT_C_BOOLEAN, CONSTANT_BOOLEAN -> {
                 return visitInteger(tag);
             }
-            case CONSTANT_FLOAT -> {
+            case CONSTANT_FLOAT, CONSTANT_C_FLOAT -> {
                 return visitFloat();
             }
-            case CONSTANT_DOUBLE -> {
+            case CONSTANT_DOUBLE, CONSTANT_C_DOUBLE -> {
                 return visitDouble();
             }
-            case CONSTANT_LONG -> {
+            case CONSTANT_LONG, CONSTANT_C_LONG -> {
                 return visitLong();
             }
             case CONSTANT_METHODTYPE -> {
                 return visitMethodType();
             }
-            case CONSTANT_STRING -> {
+            case CONSTANT_STRING, CONSTANT_L_STRING -> {
                 return visitString();
             }
-            case CONSTANT_CLASS -> {
+            case CONSTANT_CLASS, CONSTANT_C_CLASS -> {
                 return visitClass();
             }
-            case CONSTANT_METHODREF -> {
+            case CONSTANT_METHODREF, CONSTANT_METHOD -> {
                 return visitMethod();
             }
-            case CONSTANT_FIELDREF -> {
+            case CONSTANT_FIELDREF, CONSTANT_FIELD -> {
                 return visitField();
             }
-            case CONSTANT_INTERFACEMETHODREF -> {
+            case CONSTANT_INTERFACEMETHODREF, CONSTANT_INTERFACEMETHOD -> {
                 return visitInterfaceMethod();
             }
             case CONSTANT_NAMEANDTYPE -> {

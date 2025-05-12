@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,13 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.Decoder;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 import org.openjdk.asmtools.jdis.JdisEnvironment.JdisBuilder;
 
-public abstract class JdisTool extends Tool<JdisEnvironment> {
+public abstract class JdisTool extends Decoder<JdisEnvironment> {
 
     protected JdisTool(ToolOutput toolOutput, DualStreamToolOutput outerLog) {
         super(toolOutput, outerLog);

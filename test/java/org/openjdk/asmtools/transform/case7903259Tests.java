@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,8 @@ package org.openjdk.asmtools.transform;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.openjdk.asmtools.lib.LogAndReturn;
-import org.openjdk.asmtools.lib.action.EAsmTools;
+import org.openjdk.asmtools.lib.action.EAsmTool;
+import org.openjdk.asmtools.lib.log.LogAndReturn;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,9 +34,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
-import static org.openjdk.asmtools.common.FileUtils.getResourceFilePath;
+import static org.openjdk.asmtools.lib.utility.FileUtils.getResourceFilePath;
 
 /**
  * Tests tools against files without extension.
@@ -60,10 +61,10 @@ public class case7903259Tests {
 
     @Test
     void NoExtensionTest() {
-        EAsmTools.Tool tool;
+        EAsmTool tool;
         int testedToolsCount = 0;
         for (String fileName : files) {
-            tool = EAsmTools.getTool(fileName);
+            tool = EAsmTool.getToolBy(fileName);
             if (tool != null) {
                 LogAndReturn ret = tool.call(List.of(resourceDir + File.separator + appendBin(fileName)));
                 assertTrue(ret.log.toString().isEmpty());
@@ -76,7 +77,7 @@ public class case7903259Tests {
 
     private String appendBin(String fileName) {
         if (disassemblers.contains(fileName)) {
-            return fileName+".bin";
+            return fileName.concat(".bin");
         } else {
             return fileName;
         }

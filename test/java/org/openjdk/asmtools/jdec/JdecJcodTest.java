@@ -1,10 +1,9 @@
 package org.openjdk.asmtools.jdec;
 
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.BruteForceHelper;
+import org.openjdk.asmtools.lib.helper.BruteForceHelper;
 
 import java.io.IOException;
-
 
 class JdecJcodTest {
 
@@ -21,4 +20,3 @@ class JdecJcodTest {
 
     }
 }
-

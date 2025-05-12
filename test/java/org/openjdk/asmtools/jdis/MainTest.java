@@ -1,10 +1,32 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
 package org.openjdk.asmtools.jdis;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.ClassPathClassWork;
-import org.openjdk.asmtools.ThreeStringWriters;
+import org.openjdk.asmtools.lib.helper.ClassPathClassWork;
+import org.openjdk.asmtools.lib.helper.ThreeStringWriters;
 import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
@@ -19,14 +41,14 @@ class MainTest extends ClassPathClassWork {
 
     @BeforeAll
     public static void prepareClass() {
-        Options.unsetDetailedOutputOptions();
+        Options.setDefaultOutputOptions();
         initMainClassData(org.openjdk.asmtools.jdis.Main.class);
     }
 
     @Test
     public void main3StreamsNoSuchFileError() {
         ThreeStringWriters outs = new ThreeStringWriters();
-        String nonExisitngFile = "someNonExiostingFile";
+        String nonExisitngFile = "someNonExistingFile";
         Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), nonExisitngFile);
         int i = decoder.disasm();
         outs.flush();
@@ -76,7 +98,7 @@ class MainTest extends ClassPathClassWork {
     }
 
     @Test
-    public void superIsNotOmited() throws IOException {
+    public void superIsNotOmitted() throws IOException {
         ThreeStringWriters outs = new ThreeStringWriters();
         String testClazz = clazz.getName().replace('.', '/');
         String name = testClazz.replaceAll(".*/", "");
@@ -91,28 +113,31 @@ class MainTest extends ClassPathClassWork {
         for (String line : clazz.split("\n")) {
             if (line.contains("class " + name + " extends JdisTool")) {
                 Assertions.assertTrue(line.contains("super"), "class declaration had super omitted - " + line);
-                checkSupperIsOmitedIfNotPresent(clazz, testClazz);
+                checkSupperIsOmittedIfNotPresent(clazz, testClazz);
                 return;
             }
         }
         Assertions.assertTrue(false, "class Main was not found in disassembled output");
     }
 
-    private void checkSupperIsOmitedIfNotPresent(String clazzWithSuper, String fqn) throws IOException {
+    private void checkSupperIsOmittedIfNotPresent(String clazzWithSuper, String fqn) throws IOException {
         String name = fqn.replaceAll(".*/", "");
         String classWithoutSuper = clazzWithSuper.replaceFirst(" super ", " ");
-        File sourceWithoutSuper = File.createTempFile("jasmTest", name + ".java");
+        File sourceWithoutSuper = File.createTempFile("jasmTest", name + ".jasm");
         sourceWithoutSuper.deleteOnExit();
         Files.write(sourceWithoutSuper.toPath(), classWithoutSuper.getBytes(StandardCharsets.UTF_8));
         File dir = File.createTempFile("asmtools-jasmtest", "tmp.dir");
         dir.delete();
         dir.mkdir();
         dir.deleteOnExit();
-        org.openjdk.asmtools.jasm.Main jasmTool = new org.openjdk.asmtools.jasm.Main(new StdoutOutput(), new StderrLog(), sourceWithoutSuper.getAbsolutePath(), "-d", dir.getAbsolutePath());
+        org.openjdk.asmtools.jasm.Main jasmTool = new org.openjdk.asmtools.jasm.Main(
+                new StdoutOutput(), new StderrLog(), sourceWithoutSuper.getAbsolutePath(),
+                "-d", dir.getAbsolutePath());
         int ii = jasmTool.compile();
         Assertions.assertEquals(0, ii);
         ThreeStringWriters outs = new ThreeStringWriters();
-        Main decoder = new Main(outs.getToolOutputWrapper(), outs.getLoggers(), dir.getAbsolutePath() + "/" + fqn + ".class");
+        Main decoder = new Main(
+                outs.getToolOutputWrapper(), outs.getLoggers(), dir.getAbsolutePath() + "/" + fqn + ".class");
         int i = decoder.disasm();
         outs.flush();
         Assertions.assertEquals(0, i);

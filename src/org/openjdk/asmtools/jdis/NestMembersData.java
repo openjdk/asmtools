@@ -27,6 +27,9 @@ import org.openjdk.asmtools.jasm.JasmTokens;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static java.lang.String.format;
+import static org.openjdk.asmtools.jasm.TableFormatModel.Token.NEST_MEMBERS;
+
 /**
  * The NestMembers attribute data
  * <p>
@@ -40,7 +43,8 @@ import java.io.IOException;
  */
 public class NestMembersData extends ClassArrayData {
     public NestMembersData(ClassData cls) {
-        super(cls, JasmTokens.Token.NESTMEMBERS.parseKey());
+        super(cls, JasmTokens.Token.NESTMEMBERS);
+        tableToken = NEST_MEMBERS;
     }
 
     public NestMembersData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {

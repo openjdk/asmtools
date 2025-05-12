@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,9 +25,9 @@ package org.openjdk.asmtools.jdis;
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.StdoutOutput;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
-import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualOutputStreamOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import java.io.DataInputStream;
 import java.io.FileNotFoundException;
@@ -37,8 +37,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.openjdk.asmtools.Main.WRITE_SWITCH;
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.common.outputs.FSOutput.FSDestination.DIR;
+import static org.openjdk.asmtools.common.outputs.FSOutput.FSDestination.FILE;
+import static org.openjdk.asmtools.jdis.Options.PrintOption;
+import static org.openjdk.asmtools.jdis.Options.PrintOption.*;
 import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
@@ -89,36 +94,57 @@ public class Main extends JdisTool {
         return this.disasm() == OK;
     }
 
+    @Override
+    public synchronized int decode() {
+        return this.disasm();
+    }
+
+    public synchronized boolean decode(String... argv) {
+        return this.disasm(argv);
+    }
+
     // Runs disassembler when args already parsed
     public synchronized int disasm() {
-        for (ToolInput inputFileName : fileList) {
+        int rc = 0;
+        for (ToolInput toolInput : fileList) {
+            ClassData classData = null;
             try {
-                environment.setInputFile(inputFileName);
-                ClassData classData = new ClassData(environment);
-                try(DataInputStream dis=inputFileName.getDataInputStream(Optional.of(environment))) {
-                    classData.read(dis, Paths.get(inputFileName.getFileName()));
+                environment.setToolInput(toolInput);
+                classData = new ClassData(environment);
+                toolInput.setDetailedInput(classData.isDetailedOutput());
+                try (DataInputStream dis = toolInput.getDataInputStream(Optional.of(environment))) {
+                    classData.read(dis, Paths.get(toolInput.getName()));
                 }
+                environment.traceln(() -> "Options:\n%s\n".formatted(Options.getPrintOptions()));
                 environment.getToolOutput().startClass(classData.className, Optional.of(".jasm"), environment);
                 classData.print();
                 environment.getToolOutput().finishClass(classData.className);
                 environment.getOutputs().flush();
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                environment.getLogger().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
                 environment.printException(fnf);
-                environment.error("err.not_found", inputFileName);
+                environment.error("err.not_found", toolInput);
+                rc = FAILED;
             } catch (IOException | ClassFormatError ioe) {
+                classData.postPrint();
+                environment.error(ioe);
                 environment.printException(ioe);
-                if (!environment.getVerboseFlag())
-                    environment.printErrorLn(ioe.getMessage());
-                environment.error("err.fatal_error", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Error error) {
+                classData.postPrint();
+                environment.error(error);
                 environment.printException(error);
-                environment.error("err.fatal_error", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Exception ex) {
+                classData.postPrint();
+                environment.error(ex);
                 environment.printException(ex);
-                environment.error("err.fatal_exception", inputFileName);
+                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
             }
-            return FAILED;
+            environment.getLogger().flush();
+            return rc;
         }
         return OK;
     }
@@ -126,23 +152,29 @@ public class Main extends JdisTool {
     @Override
     public void usage() {
         environment.usage(List.of(
-        "info.usage",
-        "info.opt.d",
-        "info.opt.g",
-        "info.opt.nc",
-        "info.opt.lt",
-        "info.opt.lv",
-        "info.opt.instr.offset",
-        "info.opt.hx",
-        "info.opt.sl",
-// TODO "info.opt.table",
-        "info.opt.t",
-        "info.opt.v",
-        "info.opt.version"));
+                "info.usage",
+                "info.opt.d",
+                "info.opt.w",
+                "info.opt.g",
+                "info.opt.gg",
+                "info.opt.nc",
+                "info.opt.table",
+                "info.opt.hx",
+                "info.opt.instr.offset",
+                "info.opt.sysinfo",
+                "info.opt.lnt",
+                "info.opt.lvt",
+                "info.opt.drop",
+                "info.opt.b",
+                "info.opt.version",
+                "info.opt.t",
+                "info.opt.v"
+        ));
     }
 
     @Override
     protected void parseArgs(String... argv) {
+        Options.setDefaultOutputOptions();
         // Parse arguments
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
@@ -151,53 +183,81 @@ public class Main extends JdisTool {
                     Options.setDetailedOutputOptions();
                     break;
                 case "-v":
-                    Options.set(Options.PR.VERBOSE);
+                    Options.set(VERBOSE);
                     environment.setVerboseFlag(true);
                     break;
+                case "-sysinfo":
+                    Options.set(SYSINFO);
+                    break;
                 case "-t":
-                    Options.set(Options.PR.VERBOSE);
-                    Options.set(Options.PR.TRACE);
+                    Options.set(VERBOSE);
+                    Options.set(TRACE);
                     environment.setVerboseFlag(true);
                     environment.setTraceFlag(true);
                     break;
                 case "-pc":
-                    Options.set(Options.PR.PC);
-                    break;
-                case "-sl":
-                    Options.set(Options.PR.SRC);
-                    break;
-                case "-lt":
-                    Options.set(Options.PR.LNT);
+                    Options.set(PRINT_BCI);
                     break;
                 case "-nc":
-                    Options.set(Options.PR.NC);
-                    break;
-                case "-lv":
-                    Options.set(Options.PR.VAR);
+                    Options.set(NO_COMMENTS);
                     break;
                 case "-hx":
-                    Options.set(Options.PR.HEX);
+                    Options.set(HEX);
                     break;
-                case org.openjdk.asmtools.Main.DIR_SWITCH:
-                    setDestDir(++i, argv);
+                case "-f":                                          // -f <file>
+                    setFSDestination(FILE, ++i, argv);
                     break;
-                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:
+                case org.openjdk.asmtools.Main.DIR_SWITCH:          // -d <directory>
+                    setFSDestination(DIR, ++i, argv);
+                    break;
+                case WRITE_SWITCH:                                  // -w
+                    environment.setIgnorePackage(true);
+                    setFSDestination(DIR, ++i, argv);
+                    break;
+                case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH:     // -dls
                     this.environment.setOutputs(new DualOutputStreamOutput());
                     break;
-                case org.openjdk.asmtools.Main.VERSION_SWITCH:
+                case org.openjdk.asmtools.Main.VERSION_SWITCH:      // -version
                     environment.println(FULL_VERSION);
                     System.exit(OK);
-                case org.openjdk.asmtools.Main.STDIN_SWITCH:
+                case org.openjdk.asmtools.Main.STDIN_SWITCH:        // -
                     addStdIn();
                     break;
                 case "-h", "-help":
                     usage();
                     System.exit(OK);
+                case "-best-effort":
+                    Options.set(BEST_EFFORT);
+                    break;
+                case "-gg":
+                    Options.setDetailedOutputOptions();
+                    Options.set(EXTRA_DETAILED_Output);
+                    break;
+                case "-table":
+                    Options.set(PrintOption.TABLE);
+                    break;
                 default:
                     if (arg.startsWith("-")) {
-                        environment.error("err.invalid_option", arg);
-                        usage();
-                        System.exit(FAILED);
+                        if (arg.startsWith("-drop")) {
+                            if (!parseParameters("-drop", arg, "DROP", DROP_All)) {
+                                usage();
+                                System.exit(FAILED);
+                            }
+                        } else if (arg.startsWith("-lnt")) {
+                            if (!parseParameters("-lnt", arg, "LINE_NUMBER_TABLE", LINE_NUMBER_TABLE_All)) {
+                                usage();
+                                System.exit(FAILED);
+                            }
+                        } else if (arg.startsWith("-lvt")) {
+                            if (!parseParameters("-lvt", arg, "LOCAL_VARIABLE", LOCAL_VARIABLE_All)) {
+                                usage();
+                                System.exit(FAILED);
+                            }
+                        } else {
+                            environment.error("err.invalid_option", arg);
+                            usage();
+                            System.exit(FAILED);
+                        }
                     } else {
                         fileList.add(new FileInput(arg));
                     }
@@ -207,5 +267,48 @@ public class Main extends JdisTool {
             usage();
             System.exit(FAILED);
         }
+    }
+
+    /**
+     * Parse parameters group -option:parameters [parameters=option1,option2]
+     *
+     * @param option      one of the options [-lvt, -drop, -lnt]
+     * @param parameters  one of combinations corresponded to the option:
+     *                    <all,numbers,lines,table>, <all,vars,types> or
+     *                    <all|debug|SourceFile,LocalVariable,LocalVariableType,CharacterRange>
+     * @param optPrefix   prefix of the PR: LINE_NUMBER_TABLE, LOCAL_VARIABLE or DROP
+     * @param blankOption option that is used if there are no parameters option1,option2... attached to the -option
+     * @return true if parameters group parsed successfully
+     */
+    private boolean parseParameters(String option, String parameters, String optPrefix, PrintOption blankOption) {
+        parameters = parameters.substring(option.length());
+        if (parameters.isBlank()) {
+            if (!blankOption.isActive()) {
+                environment.error("err.option.unsupported", option + ":all");
+                return false;
+            }
+            blankOption.apply();
+        } else if (parameters.matches("^[:=-]+.*")) {
+            parameters = parameters.substring(1);
+            String[] prmArray = parameters.split(",");
+            for (int i = 0; i < prmArray.length; i++) {
+                PrintOption printOption = getStringFlag(optPrefix, prmArray[i]);
+                if (printOption == null || !printOption.name().startsWith(optPrefix)) {
+                    environment.error("err.invalid_parameter_of_option", prmArray[i], option);
+                    return false;
+                } else if (!printOption.isActive()) {
+                    environment.error("err.option.unsupported", "%s:%s".formatted(option, prmArray[i]));
+                    return false;
+                }
+                printOption.apply();
+                if (printOption.equals(blankOption)) { // blank options is equal to
+                    return true;
+                }
+            }
+        } else {
+            environment.error("err.option.unsupported", option + parameters);
+            return false;
+        }
+        return true;
     }
 }
