@@ -25,7 +25,7 @@ package org.openjdk.asmtools.util;
 import java.util.ResourceBundle;
 
 /**
- * Class providing an access to the product info.
+ * Class providing access to the product info.
  * <i>productinfo.properties</i> will be generated during the build
  */
 public class ProductInfo {
@@ -33,8 +33,6 @@ public class ProductInfo {
     static {
         init();
     }
-
-    ;
 
     /**
      * Returns the value of the specified property

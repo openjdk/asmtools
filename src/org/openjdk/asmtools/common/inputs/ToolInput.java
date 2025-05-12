@@ -27,6 +27,7 @@ import org.openjdk.asmtools.common.Environment;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -34,17 +35,33 @@ import java.util.Optional;
  * This class is a generic interface, symbolising any input for jdis/jasm/jdec/jcoder.
  * Asmtools as application internally uses FileInput and StdinInput.
  * UnitTests for asmtools uses mainly StringInput for assemblers  and ByteInput for disassemblers.
- *
+ * <p>
  * String/Byte/Stream inputs can be used as any 3rd part code which do not need files, aka IDE, instrumentation or similar.
- *
+ * <p>
  * The interface methods goes in favor of asmtools, and for details and help see individual implementations
  */
 public interface ToolInput {
 
-    String getFileName();
+    String getName();
 
     DataInputStream getDataInputStream(Optional<Environment> logger) throws URISyntaxException, IOException;
 
     Collection<String> readAllLines() throws IOException;
+
+    default boolean isDetailedInput() {
+        return false;
+    }
+
+    default ToolInput setDetailedInput(boolean value) {
+        return this;
+    }
+
+    default MessageDigest getMessageDigest() {
+        return null;
+    }
+
+    default int getSize() {
+        return 0;
+    }
 
 }

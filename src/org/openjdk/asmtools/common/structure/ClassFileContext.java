@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,24 +27,28 @@ package org.openjdk.asmtools.common.structure;
  */
 public enum ClassFileContext {
 
-    NONE(0x0000, "n/a"),
-    CLASS(0x0001, "class"),
-    FIELD(0x0002, "field"),
-    METHOD(0x0004, "method"),
-    INNER_CLASS(0x0008, "inner-class"),
-    MODULE(0x0010, "module"),
-    REQUIRES(0x0020, "requires"),
-    EXPORTS(0x0040, "exports"),
-    OPENS(0x0080, "opens"),
-    METHOD_PARAMETERS(0x0100, "method parameters"),
-    MODULE_DIRECTIVES(0x0020 | 0x0040 | 0x0080, "module directives");
+    NONE(0x0000, "n/a", false),
+    CLASS(0x0001, "class", false),
+    FIELD(0x0002, "field", false),
+    METHOD(0x0004, "method", false),
+    INNER_CLASS(0x0008, "inner-class", false),
+    MODULE(0x0010, "module", false),
+    REQUIRES(0x0020, "requires", false),
+    EXPORTS(0x0040, "exports", false),
+    OPENS(0x0080, "opens", false),
+    METHOD_PARAMETERS(0x0100, "method parameters", false),
+    MODULE_DIRECTIVES(0x0020 | 0x0040 | 0x0080, "module directives", false),
+    ORDINARY(0x0200, "ordinary", true),
+    VALUE_OBJECTS(0x0200, "value classes and objects", true);
 
     private final int id;
     private final String printVal;
+    private final boolean globalContext;
 
-    ClassFileContext(int id, String print) {
+    ClassFileContext(int id, String print, boolean globalContext) {
         this.id = id;
-        printVal = print;
+        this.printVal = print;
+        this.globalContext = globalContext;
     }
 
     public int getID() {
@@ -55,9 +59,13 @@ public enum ClassFileContext {
         return printVal;
     }
 
+    public boolean isGlobal() {
+        return globalContext;
+    }
+
     public boolean isOneOf(ClassFileContext... contexts) {
         for (ClassFileContext cfc : contexts) {
-            if ( (cfc.id & this.id) != 0) {
+            if ((cfc.id & this.id) != 0) {
                 return true;
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -51,25 +51,25 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
     }
 
     @Override
-    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
+    public void setToolInput(ToolInput toolInput) throws IOException, URISyntaxException {
         try {
             // content of the jcod input file
-            super.setInputFile(inputFileName);
+            super.setToolInput(toolInput);
             this.inputFile = new InputFile(getDataInputStream());
         } catch (IOException ioe) {
-            error("err.cannot.read", inputFileName);
+            error("err.cannot.read", toolInput);
             throw ioe;
         }
     }
 
     // proxy methods
     @Override
-    public void warning(int where, String id, Object... args) {
+    public void warning(long where, String id, Object... args) {
         getLogger().warning(where, id, args);
     }
 
     @Override
-    public void error(int where, String id, Object... args) {
+    public void error(long where, String id, Object... args) {
         getLogger().error(where, id, args);
     }
 
@@ -100,7 +100,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
         return super.getLogger().flush(printTotals);
     }
 
-    public int getPosition() {
+    public long getPosition() {
         return inputFile == null ? 0 : inputFile.position;
     }
 
@@ -123,17 +123,16 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
     class InputFile extends TextInput {
 
         private int pushBack = EOF;
-        //
-        private int strPos = 0;
+
+        private int index = 0;
 
         InputFile(DataInputStream dataInputStream) throws IOException {
             super(dataInputStream);
-            charPos = LINE_INC;
         }
 
         private int getChar() {
             try {
-                return strData.charAt(strPos++);
+                return strData.charAt(index++);
             } catch (StringIndexOutOfBoundsException e) {
                 return EOF;
             }
@@ -141,7 +140,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
 
         @Override
         public int readUTF() {
-            position = charPos;
+            position = ((long) linepos << OFFSET_BITS) | charPos;
             charPos += OFFSET_INC;
             int c = pushBack;
             if (c == EOF) {
@@ -186,7 +185,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
                     return d;
                 }
                 case '\n' -> {
-                    charPos += LINE_INC;
+                    linepos++;
                     return '\n';
                 }
                 case '\r' -> {
@@ -195,7 +194,7 @@ public class JcoderEnvironment extends Environment<CompilerLogger> {
                     } else {
                         charPos += OFFSET_INC;
                     }
-                    charPos += LINE_INC;
+                    linepos++;
                     return '\n';
                 }
                 default -> {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,66 +22,37 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.jasm.JasmTokens;
-
-import java.io.DataInputStream;
-import java.io.IOException;
-
-import static java.lang.String.format;
-import static org.openjdk.asmtools.jasm.JasmTokens.Token.SOURCEFILE;
+import static org.openjdk.asmtools.jasm.TableFormatModel.Token.SOURCE_FILE;
 
 /**
+ * The SourceFile attribute since 45.3
+ * <p>
  * SourceFile_attribute {
- *     u2 attribute_name_index;
- *     u4 attribute_length;
- *     u2 sourcefile_index;
+ * u2 attribute_name_index;
+ * u4 attribute_length;
+ * u2 sourcefile_index;
  * }
  */
-public class SourceFileData extends Indenter {
-    private ConstantPool pool;
-    // Constant Pool index to a file reference to the Java source
-    private int source_cpx = 0;
-    private String sourceName = null;
+public class SourceFileData extends AttributeData<SourceFileData> {
 
     public SourceFileData(ClassData classData) {
-        super(classData.toolOutput);
-        pool = classData.pool;
-    }
-
-    public SourceFileData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
-        this.source_cpx = in.readUnsignedShort();
-        return this;
+        super(classData, SOURCE_FILE);
     }
 
     @Override
     public boolean isPrintable() {
-        return getSourceName() != null;
+        return !dropSourceFile && calculateName() != null;
     }
 
-    @Override
-    public void print() {
-        if (printCPIndex) {
-            if(skipComments ) {
-                printIndentLn(format("%s #%d;", SOURCEFILE.parseKey(), source_cpx));
-            } else {
-                printIndent(PadRight(format("%s #%d;", SOURCEFILE.parseKey(), source_cpx), getCommentOffset() - 1)).
-                        println((sourceName != null) ? " // " + sourceName : "");
-            }
-        } else {
-            printIndent(PadRight(SOURCEFILE.parseKey(),OPERAND_PLACEHOLDER_LENGTH + INSTR_PREFIX_LENGTH + 1)).
-                    println( "\"" + (sourceName != null ? sourceName : "???") + "\";");
+    public String calculateName() {
+        if (this.name == null) {
+            this.name = pool.getString(cpx, index -> null);
         }
+        return this.name;
     }
 
-    public String getSourceName() {
-        if( sourceName == null ) {
-            this.sourceName = pool.getString(source_cpx, index -> null);
-        }
-        return this.sourceName;
-    }
-
-    public SourceFileData setSourceName() {
-        this.sourceName = pool.getString(source_cpx, index -> "#" + index);
+    public SourceFileData getName() {
+        name = pool.getString(cpx, index -> "#%d".formatted(index));
         return this;
     }
 }

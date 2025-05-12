@@ -40,7 +40,7 @@ class Instr {
     // that will be used to build a warning message while writing a binary if necessary
     private final ConstCell<?> nameCell, sigCell;
 
-    private int pos;
+    private long pos;
     //
     Instr next = null;
     int pc;
@@ -56,7 +56,7 @@ class Instr {
         this.sigCell = methodData.sigCell;
     }
 
-    public Instr set(int pc, int pos, Opcode opc, Indexer arg, Object arg2) {
+    public Instr set(int pc, long pos, Opcode opc, Indexer arg, Object arg2) {
         this.pc = pc;
         this.pos = pos;
         this.opc = opc;

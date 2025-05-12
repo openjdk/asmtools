@@ -1,0 +1,17 @@
+identity class Test00 version 69:0
+{
+  Method       "<init>":"()V"
+    stack 1  locals 1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+  }
+
+  Method       m:""
+    stack 1  locals 2
+  {
+         aconst_null;
+         areturn;
+  }
+}

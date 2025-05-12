@@ -22,8 +22,6 @@
  */
 package org.openjdk.asmtools.asmutils;
 
-import java.util.Objects;
-
 // Helper class
 public class Pair<F, S> {
     public F first;

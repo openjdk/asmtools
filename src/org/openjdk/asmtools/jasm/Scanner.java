@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,15 +22,16 @@
  */
 package org.openjdk.asmtools.jasm;
 
-
 import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.common.SyntaxError;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static org.openjdk.asmtools.common.CompilerConstants.EOF;
-import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
 import static org.openjdk.asmtools.jasm.JasmTokens.keyword_token_ident;
 
@@ -56,7 +57,7 @@ public class Scanner extends ParseBase {
     protected Token token;
 
     // The position of the current token
-    protected int pos;
+    protected long pos;
 
     // Token values.
     protected int intValue;
@@ -72,7 +73,7 @@ public class Scanner extends ParseBase {
     /**
      * The position of the previous token
      */
-    protected int prevPos;
+    protected long prevPos;
     protected int sign;              // sign, when reading number
     protected boolean inBits;        // inBits prefix, when reading number
 
@@ -142,7 +143,7 @@ public class Scanner extends ParseBase {
     }
 
     /**
-     * Expects a token, scans the next token or throws an exception.
+     * Expects the token, scans the next token or throws an exception.
      */
     protected final void expect(Token t) throws SyntaxError {
         check(t);
@@ -150,7 +151,59 @@ public class Scanner extends ParseBase {
     }
 
     /**
-     * Checks a token, throws an exception if not the same
+     * Expects an identifier token with parsed content of the token,
+     * scans the next token or throws an exception.
+     */
+    protected final void expectIdentContent(Token t) throws SyntaxError {
+        if (token != Token.IDENT || !stringValue.equals(t.parseKey())) {
+            environment.throwErrorException(pos, "err.token.expected", "\"" + t.parseKey() + "\"");
+        }
+        scan();
+    }
+
+    protected final void expectOneOf(List<String> identifiers, Token... tokens) throws SyntaxError {
+        boolean foundTokens = expectOneOfToken(tokens),
+                foundIdents = expectOneOfIdent(identifiers.toArray(new String[0]));
+
+        if (!foundTokens && !foundIdents) {
+            String list = identifiers.stream().map("\"%s\""::formatted).
+                    collect(Collectors.joining(","));
+            list = "[ %s,%s ]".formatted(list, Arrays.stream(tokens).
+                    map(t -> "\"%s\"".formatted(t.parseKey())).
+                    collect(Collectors.joining(",")));
+            environment.error(pos, "err.one.of.tokens.expected", list);
+        }
+    }
+
+
+    /**
+     * Expects one of the token in the list, scans the next token or throws an exception.
+     */
+    protected final boolean expectOneOfToken(Token... tokens) throws SyntaxError {
+        for (Token t : tokens) {
+            if (token == t) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Expects one of Identifier in the list, scans the next token or throws an exception.
+     */
+    protected final boolean expectOneOfIdent(String... identifiers) throws SyntaxError {
+        if (token == Token.IDENT) {
+            for (String ident : identifiers) {
+                if (stringValue.equals(ident)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks the token, throws an exception if different
      */
     protected final void check(Token t) throws SyntaxError {
         if (token != t) {
@@ -161,8 +214,6 @@ public class Scanner extends ParseBase {
                 } else {
                     environment.error(pos, "err.token.expected", "<" + t.parseKey() + ">");
                 }
-                environment.traceln("<<<<<PROBLEM>>>>>>>: ");
-                throw new SyntaxError();
             }
         }
     }
@@ -283,6 +334,7 @@ public class Scanner extends ParseBase {
      * Scan a decimal at this point
      */
     private void scanCPRef() {
+        int prevCh = ch;
         switch (ch = environment.read()) {
             case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 boolean overflow = false;
@@ -321,8 +373,8 @@ public class Scanner extends ParseBase {
                 }
             }
             default -> {
-                stringValue = Character.toString((char) ch);
-                environment.error(environment.getPosition(), "err.invalid.number", stringValue);
+                stringValue = Character.toString((char) prevCh);
+                environment.throwErrorException(environment.getPosition(), "err.invalid.number", stringValue);
                 intValue = 0;
                 token = Token.CPINDEX;
                 ch = environment.read();
@@ -548,8 +600,8 @@ public class Scanner extends ParseBase {
      *
      * @return the character or '\\'
      */
-    private int scanEscapeChar() {
-        int p = environment.getPosition();
+    private long scanEscapeChar() {
+        long p = environment.getPosition();
 
         switch (ch = environment.read()) {
             case '0', '1', '2', '3', '4', '5', '6', '7' -> {
@@ -640,7 +692,7 @@ public class Scanner extends ParseBase {
                     return;
                 }
                 case '\\' -> {
-                    int c = scanEscapeChar();
+                    long c = scanEscapeChar();
                     if (c >= 0) {
                         putCh((char) c);
                     }
@@ -676,7 +728,7 @@ public class Scanner extends ParseBase {
                         prefix = new char[]{(char) ch};
                         continue;
                     }
-                    int p = environment.getPosition();
+                    long p = environment.getPosition();
                     environment.error(p, "err.invalid.escape.char");
                 }
                 break;
@@ -730,7 +782,7 @@ public class Scanner extends ParseBase {
                         } else if (escapingAllowed.test(ch)) {
                             break;
                         }
-                        int p = environment.getPosition();
+                        long p = environment.getPosition();
                         environment.error(p, "err.invalid.escape.char");
                     default:
                         break scanloop;
@@ -740,7 +792,7 @@ public class Scanner extends ParseBase {
         idValue = bufferString();
         stringValue = idValue;
         token = keyword_token_ident(idValue);
-        traceMethodInfoLn(format("token = %s value = '%s'", token, idValue));
+        traceMethodInfoLn("token = %s value = '%s'".formatted(token, idValue));
     } // end scanIdentifier
 
     //==============================
@@ -868,33 +920,45 @@ public class Scanner extends ParseBase {
 //                            break loop;
 //                        }
 //                    }
-
-                environment.traceln("Funny char with code=" + ch + " at: " +
-                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                long ln = environment.lineNumber(pos);
+                long lineOffset = environment.lineOffset(ln, pos);
+                environment.traceln(() -> "Funny char with code='%c' at %d:%d".formatted(ch, ln, lineOffset));
                 environment.warning(pos, "warn.funny.char", ch);
                 ch = environment.read();
             } else {
-                environment.traceln("Funny char with code=" + ch + " at: " +
-                        environment.lineNumber(pos) + "/" + (pos & ((1 << OFFSET_BITS) - 1)));
+                long ln = environment.lineNumber(pos);
+                long lineOffset = environment.lineOffset(ln, pos);
+                environment.traceln(() -> "Funny char with code='%c' at %d:%d".formatted(ch, ln, lineOffset));
                 environment.warning(pos, "warn.funny.char", ch);
                 ch = environment.read();
             }
         }
     }
 
-    protected void debugScan(String dbstr) {
-        if (token == null) {
-            environment.traceln(dbstr + "<<<NULL TOKEN>>>");
-            return;
-        }
-        environment.trace(dbstr + token);
-        switch (token) {
-            case IDENT -> environment.traceln(" = '" + stringValue + "' {idValue = '" + idValue + "'}");
-            case STRINGVAL -> environment.traceln(" = {stringValue}: \"" + stringValue + "\"");
-            case INTVAL -> environment.traceln(" = {intValue}: " + intValue);
-            case FLOATVAL -> environment.traceln(" = {floatValue}: " + floatValue);
-            case DOUBLEVAL -> environment.traceln(" = {doubleValue}: " + doubleValue);
-            default -> environment.traceln("");
+    protected void debugScan(String debStr) {
+        if (environment.isTraceFlag()) {
+            if (token == null) {
+                environment.traceln(debStr.concat("<<<NULL TOKEN>>>"));
+                return;
+            }
+            environment.trace(debStr.concat(token.toString()));
+            switch (token) {
+                case IDENT -> environment.traceln(" = '" + stringValue + "' {idValue = '" + idValue + "'}");
+                case STRINGVAL -> environment.traceln(" = {stringValue}: \"" + stringValue + "\"");
+                case INTVAL -> environment.traceln(" = {intValue}: " + intValue);
+                case FLOATVAL -> environment.traceln(" = {floatValue}: " + floatValue);
+                case DOUBLEVAL -> environment.traceln(" = {doubleValue}: " + doubleValue);
+                default -> environment.traceln("");
+            }
         }
     }
+
+    protected void debugScan(long position, String debStr) {
+        if (environment.isTraceFlag()) {
+            long lineNumber = environment.lineNumber(position);
+            long linePos =   environment.lineOffset(lineNumber, position);
+            debugScan("[%4d,%-2d] ".formatted(lineNumber,linePos).concat(debStr));
+        }
+    }
+
 }

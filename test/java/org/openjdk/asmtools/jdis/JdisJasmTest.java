@@ -23,21 +23,33 @@
 package org.openjdk.asmtools.jdis;
 
 import org.junit.jupiter.api.Test;
-import org.openjdk.asmtools.BruteForceHelper;
+import org.openjdk.asmtools.lib.helper.BruteForceHelper;
 
 import java.io.IOException;
 
 class JdisJasmTest {
-
     @Test
     public void jdisJasmAllDecompileCompileAndLoad() throws IOException {
         BruteForceHelper worker = new BruteForceHelper();
-        new JdisJasm(false, worker).run();
+        JdisJasm task = new JdisJasm(worker);
+        task.run();
     }
+
+    @Test
+    public void jdisTJasmAllDecompileCompileAndLoad() throws IOException {
+        BruteForceHelper worker = new BruteForceHelper();
+        new JdisJasm(worker, "-table").run();
+    }
+
     @Test
     public void jdisGJasmAllDecompileCompileAndLoad() throws IOException {
         BruteForceHelper worker = new BruteForceHelper();
-        new JdisJasm(true, worker).run();
+        new JdisJasm(worker, "-g").run();
+    }
 
+    @Test
+    public void jdisGTJasmAllDecompileCompileAndLoad() throws IOException {
+        BruteForceHelper worker = new BruteForceHelper();
+        new JdisJasm(worker, "-g", "-table").run();
     }
 }

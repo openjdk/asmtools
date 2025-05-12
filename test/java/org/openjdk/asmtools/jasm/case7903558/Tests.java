@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,9 +28,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.openjdk.asmtools.lib.LogAndTextResults;
-import org.openjdk.asmtools.lib.action.CompileAction;
-import org.openjdk.asmtools.lib.action.GenerateAction;
+import org.openjdk.asmtools.lib.action.Jasm;
+import org.openjdk.asmtools.lib.action.Jdis;
+import org.openjdk.asmtools.lib.log.LogAndTextResults;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static org.openjdk.asmtools.lib.action.EAsmTools.Tool.TOOL_PASSED;
+import static org.openjdk.asmtools.common.Environment.OK;
 
 /**
  * This is the test for the issue CODETOOLS-7903558 (https://bugs.openjdk.org/browse/CODETOOLS-7903558)
@@ -61,10 +61,10 @@ import static org.openjdk.asmtools.lib.action.EAsmTools.Tool.TOOL_PASSED;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class Tests {
-    private CompileAction compiler;
-    private GenerateAction generator;
+    private Jasm jasm = new Jasm();
+    private Jdis jdis = new Jdis();
     private File resourceDir;
-    private File resultDir;
+    private Path resultDir;
 
     private static Stream<Arguments> getTestParameters() {
         return Stream.of(
@@ -83,24 +83,22 @@ public class Tests {
 
     @BeforeAll
     public void init() throws IOException {
-        resultDir = Files.createTempDirectory("JdisJasmWorks").toFile();
-        resultDir.deleteOnExit();
+        resultDir = Files.createTempDirectory("JdisJasmWorks");
+        resultDir.toFile().deleteOnExit();
         resourceDir = new File(this.getClass().getResource("JasmFile01.g.jasm").getFile()).getParentFile();
-        compiler = new CompileAction();
-        compiler.setToolArgs("-d", resultDir.getAbsolutePath());
-        generator = new GenerateAction();
+        jasm.setDestDir(resultDir);
     }
 
     @ParameterizedTest
     @MethodSource("getTestParameters")
     public void moduleInfoTest(String resourceName, String outputFileName, String jasmSubString) {
         // jasm to class on the disk
-        compiler.getJasmResult(List.of(resourceDir + File.separator + resourceName));
+        jasm.compile(List.of(resourceDir + File.separator + resourceName));
         Path resultPath = Path.of(resultDir + File.separator + outputFileName);
         Assertions.assertTrue(Files.exists(resultPath), format("Result file not found: %s%n", resultPath));
         // class to jasm
-        LogAndTextResults textResult = generator.getJdisResult(List.of(resultPath.toString()));
-        Assertions.assertEquals(textResult.result, TOOL_PASSED);
+        LogAndTextResults textResult = jdis.decode(List.of(resultPath.toString()));
+        Assertions.assertEquals(textResult.result, OK);
         // expected substrings
         String str = textResult.output.toString().substring(0, 80);
         Assertions.assertTrue(str.contains(jasmSubString), format("'%s' not found in '%s'%n", jasmSubString, str));

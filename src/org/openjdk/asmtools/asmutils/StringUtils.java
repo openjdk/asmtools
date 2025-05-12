@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -57,25 +57,25 @@ public class StringUtils {
     public static String removeCommentFrom(String str) {
         // firstly delete // comment if exists
         int idx = str.indexOf("//");
-        if(idx != -1) {
+        if (idx != -1) {
             str = str.substring(0, idx--);
-            if( str.charAt(idx) == ' ') {
-                str = str.substring(0,idx);
+            if (str.charAt(idx) == ' ') {
+                str = str.substring(0, idx);
             }
         }
         // remove /* some comment */ comments
         String[] list = str.split("\\/\\*.*?\\*\\/");
-        if( list.length > 1 ) {
+        if (list.length > 1) {
             // comments found
             str = "";
             for (int i = 0; i < list.length; i++) {
-                idx = list[i].length()-1;
-                if( list[i].charAt(idx) == ' ' ) {
-                    str += list[i].substring(0,idx);
+                idx = list[i].length() - 1;
+                if (list[i].charAt(idx) == ' ') {
+                    str += list[i].substring(0, idx);
                 } else {
                     str += list[i];
-                    idx = i+1;
-                    if( idx < list.length && list[idx].charAt(0) == ' ' ) {
+                    idx = i + 1;
+                    if (idx < list.length && list[idx].charAt(0) == ' ') {
                         list[idx] = list[idx].substring(1);
                     }
                 }
@@ -85,7 +85,7 @@ public class StringUtils {
     }
 
     /**
-     * Converts CONSTANT_Utf8_info string to a printable string for jdis/jdes.
+     * Converts CONSTANT_Utf8_info string to a printable string for jdis/jdec.
      *
      * @param utf8            UTF8 string taken from within ConstantPool of a class file
      * @param enclosingString strings to enclose output string
@@ -222,6 +222,18 @@ public class StringUtils {
             }
         }
         return list;
+    }
+
+    public static String ListToString(List<String> list) {
+        return ListToString(list, "(,)");
+    }
+
+    public static String ListToString(List<String> list, String separators) {
+        int l = separators.length();
+        String prefix = separators != null && l > 0 ? separators.substring(0, 1) : "[";
+        String delim = separators != null && l > 1 ? separators.substring(1, 2) : ",";
+        String postfix = separators != null && l > 2 ? separators.substring(2, 3) : "]";
+        return prefix.concat(" ") + String.join(delim.concat(" "), list) + " ".concat(postfix);
     }
 
     public static String mapToHexString(int[] array) {

@@ -27,7 +27,7 @@ package org.openjdk.asmtools.jcoder;
  */
 class ByteBuffer extends java.io.OutputStream {
 
-    String myname;
+    String className;
     /**
      * The buffer where elements are stored.
      */
@@ -37,7 +37,7 @@ class ByteBuffer extends java.io.OutputStream {
      */
     int length;
     /**
-     * The size of the increment. If it is 0 the size of the the buffer is doubled
+     * The size of the increment. If it is 0 the size of the buffer is doubled
      * everytime it needs to grow.
      */
     protected int capacityIncrement;
@@ -46,11 +46,10 @@ class ByteBuffer extends java.io.OutputStream {
      * Constructs an empty vector with the specified storage capacity and the specified
      * capacityIncrement.
      *
-     * @param initialCapacity the initial storage capacity of the vector
+     * @param initialCapacity   the initial storage capacity of the vector
      * @param capacityIncrement how much to increase the element's size by.
      */
     public ByteBuffer(int initialCapacity, int capacityIncrement) {
-//      super();
         this.data = new byte[initialCapacity];
         this.capacityIncrement = capacityIncrement;
     }
@@ -132,4 +131,3 @@ class ByteBuffer extends java.io.OutputStream {
         length += width;
     }
 } // end ByteBuffer
-

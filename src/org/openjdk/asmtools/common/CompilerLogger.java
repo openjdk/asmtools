@@ -29,6 +29,7 @@ import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 
 import static java.lang.String.format;
@@ -44,7 +45,7 @@ import static org.openjdk.asmtools.common.structure.CFVersion.DEFAULT_MINOR_VERS
 public class CompilerLogger extends ToolLogger implements ILogger {
 
     // Message Container
-    private final Map<Integer, Set<Message>> container = new HashMap<>();
+    private final Map<Long, Set<Message>> container = new HashMap<>();
     private final List<String> fileContent = new ArrayList<>();
 
     /**
@@ -57,7 +58,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     }
 
     @Override
-    public void warning(int where, String id, Object... args) {
+    public void warning(long where, String id, Object... args) {
         Message message = getResourceString(WARNING, id, args);
         if (message.notFound()) {
             if (EMessageKind.isFromResourceBundle(id)) {
@@ -71,7 +72,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     }
 
     @Override
-    public void error(int where, String id, Object... args) {
+    public void error(long where, String id, Object... args) {
         Message message = getResourceString(ERROR, id, args);
         if (message.notFound()) {
             if (EMessageKind.isFromResourceBundle(id)) {
@@ -99,9 +100,15 @@ public class CompilerLogger extends ToolLogger implements ILogger {
 
     @Override
     public void usage(List<String> usageIDs) {
+        usage(usageIDs, id -> id.equals("info.opt.cv") ?
+                getInfo(id, DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION) :
+                getInfo(id));
+    }
+
+    @Override
+    public void usage(List<String> usageIDs, Function<String, String> func) {
         for (String id : usageIDs) {
-            String s = id.equals("info.opt.cv") ? getInfo(id, DEFAULT_MAJOR_VERSION, DEFAULT_MINOR_VERSION) :
-                    getInfo(id);
+            String s = func.apply(id);
             if (s != null) {
                 Matcher m = usagePattern.matcher(s);
                 if (m.find()) {
@@ -127,22 +134,29 @@ public class CompilerLogger extends ToolLogger implements ILogger {
      * @param where absolute position in file = (linepos << OFFSETBITS) | bytepos;
      * @return the pair: [line number, line offset]
      */
-    Pair<Integer, Integer> filePosition(int where) {
+    Pair<Long, Long> filePosition(long where) {
         if (where == NOWHERE || fileContent.isEmpty()) {
             return null;
         } else {
-            final int lineNumber = lineNumber(where), absPos = where & ((1 << OFFSET_BITS) - 1);
-            int lineOffset = absPos - (fileContent.subList(0, lineNumber - 1).stream().mapToInt(String::length).sum() + lineNumber - 1);
-            return new Pair<>(lineNumber, lineOffset);
+            long lineNumber = lineNumber(where);
+            return new Pair<>(lineNumber, lineOffset(lineNumber, where));
         }
     }
 
-    public int lineNumber(int where) {
-        return where >>> OFFSET_BITS;
+    public long lineNumber(long where) {
+        return where >> OFFSET_BITS;
+    }
+
+    public long lineOffset(long lineNumber, long where) {
+        long absPos = where & ((1L << OFFSET_BITS) - 1);
+        return absPos - (fileContent.subList(0, (int) lineNumber - 1).
+                stream().mapToInt(String::length).sum() + lineNumber - 1);
+
     }
 
     public long getCount(EMessageKind kind) {
-        return noMessages() ? 0 : container.values().stream().flatMap(Collection::stream).filter(m -> m.kind() == kind).count();
+        return noMessages() ? 0 : container.values().stream().
+                flatMap(Collection::stream).filter(m -> m.kind() == kind).count();
     }
 
     public boolean noMessages() {
@@ -156,15 +170,15 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     public synchronized int flush(boolean printTotals) {
         if (noMessages()) return OK;
         int nErrors = 0, nWarnings = 0;
-        List<Map.Entry<Integer, Set<Message>>> list = new ArrayList<>(container.entrySet());
+        List<Map.Entry<Long, Set<Message>>> list = new ArrayList<>(container.entrySet());
         list.sort(Map.Entry.comparingByKey());
         ToolOutput output = getOutputs().getSToolObject();
-        for (Map.Entry<Integer, Set<Message>> entry : list) {
-            int where = entry.getKey();
-            Pair<Integer, Integer> filePosition = filePosition(where);
+        for (Map.Entry<Long, Set<Message>> entry : list) {
+            long where = entry.getKey();
+            Pair<Long, Long> filePosition = filePosition(where);
             for (Message msg : entry.getValue()) {
-                if( msg.kind() == WARNING && ignoreWarnings) {
-                   continue;
+                if (msg.kind() == WARNING && ignoreWarnings) {
+                    continue;
                 }
                 if (msg.kind() == ERROR) {
                     output = getOutputs().getEToolObject();
@@ -201,9 +215,9 @@ public class CompilerLogger extends ToolLogger implements ILogger {
         return nErrors;
     }
 
-    // Removes tabs from a source line to get correct line position while printing.
-    private void printAffectedSourceLine(ToolOutput output, Pair<Integer, Integer> filePosition) {
-        String line = fileContent.get(filePosition.first - 1);
+    // Removes tabs from a source line to get the correct line position while printing.
+    private void printAffectedSourceLine(ToolOutput output, Pair<Long, Long> filePosition) {
+        String line = fileContent.get((int) (filePosition.first - 1));
         long countOfExtraSpaces = line.chars().filter(ch -> ch == '\t').count();
         long linePosition = (filePosition.second + countOfExtraSpaces * TAB_REPLACEMENT.length()) - countOfExtraSpaces;
         line = line.replace("\t", TAB_REPLACEMENT);
@@ -214,7 +228,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
     /**
      * Insert a message in the list of outstanding messages. The list is sorted on input position.
      */
-    private void insert(int where, Message message) {
+    private void insert(long where, Message message) {
         if (where != NOWHERE && fileContent.isEmpty()) {
             addToContainer(NOWHERE,
                     new Message(ERROR, EMessageFormatter.LONG.apply(ERROR, this.getProgramName(),
@@ -227,7 +241,7 @@ public class CompilerLogger extends ToolLogger implements ILogger {
                 EMessageFormatter.LONG.apply(this.getProgramName(), message)));
     }
 
-    private void addToContainer(int where, Message msg) {
+    private void addToContainer(long where, Message msg) {
         Set<Message> messages = container.get(where);
         if (messages != null) {
             messages.add(msg);

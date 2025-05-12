@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -37,16 +39,15 @@ import java.util.stream.Stream;
  */
 class DataVectorAttr<T extends DataWriter> extends AttrData implements Collection<T> {
 
-    private ArrayList<T> elements;
-    private boolean     byteIndex;
+    private final ArrayList<T> elements;
+    private boolean byteIndex;
 
     /**
-     *
-     * @param pool Constant pool
-     * @param eAttribute the attribute name @see org.openjdk.asmtools.common.content.EAttribute
-     * @param byteIndex indicates 1 or two bytes is used to keep number of table elements:
-     *                  u2 StackMapTable_attribute.number_of_entries
-     *                  u1 RuntimeVisibleParameterAnnotations_attribute.num_parameters
+     * @param pool        Constant pool
+     * @param eAttribute  the attribute name @see org.openjdk.asmtools.common.content.EAttribute
+     * @param byteIndex   indicates 1 or two bytes is used to keep number of table elements:
+     *                    u2 StackMapTable_attribute.number_of_entries
+     *                    u1 RuntimeVisibleParameterAnnotations_attribute.num_parameters
      * @param initialData initial elements of table
      */
     private DataVectorAttr(ConstantPool pool, EAttribute eAttribute, boolean byteIndex, ArrayList<T> initialData) {
@@ -70,6 +71,10 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Collectio
 
     public T get(int index) {
         return elements.get(index);
+    }
+
+    public Optional<T> findFirst(Predicate<T> filter) {
+        return elements.stream().filter(filter).findFirst();
     }
 
     @Override
@@ -108,7 +113,7 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Collectio
     }
 
     public DataVectorAttr<T> addAll(Stream<T> s) {
-        s.filter(e->e != null).forEach(elements::add);
+        s.filter(e -> e != null).forEach(elements::add);
         return this;
     }
 
@@ -152,12 +157,12 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Collectio
         return elements.toArray(a);
     }
 
-    public Stream<T> stream() { return elements.stream(); };
+    public Stream<T> stream() { return elements.stream(); }
 
     @Override
     public int attrLength() {
         // calculate overall size
-        int length = elements.stream().mapToInt(e->e.getLength()).sum();
+        int length = elements.stream().mapToInt(DataWriter::getLength).sum();
         // add the length of number of elements
         length += (byteIndex) ? 1 : 2;
         return length;
@@ -165,11 +170,12 @@ class DataVectorAttr<T extends DataWriter> extends AttrData implements Collectio
 
     @Override
     public void write(CheckedDataOutputStream out) throws IOException {
-        super.write(out);  // attr name, attr length
+        super.write(out);
+        int size = (int)elements.stream().filter(DataWriter::isCountable).count();
         if (byteIndex) {
-            out.writeByte(elements.size());
+            out.writeByte(size);
         } else {
-            out.writeShort(elements.size());
+            out.writeShort(size);
         } // number of elements
         for (T elem : elements) {
             elem.write(out);

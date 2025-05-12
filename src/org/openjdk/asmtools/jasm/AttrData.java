@@ -54,7 +54,7 @@ class AttrData implements ConstantPoolDataVisitor {
                     if (attribute.getCPTypeOfIndex() == CONSTANT_UTF8) {
                         Optional<ConstCell<?>> strCell = pool.ConstantPoolHashByValue.values().stream().
                                 filter(v -> v.isSet() && v.getType() == CONSTANT_STRING && v.equalsByValue(cell)).
-                                findAny();
+                                findFirst();
                         cpxAttr.cell = strCell.isPresent() ?
                                 strCell.get() :
                                 pool.findCell(new ConstantPool.ConstValue_String((ConstCell<ConstantPool.ConstValue_UTF8>) cell.ref.value));
@@ -106,5 +106,8 @@ class AttrData implements ConstantPoolDataVisitor {
     public void write(CheckedDataOutputStream out) throws IOException {
         out.writeShort(attributeNameConstantCell.cpIndex);
         out.writeInt(attrLength()); // attribute length
+    }
+    public EAttribute getAttribute() {
+        return attribute;
     }
 } // end class AttrData

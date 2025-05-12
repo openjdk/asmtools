@@ -65,7 +65,6 @@ public class AnnotationData<T extends MemberData> extends MemberData {
         // and the annotation name (type index, CPX).
         // Mark whether it is invisible or not.
         String annotationName = pool.getString(type_cpx, index -> "#" + index);
-        // TODO: check Valhalla InlinableReferenceType: Q ClassName ;
         // converts class type to java class name
         if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
             annotationName = annotationName.substring(1, annotationName.length() - 1);
@@ -131,7 +130,6 @@ public class AnnotationData<T extends MemberData> extends MemberData {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         String annotationName = pool.getString(type_cpx, index -> "#" + index);
-        // TODO: check 401 InlinableReferenceType: Q ClassName ;
         // converts class type to java class name
         if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
             annotationName = annotationName.substring(1, annotationName.length() - 1);

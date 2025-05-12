@@ -39,12 +39,12 @@ import java.io.IOException;
  */
 class ExceptionData implements DataWriter {
 
-    int pos;
+    long pos;
     CodeAttr.RangePC rangePC;
     int handler_pc;
     Indexer catchType;
 
-    public ExceptionData(int pos, CodeAttr.RangePC rangePC, int handler_pc, Indexer catchType) {
+    public ExceptionData(long pos, CodeAttr.RangePC rangePC, int handler_pc, Indexer catchType) {
         this.pos = pos;
         this.rangePC = rangePC;
         this.handler_pc = handler_pc;

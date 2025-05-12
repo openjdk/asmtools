@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jasm;
 
 import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.ELocation;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.io.IOException;
@@ -32,16 +33,26 @@ import java.io.IOException;
  */
 class FieldData extends MemberData<JasmEnvironment> {
 
+
     /* FieldData Fields */
     private ConstantPool.ConstValue_FieldRef fieldRef;
     private AttrData initialValue;
 
     public FieldData(ClassData classData, int access, ConstantPool.ConstValue_FieldRef fieldRef) {
         super(classData.pool, classData.getEnvironment(), access);
+        this.attributeLocation = ELocation.field_info;
         this.fieldRef = fieldRef;
         if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
+    }
+
+    protected boolean checkExistence(EAttribute attribute) {
+        return switch (attribute) {
+            case ATT_Signature -> signatureAttr != null;
+            default -> throw new IllegalStateException("Unexpected attribute: %s in %s".
+                    formatted(attribute.parseKey(), attributeLocation.name()));
+        };
     }
 
     public ConstantPool.ConstValue_FieldRef getNameDesc() {

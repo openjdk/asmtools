@@ -1,0 +1,692 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00402m1/atrcvl00402m1 {
+  0xCAFEBABE;
+  0;                                       // minor version
+  67;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Method #2 #3;                          // #1
+    Class #4;                              // #2
+    NameAndType #5 #6;                     // #3
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00402m1/atrcvl00402m1t";  // #4
+    Utf8 "<init>";                         // #5
+    Utf8 "()V";                            // #6
+    Field #8 #9;                           // #7
+    Class #10;                             // #8
+    NameAndType #11 #12;                   // #9
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00402m1/atrcvl00402m1";  // #10
+    Utf8 "sfStringMirror";                 // #11
+    Utf8 "Ljava/lang/String;";             // #12
+    String #14;                            // #13
+    Utf8 "sfString";                       // #14
+    Method #16 #17;                        // #15
+    Class #18;                             // #16
+    NameAndType #19 #20;                   // #17
+    Utf8 "java/lang/String";               // #18
+    Utf8 "equals";                         // #19
+    Utf8 "(Ljava/lang/Object;)Z";          // #20
+    InvokeDynamic 0s #22;                  // #21
+    NameAndType #23 #24;                   // #22
+    Utf8 "makeConcatWithConstants";        // #23
+    Utf8 "(Ljava/lang/String;)Ljava/lang/String;";  // #24
+    Method #26 #27;                        // #25
+    Class #28;                             // #26
+    NameAndType #29 #30;                   // #27
+    Utf8 "java/io/PrintStream";            // #28
+    Utf8 "println";                        // #29
+    Utf8 "(Ljava/lang/String;)V";          // #30
+    Field #8 #32;                          // #31
+    NameAndType #33 #12;                   // #32
+    Utf8 "sStringMirror";                  // #33
+    Field #8 #35;                          // #34
+    NameAndType #36 #12;                   // #35
+    Utf8 "sString";                        // #36
+    InvokeDynamic 1s #38;                  // #37
+    NameAndType #23 #39;                   // #38
+    Utf8 "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";  // #39
+    String #36;                            // #40
+    InvokeDynamic 2s #22;                  // #41
+    Field #8 #43;                          // #42
+    NameAndType #44 #45;                   // #43
+    Utf8 "sfBooleanMirror";                // #44
+    Utf8 "Z";                              // #45
+    InvokeDynamic 3s #47;                  // #46
+    NameAndType #23 #48;                   // #47
+    Utf8 "(Z)Ljava/lang/String;";          // #48
+    Field #8 #50;                          // #49
+    NameAndType #51 #45;                   // #50
+    Utf8 "sBooleanMirror";                 // #51
+    Field #8 #53;                          // #52
+    NameAndType #54 #45;                   // #53
+    Utf8 "sBoolean";                       // #54
+    InvokeDynamic 1s #56;                  // #55
+    NameAndType #23 #57;                   // #56
+    Utf8 "(ZZ)Ljava/lang/String;";         // #57
+    InvokeDynamic 4s #47;                  // #58
+    Field #8 #60;                          // #59
+    NameAndType #61 #62;                   // #60
+    Utf8 "sfShortMirror";                  // #61
+    Utf8 "S";                              // #62
+    InvokeDynamic 5s #64;                  // #63
+    NameAndType #23 #65;                   // #64
+    Utf8 "(S)Ljava/lang/String;";          // #65
+    Field #8 #67;                          // #66
+    NameAndType #68 #62;                   // #67
+    Utf8 "sShortMirror";                   // #68
+    Field #8 #70;                          // #69
+    NameAndType #71 #62;                   // #70
+    Utf8 "sShort";                         // #71
+    InvokeDynamic 1s #73;                  // #72
+    NameAndType #23 #74;                   // #73
+    Utf8 "(SS)Ljava/lang/String;";         // #74
+    InvokeDynamic 6s #64;                  // #75
+    Field #8 #77;                          // #76
+    NameAndType #78 #79;                   // #77
+    Utf8 "sfCharMirror";                   // #78
+    Utf8 "C";                              // #79
+    InvokeDynamic 7s #81;                  // #80
+    NameAndType #23 #82;                   // #81
+    Utf8 "(C)Ljava/lang/String;";          // #82
+    InvokeDynamic 8s #81;                  // #83
+    Field #8 #85;                          // #84
+    NameAndType #86 #79;                   // #85
+    Utf8 "sCharMirror";                    // #86
+    Field #8 #88;                          // #87
+    NameAndType #89 #79;                   // #88
+    Utf8 "sChar";                          // #89
+    InvokeDynamic 1s #91;                  // #90
+    NameAndType #23 #92;                   // #91
+    Utf8 "(CC)Ljava/lang/String;";         // #92
+    InvokeDynamic 9s #81;                  // #93
+    Field #8 #95;                          // #94
+    NameAndType #96 #97;                   // #95
+    Utf8 "sfByteMirror";                   // #96
+    Utf8 "B";                              // #97
+    InvokeDynamic 10s #99;                 // #98
+    NameAndType #23 #100;                  // #99
+    Utf8 "(B)Ljava/lang/String;";          // #100
+    Field #8 #102;                         // #101
+    NameAndType #103 #97;                  // #102
+    Utf8 "sByteMirror";                    // #103
+    Field #8 #105;                         // #104
+    NameAndType #106 #97;                  // #105
+    Utf8 "sByte";                          // #106
+    InvokeDynamic 1s #108;                 // #107
+    NameAndType #23 #109;                  // #108
+    Utf8 "(BB)Ljava/lang/String;";         // #109
+    InvokeDynamic 11s #99;                 // #110
+    Field #8 #112;                         // #111
+    NameAndType #113 #114;                 // #112
+    Utf8 "sfLongMirror";                   // #113
+    Utf8 "J";                              // #114
+    Long 0x0000000000000005;;              // #115
+    InvokeDynamic 12s #118;                // #117
+    NameAndType #23 #119;                  // #118
+    Utf8 "(J)Ljava/lang/String;";          // #119
+    Field #8 #121;                         // #120
+    NameAndType #122 #114;                 // #121
+    Utf8 "sLongMirror";                    // #122
+    Field #8 #124;                         // #123
+    NameAndType #125 #114;                 // #124
+    Utf8 "sLong";                          // #125
+    InvokeDynamic 1s #127;                 // #126
+    NameAndType #23 #128;                  // #127
+    Utf8 "(JJ)Ljava/lang/String;";         // #128
+    Long 0x000000000000000F;;              // #129
+    InvokeDynamic 13s #118;                // #131
+    Field #8 #133;                         // #132
+    NameAndType #134 #135;                 // #133
+    Utf8 "sfFloatMirror";                  // #134
+    Utf8 "F";                              // #135
+    Float 0x40C00000;                      // #136
+    InvokeDynamic 14s #138;                // #137
+    NameAndType #23 #139;                  // #138
+    Utf8 "(F)Ljava/lang/String;";          // #139
+    InvokeDynamic 15s #138;                // #140
+    Field #8 #142;                         // #141
+    NameAndType #143 #135;                 // #142
+    Utf8 "sFloatMirror";                   // #143
+    Field #8 #145;                         // #144
+    NameAndType #146 #135;                 // #145
+    Utf8 "sFloat";                         // #146
+    InvokeDynamic 1s #148;                 // #147
+    NameAndType #23 #149;                  // #148
+    Utf8 "(FF)Ljava/lang/String;";         // #149
+    Float 0x41800000;                      // #150
+    InvokeDynamic 16s #138;                // #151
+    Field #8 #153;                         // #152
+    NameAndType #154 #155;                 // #153
+    Utf8 "sfDoubleMirror";                 // #154
+    Utf8 "D";                              // #155
+    Double 0x401C000000000000;;            // #156
+    InvokeDynamic 17s #159;                // #158
+    NameAndType #23 #160;                  // #159
+    Utf8 "(D)Ljava/lang/String;";          // #160
+    InvokeDynamic 18s #159;                // #161
+    Field #8 #163;                         // #162
+    NameAndType #164 #155;                 // #163
+    Utf8 "sDoubleMirror";                  // #164
+    Field #8 #166;                         // #165
+    NameAndType #167 #155;                 // #166
+    Utf8 "sDouble";                        // #167
+    InvokeDynamic 1s #169;                 // #168
+    NameAndType #23 #170;                  // #169
+    Utf8 "(DD)Ljava/lang/String;";         // #170
+    Double 0x4031000000000000;;            // #171
+    InvokeDynamic 19s #159;                // #173
+    Field #175 #176;                       // #174
+    Class #177;                            // #175
+    NameAndType #178 #179;                 // #176
+    Utf8 "java/lang/System";               // #177
+    Utf8 "out";                            // #178
+    Utf8 "Ljava/io/PrintStream;";          // #179
+    Method #8 #181;                        // #180
+    NameAndType #182 #183;                 // #181
+    Utf8 "run";                            // #182
+    Utf8 "([Ljava/lang/String;Ljava/io/PrintStream;)I";  // #183
+    Method #175 #185;                      // #184
+    NameAndType #186 #187;                 // #185
+    Utf8 "exit";                           // #186
+    Utf8 "(I)V";                           // #187
+    Utf8 "Code";                           // #188
+    Utf8 "LineNumberTable";                // #189
+    Utf8 "StackMapTable";                  // #190
+    Utf8 "main";                           // #191
+    Utf8 "([Ljava/lang/String;)V";         // #192
+    Utf8 "SourceFile";                     // #193
+    Utf8 "atrcvl00402m1.java";             // #194
+    Utf8 "BootstrapMethods";               // #195
+    String #197;                           // #196
+    Utf8 "\u0001 != sfString";             // #197
+    String #199;                           // #198
+    Utf8 "\u0001 != \u0001";               // #199
+    String #201;                           // #200
+    Utf8 "\u0001 != sString";              // #201
+    String #203;                           // #202
+    Utf8 "\u0001 != true";                 // #203
+    String #205;                           // #204
+    Utf8 "\u0001 != false";                // #205
+    String #207;                           // #206
+    Utf8 "\u0001 != 2";                    // #207
+    String #209;                           // #208
+    Utf8 "\u0001 != 12";                   // #209
+    String #211;                           // #210
+    Utf8 "\u0001 != \u0002";               // #211
+    String #213;                           // #212
+    Utf8 "\u0001";                         // #213
+    String #215;                           // #214
+    Utf8 "\u0001 != 1";                    // #215
+    String #217;                           // #216
+    Utf8 "\u0001 != 11";                   // #217
+    String #219;                           // #218
+    Utf8 "\u0001 != 4";                    // #219
+    String #221;                           // #220
+    Utf8 "\u0001 != 14";                   // #221
+    String #223;                           // #222
+    Utf8 "\u0001 != 5";                    // #223
+    String #225;                           // #224
+    Utf8 "\u0001 != 15";                   // #225
+    String #227;                           // #226
+    Utf8 "\u0001 != 6.0";                  // #227
+    String #229;                           // #228
+    Utf8 "\u0001 != 6.0F";                 // #229
+    String #231;                           // #230
+    Utf8 "\u0001 != 16.0F";                // #231
+    String #233;                           // #232
+    Utf8 "\u0001 != 7.0";                  // #233
+    String #235;                           // #234
+    Utf8 "\u0001 != 7.0D";                 // #235
+    String #237;                           // #236
+    Utf8 "\u0001 != 17.0D";                // #237
+    MethodHandle 6b #239;                  // #238
+    Method #240 #241;                      // #239
+    Class #242;                            // #240
+    NameAndType #23 #243;                  // #241
+    Utf8 "java/lang/invoke/StringConcatFactory";  // #242
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";  // #243
+    Utf8 "InnerClasses";                   // #244
+    Class #246;                            // #245
+    Utf8 "java/lang/invoke/MethodHandles$Lookup";  // #246
+    Class #248;                            // #247
+    Utf8 "java/lang/invoke/MethodHandles";  // #248
+    Utf8 "Lookup";                         // #249
+  }
+
+  0x0021;                                  // access
+  #8;                                      // this_cpx
+  #2;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #5;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+        Attr(#188) {                       // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x01 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#189) {                   // LineNumberTable
+              [] {                         // line_number_table
+                   0   13;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #182;                                // name_index
+      #183;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#188) {                       // Code
+          5;                               // max_stack
+          2;                               // max_locals
+          Bytes[]{
+            0xB2 0x00 0x07 0x12 0x0D 0xB6 0x00 0x0F 0x9A 0x00 0x11 0x2B;
+            0xB2 0x00 0x07 0xBA 0x00 0x15 0x00 0x00 0xB6 0x00 0x19 0x05;
+            0xAC 0xB2 0x00 0x07 0x12 0x0D 0xB6 0x00 0x0F 0x9A 0x00 0x11;
+            0x2B 0xB2 0x00 0x07 0xBA 0x00 0x15 0x00 0x00 0xB6 0x00 0x19;
+            0x05 0xAC 0xB2 0x00 0x1F 0xB2 0x00 0x22 0xB6 0x00 0x0F 0x9A;
+            0x00 0x14 0x2B 0xB2 0x00 0x1F 0xB2 0x00 0x22 0xBA 0x00 0x25;
+            0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x1F 0x12 0x28;
+            0xB6 0x00 0x0F 0x9A 0x00 0x11 0x2B 0xB2 0x00 0x1F 0xBA 0x00;
+            0x29 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x2A 0x04;
+            0x9F 0x00 0x11 0x2B 0xB2 0x00 0x2A 0xBA 0x00 0x2E 0x00 0x00;
+            0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x2A 0x04 0x9F 0x00 0x11;
+            0x2B 0xB2 0x00 0x2A 0xBA 0x00 0x2E 0x00 0x00 0xB6 0x00 0x19;
+            0x05 0xAC 0xB2 0x00 0x31 0xB2 0x00 0x34 0x9F 0x00 0x14 0x2B;
+            0xB2 0x00 0x31 0xB2 0x00 0x34 0xBA 0x00 0x37 0x00 0x00 0xB6;
+            0x00 0x19 0x05 0xAC 0xB2 0x00 0x31 0x99 0x00 0x11 0x2B 0xB2;
+            0x00 0x31 0xBA 0x00 0x3A 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC;
+            0xB2 0x00 0x3B 0x05 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x3B 0xBA;
+            0x00 0x3F 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x3B;
+            0x05 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x3B 0xBA 0x00 0x3F 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x42 0xB2 0x00 0x45;
+            0x9F 0x00 0x14 0x2B 0xB2 0x00 0x42 0xB2 0x00 0x45 0xBA 0x00;
+            0x48 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x42 0x10;
+            0x0C 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x42 0xBA 0x00 0x4B 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x4C 0x04 0x9F 0x00;
+            0x11 0x2B 0xB2 0x00 0x4C 0xBA 0x00 0x50 0x00 0x00 0xB6 0x00;
+            0x19 0x05 0xAC 0xB2 0x00 0x4C 0x04 0x9F 0x00 0x11 0x2B 0xB2;
+            0x00 0x4C 0xBA 0x00 0x53 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC;
+            0xB2 0x00 0x54 0xB2 0x00 0x57 0x9F 0x00 0x14 0x2B 0xB2 0x00;
+            0x54 0xB2 0x00 0x57 0xBA 0x00 0x5A 0x00 0x00 0xB6 0x00 0x19;
+            0x05 0xAC 0xB2 0x00 0x54 0x10 0x0B 0x9F 0x00 0x11 0x2B 0xB2;
+            0x00 0x54 0xBA 0x00 0x5D 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC;
+            0xB2 0x00 0x5E 0x07 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x5E 0xBA;
+            0x00 0x62 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x5E;
+            0x07 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x5E 0xBA 0x00 0x62 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x65 0xB2 0x00 0x68;
+            0x9F 0x00 0x14 0x2B 0xB2 0x00 0x65 0xB2 0x00 0x68 0xBA 0x00;
+            0x6B 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x65 0x10;
+            0x0E 0x9F 0x00 0x11 0x2B 0xB2 0x00 0x65 0xBA 0x00 0x6E 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x6F 0x14 0x00 0x73;
+            0x94 0x99 0x00 0x11 0x2B 0xB2 0x00 0x6F 0xBA 0x00 0x75 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x6F 0x14 0x00 0x73;
+            0x94 0x99 0x00 0x11 0x2B 0xB2 0x00 0x6F 0xBA 0x00 0x75 0x00;
+            0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x78 0xB2 0x00 0x7B;
+            0x94 0x99 0x00 0x14 0x2B 0xB2 0x00 0x78 0xB2 0x00 0x7B 0xBA;
+            0x00 0x7E 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x78;
+            0x14 0x00 0x81 0x94 0x99 0x00 0x11 0x2B 0xB2 0x00 0x78 0xBA;
+            0x00 0x83 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x84;
+            0x12 0x88 0x95 0x99 0x00 0x11 0x2B 0xB2 0x00 0x84 0xBA 0x00;
+            0x89 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x84 0x12;
+            0x88 0x95 0x99 0x00 0x11 0x2B 0xB2 0x00 0x84 0xBA 0x00 0x8C;
+            0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x8D 0xB2 0x00;
+            0x90 0x95 0x99 0x00 0x14 0x2B 0xB2 0x00 0x8D 0xB2 0x00 0x90;
+            0xBA 0x00 0x93 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00;
+            0x8D 0x12 0x96 0x95 0x99 0x00 0x11 0x2B 0xB2 0x00 0x8D 0xBA;
+            0x00 0x97 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x98;
+            0x14 0x00 0x9C 0x97 0x99 0x00 0x11 0x2B 0xB2 0x00 0x98 0xBA;
+            0x00 0x9E 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0x98;
+            0x14 0x00 0x9C 0x97 0x99 0x00 0x11 0x2B 0xB2 0x00 0x98 0xBA;
+            0x00 0xA1 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC 0xB2 0x00 0xA2;
+            0xB2 0x00 0xA5 0x97 0x99 0x00 0x14 0x2B 0xB2 0x00 0xA2 0xB2;
+            0x00 0xA5 0xBA 0x00 0xA8 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC;
+            0xB2 0x00 0xA2 0x14 0x00 0xAB 0x97 0x99 0x00 0x11 0x2B 0xB2;
+            0x00 0xA2 0xBA 0x00 0xAD 0x00 0x00 0xB6 0x00 0x19 0x05 0xAC;
+            0x03 0xAC;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#189) {                   // LineNumberTable
+              [] {                         // line_number_table
+                   0   17;
+                  11   18;
+                  23   19;
+                  25   21;
+                  36   22;
+                  48   23;
+                  50   27;
+                  62   28;
+                  77   29;
+                  79   31;
+                  90   32;
+                 102   33;
+                 104   37;
+                 111   38;
+                 123   39;
+                 125   41;
+                 132   42;
+                 144   43;
+                 146   47;
+                 155   48;
+                 170   49;
+                 172   51;
+                 178   52;
+                 190   53;
+                 192   57;
+                 199   58;
+                 211   59;
+                 213   61;
+                 220   62;
+                 232   63;
+                 234   67;
+                 243   68;
+                 258   69;
+                 260   71;
+                 268   72;
+                 280   73;
+                 282   77;
+                 289   78;
+                 301   79;
+                 303   81;
+                 310   82;
+                 322   83;
+                 324   87;
+                 333   88;
+                 348   89;
+                 350   91;
+                 358   92;
+                 370   93;
+                 372   97;
+                 379   98;
+                 391   99;
+                 393  101;
+                 400  102;
+                 412  103;
+                 414  107;
+                 423  108;
+                 438  109;
+                 440  111;
+                 448  112;
+                 460  113;
+                 462  117;
+                 472  118;
+                 484  119;
+                 486  121;
+                 496  122;
+                 508  123;
+                 510  127;
+                 520  128;
+                 535  129;
+                 537  131;
+                 547  132;
+                 559  133;
+                 561  137;
+                 570  138;
+                 582  139;
+                 584  141;
+                 593  142;
+                 605  143;
+                 607  147;
+                 617  148;
+                 632  149;
+                 634  151;
+                 643  152;
+                 655  153;
+                 657  157;
+                 667  158;
+                 679  159;
+                 681  161;
+                 691  162;
+                 703  163;
+                 705  167;
+                 715  168;
+                 730  169;
+                 732  171;
+                 742  172;
+                 754  173;
+                 756  176;
+              }
+            }                              // end of LineNumberTable
+            ;
+            Attr(#190) {                   // StackMapTable
+              [] {                         // 
+                25b;                       // same_frame
+                24b;                       // same_frame
+                28b;                       // same_frame
+                24b;                       // same_frame
+                20b;                       // same_frame
+                20b;                       // same_frame
+                25b;                       // same_frame
+                19b;                       // same_frame
+                20b;                       // same_frame
+                20b;                       // same_frame
+                25b;                       // same_frame
+                21b;                       // same_frame
+                20b;                       // same_frame
+                20b;                       // same_frame
+                25b;                       // same_frame
+                21b;                       // same_frame
+                20b;                       // same_frame
+                20b;                       // same_frame
+                25b;                       // same_frame
+                21b;                       // same_frame
+                23b;                       // same_frame
+                23b;                       // same_frame
+                26b;                       // same_frame
+                23b;                       // same_frame
+                22b;                       // same_frame
+                22b;                       // same_frame
+                26b;                       // same_frame
+                22b;                       // same_frame
+                23b;                       // same_frame
+                23b;                       // same_frame
+                26b;                       // same_frame
+                23b;                       // same_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #191;                                // name_index
+      #192;                                // descriptor_index
+      [] {                                 // Attributes
+        Attr(#188) {                       // Code
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB2 0x00 0xAE 0xB8 0x00 0xB4 0x10 0x5F 0x60 0xB8 0x00;
+            0xB8 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#189) {                   // LineNumberTable
+              [] {                         // line_number_table
+                   0  180;
+                  13  181;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#193) {                           // SourceFile
+      #194;
+    }                                      // end of SourceFile
+    ;
+    Attr(#195) {                           // BootstrapMethods
+      [] {                                 // bootstrap_methods
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #196;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #198;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #200;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #202;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #204;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #206;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #208;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #210;
+            #212;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #214;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #216;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #218;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #220;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #222;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #224;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #226;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #228;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #230;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #232;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #234;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #238;                            // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #236;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+      }
+    }                                      // end of BootstrapMethods
+    ;
+    Attr(#244) {                           // InnerClasses
+      [] {                                 // classes
+         #245  #247  #249  25;
+      }
+    }                                      // end of InnerClasses
+  }                                        // end of Attributes
+}

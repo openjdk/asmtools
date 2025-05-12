@@ -23,16 +23,16 @@
 package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 class BootstrapMethodData extends Indexer implements DataWriter {
 
     ConstCell bootstrapMethodHandle;
-    ArrayList<ConstCell<?>> arguments;
+    List<ConstCell<?>> arguments;
 
-    public BootstrapMethodData(ConstCell bsmHandle, ArrayList<ConstCell<?>> arguments) {
+    public BootstrapMethodData(ConstCell bsmHandle, List<ConstCell<?>> arguments) {
         super();
         this.bootstrapMethodHandle = bsmHandle;
         this.arguments = arguments;
@@ -64,6 +64,7 @@ class BootstrapMethodData extends Indexer implements DataWriter {
         return super.cpIndex;
 
     }
+
     public void write(CheckedDataOutputStream out) throws IOException {
         out.writeShort(bootstrapMethodHandle.cpIndex);
         out.writeShort(arguments.size());

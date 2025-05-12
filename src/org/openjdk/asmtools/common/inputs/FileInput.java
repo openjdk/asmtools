@@ -24,60 +24,117 @@ package org.openjdk.asmtools.common.inputs;
 
 import org.openjdk.asmtools.common.Environment;
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Optional;
 
 public class FileInput implements ToolInput {
-    private final String file;
 
-    public FileInput(String file) {
-        this.file = file;
+    private boolean detailedInput = false;
+    private final String fileName;
+    private MessageDigest md = null;
+    private CapacityInputStream cis = null;
+
+    public FileInput(String fileName) {
+        this.fileName = fileName;
     }
 
     @Override
-    public String getFileName() {
-        return file;
+    public String getName() {
+        return fileName;
     }
 
     public Collection<String> readAllLines() throws IOException {
-        return Files.readAllLines(Paths.get(getFileName()));
+        return Files.readAllLines(Paths.get(getName()));
+    }
+
+    public FileInput setDetailedInput(boolean detailedInput) {
+        this.detailedInput = detailedInput;
+        return this;
+    }
+
+    @Override
+    public MessageDigest getMessageDigest() {
+        return md;
+    }
+
+    @Override
+    public int getSize() {
+        return cis != null ? cis.size() : 0;
     }
 
     @Override
     public DataInputStream getDataInputStream(Optional<Environment> logger) throws URISyntaxException, IOException {
         try {
-            return new DataInputStream(new FileInputStream(this.getFileName()));
+            FileInputStream fis = new FileInputStream(this.getName());
+            if (detailedInput) {
+                cis = new CapacityInputStream(fis);
+                md = MessageDigest.getInstance("SHA-256");
+                DigestInputStream dis = new DigestInputStream(cis, md);
+                return new DataInputStream(dis);
+            } else {
+                return new DataInputStream(fis);
+            }
         } catch (IOException ex) {
-            if (this.getFileName().matches("^[A-Za-z]+:.*")) {
+            if (this.getName().matches("^[A-Za-z]+:.*")) {
                 try {
-                    final URI uri = new URI(this.getFileName());
+                    final URI uri = new URI(this.getName());
                     final URL url = uri.toURL();
                     final URLConnection conn = url.openConnection();
                     conn.setUseCaches(false);
                     return new DataInputStream(conn.getInputStream());
                 } catch (URISyntaxException | IOException exception) {
                     if (logger.isPresent()) {
-                        logger.get().error("err.cannot.read", this.getFileName());
+                        logger.get().error("err.cannot.read", this.getName());
                     }
                     throw exception;
                 }
             } else {
                 throw ex;
             }
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public String toString() {
-        return getFileName();
+        return getName();
+    }
+
+    private static class CapacityInputStream extends FilterInputStream {
+        CapacityInputStream(InputStream in) {
+            super(in);
+        }
+
+        int size() {
+            return size;
+        }
+
+        @Override
+        public int read(byte[] buf, int offset, int length) throws IOException {
+            int n = super.read(buf, offset, length);
+            if (n > 0)
+                size += n;
+            return n;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            size += 1;
+            return b;
+        }
+
+        private int size;
     }
 }

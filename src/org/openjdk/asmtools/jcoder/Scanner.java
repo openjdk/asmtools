@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.SyntaxError;
+import org.openjdk.asmtools.jasm.ClassFileConst;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -57,9 +58,9 @@ public class Scanner {
     // Current token
     protected Token token;
     // The position of the current token
-    protected int pos;
+    protected long pos;
     // The position of the previous token
-    protected int prevPos;
+    protected long prevPos;
     //  Token values.
     protected long longValue;
     protected int intValue;
@@ -104,9 +105,9 @@ public class Scanner {
 
     }
 
-    void addConstDebug(ConstType ct) {
+    void addConstDebug(ClassFileConst.ConstType ct) {
         numCPentrs++;
-        environment.traceln("\n Const[" + numCPentrs + "] = " + ct.printval());
+        environment.traceln("\n Const[" + numCPentrs + "] = " + ct.printVal());
     }
 
     void setMacro(String macro) {
@@ -386,7 +387,7 @@ public class Scanner {
      * @return the character or -1 if it escaped an end-of-line.
      */
     private int scanEscapeChar() throws IOException {
-        int p = inputFile.position;
+        long p = inputFile.position;
 
         readCh();
         switch (ch) {
@@ -562,13 +563,13 @@ public class Scanner {
         } else {
             token = keyword_token_ident(stringValue);
             if (token == Token.IDENT) {
-                intValue = constValue(stringValue);
+                intValue = getConstTagByParseString(stringValue);
                 if (intValue != -1) {
                     // this is a constant
                     if (debugCP) {
-                        ConstType ct = constType(stringValue);
-                        if (ct != null) {
-                            addConstDebug(ct);
+                        ClassFileConst.ConstType constType = ClassFileConst.getByParseKey(stringValue);
+                        if (constType != null) {
+                            addConstDebug(constType);
                         }
                     }
                     token = Token.INTVAL;
@@ -592,8 +593,8 @@ public class Scanner {
         }
     }
 
-    protected int xscan() throws IOException {
-        int retPos = pos;
+    protected long xscan() throws IOException {
+        long retPos = pos;
         prevPos = inputFile.position;
         docComment = null;
         sign = 1;
@@ -817,9 +818,8 @@ public class Scanner {
      *
      * @return the position of the previous token.
      */
-    protected int scan() throws IOException {
-        int retPos = xscan();
-        return retPos;
+    protected long scan() throws IOException {
+        return xscan();
     }
 
     /**
@@ -827,8 +827,7 @@ public class Scanner {
      *
      * @return the position of the previous token.
      */
-    protected int scanMacro() throws IOException {
-        int retPos = xscan();
-        return retPos;
+    protected long scanMacro() throws IOException {
+        return xscan();
     }
 }

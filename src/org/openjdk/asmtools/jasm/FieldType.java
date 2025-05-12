@@ -45,8 +45,6 @@ public enum FieldType {
         this.slotsCount = slotsCount;
     }
 
-
-
     public static FieldType getFieldType(char term) {
         for (FieldType ft : FieldType.values()) {
             if ( ft.term == term ) {

@@ -29,14 +29,14 @@ import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.outputs.ByteOutput;
 import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
-import org.openjdk.asmtools.ext.CaptureSystemOutput;
+import org.openjdk.asmtools.lib.ext.CaptureSystemOutput;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.openjdk.asmtools.ext.CaptureSystemOutput.Kind.ERROR;
+import static org.openjdk.asmtools.lib.ext.CaptureSystemOutput.Kind.ERROR;
 
 public class MultipleFilesInSingleJasmTest {
 
@@ -49,7 +49,7 @@ public class MultipleFilesInSingleJasmTest {
         DualStreamToolOutput log = new StderrLog();
         org.openjdk.asmtools.jasm.Main jasm = new org.openjdk.asmtools.jasm.Main(output, log, file, "-v");
         int i = jasm.compile();
-        outputCapture.expect(containsString("Invalid modifier(s) for a class 0x0002"));
+        outputCapture.expect(containsString("Class file version not specified in file or by -cv parameter"));
         Assertions.assertEquals(0, i);
         Assertions.assertEquals(2, output.getOutputs().size());
     }

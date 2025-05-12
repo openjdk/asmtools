@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.asmutils.Pair;
+import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.jasm.JasmTokens;
@@ -30,21 +31,29 @@ import org.openjdk.asmtools.jasm.JasmTokens;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 
 /**
  * Base class for ClassData, MethodData, FieldData and RecordData(JEP 360)
  */
-public abstract class  MemberData<T extends MemberData> extends Indenter {
+public abstract class MemberData<T extends MemberData> extends Indenter {
 
     // String prefix to print Defaults for Annotation Interface Elements
     protected static final String DEFAULT_VALUE_PREFIX = "default { ";
 
     protected T data;
-    protected JdisEnvironment environment;          // Environment of this data
-    protected ConstantPool  pool;
-    protected String        memberType = "";
+    protected Environment environment;          // Environment of this data
+    protected ConstantPool pool;
+    protected String memberType = "";
+
+    public MemberData<T> setOwner(MemberData<? extends MemberData<T>> owner) {
+        this.owner = owner;
+        return this;
+    }
+
+    MemberData<? extends MemberData<T>> owner;
 
     // access flags (modifiers)
     protected int access;
@@ -88,14 +97,28 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         init(data);
     }
 
-    public MemberData(JdisEnvironment environment) {
+    public MemberData(Environment environment) {
         super(environment.getToolOutput());
         this.environment = environment;
     }
 
-    public void init( T data) {
+    public void init(T data) {
         this.data = data;
         this.pool = data.pool;
+    }
+
+    /**
+     * Prints system comments if the option -sysinfo is used.
+     */
+    protected void printSysInfo() {
+        if (sysInfo) {
+            throw new RuntimeException("Not implemented yet");
+        }
+    }
+
+    public MemberData<T> setSignature(SignatureData signatureData) {
+        this.signature = signatureData;
+        return this;
     }
 
     public ConstantPool getConstantPool() {
@@ -109,12 +132,19 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         return false;
     }
 
+    protected boolean handleUnrecognizedAttributes(DataInputStream in,
+                                       int attributeNameCpx,
+                                       int attributeLength) throws IOException {
+        // sub-classes override
+        return false;
+    }
+
     protected String getPseudoFlagsAsString() {
         String s = "";
         if (isSynthetic)
-            s += JasmTokens.Token.SYNTHETIC.parseKey() + " ";
+            s += "%s ".formatted(JasmTokens.Token.SYNTHETIC.parseKey());
         if (isDeprecated)
-            s += JasmTokens.Token.DEPRECATED.parseKey() + " ";
+            s += "%s ".formatted(JasmTokens.Token.DEPRECATED.parseKey());
         return s;
     }
 
@@ -133,80 +163,78 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         return this;
     }
 
-    final protected int getAnnotationsCount() {
-        return  ((visibleAnnotations == null) ? 0 : visibleAnnotations.size()) +
+    protected int getAnnotationsCount() {
+        return ((visibleAnnotations == null) ? 0 : visibleAnnotations.size()) +
                 ((invisibleAnnotations == null) ? 0 : invisibleAnnotations.size()) +
                 ((visibleTypeAnnotations == null) ? 0 : visibleTypeAnnotations.size()) +
                 ((invisibleTypeAnnotations == null) ? 0 : invisibleTypeAnnotations.size());
     }
 
-    final protected void printAnnotations() throws IOException {
-        if( getAnnotationsCount() > 0 ) {
-            if (visibleAnnotations != null) {
-                for (AnnotationData va : visibleAnnotations) {
-                    va.setTheSame(this).print();
-                    println();
-                }
-            }
-            if (invisibleAnnotations != null) {
-                for (AnnotationData ia : invisibleAnnotations) {
-                    ia.setTheSame(this).print();
-                    println();
-                }
-            }
-            if (visibleTypeAnnotations != null) {
-                for (TypeAnnotationData vta : visibleTypeAnnotations) {
-                    vta.setTheSame(this).print();
-                    println();
-                }
-            }
-            if (invisibleTypeAnnotations != null) {
-                for (TypeAnnotationData ita : invisibleTypeAnnotations) {
-                    ita.setTheSame(this).print();
+    /**
+     * Print member's (ClassData, MethodData, FieldData and RecordData) annotations
+     *
+     * @throws IOException signals that an exception to some sort has occurred
+     */
+
+    protected <T extends AnnotationData> void printAnnotations(List<T>... annotationLists) throws IOException {
+        for (List<T> list : annotationLists) {
+            if (list != null) {
+                for (T annotation : list) {
+                    annotation.setTheSame(this).print();
                     println();
                 }
             }
         }
     }
 
+    protected void printAttributes(Container<? extends Indenter, CodeData>... tables) throws IOException {
+        for (Container<?, ?> table : tables) {
+            if (table != null && table.isPrintable()) {
+                table.setCommentOffset(this.getCommentOffset()).print();
+            }
+        }
+    }
+
     /**
      * Prints field or a record component
-     * @param prefix      the field prefix: "private static final Field" or the component prefix: "synthetic Component"
-     * @param postfix     String presentation of the initial value if exists ( = String "ABC" )
-     * @param name_cpx    Field/Component name cpIndex
-     * @param type_cpx    Field/Component type cpIndex
-     * @param value_cpx   either cpIndex of an initial value of a field or 0
-     *                    if it's a component or the field doesn't have an initial value.
+     *
+     * @param prefix    the field prefix: "private static final Field" or the component prefix: "synthetic Component"
+     * @param postfix   String presentation of the end of line (either ":" or ";")
+     * @param name_cpx  Field/Component name cpIndex
+     * @param type_cpx  Field/Component type cpIndex
+     * @param value_cpx either cpIndex of an initial field's value or 0
+     *                  if it's a component or the field doesn't have an initial value.
      */
-    protected void printVar(StringBuilder prefix, String postfix, int name_cpx, int type_cpx, int value_cpx) {
+    protected void printVar(StringBuilder prefix, String postfix, String eol, int name_cpx, int type_cpx, int value_cpx) {
 
-        Pair<String, String> signInfo = ( signature != null) ?
-                signature.getPrintInfo((i)->pool.inRange(i)) :
+        Pair<String, String> signInfo = (this.signature != null) ?
+                this.signature.getJasmPrintInfo((i) -> pool.inRange(i)) :
                 new Pair<>("", "");
 
-        if(printCPIndex) {
+        if (printCPIndex) {
             prefix.append('#').append(name_cpx).append(":#").append(type_cpx).append(signInfo.first);
-            if(value_cpx != 0) {
+            if (value_cpx != UNDEFINED ) {
                 prefix.append(" = #").append(value_cpx);
             }
-            prefix.append(';');
-            if( skipComments ) {
-               print(prefix.toString());
+            prefix.append(eol);
+            if (skipComments) {
+                print(prefix.toString());
             } else {
-                printPadRight(prefix.toString(), getCommentOffset() - 1).print(" // ");
-                print(data.pool.getName(name_cpx) + ":" +
-                        data.pool.getName(type_cpx) +
-                        signInfo.second +
-                        (postfix != null ? postfix : ""));
+                printPadRight(prefix.toString(), getCommentOffset()).print(" // ");
+                print("%s:%s%s%s".formatted(
+                        data.pool.getName(name_cpx),
+                        data.pool.getName(type_cpx),
+                        signInfo.second,
+                        postfix != null ? postfix : ""));
             }
         } else {
             prefix.append(data.pool.getName(name_cpx)).append(':').
                     append(data.pool.getName(type_cpx)).
                     append(signInfo.second);
-            if( postfix != null ) {
+            if (postfix != null) {
                 prefix.append(postfix);
             }
-            print(prefix+";");
+            print("%s%s".formatted(prefix, eol));
         }
         println();
     }
@@ -215,30 +243,40 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
         // Read the Attributes
         int attributesCount = in.readUnsignedShort();
         attributes = new ArrayList<>(attributesCount);
-        environment.traceln(format("%s - Attributes[%d]", memberType , attributesCount));
+        environment.traceln(format("%s - Attributes[%d]", memberType, attributesCount));
         AttrData attrData;
         for (int k = 0; k < attributesCount; k++) {
             int name_cpx = in.readUnsignedShort();
-            attrData = new AttrData(this.environment);
-            attributes.add(attrData);
-            String attr_name = data.pool.getString(name_cpx, index->"#"+index);
+            String attr_name = data.pool.getString(name_cpx, index -> "#" + index);
             environment.traceln(format("Attribute#%d name[%d]=\"%s\"", k, name_cpx, attr_name));
             EAttribute tag = EAttribute.get(attr_name);
             int attrLength = in.readInt();
+            attrData = new AttrData(environment, tag);
+            attributes.add(attrData);
             switch (tag) {
                 case ATT_Synthetic:
                     // Read Synthetic Attribute
                     if (attrLength != 0) {
-                        throw new FormatError(environment.getLogger(),
-                                "err.invalid.attribute.length",  tag.printValue(), attrLength);
+                        if (bestEffort) {
+                            environment.getLogger().error(
+                                    "err.invalid.attribute.length", tag.printValue(), attrLength);
+                        } else {
+                            throw new FormatError(environment.getLogger(),
+                                    "err.invalid.attribute.length", tag.printValue(), attrLength);
+                        }
                     }
                     isSynthetic = true;
                     break;
                 case ATT_Deprecated:
                     // Read Deprecated Attribute
                     if (attrLength != 0) {
-                        throw new FormatError(environment.getLogger(),
-                                "err.invalid.attribute.length", tag.printValue(), attrLength);
+                        if (bestEffort) {
+                            environment.getLogger().error(
+                                    "err.invalid.attribute.length", tag.printValue(), attrLength);
+                        } else {
+                            throw new FormatError(environment.getLogger(),
+                                    "err.invalid.attribute.length", tag.printValue(), attrLength);
+                        }
                     }
                     isDeprecated = true;
                     break;
@@ -276,6 +314,10 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
                         visibleTypeAnnotations = typeAnnotations;
                     }
                     break;
+                case ATT_Unrecognized:
+                    handleUnrecognizedAttributes(in,name_cpx, attrLength);
+                    attrData.read(name_cpx, attrLength, in);
+                    break;
                 default:
                     boolean handled = handleAttributes(in, tag, attrLength);
                     if (!handled) {
@@ -286,5 +328,22 @@ public abstract class  MemberData<T extends MemberData> extends Indenter {
                     break;
             }
         }
+    }
+
+    public List<AttrData> getListOf(EAttribute attributeTag) {
+        return attributes.stream().filter(a -> a.getAttributeInfo().equals(attributeTag)).toList();
+    }
+
+    /**
+     * |  012:       aad
+     * |iiSSSSSHeader....
+     * ii - indent SSSS - shift that is returned.
+     */
+    public int calculateInlinedTitleShift(String Header) {
+        return (
+                (printProgramCounter)
+                        ? PROGRAM_COUNTER_PLACEHOLDER_LENGTH + getIndentStep() * 2 + Header.length() - getIndentSize()
+                        : INSTR_PREFIX_LENGTH + getIndentStep() * 2 + Header.length() - getIndentSize() * 2
+        ) - getIndentSize();
     }
 }

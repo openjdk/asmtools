@@ -36,7 +36,7 @@ import java.util.List;
  * u2 classes[number_of_classes];
  * }
  */
-public class PermittedSubclassesAttr extends ClassArrayAttr {
+public class PermittedSubclassesAttr extends ArrayAttr {
     public PermittedSubclassesAttr(ConstantPool pool, List<ConstCell> classes) {
         super(pool, EAttribute.ATT_PermittedSubclasses, classes);
     }

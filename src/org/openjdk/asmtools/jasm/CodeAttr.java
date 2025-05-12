@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,6 +33,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import static java.lang.Math.max;
+import static org.openjdk.asmtools.common.structure.EAttribute.ATT_StackMap;
+import static org.openjdk.asmtools.common.structure.EAttribute.ATT_StackMapTable;
+import static org.openjdk.asmtools.jasm.OpcodeTables.MAX_LOOKUPSWITCH_LENGTH;
+import static org.openjdk.asmtools.jasm.OpcodeTables.MAX_TABLESWITCH_LENGTH;
+import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode.opc_lookupswitch;
+import static org.openjdk.asmtools.jasm.OpcodeTables.Opcode.opc_tableswitch;
+
 /**
  * 4.7.3. The Code Attribute
  * <p>
@@ -54,25 +62,28 @@ import java.util.List;
  * }
  */
 class CodeAttr extends AttrData {
-    protected final List<LocVarData> locVarSlots;
-    private final LocVarData VACANT = null;
-
-    protected ClassData classData;              // reference to the surrounding data containers
+    protected final List<LocalVariableData> locVarSlots;
+    protected final List<LocalVariableData> locVarTypeSlots;
+    private final LocalVariableData VACANT = null;
+    // reference to the surrounding data containers
+    protected ClassData classData;
     protected MethodData methodData;
     protected JasmEnvironment environment;
 
     protected Indexer max_stack, max_locals;
     protected Instr zeroInstr, lastInstr;
     protected int curPC = 0;
-    protected DataVector<ExceptionData> exceptionTable;             // TrapData
-    protected DataVectorAttr<LineNumberData> lineNumberTable;       // LineNumData
-    protected int lastLineNumber = 0;
-    protected DataVectorAttr<LocVarData> localVariableTable;        // LocVarData
+    protected DataVector<ExceptionData> exceptionTable;
+    protected DataVectorAttr<LineNumberData> lineNumberTable;
+    protected long lastLineNumber = 0;
+    protected DataVectorAttr<LocalVariableData> localVariableTable;
+    protected DataVectorAttr<LocalVariableData> localVariableTypeTable;
+
     protected DataVector<DataVectorAttr<? extends DataWriter>> attributes;
     protected HashMap<String, Label> labelsHash;
     protected HashMap<String, RangePC> trapsHash;
-    protected StackMapData curMapEntry = null;
-    protected DataVectorAttr<StackMapData> stackMap;
+    protected List<StackMapData> stackMapEntries = new ArrayList<>();
+    protected DataVectorAttr<StackMapData> stackMapTable;
     // type annotations
     protected DataVectorAttr<TypeAnnotationData> visTypeAnnotations = null;
     protected DataVectorAttr<TypeAnnotationData> inVisTypeAnnotations = null;
@@ -85,6 +96,7 @@ class CodeAttr extends AttrData {
         this.max_stack = max_stack;
         this.max_locals = max_locals;
         this.locVarSlots = new ArrayList<>(Collections.nCopies(max_locals != null ? max_locals.value() : paramCount, VACANT));
+        this.locVarTypeSlots = new ArrayList<>(Collections.nCopies(max_locals != null ? max_locals.value() : paramCount, VACANT));
         lastInstr = zeroInstr = new Instr(methodData, environment);
         exceptionTable = new DataVector<>(0); // TrapData
         attributes = new DataVector<>();
@@ -96,7 +108,8 @@ class CodeAttr extends AttrData {
 
     void endCode() {
         checkTraps();
-        checkLocVars();
+        checkLocVars(Opcode.opc_var);
+        checkLocVars(Opcode.opc_type);
         checkLabels();
         //
         if (visTypeAnnotations != null) {
@@ -114,12 +127,12 @@ class CodeAttr extends AttrData {
                 // Type Annotations
                 if (invisible) {
                     if (inVisTypeAnnotations == null) {
-                        inVisTypeAnnotations = new DataVectorAttr(methodData.pool, EAttribute.ATT_RuntimeInvisibleTypeAnnotations);
+                        inVisTypeAnnotations = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_RuntimeInvisibleTypeAnnotations);
                     }
                     inVisTypeAnnotations.add(typeAnnotationData);
                 } else {
                     if (this.visTypeAnnotations == null) {
-                        this.visTypeAnnotations = new DataVectorAttr(methodData.pool, EAttribute.ATT_RuntimeVisibleTypeAnnotations);
+                        this.visTypeAnnotations = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_RuntimeVisibleTypeAnnotations);
                     }
                     this.visTypeAnnotations.add(typeAnnotationData);
                 }
@@ -127,8 +140,50 @@ class CodeAttr extends AttrData {
         }
     }
 
+    public void fillLineTable(List<LineNumberData> list) {
+        if (lineNumberTable != null) {
+            // Remove the automatically generated LineTable by jasm and instead,
+            // include a table inline within the jasm source.
+            lineNumberTable.clear();
+        } else {
+            lineNumberTable = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_LineNumberTable);
+            attributes.add(lineNumberTable);
+        }
+        lineNumberTable.addAll(list);
+    }
+
+    /**
+     * Fills either localVariableTable or localVariableTypeTable according to the boolean parameter isTypeTable
+     *
+     * @param isTypeTable defines which localVariableTypeTable or localVariableTable is filled
+     * @param list        list of local_variable_table[i] or local_variable_type_table[i] entries
+     */
+    public void fillLocalVariableTable(boolean isTypeTable, List<LocalVariableData> list) {
+        DataVectorAttr<LocalVariableData> vector = (isTypeTable) ? localVariableTypeTable : localVariableTable;
+        if (vector == null) {
+            vector = new DataVectorAttr<>(methodData.pool, (isTypeTable) ? EAttribute.ATT_LocalVariableTypeTable : EAttribute.ATT_LocalVariableTable);
+            attributes.add(vector);
+        }
+        vector.addAll(list);
+    }
+
+    public void fillStackMapTable(List<StackMapData> list) {
+        if (stackMapTable == null) {
+            DataVectorAttr<StackMapData> table = (DataVectorAttr<StackMapData>) attributes.
+                    findFirst(item -> item.getAttribute().
+                            isOneOf(ATT_StackMapTable, ATT_StackMap)).orElse(null);
+            if (table == null) {
+                stackMapTable = new DataVectorAttr<>(classData.pool, classData.cfv.isTypeCheckingVerifier() ? ATT_StackMapTable : ATT_StackMap);
+                attributes.add(stackMapTable);
+            } else {
+                stackMapTable = table;
+            }
+        }
+        stackMapTable.addAll(list);
+    }
+
     /* -------------------------------------- Traps */
-    RangePC trapDecl(int pos, String name) {
+    RangePC trapDecl(long pos, String name) {
         RangePC local;
         if (trapsHash == null) {
             trapsHash = new HashMap<>(10);
@@ -143,7 +198,7 @@ class CodeAttr extends AttrData {
         return local;
     }
 
-    void beginTrap(int pos, String name) {
+    void beginTrap(long pos, String name) {
         RangePC rangePC = trapDecl(pos, name);
         if (rangePC.start_pc != Indexer.NotSet) {
             environment.error("err.trap.tryredecl", name);
@@ -152,7 +207,7 @@ class CodeAttr extends AttrData {
         rangePC.start_pc = curPC;
     }
 
-    void endTrap(int pos, String name) {
+    void endTrap(long pos, String name) {
         RangePC rangePC = trapDecl(pos, name);
         if (rangePC.end_pc != Indexer.NotSet) {
             environment.error("err.trap.endtryredecl", name);
@@ -161,7 +216,7 @@ class CodeAttr extends AttrData {
         rangePC.end_pc = curPC;
     }
 
-    void trapHandler(int pos, String name, Indexer type) {
+    void trapHandler(long pos, String name, Indexer type) {
         RangePC rangePC = trapDecl(pos, name);
         rangePC.isReferred = true;
         ExceptionData exceptionData = new ExceptionData(pos, rangePC, curPC, type);
@@ -205,7 +260,7 @@ class CodeAttr extends AttrData {
         return local;
     }
 
-    public Label LabelDef(int pos, String name) {
+    public Label LabelDef(long pos, String name) {
         Label label = labelDecl(name);
         if (label.isDefined) {
             environment.error(pos, "err.label.redecl", name);
@@ -234,92 +289,133 @@ class CodeAttr extends AttrData {
         }
     }
 
-    // LocalVariables
+// LocalVariables
 
     /**
      * Constructs the local variable nameCell:descriptorCell assigned to the slot index.
      *
+     * @param opcode         var or type opcode that defines type of filled table -LocalVariableTypeTable or LocalVariableTable
      * @param position       scanners' position to navigate where a syntax error happened if any
      * @param index          a valid index into the local variable array of the current frame
      * @param nameCell       valid unqualified name denoting a local variable
      * @param descriptorCell a field descriptor which encodes a type of local variable in the source program
      */
-    public void LocVarDataDef(int position, int index, ConstCell<?> nameCell, ConstCell<?> descriptorCell) {
-        LocVarData locVarData = new LocVarData((short) index, (short) curPC, nameCell, descriptorCell);
-        FieldType fieldType = locVarData.getFieldType();
-        // check slot availability
-        //If the given local variable is of type double or long, it occupies both index and index + 1
-        for (int i = 0; i < fieldType.getSlotsCount(); i++) {
-            if (!max_locals.inRange(index + i)) {
-                environment.error(position, "err.locvar.wrong.index", index + i, max_locals.value() - 1);
-                throw new SyntaxError();
+    public void LocVarDataDef(OpcodeTables.Opcode opcode, long position, int index, ConstCell<?> nameCell, ConstCell<?> descriptorCell) {
+        FieldType fieldType = null;
+        List<LocalVariableData> slots;
+        LocalVariableData localVariableData = new LocalVariableData((short) index, (short) curPC, nameCell, descriptorCell);
+        if (opcode == Opcode.opc_var) {
+            slots = locVarSlots;
+            fieldType = localVariableData.getFieldType();
+            if (localVariableTable == null) {
+                localVariableTable = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_LocalVariableTable);
+                attributes.add(localVariableTable);
             }
-            if (locVarSlots.get(index + i) != VACANT) {
-                environment.error(position, "err.locvar.slot.occupied", index + i);
-                throw new SyntaxError();
+            localVariableTable.add(localVariableData);
+        } else {
+            slots = locVarTypeSlots;
+            if (localVariableTable != null) {
+                LocalVariableData lvd = localVariableTable.findFirst(lv -> lv.getIndex() == index).orElse(null);
+                if (lvd != null) {
+                    fieldType = lvd.getFieldType();
+                }
             }
-            locVarSlots.set(index + i, locVarData); // OCCUPIED
+            if (localVariableTypeTable == null) {
+                localVariableTypeTable = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_LocalVariableTypeTable);
+                attributes.add(localVariableTypeTable);
+            }
+            localVariableTypeTable.add(localVariableData);
         }
-        if (localVariableTable == null) {
-            localVariableTable = new DataVectorAttr<>(methodData.pool, EAttribute.ATT_LocalVariableTable);
-            attributes.add(localVariableTable);
+        if (fieldType == null) {
+            environment.throwErrorException(position, "err.fieldType.undecl", index);
+        } else {
+            localVariableData.setFieldType(fieldType);
+            // check slot availability
+            //If the given local variable is of type double or long, it occupies both index and index + 1
+            for (int i = 0; i < fieldType.getSlotsCount(); i++) {
+                if (!max_locals.inRange(index + i)) {
+                    environment.throwErrorException(position, "err.locvar.wrong.index", index + i, max_locals.value() - 1);
+                }
+
+                if (slots.get(index + i) != VACANT) {
+                    environment.throwErrorException(position, "err.locvar.slot.occupied", index + i);
+                }
+                slots.set(index + i, localVariableData); // OCCUPIED
+            }
         }
-        localVariableTable.add(locVarData);
     }
 
     /**
-     * Marks the end of Local Variable presented in the form endVar index: locVarSlots[slot] = VACANT
+     * Marks the end of Local Variable (Type) presented in the form endVar index: locVarSlots[slot] = VACANT
      * and sets the Length of the Local Var
      *
      * @param position the position of the scanner
      * @param slot     The value of the index item is a valid index into the local variable array of the current frame.
      */
-    public void LocVarDataEnd(short slot, int position) {
+    public void LocVarDataEnd(OpcodeTables.Opcode opcode, short slot, long position) {
         if (!max_locals.inRange(slot)) {
-            environment.error(position, "err.locvar.wrong.index", slot, max_locals.value() - 1);
-            throw new SyntaxError();
+            environment.throwErrorException(position, "err.locvar.wrong.index", slot, max_locals.value() - 1);
         }
-        final LocVarData locVarData = locVarSlots.get(slot);
-        if (locVarData == VACANT) {
-            environment.error(position, "err.locvar.undecl", slot);
-            throw new SyntaxError();
-        }
-        locVarData.setLength(curPC);
-        // Check slot availability and clean up appropriate locVarSlots[slot{,slot+1}]
-        // If the given local variable is of type double or long, it occupies both index and index + 1
-        for (int i = 0; i < locVarData.getSlotsCount(); i++) {
-            if (i > 0 && !max_locals.inRange(slot + i)) {
-                environment.error(position, "err.locvar.wrong.index", slot + i, max_locals.value() - 1);
-                throw new SyntaxError();
+        final LocalVariableData localVariableData = (opcode == Opcode.opc_var) ? locVarSlots.get(slot) : locVarTypeSlots.get(slot);
+        if (localVariableData == VACANT) {
+            environment.throwErrorException(position, "err.locvar.undecl", slot);
+        } else {
+            localVariableData.setLength(curPC);
+            // Check slot availability and clean up appropriate locVarSlots[slot{,slot+1}] or locVarTypeSlots[slot{,slot+1}]
+            // If the given local variable is of type double or long, it occupies both index and index + 1
+            List<LocalVariableData> slots = (opcode == Opcode.opc_var) ? locVarSlots : locVarTypeSlots;
+
+            for (int i = 0; i < localVariableData.getSlotsCount(); i++) {
+                if (i > 0 && !max_locals.inRange(slot + i)) {
+                    environment.error(position, "err.locvar.wrong.index", slot + i, max_locals.value() - 1);
+                    throw new SyntaxError();
+                }
+                if (i > 0 && slots.get(slot + i) == VACANT) {
+                    environment.error(position, "err.locvar.undecl", slot + i);
+                    throw new SyntaxError();
+                }
+                slots.set(slot + i, VACANT);
             }
-            if (i > 0 && locVarSlots.get(slot + i) == VACANT) {
-                environment.error(position, "err.locvar.undecl", slot + i);
-                throw new SyntaxError();
-            }
-            locVarSlots.set(slot + i, VACANT);
         }
     }
 
-    void checkLocVars() {
-        for (int i = 0; i < locVarSlots.size(); i++) {
-            if (locVarSlots.get(i) != VACANT) {
-                locVarSlots.get(i).setLength(curPC);
-                environment.warning(environment.getPosition(), "warn.locvar.ambiqous", i);
+    void checkLocVars(OpcodeTables.Opcode opcode) {
+        List<LocalVariableData> slots = (opcode == Opcode.opc_var) ? locVarSlots : locVarTypeSlots;
+        for (int i = 0; i < slots.size(); i++) {
+            if (slots.get(i) != VACANT) {
+                slots.get(i).setLength(curPC);
+                environment.warning(environment.getPosition(), (opcode == Opcode.opc_var) ? "warn.locvar.ambiqous" :
+                        "warn.loctype.ambiqous", i);
             }
         }
     }
 
     // The StackMap
-    public StackMapData getStackMap() {
-        if (curMapEntry == null) {
-            curMapEntry = new StackMapData(environment);
-            curMapEntry.setIsStackMapTable(classData.cfv.isTypeCheckingVerifier());
+    public StackMapData getStackMapTable() {
+        StackMapData entry;
+        if (stackMapEntries.isEmpty()) {
+            entry = new StackMapData(environment, isTypeCheckingVerifier());
+            stackMapEntries.add(entry);
+        } else {
+            entry = stackMapEntries.getLast();
         }
-        return curMapEntry;
+        return entry;
+    }
+
+    public StackMapData getNextStackMapTable() {
+        StackMapData entry = new StackMapData(environment, isTypeCheckingVerifier());
+        stackMapEntries.add(entry);
+        return entry;
+    }
+
+    // A class file whose version number is 50.0 or above (§4.1) must be verified using the type checking rules given
+    // in the section 4.10.1. Verification by Type Checking
+    public boolean isTypeCheckingVerifier() {
+        return classData.cfv.isTypeCheckingVerifier();
     }
 
     // Instructions
-    void addInstr(int mnenoc_pos, Opcode opcode, Indexer arg, Object arg2) {
+    void addInstr(long mnenoc_pos, Opcode opcode, Indexer arg, Object arg2) {
         Instr newInstr = new Instr(methodData, environment).set(curPC, environment.getPosition(), opcode, arg, arg2);
         lastInstr.next = newInstr;
         lastInstr = newInstr;
@@ -327,9 +423,17 @@ class CodeAttr extends AttrData {
         switch (opcode) {
             case opc_tableswitch:
                 len = ((SwitchTable) arg2).recalcTableSwitch(curPC);
+                if (len >= MAX_TABLESWITCH_LENGTH) {
+                    environment.error(mnenoc_pos, "err.instr.oversize",
+                            opc_tableswitch.parseKey(), len, MAX_TABLESWITCH_LENGTH);
+                }
                 break;
             case opc_lookupswitch:
                 len = ((SwitchTable) arg2).calcLookupSwitch(curPC);
+                if (len >= MAX_LOOKUPSWITCH_LENGTH) {
+                    environment.error(mnenoc_pos, "err.instr.oversize",
+                            opc_lookupswitch.parseKey(), len, MAX_LOOKUPSWITCH_LENGTH);
+                }
                 break;
             case opc_ldc:
                 ((ConstCell<?>) arg).setRank(ConstantPool.ReferenceRank.LDC);
@@ -343,31 +447,42 @@ class CodeAttr extends AttrData {
                 }
         }
         if (environment.getVerboseFlag()) {
-            int ln = environment.lineNumber(mnenoc_pos);
+            long ln = environment.lineNumber(mnenoc_pos);
             if (ln != lastLineNumber) { // only one entry in lineNumberTable per line
                 lineNumberTable.add(new LineNumberData(curPC, ln));
                 lastLineNumber = ln;
             }
         }
-        if (curMapEntry != null) {
-            curMapEntry.setPC(curPC);
-            StackMapData prevStackFrame = null;
-            if (stackMap == null) {
-                if (classData.cfv.isTypeCheckingVerifier()) {
-                    stackMap = new DataVectorAttr<>(classData.pool, EAttribute.ATT_StackMapTable);
-                } else {
-                    stackMap = new DataVectorAttr<>(classData.pool, EAttribute.ATT_StackMap);
+        if (!stackMapEntries.isEmpty()) {
+            StackMapData prevStackFrame = getPreviousStackMapEntry();
+            for (StackMapData entry : stackMapEntries) {
+                if (!entry.isWrapper()) {
+                    entry.setPC(curPC);
+                    entry.setOffset(prevStackFrame);
                 }
-                attributes.add(stackMap);
-            } else if (stackMap.size() > 0) {
-                prevStackFrame = stackMap.get(stackMap.size() - 1);
             }
-            curMapEntry.setOffset(prevStackFrame);
-            stackMap.add(curMapEntry);
-            curMapEntry = null;
+            stackMapTable.addAll(stackMapEntries);
+            stackMapEntries.clear();
         }
         curPC += len;
     }
+
+    private StackMapData getPreviousStackMapEntry() {
+        if (stackMapTable == null) {
+            stackMapTable = new DataVectorAttr<>(classData.pool,
+                    classData.cfv.isTypeCheckingVerifier() ? ATT_StackMapTable : ATT_StackMap);
+            attributes.add(stackMapTable);
+        } else if (!stackMapTable.isEmpty()) {
+            for (int i = stackMapTable.size() - 1; i >= 0; i--) {
+                StackMapData entry = stackMapTable.get(i);
+                if (!entry.isWrapper()) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public int attrLength() {
@@ -380,7 +495,7 @@ class CodeAttr extends AttrData {
     public void write(CheckedDataOutputStream out)
             throws IOException, Parser.CompilerError {
         int maxStack = (max_stack != null) ? max_stack.cpIndex : 0;
-        int maxLocals = (max_locals != null) ? max_locals.cpIndex : locVarSlots.size();
+        int maxLocals = (max_locals != null) ? max_locals.cpIndex : max(locVarSlots.size(), locVarTypeSlots.size());
         super.write(out);  // attr name, attr len
         out.writeShort(maxStack);
         out.writeShort(maxLocals);
@@ -417,9 +532,9 @@ class CodeAttr extends AttrData {
     static class RangePC extends Local {
         int start_pc = Indexer.NotSet;
         int end_pc = Indexer.NotSet;
-        int pos;
+        long pos;
 
-        RangePC(int pos, String name) {
+        RangePC(long pos, String name) {
             super(name);
             this.pos = pos;
         }

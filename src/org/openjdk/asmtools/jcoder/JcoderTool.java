@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,12 +22,12 @@
  */
 package org.openjdk.asmtools.jcoder;
 
-import org.openjdk.asmtools.common.Tool;
-import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
+import org.openjdk.asmtools.common.Compiler;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
+import org.openjdk.asmtools.common.outputs.log.DualStreamToolOutput;
 import org.openjdk.asmtools.common.outputs.log.StderrLog;
 
-public abstract class JcoderTool extends Tool<JcoderEnvironment> {
+public abstract class JcoderTool extends Compiler<JcoderEnvironment> {
 
     protected JcoderTool(ToolOutput toolOutput) {
         super(toolOutput, new StderrLog());

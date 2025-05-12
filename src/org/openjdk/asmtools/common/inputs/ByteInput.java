@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle, Red Hat  and/or theirs affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,17 +24,19 @@ package org.openjdk.asmtools.common.inputs;
 
 import org.openjdk.asmtools.common.Environment;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URISyntaxException;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
 public class ByteInput implements ToolInput {
+
+    private boolean detailedInput = false;
+    private MessageDigest md = null;
 
     //compilers passes input more than one times, so saving it for reuse;
     protected byte[] bytes;
@@ -44,18 +46,36 @@ public class ByteInput implements ToolInput {
     }
 
     protected ByteInput() {
+    }
 
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public ByteInput setDetailedInput(boolean detailedInput) {
+        this.detailedInput = detailedInput;
+        return this;
     }
 
     @Override
-    public String getFileName() {
+    public MessageDigest getMessageDigest() {
+        return md;
+    }
+
+    @Override
+    public int getSize() {
+        return bytes.length;
+    }
+
+    @Override
+    public String getName() {
         //get parent is used
         return "bytes/bytes";
     }
 
     @Override
     public String toString() {
-        return getFileName();
+        return getName();
     }
 
     protected void init() {
@@ -63,9 +83,20 @@ public class ByteInput implements ToolInput {
     }
 
     @Override
-    public DataInputStream getDataInputStream(Optional<Environment> logger) throws URISyntaxException, IOException {
+    public DataInputStream getDataInputStream(Optional<Environment> logger) {
         init();
-        return new DataInputStream(new ByteArrayInputStream(bytes));
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            if (detailedInput) {
+                md = MessageDigest.getInstance("SHA-256");
+                DigestInputStream dis = new DigestInputStream(bais, md);
+                return new DataInputStream(dis);
+            } else {
+                return new DataInputStream(bais);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -81,7 +112,6 @@ public class ByteInput implements ToolInput {
                 resultingLines.add(l);
             }
         }
-        ;
         return resultingLines;
     }
 }

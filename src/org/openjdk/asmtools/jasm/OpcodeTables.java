@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,10 @@ import java.util.HashMap;
  */
 public class OpcodeTables {
 
+    public static int MAX_TABLESWITCH_LENGTH = 16384;            // 2^14 in bytes
+    public static int MAX_LOOKUPSWITCH_LENGTH = 16384;           // 2^14 in bytes
+    public static int MAX_LOOKUPSWITCH_PAIRS_COUNT = 2048;       // count
+
     /**
      * Initialized keyword and token Hash Maps (and Reverse Tables)
      */
@@ -67,8 +71,6 @@ public class OpcodeTables {
         return IntToAllOpcodes.get(mnem_code);
     }
 
-    /*-------------------------------------------------------- */
-
     /**
      * Marker: describes the type of Opcode.
      * <p>
@@ -92,7 +94,6 @@ public class OpcodeTables {
 
     }
 
-    /*-------------------------------------------------------- */
     /* Opcode Enums */
     public enum Opcode {
         /* Opcodes */
@@ -304,9 +305,6 @@ public class OpcodeTables {
         // JVMS: The third reserved opcode, number 202 (0xca), has the mnemonic breakpoint and is intended to be used
         // by debuggers to implement breakpoints.
         opc_breakpoint(202, "breakpoint", 1),
-        // Valhalla instructions:     aconst_init, withfield
-        opc_aconst_init(203, "aconst_init", 3),
-        opc_withfield(204, "withfield", 3),
 
         /* Pseudo-instructions */
         opc_bytecode(210, "bytecode", 1),
@@ -315,9 +313,21 @@ public class OpcodeTables {
         opc_catch(213, "catch", 0),
         opc_var(214, "var", 0),
         opc_endvar(215, "endvar", 0),
+
         opc_locals_map(216, "locals_map", 0),
         opc_stack_map(217, "stack_map", 0),
-        opc_stack_frame_type(218, "stack_frame_type", 0),
+        opc_unset_fields(218, "unset_fields", 0),
+        // StackMap Attribute (Java 6.0) This entry point of the beginning of the record or nothing.
+        opc_stack_map_frame(219, "stack_map_frame", 0),
+
+        // Always must be first record of any entry of the StackMapTable Attribute (Java 7.0 and above)
+        opc_stack_map_entry(220, "stack_map_entry", 0),
+        opc_stack_frame_type(221, "stack_frame_type", 0),
+        opc_frame_type(222,       "frame_type", 0),
+        opc_entry_type(223,       "entry_type", 0),
+
+        opc_type(224, "type", 0),
+        opc_endtype(225, "endtype", 0),
 
         // JVMS: Two of the reserved opcodes, numbers 254 (0xfe) and 255 (0xff), have the mnemonics impdep1 and impdep2, respectively.
         opc_nonpriv(254, "impdep1", 1),
@@ -336,7 +346,6 @@ public class OpcodeTables {
         opc_astore_w(opc_astore.value, "astore_w", 4, OpcodeType.WIDE),
         opc_ret_w(opc_ret.value, "ret_w", 4, OpcodeType.WIDE),
         opc_iinc_w(opc_iinc.value, "iinc_w", 6, OpcodeType.WIDE),
-
 
         /* Privileged instructions */
         opc_load_ubyte(0, "load_ubyte", OpcodeType.NONPRIVELEGED),
@@ -515,6 +524,10 @@ public class OpcodeTables {
             return value;
         }
 
+        public byte byteValue() {
+            return (byte) (value & 0xFF);
+        }
+
         public int length() {
             return length;
         }
@@ -532,5 +545,4 @@ public class OpcodeTables {
             return this.value >= 0 && this.value < Opcode.opc_bytecode.value();
         }
     }
-
 }

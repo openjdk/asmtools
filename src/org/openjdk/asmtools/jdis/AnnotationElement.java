@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -86,8 +86,15 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
                     arrayAnnotationValue.add(readValue(in, data, invisible));
                 }
             }
-            default -> throw new FormatError(data.environment.getLogger(),
-                    "err.unknown.tag", isPrintableChar(tg) ? tg : '?', Integer.toHexString(tg));
+            default -> {
+                if (data.bestEffort) {
+                    data.environment.error("err.unknown.tag", isPrintableChar(tg) ? tg : '?', Integer.toHexString(tg));
+                    val = new Annotation_AnnotationValue<>(tag, data, null);
+                } else {
+                    throw new FormatError(data.environment.getLogger(),
+                            "err.unknown.tag", isPrintableChar(tg) ? tg : '?', Integer.toHexString(tg));
+                }
+            }
         }
         return val;
     }
@@ -105,7 +112,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
 
     public String stringVal() {
         String name = pool.getName(name_cpx);
-        if( printCPIndex ) {
+        if (printCPIndex) {
             return (skipComments) ? format("#%d", name_cpx) : format("#%d /* %s */", name_cpx, name);
         }
         return name;
@@ -205,7 +212,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         private String valueAsString(String prefix, Supplier<String> supplier) {
             String str = prefix.isEmpty() ? "" : prefix + " ";
             if (printCPIndex) {
-                if( skipComments ) {
+                if (skipComments) {
                     str += format("#%d", cpx);
                 } else {
                     str += format("#%d /* %s */", cpx, supplier.get());
@@ -219,9 +226,9 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         @Override
         public void print() {
             AnnotationElementState state = getAnnotationElementState();
-            if ( state == HAS_DEFAULT_VALUE) {
+            if (state == HAS_DEFAULT_VALUE) {
                 print(DEFAULT_VALUE_PREFIX + "%s }", stringVal());
-            } else if( state == RIGHT_OPERAND) {
+            } else if (state == RIGHT_OPERAND) {
                 print(" %s }", stringVal());
             } else {
                 print(stringVal());
@@ -254,7 +261,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
                 String name = pool.getName(cpx2);
                 sb.append(elementType.printValue()).append(' ');
                 if (printCPIndex) {
-                    if( skipComments ) {
+                    if (skipComments) {
                         sb.append(format("#%d", cpx1)).append(format(" #%d", cpx2));
                     } else {
                         sb.append(format("#%d /* %s */", cpx1, className)).append(format(" #%d /* %s */", cpx2, name));
@@ -322,7 +329,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         private <P extends AnnotationValue<T>> int getIndent(P value) {
             if (value instanceof Annotation_AnnotationValue || value instanceof CPX_AnnotationValue) {
                 // commentShift + "default { { ".length()
-                return getCommentOffset() + DEFAULT_VALUE_PREFIX.length() + 2;
+                return getCommentOffset() + DEFAULT_VALUE_PREFIX.length() + getIndentSize();
             }
             return 1;
         }
@@ -339,14 +346,14 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         public void printDefaultAnnotationElement(int count, int ItemsPerLine) throws IOException {
             int i = 0, lineIndent = getIndent(annotationValues.get(0));
             println(DEFAULT_VALUE_PREFIX + "{ ");
-            printPadLeft(INDENT_STRING, INDENT_OFFSET*2);
+            printPadLeft(INDENT_STRING, INDENT_OFFSET * 2);
             for (AnnotationValue<T> annotationValue : annotationValues) {
                 annotationValue.setElementState(INLINED_ELEMENT);
                 annotationValue.setCommentOffset(lineIndent);
                 if (annotationValue instanceof Annotation_AnnotationValue ||
                         annotationValue instanceof CPX_AnnotationValue) {
                     if (i % ItemsPerLine == 0 && i != 0)
-                        printPadLeft(INDENT_STRING, INDENT_OFFSET*2);
+                        printPadLeft(INDENT_STRING, INDENT_OFFSET * 2);
                 }
                 annotationValue.print(); // entry
                 if (i < count - 1)
@@ -402,10 +409,12 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
 
         @Override
         public void print() throws IOException {
-            // set the same offset, Indent etc.
-            annotationData.setCommentOffset(this.getCommentOffset());
-            annotationData.setTheSame(this);
-            annotationData.print();  // check off
+            if (this.annotationData != null) { // data might be null if -best-effort is set
+                // sets the same offset, Indent etc.
+                annotationData.setCommentOffset(this.getCommentOffset());
+                annotationData.setTheSame(this);
+                annotationData.print();  // check off
+            }
         }
     }
 }

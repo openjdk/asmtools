@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,47 +22,29 @@
  */
 package org.openjdk.asmtools.jdis;
 
-import org.openjdk.asmtools.jasm.JasmTokens;
-
-import java.io.DataInputStream;
-import java.io.IOException;
-
-import static java.lang.String.format;
-import static org.openjdk.asmtools.jasm.JasmTokens.Token.NESTHOST;
+import static org.openjdk.asmtools.jasm.TableFormatModel.Token.NEST_HOST;
 
 /**
  * The NestHost attribute data
  * <p>
+ * NestHost_attribute {
+ * u2 attribute_name_index;
+ * u4 attribute_length;
+ * u2 host_class_index;
+ * }
  * since class file 55.0 (JEP 181)
  */
-public class NestHostData extends Indenter {
-    ClassData cls;
-    int host_class_index;
+public class NestHostData extends AttributeData<NestHostData> {
 
-    public NestHostData(ClassData cls) {
-        super(cls.toolOutput);
-        this.cls = cls;
+    public NestHostData(ClassData classData) {
+        super(classData, NEST_HOST);
     }
 
-    public NestHostData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
-        if (attribute_length != 2) {
-            throw new ClassFormatError("ATT_NestHost: Invalid attribute length");
+    public String calculateName() {
+        if (this.name == null) {
+            this.name = pool.getClassName(cpx,
+                            index -> "%s #%d".formatted(logger.getResourceString("info.invalid_cp_entry"), index));
         }
-        host_class_index = in.readUnsignedShort();
-        return this;
-    }
-
-    @Override
-    public void print() {
-        if (printCPIndex) {
-            if( skipComments ) {
-                printIndent("%s #%d;", NESTHOST.parseKey(), host_class_index);
-            } else {
-                printIndent(PadRight(format("%s #%d;", NESTHOST.parseKey(), host_class_index),
-                        getCommentOffset() - 1)).println(" // " + cls.pool.ConstantStrValue(host_class_index));
-            }
-        } else {
-            printIndent("%s %s;", NESTHOST.parseKey(), cls.pool.StringValue(host_class_index));
-        }
+        return this.name;
     }
 }

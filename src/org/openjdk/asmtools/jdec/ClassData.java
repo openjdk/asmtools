@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,27 +24,28 @@ package org.openjdk.asmtools.jdec;
 
 import org.openjdk.asmtools.asmutils.StringUtils;
 import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.outputs.StdoutOutput;
 import org.openjdk.asmtools.common.outputs.ToolOutput;
-import org.openjdk.asmtools.common.structure.ClassFileContext;
-import org.openjdk.asmtools.common.structure.EAttribute;
-import org.openjdk.asmtools.common.structure.EModifier;
-import org.openjdk.asmtools.common.structure.StackMap;
+import org.openjdk.asmtools.common.structure.*;
 import org.openjdk.asmtools.jcoder.JcodTokens;
 
-import java.awt.event.KeyEvent;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.Main.sharedI18n;
 import static org.openjdk.asmtools.asmutils.StringUtils.*;
 import static org.openjdk.asmtools.common.structure.ClassFileContext.MODULE_DIRECTIVES;
+import static org.openjdk.asmtools.common.structure.ClassFileContext.VALUE_OBJECTS;
 import static org.openjdk.asmtools.jasm.ClassFileConst.*;
 import static org.openjdk.asmtools.jasm.ClassFileConst.AnnotationElementType.AE_UNKNOWN;
 import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_MODULE;
+import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_UTF8;
 import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetInfo;
 import static org.openjdk.asmtools.jasm.TypeAnnotationTypes.ETargetType;
 import static org.openjdk.asmtools.jcoder.JcodTokens.Token.IDENT;
@@ -54,7 +55,10 @@ import static org.openjdk.asmtools.jcoder.JcodTokens.Token.IDENT;
  */
 class ClassData {
 
-    private static final int COMMENT_OFFSET = 32;
+    private static final int COMMENT_OFFSET = 42;
+    private static final int BYTES_IN_LINE_SPACED_OUT = 12;    // Format: 0x04 0x3C 0x04 0x3D;
+    private static final int BYTES_IN_LINE_CONDENSED = 8;     // Format: 0x043C043D043E1B1C;
+
     private static final String INDENT_STRING = "  ";
     private static final int INDENT_LENGTH = INDENT_STRING.length();
     /*========================================================*/
@@ -75,7 +79,7 @@ class ClassData {
     ClassData(JdecEnvironment environment) throws IOException, URISyntaxException {
         this.environment = environment;
         //
-        try (DataInputStream dis = environment.getInputFile().getDataInputStream(Optional.empty())) {
+        try (DataInputStream dis = environment.getToolInput().getDataInputStream(Optional.empty())) {
             byte[] buf = new byte[dis.available()];
             if (dis.read(buf) <= 0) {
                 throw new FormatError(environment.getLogger(),
@@ -110,7 +114,6 @@ class ClassData {
     }
 
     /**
-     *
      * @param in              input stream to get bytes for printing
      * @param len             number of bytes
      * @param printSeparately defines a format  of printed lines which will be either  0x04 0x3C 0x04 0x3D; or 0x043C043D043E1B1C;
@@ -118,7 +121,7 @@ class ClassData {
      **/
     private void printBytes(DataInputStream in, int len, boolean printSeparately) throws IOException {
         int i = 0;
-        final int BYTES_IN_LINE = printSeparately ? 4 : 8;
+        final int BYTES_IN_LINE = printSeparately ? BYTES_IN_LINE_SPACED_OUT : BYTES_IN_LINE_CONDENSED;
         try {
             for (; i < len; i++) {
                 if (i % BYTES_IN_LINE == 0) {
@@ -159,27 +162,51 @@ class ClassData {
         for (int i = 0; ; i++) {
             try {
                 byte b = inputStream.readByte();
-                if (i % 8 == 0) {
-                    out_print("0x");
-                }
+                if (i % BYTES_IN_LINE_SPACED_OUT == 0)
+                    environment.print(INDENT_STRING);
+                else
+                    environment.print(" ");
+                environment.print("0x");
                 printByteHex(b);
-                if (i % 8 == 7) {
+                if (i % BYTES_IN_LINE_SPACED_OUT == BYTES_IN_LINE_SPACED_OUT - 1)
                     environment.println(";");
-                }
             } catch (IOException e) {
+                environment.println(";");
                 return;
             }
         }
     }
 
-    private void printUtf8InfoIndex(int index, String indexName) {
-        String name = (String) cpool[index];
-        out_print("#" + index + "; // ");
-        if (environment.printDetailsFlag) {
-            environment.println(format("%-16s", indexName) + " : " + name);
-        } else {
-            environment.println(indexName);
+    private void printBytes(byte[] buf) {
+        boolean newline = false;
+        for (int i = 0; i < buf.length; i++) {
+            if (i % BYTES_IN_LINE_SPACED_OUT == 0)
+                environment.print(INDENT_STRING);
+            else
+                environment.print(" ");
+            environment.print("0x");
+            printByteHex(buf[i]);
+            if (i % BYTES_IN_LINE_SPACED_OUT == BYTES_IN_LINE_SPACED_OUT - 1) {
+                newline = true;
+                environment.println(";");
+            } else {
+                newline = false;
+            }
         }
+        if (!newline)
+            environment.println(";");
+    }
+
+    private void printUtf8InfoIndex(int index, String indexName) {
+        out_print("#" + index + "; // ");
+        String comment = indexName;
+        try {
+            if (environment.printDetailsFlag) {
+                comment = format("%-16s", indexName) + " : " + cpool[index];
+            }
+        } catch (Exception ignored) {
+        }
+        environment.println(comment);
     }
 
     private void out_begin(String s) {
@@ -217,7 +244,7 @@ class ClassData {
         out_begin(startArray(length) + format("b {%s", comment == null ? "" : " // " + comment));
     }
 
-    private void readCP(DataInputStream in) throws IOException {
+    private void readCP(byte[] alreadyRead, DataInputStream in) throws IOException {
         int length = in.readUnsignedShort();
         CPlen = length;
         environment.traceln("jdec.trace.CP_len", length);
@@ -232,42 +259,56 @@ class ClassData {
             btag = in.readByte();
             environment.traceln("jdec.trace.CP_entry", i, btag);
             types[i] = btag;
-            ConstType tg = tag(btag);
+            ConstType tg = getByTag(btag);
             switch (tg) {
-                case CONSTANT_UTF8 -> cpool[i] = in.readUTF();
-                case CONSTANT_INTEGER -> {
+                case CONSTANT_UTF8, CONSTANT_ASCIZ -> cpool[i] = in.readUTF();
+                case CONSTANT_INTEGER, CONSTANT_INT,
+                     CONSTANT_BYTE, CONSTANT_C_BYTE,
+                     CONSTANT_CHAR, CONSTANT_C_CHAR,
+                     CONSTANT_SHORT, CONSTANT_C_SHORT,
+                     CONSTANT_C_BOOLEAN, CONSTANT_BOOLEAN -> {
                     v1 = in.readInt();
                     cpool[i] = v1;
                 }
-                case CONSTANT_FLOAT -> {
+                case CONSTANT_FLOAT, CONSTANT_C_FLOAT -> {
                     v1 = Float.floatToIntBits(in.readFloat());
                     cpool[i] = v1;
                 }
-                case CONSTANT_LONG -> {
+                case CONSTANT_LONG, CONSTANT_C_LONG -> {
                     lv = in.readLong();
                     cpool[i] = lv;
                     i++;
                 }
-                case CONSTANT_DOUBLE -> {
+                case CONSTANT_DOUBLE, CONSTANT_C_DOUBLE -> {
                     lv = Double.doubleToLongBits(in.readDouble());
                     cpool[i] = lv;
                     i++;
                 }
-                case CONSTANT_CLASS, CONSTANT_STRING, CONSTANT_MODULE, CONSTANT_PACKAGE -> {
+                case CONSTANT_CLASS, CONSTANT_C_CLASS,
+                     CONSTANT_STRING, CONSTANT_L_STRING,
+                     CONSTANT_MODULE, CONSTANT_PACKAGE -> {
                     v1 = in.readUnsignedShort();
                     cpool[i] = v1;
                 }
-                case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE ->
-                        cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
+                case CONSTANT_INTERFACEMETHODREF, CONSTANT_INTERFACEMETHOD,
+                     CONSTANT_FIELDREF, CONSTANT_FIELD,
+                     CONSTANT_METHODREF, CONSTANT_METHOD,
+                     CONSTANT_NAMEANDTYPE -> cpool[i] = "#" + in.readUnsignedShort() + " #" + in.readUnsignedShort();
                 case CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC ->
                         cpool[i] = in.readUnsignedShort() + "s #" + in.readUnsignedShort();
                 case CONSTANT_METHODHANDLE -> cpool[i] = in.readUnsignedByte() + "b #" + in.readUnsignedShort();
                 case CONSTANT_METHODTYPE -> cpool[i] = "#" + in.readUnsignedShort();
                 default -> {
-                    CPlen = i;
-                    printCP();
-                    out_println(toHex(btag, 1) + "; // invalid constant type: " + (int) btag + " for element " + i);
-                    throw new ClassFormatError();
+                    cpool[i] = in.readUnsignedShort();
+                    CPlen = ++i;
+                    // the output can be not ready if file output is used.
+                    if (!environment.getToolOutput().isReady()) {
+                        environment.setToolOutput(new StdoutOutput());
+                    }
+                    out_println("class {");
+                    printBytes(alreadyRead);
+                    indent++;
+                    printCP();  // exception will be thrown here.
                 }
             }
         }
@@ -282,7 +323,7 @@ class ClassData {
             for (int i = 1; i < length; i = i + size) {
                 size = 1;
                 byte btag = types[i];
-                ConstType tg = tag(btag);
+                ConstType tg = getByTag(btag);
                 int pos = cpe_pos[i];
                 String tagstr;
                 String valstr;
@@ -294,28 +335,40 @@ class ClassData {
                     throw new Error("Can't get a tg representing the type of Constant in the Constant Pool at: " + i);
                 }
                 switch (tg) {
-                    case CONSTANT_UTF8 -> {
-                        tagstr = "Utf8";
-                        valstr = StringUtils.Utf8ToString((String) cpool[i], "\"");
+                    case CONSTANT_UTF8, CONSTANT_ASCIZ -> {
+                        tagstr = CONSTANT_UTF8.parseKey();
+                        valstr = StringUtils.Utf8ToString(getStringByIndex(i), "\"");
                     }
-                    case CONSTANT_FLOAT, CONSTANT_INTEGER -> {
+                    case CONSTANT_INTEGER, CONSTANT_INT,
+                         CONSTANT_BYTE, CONSTANT_C_BYTE,
+                         CONSTANT_CHAR, CONSTANT_C_CHAR,
+                         CONSTANT_SHORT, CONSTANT_C_SHORT,
+                         CONSTANT_C_BOOLEAN, CONSTANT_BOOLEAN,
+                         CONSTANT_FLOAT, CONSTANT_C_FLOAT -> {
                         v1 = (Integer) cpool[i];
                         valstr = toHex(v1, 4);
                     }
-                    case CONSTANT_DOUBLE, CONSTANT_LONG -> {
+                    case CONSTANT_DOUBLE, CONSTANT_C_DOUBLE, CONSTANT_LONG, CONSTANT_C_LONG -> {
                         lv = (Long) cpool[i];
                         valstr = toHex(lv, 8) + ";";
                         size = 2;
                     }
-                    case CONSTANT_CLASS, CONSTANT_MODULE, CONSTANT_PACKAGE, CONSTANT_STRING -> {
+                    case CONSTANT_MODULE, CONSTANT_PACKAGE,
+                         CONSTANT_CLASS, CONSTANT_C_CLASS,
+                         CONSTANT_STRING, CONSTANT_L_STRING -> {
                         v1 = (Integer) cpool[i];
                         valstr = "#" + v1;
                     }
-                    case CONSTANT_INTERFACEMETHODREF, CONSTANT_FIELDREF,
-                            CONSTANT_METHODREF, CONSTANT_NAMEANDTYPE,
-                            CONSTANT_METHODHANDLE, CONSTANT_METHODTYPE,
-                            CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> valstr = (String) cpool[i];
-                    default -> throw new Error("invalid constant type: " + (int) btag);
+                    case CONSTANT_INTERFACEMETHODREF, CONSTANT_INTERFACEMETHOD,
+                         CONSTANT_FIELDREF, CONSTANT_FIELD,
+                         CONSTANT_METHODREF, CONSTANT_METHOD,
+                         CONSTANT_NAMEANDTYPE,
+                         CONSTANT_METHODHANDLE, CONSTANT_METHODTYPE,
+                         CONSTANT_DYNAMIC, CONSTANT_INVOKEDYNAMIC -> valstr = getStringByIndex(i);
+                    default -> {
+                        out_println(toHex(btag, 1) + "; // invalid constant type: " + (int) btag + " for element " + i);
+                        throw new ClassFormatError("Invalid constant type: " + (int) btag + " for element " + i);
+                    }
                 }
                 out_print(tagstr + " " + valstr + "; // #" + i);
                 if (environment.printDetailsFlag) {
@@ -332,8 +385,8 @@ class ClassData {
 
     /**
      * CONSTANT_Module_info {
-     *     u1 tag;              // == CONSTANT_MODULE(19)
-     *     u2 name_index;
+     * u1 tag;              // == CONSTANT_MODULE(19)
+     * u2 name_index;
      * }
      *
      * @return Constant Pool module name by name_index
@@ -349,7 +402,7 @@ class ClassData {
         }
         if (idx != 0) {
             try {
-                name = StringUtils.Utf8ToString((String) cpool[(int) cpool[idx]]);
+                name = StringUtils.Utf8ToString(getStringByIndex(idx));
             } catch (Throwable ignored) { /* ignored*/ }
         }
         return name;
@@ -384,10 +437,42 @@ class ClassData {
                     outputString = new StringBuilder();
                 }
             }
-            if (outputString.length() > 0) {
+            if (!outputString.isEmpty()) {
                 out_println(outputString.toString().replaceAll("\\s+$", ""));
             }
         }
+    }
+
+    /**
+     * Reads from
+     * early_larval_frame {
+     * u1 frame_type = EARLY_LARVAL;            // 246
+     * u2 number_of_unset_fields;
+     * u2 unset_fields[number_of_unset_fields];
+     * base_frame base;
+     * }
+     * the structure unset_fields[number_of_unset_fields] and returns its string presentation
+     *
+     * @param in input stream
+     * @return String presentation of the aggregation of [number_of_unset_fields] {unset_fields }
+     * @throws IOException if IO exception occurs
+     */
+    private String getUnsetFields(DataInputStream in) throws IOException {
+        int num = in.readUnsignedShort();
+        StringBuilder sb = new StringBuilder(20);
+        sb.append(startArray(num)).append('{');
+        try {
+            for (int i = 0; i < num; i++) {
+                int cpIndex = in.readUnsignedShort();   // unset_field[i]
+                sb.append("#").append(cpIndex);
+                if (i < num - 1) {
+                    sb.append("; ");
+                }
+            }
+        } finally {
+            sb.append('}');
+        }
+        return sb.toString();
     }
 
     private String getStackMap(DataInputStream in, int elementsNum) throws IOException {
@@ -403,7 +488,7 @@ class ClassData {
             for (int k = 0; k < num; k++) {
                 int maptype = in.readUnsignedByte();
                 StackMap.VerificationType verificationType = StackMap.getVerificationType(maptype,
-                        Optional.of((s) -> environment.printErrorLn(s)));
+                        Optional.of((s, a) -> environment.printErrorLn(s, a)));
                 String maptypeImg;
                 if (environment.printDetailsFlag) {
                     maptypeImg = maptype + "b";
@@ -415,7 +500,7 @@ class ClassData {
                     }
                 }
                 switch (verificationType) {
-                    case ITEM_Object, ITEM_NewObject -> maptypeImg = maptypeImg + "," + in.readUnsignedShort();
+                    case ITEM_Object, ITEM_NewObject -> maptypeImg = maptypeImg + ",#" + in.readUnsignedShort();
                     case ITEM_UNKNOWN -> maptypeImg = maptype + "b";
                     default -> {
                     }
@@ -519,8 +604,8 @@ class ClassData {
             }
             switch (tag) {
                 case AE_BYTE, AE_CHAR, AE_DOUBLE, AE_FLOAT,
-                        AE_INT, AE_LONG, AE_SHORT, AE_BOOLEAN,
-                        AE_STRING -> decodeCPXAttr(in, 2, "const_value_index");
+                     AE_INT, AE_LONG, AE_SHORT, AE_BOOLEAN,
+                     AE_STRING -> decodeCPXAttr(in, 2, "const_value_index");
                 case AE_ENUM -> {
                     out_begin("{  //  enum_const_value");
                     decodeCPXAttr(in, 2, "type_name_index");
@@ -544,7 +629,8 @@ class ClassData {
                     }
                 }
                 case AE_UNKNOWN -> {
-                    String msg = "invalid element_value" + (isPrintableChar(tg) ? " tag type : " + tg : "??");
+                    String msg = "invalid element_value" +
+                            (StringUtils.isPrintableChar(tg) ? " tag type : " + tg : "??");
                     out_println(toHex(tg, 1) + "; // " + msg);
                     throw new ClassFormatError(msg);
                 }
@@ -552,14 +638,6 @@ class ClassData {
         } finally {
             out_end("}  //  element_value");
         }
-    }
-
-    public boolean isPrintableChar(char c) {
-        Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-        return (!Character.isISOControl(c)) &&
-                c != KeyEvent.CHAR_UNDEFINED &&
-                block != null &&
-                block != Character.UnicodeBlock.SPECIALS;
     }
 
     private void decodeAnnotation(DataInputStream in, ToolOutput out) throws IOException {
@@ -676,10 +754,10 @@ class ClassData {
         try {
             name_cpx = in.readUnsignedShort();
             btag = types[name_cpx];
-            ConstType tag = tag(btag);
+            ConstType tag = getByTag(btag);
 
             if (tag == ConstType.CONSTANT_UTF8) {
-                AttrName = (String) cpool[name_cpx];
+                AttrName = getStringByIndex(name_cpx);
             }
         } catch (ArrayIndexOutOfBoundsException ignored) {
             environment.print(getOutString(""));
@@ -703,19 +781,26 @@ class ClassData {
                     int code_len = in.readInt();
                     out_begin("Bytes" + startArray(code_len) + "{");
                     try {
-                        printBytes(in, code_len, false);
+                        printBytes(in, code_len, true);
                     } finally {
                         out_end("}");
                     }
                     int trap_num = in.readUnsignedShort();
+                    /*
+                    {   u2 start_pc;
+                        u2 end_pc;
+                        u2 handler_pc;
+                        u2 catch_type;
+                    } exception_table[exception_table_length];
+                     */
                     startArrayCmt(trap_num, "Traps");
                     try {
                         for (int i = 0; i < trap_num; i++) {
-                            out_println(in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + ";" +
-                                    getCommentPosCond());
+                            out_println(
+                                    "%4d %4d %4d %3d;".formatted(in.readUnsignedShort(),
+                                            in.readUnsignedShort(),
+                                            in.readUnsignedShort(),
+                                            in.readUnsignedShort()) + getCommentPosCond());
                         }
                     } finally {
                         out_end("} // end of Traps");
@@ -740,9 +825,9 @@ class ClassData {
                     startArrayCmt(ll_num, "line_number_table");
                     try {
                         for (int i = 0; i < ll_num; i++) {
-                            out_println(in.readUnsignedShort() + "  " +
-                                    in.readUnsignedShort() + ";" +
-                                    getCommentPosCond());
+                            out_println(
+                                    "%4d %4d;".formatted(in.readUnsignedShort(), in.readUnsignedShort()) +
+                                            getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -753,12 +838,11 @@ class ClassData {
                     startArrayCmt(lvt_num, AttrName);
                     try {
                         for (int i = 0; i < lvt_num; i++) {
-                            out_println(in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + ";" +
-                                    getCommentPosCond());
+                            out_println(
+                                    "%4d %4d %4d %4d %3d;".formatted(in.readUnsignedShort(),
+                                            in.readUnsignedShort(), in.readUnsignedShort(),
+                                            in.readUnsignedShort(), in.readUnsignedShort()) +
+                                            getCommentPosCond());
                         }
                     } finally {
                         out_end("}");
@@ -769,10 +853,16 @@ class ClassData {
                     startArrayCmt(ic_num, "classes");
                     try {
                         for (int i = 0; i < ic_num; i++) {
-                            out_println("#" + in.readUnsignedShort() + " #" +
-                                    in.readUnsignedShort() + " #" +
-                                    in.readUnsignedShort() + " " +
-                                    in.readUnsignedShort() + ";" + getCommentPosCond());
+                            int inner_class_info_index = in.readUnsignedShort();
+                            int outer_class_info_index = in.readUnsignedShort();
+                            int inner_name_index = in.readUnsignedShort();
+                            int inner_class_access_flags = in.readUnsignedShort();
+                            out_println("%5s %5s %5s %3s;".formatted(
+                                    "#" + inner_class_info_index,
+                                    "#" + outer_class_info_index,
+                                    "#" + inner_name_index,
+                                    "" + inner_class_access_flags) +
+                                    getInnerClassComment(inner_class_access_flags));
                         }
                     } finally {
                         out_end("}");
@@ -792,57 +882,76 @@ class ClassData {
                     }
                 }
                 case ATT_StackMapTable -> {
+                    int wrappingLevel = 0;
                     int et_num = in.readUnsignedShort();
                     startArrayCmt(et_num, "");
                     try {
-                        for (int k = 0; k < et_num; k++) {
+                        int idx = 0;          // wrapper (early_larval_frame) is skipped.
+                        while (idx < et_num) {
                             int frame_type = in.readUnsignedByte();
-                            StackMap.FrameType ftype = StackMap.stackMapFrameType(frame_type);
+                            StackMap.EntryType ftype = StackMap.stackMapEntryType(frame_type);
+                            String indentString = (wrappingLevel > 0) ? INDENT_STRING.repeat(min(wrappingLevel, 4)) : "";
+
                             switch (ftype) {
                                 case SAME_FRAME -> {
-                                    // verificationType is same_frame;
-                                    out_println("" + frame_type + "b; // same_frame");
+                                    // entryType is same_frame;
+                                    out_println(indentString.concat(frame_type + "b; // same_frame"));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
                                 case SAME_LOCALS_1_STACK_ITEM_FRAME -> {
-                                    // verificationType is same_locals_1_stack_item_frame
+                                    // entryType is same_locals_1_stack_item_frame
                                     // read additional single stack element
-                                    out_println(format("%db, %s; // same_locals_1_stack_item_frame",
-                                            frame_type, getStackMap(in, 1)));
+                                    out_println(indentString.concat(format("%db, %s; // same_locals_1_stack_item_frame",
+                                            frame_type, getStackMap(in, 1))));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
-                                case SAME_LOCALS_1_STACK_ITEM_EXTENDED_FRAME -> {
-                                    // verificationType is same_locals_1_stack_item_frame_extended
+                                case EARLY_LARVAL -> {
+                                    // entryType is early_larval_frame
+                                    out_println(indentString.concat(format("%db, %s, { // early_larval_frame",
+                                            frame_type, getUnsetFields(in))));
+                                    wrappingLevel++;
+                                    continue;   // skip idx increasing
+                                }
+                                case SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED -> {
+                                    // entryType is same_locals_1_stack_item_frame_extended
                                     // read additional single stack element
                                     int noffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d, %s; // same_locals_1_stack_item_frame_extended",
-                                            frame_type, noffset, getStackMap(in, 1)));
+                                    out_println(indentString.concat(format("%db, %d, %s; // same_locals_1_stack_item_frame_extended",
+                                            frame_type, noffset, getStackMap(in, 1))));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
                                 case CHOP_1_FRAME, CHOP_2_FRAME, CHOP_3_FRAME -> {
-                                    // verificationType is chop_frame
+                                    // entryType is chop_frame
                                     int coffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d; // chop_frame %d",
-                                            frame_type, coffset, 251 - frame_type));
+                                    out_println(indentString.concat(format("%db, %d; // chop_frame %d",
+                                            frame_type, coffset, 251 - frame_type)));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
-                                case SAME_FRAME_EX -> {
-                                    // verificationType is same_frame_extended;
+                                case SAME_FRAME_EXTENDED -> {
+                                    // entryType is same_frame_extended;
                                     int xoffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d; // same_frame_extended",
-                                            frame_type, xoffset));
+                                    out_println(indentString.concat(format("%db, %d; // same_frame_extended",
+                                            frame_type, xoffset)));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
                                 case APPEND_FRAME -> {
-                                    // verificationType is append_frame
+                                    // entryType is append_frame
                                     // read additional locals
                                     int aoffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d, %s; // append_frame %d",
+                                    out_println(indentString.concat(format("%db, %d, %s; // append_frame %d",
                                             frame_type, aoffset,
-                                            getStackMap(in, frame_type - 251), frame_type - 251));
+                                            getStackMap(in, frame_type - 251), frame_type - 251)));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
                                 case FULL_FRAME -> {
-                                    // verificationType is full_frame
+                                    // entryType is full_frame
                                     int foffset = in.readUnsignedShort();
-                                    out_println(format("%db, %d, %s, %s; // full_frame", frame_type, foffset,
-                                            getStackMap(in, 0), getStackMap(in, 0)));
+                                    out_println(indentString.concat(format("%db, %d, %s, %s; // full_frame", frame_type, foffset,
+                                            getStackMap(in, 0), getStackMap(in, 0))));
+                                    wrappingLevel = checkWrapping(wrappingLevel);
                                 }
                             }
+                            idx++;
                         }
                     } finally {
                         out_end("}");
@@ -996,10 +1105,26 @@ class ClassData {
                 //    u2 number_of_classes;
                 //    u2 classes[number_of_classes];
                 //  }
-                // Valhalla
-                case ATT_NestMembers, ATT_PermittedSubclasses, ATT_Preload -> {
+                case ATT_NestMembers, ATT_PermittedSubclasses -> {
                     int nsubtypes = in.readUnsignedShort();
                     startArrayCmt(nsubtypes, "classes");
+                    try {
+                        decodeTypes(in, nsubtypes);
+                    } finally {
+                        out_end("}");
+                    }
+                }
+                // Valhalla:
+                //
+                // LoadableDescriptors_attribute {
+                // u2 attribute_name_index;
+                // u4 attribute_length;
+                // u2 number_of_descriptors;
+                // u2 descriptors[number_of_descriptors];
+                // }
+                case ATT_LoadableDescriptors -> {
+                    int nsubtypes = in.readUnsignedShort();
+                    startArrayCmt(nsubtypes, "Utf8");
                     try {
                         decodeTypes(in, nsubtypes);
                     } finally {
@@ -1013,15 +1138,11 @@ class ClassData {
                 // }
                 case ATT_SourceDebugExtension -> {
                     printUtf8String(in, len);
-                    if (AttrName == null) {
-                        endingComment = "Attr(#" + name_cpx + ")";
-                    }
+                    endingComment = "Attr(#" + name_cpx + ")";
                 }
                 default -> {
                     printBytes(in, len, true);
-                    if (AttrName == null) {
-                        endingComment = "Attr(#" + name_cpx + ")";
-                    }
+                    endingComment = "Attr(#" + name_cpx + ")";
                 }
             }
 
@@ -1073,7 +1194,7 @@ class ClassData {
         String sComment;
         //u2 module_name_index
         int index = in.readUnsignedShort();
-        entityName = (String) cpool[(Integer) cpool[index]];
+        entityName = getStringByIndex(index);
         out_print("#" + index + "; // ");
         if (environment.printDetailsFlag) {
             environment.println(format("%-16s", "name_index") + " : " + entityName);
@@ -1180,15 +1301,27 @@ class ClassData {
         }
     }
 
+    String getInnerClassComment(int inner_class_access_flags) {
+        StringBuilder sb = new StringBuilder();
+        if (environment.printDetailsFlag) {
+            sb.append("// access [ ").append(EModifier.asNames(inner_class_access_flags, ClassFileContext.INNER_CLASS)).append(" ]");
+        }
+        return sb.toString();
+    }
+
     void decodeClass() throws IOException {
+        boolean printingStarted = false;
         // Read the header
         try {
             int magic = inputStream.readInt();
             int min_version = inputStream.readUnsignedShort();
             int version = inputStream.readUnsignedShort();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(8).putInt(magic).
+                    putShort((short) min_version).
+                    putShort((short) version);
 
             // Read the constant pool
-            readCP(inputStream);
+            readCP(byteBuffer.array(), inputStream);
             short access = inputStream.readShort(); // don't care about sign
             int this_cpx = inputStream.readUnsignedShort();
 
@@ -1201,27 +1334,34 @@ class ClassData {
                 } else {
                     entityType = "class";
                 }
-                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != IDENT || JcodTokens.constValue(entityName) != -1)) {
+                if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != IDENT ||
+                        JcodTokens.getConstTagByParseString(entityName) != -1)) {
                     // JCod can't parse a entityName matching a keyword or a constant value,
                     // then use the filename instead:
                     out_begin(format("file \"%s.class\" {", entityName));
                 } else {
                     out_begin(format("%s %s {", entityType, entityName));
                 }
+                printingStarted = true;
             } catch (Exception e) {
-                entityName = environment.getInputFile().getFileName();
+                entityName = environment.getToolInput().getName();
                 environment.println("// " + e.getMessage() + " while accessing entityName");
                 out_begin(format("%s %s { // source file name", entityType, entityName));
+                printingStarted = true;
             }
 
             if (magic != JAVA_MAGIC) {
-                out_println(toHex(magic, 4) + "; // wrong magic: 0x" + Integer.toString(JAVA_MAGIC, 16) + " expected");
+                out_println(toHex(magic, 4) + "; // wrong magic: " + toHex(JAVA_MAGIC, 4) + " expected");
             } else {
                 out_println(toHex(magic, 4) + ";");
 
             }
             out_println(min_version + "; // minor version");
             out_println(version + "; // version");
+
+            if (CFVersion.isValueObjectContext(version, min_version)) {
+                EModifier.setGlobalContext(VALUE_OBJECTS);
+            }
 
             // Print the constant pool
             printCP();
@@ -1254,18 +1394,30 @@ class ClassData {
         } catch (EOFException ignored) {
         } catch (ClassFormatError err) {
             String msg = err.getMessage();
-            environment.println("//------- ClassFormatError" +
-                    (msg == null || msg.isEmpty() ? "" : ": " + msg));
+            environment.println(INDENT_STRING + "// ClassFormatError" + (msg == null || msg.isEmpty() ? "" : ": " + msg));
             printRestOfBytes();
+            printingStarted = true;
+            throw err;
         } finally {
-            if (environment.printDetailsFlag) {
-                out_end(format("} // end of %s %s", entityType, entityName));
-            } else {
-                out_end("}");
+            if (printingStarted) {
+                if (environment.printDetailsFlag && (!entityName.isBlank() || !entityType.isBlank())) {
+                    out_end(format("} // end of %s %s", entityType, entityName));
+                } else {
+                    out_end("}");
+                }
             }
             environment.getToolOutput().finishClass(entityName);
         }
     } // end decodeClass()
+
+    private int checkWrapping(int wrappingLevel) {
+        if (wrappingLevel > 0) {
+            for (int i = wrappingLevel-1; i >= 0; i--) {
+                out_println(INDENT_STRING.repeat(i).concat("};"));
+            }
+        }
+        return 0;
+    }
 
     private void decodeTypes(DataInputStream in, int count) throws IOException {
         for (int i = 0; i < count; i++) {
@@ -1273,21 +1425,40 @@ class ClassData {
             environment.traceln("jdec.trace.type", i, type_cpx);
             String s = "#" + type_cpx + ";";
             if (environment.printDetailsFlag) {
-                String name = (String) cpool[(int) cpool[type_cpx]];
+                Object cpObj = cpool[type_cpx];
+                String name;
+                if (cpObj instanceof Integer index) {
+                    name = getStringByIndex(index);
+                } else {
+                    name = "Reference to a ConstantPool Object: %s".formatted(cpObj);
+                }
                 out_println(s + " // " + name + getStringPos());
             } else {
-                environment.println(s);
+                out_println(s);
             }
         }
     }
 
-    private String formatComments(String s, int shift) {
-        String[] pair = s.split("//");
-        if (pair.length != 2) {
-            return s;
+    private String getStringByIndex(int idx) {
+        Object str = cpool[idx];
+        if (str instanceof String) {
+            return (String) str;
+        } else {
+            return " // The ConstantPoll Index #%d refers to a ConstantPool Object: %s".
+                    formatted(idx, String.valueOf(str));
         }
-        pair[0] = pair[0].trim();
-        pair[1] = pair[1].trim();
-        return pair[0] + repeat(" ", COMMENT_OFFSET - pair[0].length() - shift * INDENT_LENGTH) + " // " + pair[1];
+    }
+
+    private String formatComments(String str, int shift) {
+        String[] pair = str.split("//");
+        int len = pair.length;
+        if (len < 2) {
+            return str;
+        }
+        String s = pair[0];
+        for (int i = 1; i <= len - 2; i++) {
+            s = s.concat("//").concat(pair[i]);
+        }
+        return s + repeat(" ", COMMENT_OFFSET - s.length() - shift * INDENT_LENGTH) + " // " + pair[len - 1].trim();
     }
 }// end class ClassData

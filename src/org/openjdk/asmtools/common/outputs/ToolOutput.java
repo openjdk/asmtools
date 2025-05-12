@@ -25,23 +25,19 @@ package org.openjdk.asmtools.common.outputs;
 
 import org.openjdk.asmtools.common.Environment;
 
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /**
- * This class is a generic interface, symbolising any output from jdis/jasm/jdec/jcoder.
+ * This class is a generic interface, symbolizing any output from jdis/jasm/jdec/jcoder.
  * Asmtools as application internally uses DirOutput and StdoutOutput (via EscapedPrintStreamOutput).
- * UnitTests for asmtools uses mainly ByteOutput for assemblers  and TextOutput for disasemblers.
- *
- * Text/Byte/EscapedPrintStream outputs can be used as any 3rd part code which do not need files, aka IDE, instrumetations or similar.
- *
- * The interface methods goes in favor of asmtools, and for details and help see individual implementations
+ * UnitTests for asmtools uses mainly ByteOutput for assemblers  and TextOutput for disassemblers.
+ * <p>
+ * Text/Byte/EscapedPrintStream outputs can be used as any 3rd part code that does not need files, aka IDE,
+ * instrumentation or similar.
+ * <p>
+ * The interface methods go in favor of asmtools, and for details and help see individual implementations
  */
 public interface ToolOutput {
 
@@ -61,11 +57,13 @@ public interface ToolOutput {
 
     void flush();
 
-
     public static String exToString(Throwable e) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(out, true, StandardCharsets.UTF_8));
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
-}
 
+    default boolean isReady() {
+        return true;
+    }
+}

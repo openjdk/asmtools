@@ -1,0 +1,83 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl001/atrcvl00102m1/atrcvl00102m10p {
+  0xCAFEBABE;
+  3;                                       // minor version
+  45;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Method #18 #16;                        // #1
+    Method #3 #16;                         // #2
+    Class #12;                             // #3
+    Field #9 #17;                          // #4
+    Utf8 "<init>";                         // #5
+    Utf8 "()V";                            // #6
+    Utf8 "ConstantValue";                  // #7
+    Utf8 "SourceFile";                     // #8
+    Class #20;                             // #9
+    Utf8 "I";                              // #10
+    Utf8 "java/lang/Object";               // #11
+    Utf8 "java/lang/Exception";            // #12
+    Utf8 "Code";                           // #13
+    Utf8 "Exceptions";                     // #14
+    Utf8 "ifi";                            // #15
+    NameAndType #5 #6;                     // #16
+    NameAndType #15 #10;                   // #17
+    Class #11;                             // #18
+    Integer 0x00030D40;                    // #19
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl001/atrcvl00102m1/atrcvl00102m10p";  // #20
+    Utf8 "atrcvl00102m10p.jasm";           // #21
+  }
+
+  0x0001;                                  // access
+  #9;                                      // this_cpx
+  #18;                                     // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+    {                                      // field
+      0x0000;                              // access
+      #15;                                 // name_index
+      #10;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#7) {                         // ConstantValue
+          #19;
+        }                                  // end of ConstantValue
+      }                                    // end of Attributes
+    }
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #5;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+        Attr(#14) {                        // Exceptions
+          [] {                             // Exceptions
+            #3;
+          }
+        }                                  // end of Exceptions
+        ;
+        Attr(#13) {                        // Code
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x01 0x2A 0xB4 0x00 0x04 0x99 0x00 0x0B 0xBB;
+            0x00 0x03 0x59 0xB7 0x00 0x02 0xBF 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#8) {                             // SourceFile
+      #21;
+    }                                      // end of SourceFile
+  }                                        // end of Attributes
+}

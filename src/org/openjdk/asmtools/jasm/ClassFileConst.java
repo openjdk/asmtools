@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -50,6 +50,7 @@ public final class ClassFileConst {
     private static final HashMap<Character, AnnotationElementType> AnnotationElementTypes = new HashMap<>(10);
 
     private static final HashMap<String, ConstType> NameToConstantType = new HashMap<>(ConstType.maxTag);
+    private static final HashMap<String, ConstType> BSMArgumentNameToConstantType = new HashMap<>(ConstType.maxTag);
     private static final HashMap<Integer, ConstType> ConstantTypes = new HashMap<>(ConstType.maxTag);
 
     static {
@@ -74,17 +75,25 @@ public final class ClassFileConst {
         }
     }
 
-    static public ConstType tag(int i) {
-        return ConstantTypes.get(i);
+    static public ConstType getByTag(int i) {
+        ConstType constType = ConstantTypes.get(i);
+        return constType == null ? ConstType.CONSTANT_UNKNOWN : constType;
     }
 
-    static public ConstType tag(String parseKey) {
+    static public ConstType getByParseKey(String parseKey) {
         return NameToConstantType.get(parseKey);
+    }
+
+    static public ConstType getBSMArgumentTypeByParseKey(String parseKey) {
+        return BSMArgumentNameToConstantType.get(parseKey);
     }
 
     private static void registerConstantType(ConstType constType) {
         NameToConstantType.put(constType.parseKey, constType);
-        if ( !ConstantTypes.containsKey(constType.tag) ) {
+        if (constType.isBsmType) {
+            BSMArgumentNameToConstantType.put(constType.parseKey, constType);
+        }
+        if (!ConstantTypes.containsKey(constType.tag)) {
             // only first CONSTANT_INTEGER(3, "CONSTANT_INTEGER", "int", AnnotationElementType.AE_INT)
             ConstantTypes.put(constType.tag, constType);
         }
@@ -142,35 +151,57 @@ public final class ClassFileConst {
      * A (typed) tag (constant) representing the type of Constant in the Constant Pool.
      */
     public enum ConstType {
-        CONSTANT_UNKNOWN(-1, "CONSTANT_UNKNOWN", "", AnnotationElementType.AE_NOT_APPLICABLE),
+        CONSTANT_UNKNOWN(-1, "CONSTANT_UNKNOWN", "", AnnotationElementType.AE_NOT_APPLICABLE, false),
         //
-        CONSTANT_ZERO(0, "CONSTANT_ZERO", "", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_UTF8(1, "CONSTANT_UTF8", "Utf8", AnnotationElementType.AE_STRING),
-        CONSTANT_ASCIZ(1, "CONSTANT_UTF8", "Asciz", AnnotationElementType.AE_STRING),   // supports previous version
+        CONSTANT_ZERO(0, "CONSTANT_ZERO", "", AnnotationElementType.AE_NOT_APPLICABLE, false),
+        CONSTANT_UTF8(1, "CONSTANT_UTF8", "Utf8", AnnotationElementType.AE_STRING, true),
+        CONSTANT_ASCIZ(1, "CONSTANT_UTF8", "Asciz", AnnotationElementType.AE_STRING, true),   // supports previous version
         // Constant 2 reserved
-        CONSTANT_INTEGER(3, "CONSTANT_INTEGER",  AnnotationElementType.AE_INT.printValue, AnnotationElementType.AE_INT),
-        CONSTANT_INTEGER_BYTE(3, "CONSTANT_INTEGER", AnnotationElementType.AE_BYTE.printValue, AnnotationElementType.AE_BYTE),
-        CONSTANT_INTEGER_CHAR(3, "CONSTANT_INTEGER", AnnotationElementType.AE_CHAR.printValue, AnnotationElementType.AE_CHAR),
-        CONSTANT_INTEGER_SHORT(3, "CONSTANT_INTEGER", AnnotationElementType.AE_SHORT.printValue, AnnotationElementType.AE_SHORT),
-        CONSTANT_INTEGER_BOOLEAN(3, "CONSTANT_INTEGER", AnnotationElementType.AE_BOOLEAN.printValue, AnnotationElementType.AE_BOOLEAN),
+        CONSTANT_INTEGER(3, "CONSTANT_INTEGER", "Integer", AnnotationElementType.AE_INT, true),
+        CONSTANT_INT(3, "CONSTANT_INTEGER", AnnotationElementType.AE_INT.printValue, AnnotationElementType.AE_INT, true),
+        CONSTANT_BYTE(3, "CONSTANT_INTEGER", AnnotationElementType.AE_BYTE.printValue, AnnotationElementType.AE_BYTE, true),
+        CONSTANT_C_BYTE(3, "CONSTANT_INTEGER", "Byte", AnnotationElementType.AE_BYTE, true),
+        CONSTANT_CHAR(3, "CONSTANT_INTEGER", AnnotationElementType.AE_CHAR.printValue, AnnotationElementType.AE_CHAR, true),
+        CONSTANT_C_CHAR(3, "CONSTANT_INTEGER", "Char", AnnotationElementType.AE_CHAR, true),
+        CONSTANT_SHORT(3, "CONSTANT_INTEGER", AnnotationElementType.AE_SHORT.printValue, AnnotationElementType.AE_SHORT, true),
+        CONSTANT_C_SHORT(3, "CONSTANT_INTEGER", "Short", AnnotationElementType.AE_SHORT, true),
+        CONSTANT_BOOLEAN(3, "CONSTANT_INTEGER", AnnotationElementType.AE_BOOLEAN.printValue, AnnotationElementType.AE_BOOLEAN, true),
+        CONSTANT_C_BOOLEAN(3, "CONSTANT_INTEGER", "Boolean", AnnotationElementType.AE_BOOLEAN, true),
 
-        CONSTANT_FLOAT(4, "CONSTANT_FLOAT", "float", AnnotationElementType.AE_FLOAT),
-        CONSTANT_LONG(5, "CONSTANT_LONG", "long", AnnotationElementType.AE_LONG),
-        CONSTANT_DOUBLE(6, "CONSTANT_DOUBLE", "double", AnnotationElementType.AE_DOUBLE),
-        CONSTANT_CLASS(7, "CONSTANT_CLASS", "class", AnnotationElementType.AE_CLASS),
-        CONSTANT_STRING(8, "CONSTANT_STRING", "String", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_FIELDREF(9, "CONSTANT_FIELDREF", "Field", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_METHODREF(10, "CONSTANT_METHODREF", "Method", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_INTERFACEMETHODREF(11, "CONSTANT_INTERFACEMETHODREF", "InterfaceMethod", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_NAMEANDTYPE(12, "CONSTANT_NAMEANDTYPE", "NameAndType", AnnotationElementType.AE_NOT_APPLICABLE),
+        CONSTANT_C_FLOAT(4, "CONSTANT_FLOAT", "Float", AnnotationElementType.AE_FLOAT, true),
+        CONSTANT_FLOAT(4, "CONSTANT_FLOAT", "float", AnnotationElementType.AE_FLOAT, true),
+
+        CONSTANT_C_LONG(5, "CONSTANT_LONG", "Long", AnnotationElementType.AE_LONG, true),
+        CONSTANT_LONG(5, "CONSTANT_LONG", "long", AnnotationElementType.AE_LONG, true),
+
+        CONSTANT_C_DOUBLE(6, "CONSTANT_DOUBLE", "Double", AnnotationElementType.AE_DOUBLE, true),
+        CONSTANT_DOUBLE(6, "CONSTANT_DOUBLE", "double", AnnotationElementType.AE_DOUBLE, true),
+
+        CONSTANT_C_CLASS(7, "CONSTANT_CLASS", "Class", AnnotationElementType.AE_CLASS, true),
+        CONSTANT_CLASS(7, "CONSTANT_CLASS", "class", AnnotationElementType.AE_CLASS, true),
+
+        CONSTANT_STRING(8, "CONSTANT_STRING", "String", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_L_STRING(8, "CONSTANT_STRING", "string", AnnotationElementType.AE_NOT_APPLICABLE, false),
+
+        CONSTANT_FIELD(9, "CONSTANT_FIELD", "Field", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_FIELDREF(9, "CONSTANT_FIELDREF", "Fieldref", AnnotationElementType.AE_NOT_APPLICABLE, true),
+
+        CONSTANT_METHOD(10, "CONSTANT_METHOD", "Method", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_METHODREF(10, "CONSTANT_METHODREF", "Methodref", AnnotationElementType.AE_NOT_APPLICABLE, true),
+
+        CONSTANT_INTERFACEMETHOD(11, "CONSTANT_INTERFACEMETHOD", "InterfaceMethod", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_INTERFACEMETHODREF(11, "CONSTANT_INTERFACEMETHODREF", "InterfaceMethodref", AnnotationElementType.AE_NOT_APPLICABLE, true),
+
+        CONSTANT_NAMEANDTYPE(12, "CONSTANT_NAMEANDTYPE", "NameAndType", AnnotationElementType.AE_NOT_APPLICABLE, true),
         // Constant 13 reserved
         // Constant 14 reserved
-        CONSTANT_METHODHANDLE(15, "CONSTANT_METHODHANDLE", "MethodHandle", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_METHODTYPE(16, "CONSTANT_METHODTYPE", "MethodType", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_DYNAMIC(17, "CONSTANT_DYNAMIC", "Dynamic", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_INVOKEDYNAMIC(18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_MODULE(19, "CONSTANT_MODULE", "Module", AnnotationElementType.AE_NOT_APPLICABLE),
-        CONSTANT_PACKAGE(20, "CONSTANT_PACKAGE", "Package", AnnotationElementType.AE_NOT_APPLICABLE);
+        CONSTANT_METHODHANDLE(15, "CONSTANT_METHODHANDLE", "MethodHandle", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_METHODTYPE(16, "CONSTANT_METHODTYPE", "MethodType", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_DYNAMIC(17, "CONSTANT_DYNAMIC", "Dynamic", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_INVOKEDYNAMIC(18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic", AnnotationElementType.AE_NOT_APPLICABLE, true),
+
+        CONSTANT_MODULE(19, "CONSTANT_MODULE", "Module", AnnotationElementType.AE_NOT_APPLICABLE, true),
+        CONSTANT_PACKAGE(20, "CONSTANT_PACKAGE", "Package", AnnotationElementType.AE_NOT_APPLICABLE, true);
 
         static final public int maxTag = 20;
 
@@ -178,12 +209,21 @@ public final class ClassFileConst {
         private final String printVal;
         private final String parseKey;
         private final AnnotationElementType annotationElementType;
+        private final boolean isBsmType;
 
-        ConstType(int val, String printVal, String parseKey, AnnotationElementType annotationElementType) {
-            this.tag = val;
+        public boolean equals(ConstType other) {
+            if (other != null) {
+                return this.tag == other.tag;
+            }
+            return false;
+        }
+
+        ConstType(int tag, String printVal, String parseKey, AnnotationElementType annotationElementType, boolean isBsmType) {
+            this.tag = tag;
             this.printVal = printVal;
             this.parseKey = parseKey;
             this.annotationElementType = annotationElementType;
+            this.isBsmType = isBsmType;
         }
 
         public boolean oneOf(ConstType... constTypes) {
@@ -207,7 +247,7 @@ public final class ClassFileConst {
         }
 
         public byte getTag() {
-            return (byte)tag;
+            return (byte) tag;
         }
 
         public String parseKey() {
@@ -232,7 +272,7 @@ public final class ClassFileConst {
      * Annotation Element Type enums
      * Table 4.7.16.1-A. Interpretation of tag values as types
      */
-     public enum AnnotationElementType {
+    public enum AnnotationElementType {
         AE_BYTE("B", "byte"),
         AE_CHAR("C", "char"),
         AE_SHORT("S", "short"),
@@ -284,7 +324,7 @@ public final class ClassFileConst {
     /**
      * SubTag enums
      */
-     public enum SubTag {
+    public enum SubTag {
         REF_GETFIELD(1, "REF_getField"),
         REF_GETSTATIC(2, "REF_getStatic"),
         REF_PUTFIELD(3, "REF_putField"),
@@ -315,7 +355,7 @@ public final class ClassFileConst {
     /**
      * BasicType enums
      */
-     public enum BasicType {
+    public enum BasicType {
         T_INT(0x0000000a, "int"),
         T_LONG(0x0000000b, "long"),
         T_FLOAT(0x00000006, "float"),

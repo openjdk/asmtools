@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,19 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.structure.StackMap;
+import org.openjdk.asmtools.jasm.ClassFileConst;
 
-import java.io.PrintWriter;
 import java.util.HashMap;
 
 /**
- *
  * JcodTokens
- *
+ * <p>
  * This class contains tokens specific to parsing JCOD syntax.
- *
+ * <p>
  * The classes in JcodTokens are following a Singleton Pattern. These classes are Enums,
  * and they are contained in private hash maps (lookup tables and reverse lookup tables).
  * These hash maps all have public accessors, which clients use to look-up enums.
- *
+ * <p>
  * Tokens in this table carry no external state, and are typically treated as constants.
  * They do not need to be reset.
  */
@@ -66,12 +65,12 @@ public class JcodTokens {
     /* Marker - describes the type of token */
     /*    this is rather cosmetic, no function currently. */
     static public enum TokenType {
-        VALUE               (0, "Value"),
-        KEYWORDS            (1, "Keywords"),
-        PUNCTUATION         (2, "Punctuation"),
-        JDEC                (3, "JDec"),
-        STACKMAP            (4, "StackMap"),
-        MISC                (5, "Misc");
+        VALUE(0, "Value"),
+        KEYWORDS(1, "Keywords"),
+        PUNCTUATION(2, "Punctuation"),
+        JDEC(3, "JDec"),
+        STACKMAP(4, "StackMap"),
+        MISC(5, "Misc");
 
         private final Integer value;
         private final String printVal;
@@ -86,43 +85,46 @@ public class JcodTokens {
         }
     }
 
-  /*-------------------------------------------------------- */
-  /** Scanner Tokens (Definitive List) */
+    /*-------------------------------------------------------- */
+
+    /**
+     * Scanner Tokens (Definitive List)
+     */
     static public enum Token {
-        EOF                 (-1, "EOF",             "EOF",          TokenType.MISC),
-        IDENT               (60, "IDENT",           "IDENT",        TokenType.VALUE),
-        LONGSTRINGVAL       (61, "LONGSTRINGVAL",   "LONGSTRING",   TokenType.VALUE),
-        INTVAL              (65, "INTVAL",          "INT",          TokenType.VALUE),
-        LONGVAL             (66, "LONGVAL",         "LONG",         TokenType.VALUE),
-        STRINGVAL           (69, "STRINGVAL",       "STRING",       TokenType.VALUE),
+        EOF(-1, "EOF", "EOF", TokenType.MISC),
+        IDENT(60, "IDENT", "IDENT", TokenType.VALUE),
+        LONGSTRINGVAL(61, "LONGSTRINGVAL", "LONGSTRING", TokenType.VALUE),
+        INTVAL(65, "INTVAL", "INT", TokenType.VALUE),
+        LONGVAL(66, "LONGVAL", "LONG", TokenType.VALUE),
+        STRINGVAL(69, "STRINGVAL", "STRING", TokenType.VALUE),
 
-        CLASS               (70, "CLASS",           "class",        TokenType.KEYWORDS, KeywordType.KEYWORD),
-        INTERFACE           (71, "INTERFACE",       "interface",    TokenType.KEYWORDS, KeywordType.KEYWORD),
-        DIV                 (72, "DIV",             "div",          TokenType.KEYWORDS),
-        EQ                  (73, "EQ",              "eq",           TokenType.KEYWORDS),
-        ASSIGN              (74, "ASSIGN",          "assign",       TokenType.KEYWORDS),
-        MODULE              (75, "MODULE",          "module",       TokenType.KEYWORDS, KeywordType.KEYWORD),
+        CLASS(70, "CLASS", "class", TokenType.KEYWORDS, KeywordType.KEYWORD),
+        INTERFACE(71, "INTERFACE", "interface", TokenType.KEYWORDS, KeywordType.KEYWORD),
+        DIV(72, "DIV", "div", TokenType.KEYWORDS),
+        EQ(73, "EQ", "eq", TokenType.KEYWORDS),
+        ASSIGN(74, "ASSIGN", "assign", TokenType.KEYWORDS),
+        MODULE(75, "MODULE", "module", TokenType.KEYWORDS, KeywordType.KEYWORD),
 
-        COLON               (134, "COLON",        ":",    TokenType.PUNCTUATION),
-        SEMICOLON           (135, "SEMICOLON",    ";",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        COMMA               (0,   "COMMA",        ",",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        LBRACE              (138, "LBRACE",       "{",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        RBRACE              (139, "RBRACE",       "}",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        LPAREN              (140, "LPAREN",       "(",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        RPAREN              (141, "RPAREN",       ")",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        LSQBRACKET          (142, "LSQBRACKET",   "[",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
-        RSQBRACKET          (143, "RSQBRACKET",   "]",    TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        COLON(134, "COLON", ":", TokenType.PUNCTUATION),
+        SEMICOLON(135, "SEMICOLON", ";", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        COMMA(0, "COMMA", ",", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        LBRACE(138, "LBRACE", "{", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        RBRACE(139, "RBRACE", "}", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        LPAREN(140, "LPAREN", "(", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        RPAREN(141, "RPAREN", ")", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        LSQBRACKET(142, "LSQBRACKET", "[", TokenType.PUNCTUATION, KeywordType.KEYWORD),
+        RSQBRACKET(143, "RSQBRACKET", "]", TokenType.PUNCTUATION, KeywordType.KEYWORD),
 
 
-        BYTEINDEX           (156, "BYTEINDEX",   "b",       TokenType.JDEC, KeywordType.KEYWORD),
-        SHORTINDEX          (157, "SHORTINDEX",  "s",       TokenType.JDEC, KeywordType.KEYWORD),
-        ATTR                (158, "ATTR",        "Attr",    TokenType.JDEC, KeywordType.KEYWORD),
-        BYTES               (159, "BYTES",       "Bytes",   TokenType.JDEC, KeywordType.KEYWORD),
-        MACRO               (160, "MACRO",        "Attr",    TokenType.JDEC),
-        COMP                (161, "COMP",        "Component", TokenType.JDEC, KeywordType.KEYWORD),
-        FILE                (162, "FILE",        "file",    TokenType.JDEC, KeywordType.KEYWORD),
+        BYTEINDEX(156, "BYTEINDEX", "b", TokenType.JDEC, KeywordType.KEYWORD),
+        SHORTINDEX(157, "SHORTINDEX", "s", TokenType.JDEC, KeywordType.KEYWORD),
+        ATTR(158, "ATTR", "Attr", TokenType.JDEC, KeywordType.KEYWORD),
+        BYTES(159, "BYTES", "Bytes", TokenType.JDEC, KeywordType.KEYWORD),
+        MACRO(160, "MACRO", "Attr", TokenType.JDEC),
+        COMP(161, "COMP", "Component", TokenType.JDEC, KeywordType.KEYWORD),
+        FILE(162, "FILE", "file", TokenType.JDEC, KeywordType.KEYWORD),
 
-        ZEROINDEX           (163, "ZEROINDEX",   "z",       TokenType.STACKMAP, KeywordType.KEYWORD);
+        ZEROINDEX(163, "ZEROINDEX", "z", TokenType.STACKMAP, KeywordType.KEYWORD);
 
         private Integer value;
         private String printval;
@@ -265,111 +267,9 @@ public class JcodTokens {
         return keyword_token_ident(idValue).value();
     }
 
-    private static HashMap<String, ConstType> NameToConstantType = new HashMap<>(ConstType.maxTag);
-    private static HashMap<Integer, ConstType> ConstantTypes = new HashMap<>(ConstType.maxTag);
-
-    static {
-        // register all of the tokens
-        for (ConstType ct : ConstType.values()) {
-            registerConstantType(ct);
-        }
-    }
-
-    /**
-     * ConstType
-     *
-     * A (typed) tag (constant) representing the type of Constant in the Constant Pool.
-     *
-     * This is more-or-less a copy of jasm.ConstType. Unfortunately, there's no way to
-     * sub-class (or slightly alter) the members of an enum. This enum set is slightly
-     * modified from the Jasm one.
-     */
-    static public enum ConstType {
-//        CONSTANT_ZERO                       (-3, "CONSTANT_ZERO", ""),
-        CONSTANT_UTF8                       (1, "CONSTANT_UTF8", "Asciz", "Utf8"),
-        CONSTANT_UNICODE                    (2, "CONSTANT_UNICODE", ""),
-        CONSTANT_INTEGER                    (3, "CONSTANT_INTEGER", "int", "u4"),
-        CONSTANT_FLOAT                      (4, "CONSTANT_FLOAT", "float"),
-        CONSTANT_LONG                       (5, "CONSTANT_LONG", "long"),
-        CONSTANT_DOUBLE                     (6, "CONSTANT_DOUBLE", "double"),
-        // Class is removed for JavaCard (???)
-        CONSTANT_CLASS                      (7, "CONSTANT_CLASS", "class"),
-        CONSTANT_STRING                     (8, "CONSTANT_STRING", "String"),
-        CONSTANT_FIELD                      (9, "CONSTANT_FIELD", "Field"),
-        CONSTANT_METHOD                     (10, "CONSTANT_METHOD", "Method"),
-        CONSTANT_INTERFACEMETHOD            (11, "CONSTANT_INTERFACEMETHOD", "InterfaceMethod"),
-        CONSTANT_NAMEANDTYPE                (12, "CONSTANT_NAMEANDTYPE", "NameAndType"),
-        // added for JavaCard
-        CONSTANT_JAVACARD_PACKAGE           (13, "CONSTANT_PACKAGE", "package"),  // in javacard export file
-        // Constant 14 reserved
-        CONSTANT_METHODHANDLE               (15, "CONSTANT_METHODHANDLE", "MethodHandle"),
-        CONSTANT_METHODTYPE                 (16, "CONSTANT_METHODTYPE", "MethodType"),
-        CONSTANT_DYNAMIC                    (17, "CONSTANT_DYNAMIC", "Dynamic"),
-        CONSTANT_INVOKEDYNAMIC              (18, "CONSTANT_INVOKEDYNAMIC", "InvokeDynamic"),
-        CONSTANT_MODULE                     (19, "CONSTANT_MODULE",  "Module"),
-        CONSTANT_MODULE_PACKAGE             (20, "CONSTANT_PACKAGE", "Package");
-
-        public static final int maxTag = 20;
-
-        private final int value;
-        private final String parseKey;
-        private final String printVal;
-        private final String alias;
-
-        ConstType(int val, String print, String parse) {
-            value = val;
-            parseKey = parse;
-            printVal = print;
-            alias = null;
-        }
-
-        ConstType(int val, String print, String parse, String als) {
-            value = val;
-            parseKey = parse;
-            printVal = print;
-            alias = als;
-        }
-
-        public int value() {
-            return value;
-        }
-
-        public String parseKey() {
-            return parseKey;
-        }
-
-        public String printval() {
-            return printVal;
-        }
-
-        public void print(PrintWriter out) {
-            out.print(parseKey);
-        }
-
-        @Override
-        public String toString() {
-            return "<" + printVal + "> [" + value + "]";
-        }
-    };
-
-    static public ConstType constType(int i) {
-        return ConstantTypes.get(i);
-    }
-
-    static public ConstType constType(String parsekey) {
-        return NameToConstantType.get(parsekey);
-    }
-
-    private static void registerConstantType(ConstType tt) {
-        NameToConstantType.put(tt.parseKey, tt);
-        if (tt.alias != null) {
-            NameToConstantType.put(tt.alias, tt);
-        }
-        ConstantTypes.put(tt.value, tt);
-    }
-
-    public static int constValue(String stringValue) {
-        ConstType constType = constType(stringValue);
-        return constType != null ? constType.value() : StackMap.VerificationType.getByParseKey(stringValue).tag();
+    public static int getConstTagByParseString(String stringValue) {
+        ClassFileConst.ConstType constType = ClassFileConst.getByParseKey(stringValue);
+        return constType != null ? constType.getTag() :
+                StackMap.VerificationType.getByParseKey(stringValue).tag();
     }
 }

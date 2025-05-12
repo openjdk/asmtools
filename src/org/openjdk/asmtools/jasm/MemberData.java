@@ -25,12 +25,13 @@ package org.openjdk.asmtools.jasm;
 import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.ToolLogger;
 import org.openjdk.asmtools.common.structure.EAttribute;
+import org.openjdk.asmtools.common.structure.ELocation;
 import org.openjdk.asmtools.common.structure.EModifier;
 
 import java.util.ArrayList;
 
-import static org.openjdk.asmtools.common.structure.EModifier.DEPRECATED_ATTRIBUTE;
-import static org.openjdk.asmtools.common.structure.EModifier.SYNTHETIC_ATTRIBUTE;
+import static org.openjdk.asmtools.common.structure.EModifier.*;
+import static org.openjdk.asmtools.jasm.JasmTokens.Token.SIGNATURE;
 
 /**
  * The common base structure for field_info, method_info, and component_info
@@ -46,6 +47,7 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrVis = null;
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrInv = null;
     protected AttrData signatureAttr;
+    protected ELocation attributeLocation = ELocation.UNKNOWN;
 
     public MemberData(ConstantPool pool, T environment) {
         this(pool, environment, 0);
@@ -55,6 +57,35 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
         this.pool = pool;
         this.environment = environment;
         this.access = access;
+    }
+
+    /**
+     * Checks for the existence of an attribute belonging to the MemberData.
+     *
+     * @param attribute the attribute to check for existence
+     * @return true if the attribute exists
+     */
+    protected <M extends MemberData<?>> boolean checkExistence(EAttribute attribute) {
+        throw new RuntimeException("Not implemented yet");
+    }
+
+    /**
+     * Checks for the existence of an attribute belonging to the MemberData.
+     *
+     * @param attribute the attribute to check for existence
+     * @param action    the action to take if the attribute exists
+     * @param <M>       the type of the attribute owner
+     * @return the instance of the attribute owner
+     */
+    protected <M extends MemberData<?>> M checkExistence(EAttribute attribute, Runnable action) {
+        if (checkExistence(attribute)) {
+            action.run();
+        }
+        return (M) this;
+    }
+
+    protected <M extends MemberData<?>> M andThenCheck(EAttribute attribute, Runnable action) {
+        return checkExistence(attribute, action);
     }
 
     public void createPseudoMod() {
@@ -83,6 +114,18 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
     public void setSignatureAttr(ConstCell value_cpx) {
         signatureAttr = new CPXAttr(pool, EAttribute.ATT_Signature, value_cpx);
     }
+
+    public void setSignatureAttr(ConstCell value_cpx, long position) {
+        if (signatureAttr != null) {
+            CPXAttr cpx = (CPXAttr) signatureAttr;
+            if (value_cpx.cpIndex != cpx.cell.cpIndex) {
+                environment.warning(position, "warn.redeclared.attribute",
+                        SIGNATURE.parseKey(), ELocation.ClassFile.toString());
+            }
+        }
+        signatureAttr = new CPXAttr(pool, EAttribute.ATT_Signature, value_cpx);
+    }
+
 
     protected abstract <D extends DataWriter> DataVector<D> getAttrVector();
 

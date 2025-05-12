@@ -1,5 +1,5 @@
 
-# JASM Syntax 
+# JASM Syntax
 
 This chapter describes _JASM syntax_, and how to encode class files using this syntax. _Jasm_ is a java
 assembler that accepts text in the JASM format and produces a `.class` file for use with a Java Virtual Machine.
@@ -7,107 +7,135 @@ _Jasm_'s primary use is as a tool for producing specialized tests for testing a 
 
 This chapter describes JASM syntax in the following sections:
 
--   [General Syntax](#gensyntax)
-    -   [Description Formats](#descrfrm)
-    -   [Lexical Structure](#lex)
--   [General Class Structure](#genstruct)
--   [General Module Structure](#genmodule)
--   [General Source File Structure](#source)
--   [The Constant Pool and Constant Elements](#cp)
--   [Constant Declarations](#constant)
--   [Field Variables](#field)
--   [Method Declarations](#method)
--   [Instructions](#instructions)
-    -   [VM Instructions](#vminstructions)
-    -   [InvokeDynamic Instructions](#invokedynamicinstructions)
-    -   [Pseudo Instructions](#pseudoinstructions)
-        -   [Code Generating Pseudo Instructions](#codepseudo)
-        -   [Attribute Generating Pseudo Instructions](#attrpseudo)
--   [Inner Class Declarations](#innercl)
--   [Annotation Declarations](#annots)
-    -   [Member Annotations](#memberannots)
-    -   [Parameter Names and Parameter Annotations](#paramannots)
-    -   [Default Annotations](#defaultannots)
--   [Module Properties](#module_properties)
-    -   [Requires](#module_requires)
-    -   [Exports](#module_exports)
-    -   [Opens](#module_opens)
-    -   [Uses](#module_uses)
-    -   [Provides](#module_provides)
--   [PicoJava Instructions](#pico)
+- [General Class Structure](#general-class-structure)
+- [General Module Structure](#general-module-structure)
+- [General Source File Structure](#general-source-file-structure)
+- [The Constant Pool and Constant Elements](#the-constant-pool-and-constant-elements)
+- [Constant Declarations](#constant-declarations)
+- [Field Variables](#field-variables)
+- [Method Declarations](#method-declarations)
+- [Instructions](#instructions)
+  - [Pseudo Instructions](#pseudo-instructions)
+- [Inner Class Declarations](#inner-class-declarations)
+- [Annotation Declarations](#annotation-declarations)
+  - [Member Annotations](#member-annotations)
+      - [Synopsis](#synopsis)
+      - [Examples](#examples)
+  - [Type Annotations](#type-annotations)
+      - [Synopsis](#synopsis-1)
+  - [Parameter Names and Parameter Annotations](#parameter-names-and-parameter-annotations)
+      - [Synopsis](#synopsis-2)
+      - [Examples](#examples-1)
+  - [Default Annotations](#default-annotations)
+      - [Synopsis](#synopsis-3)
+      - [Examples](#examples-2)
+- [Module properties](#module-properties)
+  - [Requires](#requires)
+  - [Exports](#exports)
+  - [Opens](#opens)
+  - [Uses](#uses)
+  - [Provides](#provides)
+- [PicoJava Instructions](#picojava-instructions)
 
-*** 
+---
 
-## General Syntax
+## JASM Syntax Overview
 
- _JASM_ syntax can come in one of two variations: short-form or verbose-form.  Short form uses Java-style names to refer 
- to items in a constant-pool. Verbose form uses explicit constant-pool indexes to refer to items in the constant pool.
- The normal output from _JDIS_ produces jasm files in the short-form.  Using the -g option for [_JDIS_](UsingTools.md#BADCBFCE)
-(i.e.  `java -jar asmtools.jar jdis`) produces JASM source in the verbose-form.  
+JASM syntax comes in two forms: short-form and verbose-form:
 
-The source text file can be free form (newlines are considered blanks) and may contain Java-style commenting. 
-The first line of a JASM file
-represents the name of the resulting file in the destination directory.
-This name does not affect the content of the resulting file. This line
-has two forms:
+1. **Short-form:** Uses Java-style names to refer to items in the constant-pool.
+2. **Verbose-form:** Uses constant-pool indexes to explicitly refer to items.
+By default, the **JDIS** tool outputs short-form JASM files. To generate verbose-form output, use the `-g` option, like this:
 
-    file FILENAME 
+``` shell
+java -jar asmtools.jar jdis -g
+```
 
-or
+## File Naming in JASM
 
-    class CLASSNAME 
+A JASM file can start with a line specifying the name of the output file. This does not affect the file’s content but determines the file name. The first line can be one of these:
 
-In the latter case, extension ` .class ` will be added to form FILENAME.
-Jasm's `-d option` allows you to define the destination directory. A
-list of structured dataWriter items follows the class name. The length
-(in bytes) of each item is determined by its representation.  
+- `file FILENAME;`
+- `classfile CLASSNAME;` (adds `.class` to the name).
+
+You can define the destination directory using these options:
+
+- `-d`: Specifies the root directory for the output, following the class package structure.
+- `-w`: Specifies the exact directory for the output file.
+
+If neither option is used, JASM outputs to `<stdout>`.
+
+## Class Structure in JASM
+
+A JASM file defines class or interface items as follows:
+
+1. **Optional Package Declaration:**
+
+```java
+package package_name;
+```
+
+2. **Class or Interface Declaration**:
+
+```java
+[CLASS_MODIFIERS] class|interface CLASSNAME [extends SUPERCLASSNAME] { [CLASS_BODY] }
+```
+
+- The `CLASSNAME` determines the resulting file name.
+- If `this_class` is defined in CLASS_BODY, the name does not affect the file's content but only its name.
+
+If both `file FILENAME;` ( or `classfile CLASSNAME;`) and `class CLASSNAME { [CLASS_BODY] }` are present, the file(classfile) declaration takes priority.
+
+### Example Command and Output
+
+Here is an example of compiling a JASM file:
+
+**Input Command:**
+
+```shell
+java -jar asmtools.jar jasm -d . FILE.jasm
+```
+
+**JASM File Content:**
+
+```java
+class FILENAME.data {
+this_class  CLASSNAME;
+super_class SUPERCLASSNAME;
+}
+```
+
+**Output:**
+
+A binary file FILENAME.data is created. Decompiling this file (`java -jar asmtools.jar jdis FILENAME.data`) produces:
+
+```java
+super class CLASSNAME extends SUPERCLASSNAME version 45:0 {
+}
+```
+
+---
+
+## Description formats
+
+|               |                                                                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| TERM1\|TERM2  | TERM1 or TERM2 (not both)                                                                                                              |
+| [ TERM ]      | TERM is optional                                                                                                                       |
+| TERM...       | TERM repeated 1 or more times                                                                                                          |
+| [TERM...]     | TERM repeated 0 or more times                                                                                                          |
+| "sequence of" | all the following terms are mandatory, in the order given.                                                                             |
+| "set of"      | any of following terms, or none of them, may appear in any order. However, repetitions are not llowed.                                 |
+| "list of"     | any of following terms, or none of them, may appear in any sequence. If more than one term appear, they are separated by commas (',')  |
+
+---
+## Lexical Structure
+
+
+# TODO
 
 > ------------------------------------------------------------------------
 >
-> <span id="descrfrm"></span>
->
-> ## Description formats
->
-> <table>
-> <tbody>
-> <tr class="odd">
-> <td>TERM1|TERM2</td>
-> <td>TERM1 or TERM2 (not both)</td>
-> </tr>
-> <tr class="even">
-> <td>[TERM]</td>
-> <td>TERM is optional</td>
-> </tr>
-> <tr class="odd">
-> <td>TERM...</td>
-> <td>TERM repeated 1 or more times</td>
-> </tr>
-> <tr class="even">
-> <td>[TERM...]</td>
-> <td>TERM repeated 0 or more times</td>
-> </tr>
-> <tr class="odd">
-> <td>"sequence of"</td>
-> <td>all the following terms are mandatory, in the order given.</td>
-> </tr>
-> <tr class="even">
-> <td>"set of"</td>
-> <td>any of following terms, or none of them, may appear in any order.
-> However, repetitions are not allowed.</td>
-> </tr>
-> <tr class="odd">
-> <td>"list of"</td>
-> <td>any of following terms, or none of them, may appear in any sequence.
-> If more than one term appear, they are separated by commas (',')</td>
-> </tr>
-> </tbody>
-> </table>
->
-> ------------------------------------------------------------------------
->
-> <span id="lex"></span>
->
-> ## Lexical Structure
 >
 > The source text file can be free form (newlines, tabs, and blank
 > spaces are equivalent). Additionally, the source may contain standard
@@ -117,16 +145,16 @@ list of structured dataWriter items follows the class name. The length
 > Language Specification. One difference is that LETTERs include also
 > \`/', \`&lt;', \`&gt;', \`(', and \`)' .
 >
-> ***`STRING`***:  
+> _**`STRING`**_:  
 > `" [ STRING_CHARACTER... ] "`
 >
-> ***`NUMBER`***:  
-> ` DIGIT...`
+> _**`NUMBER`**_:  
+> `DIGIT...`
 >
-> ***`IDENT`***:  
+> _**`IDENT`**_:  
 > `LETTER [ LETTER_OR_DIGIT ...]`
 >
-> ***`ACCESS`*** (depends on the context): set of  
+> _**`ACCESS`**_ (depends on the context): set of  
 > `abstract final interface native private protected public static super synchronized transient volatile deprecated synthetic bridge varargs`
 >
 > Not all access bits make sense for all declarations: for example, the
@@ -142,18 +170,18 @@ list of structured dataWriter items follows the class name. The length
 > members not seen in the source (for example, a field reference to an
 > anonymous outer class).
 >
-> ***`TAG`***: one of  
+> _**`TAG`**_: one of  
 > `int float long double Asciz String class Field Method NameAndType InterfaceMethod MethodType MethodHandle InvokeDynamic Dynamic`
 >
 > Local names represent labels, rangePC-labels and local variables.
 > Their scope is constrained by method parenthesis.
 >
-> ***`LOCAL_NAME`***:  
+> _**`LOCAL_NAME`**_:  
 > `IDENT`
 >
->  
+> 
 >
-> ***`CONSTANT_INDEX`***:  
+> _**`CONSTANT_INDEX`**_:  
 > `#NUMBER`
 >
 > Each CONSTANT\_INDEX represents a reference into the constant pool at
@@ -165,13 +193,13 @@ list of structured dataWriter items follows the class name. The length
 
 # General Class Structure
 
-***`INTERFACES`***:list of  
+_**`INTERFACES`**_:list of  
 `CONSTANT_CELL(class|@interface|interface)`
 
-***`TOP_LEVEL_COMPONENT`***: one of  
+_**`TOP_LEVEL_COMPONENT`**_: one of  
 `CONSTANT_DECLARATION FIELD_DECLARATION METHOD_DECLARATION INNER_CLASS_DECLARATIONS`
 
-***`CLASS`***: sequence of  
+_**`CLASS`**_: sequence of  
 `ANNOTATIONS CLASS_ACCESS CONSTANT_CELL(class|@interface|interface) [extends CONSTANT_CELL(class)] [implements INTERFACES] [version INTEGER:INTEGER] { [TOP_LEVEL_COMPONENT...] }`
 
 <span style="font-weight: bold; font-style: italic;">`CLASS_ACCESS`</span>`: list of`  
@@ -194,10 +222,10 @@ several parts, mixing constants and method declarations.
 
 # General Module Structure
 
-***`MODULE`***: sequence of  
+_**`MODULE`**_: sequence of  
 `ANNOTATIONS [MODULE_FLAGS] moduleContent CONSTANT_CELL(moduleContent) [version INTEGER:INTEGER] {[TOP_LEVEL_MODULE_PROPERTIES...]}`
 
-***`TOP_LEVEL_MODULE_PROPERTIES`***: one of  
+_**`TOP_LEVEL_MODULE_PROPERTIES`**_: one of  
 `MODULE_REQUIRES` `MODULE_EXPORTS` `MODULE_OPENS` `MODULE_USES`
 `MODULE_PROVIDES`
 
@@ -210,22 +238,22 @@ several parts, mixing constants and method declarations.
 
 # General Source File Structure
 
-***`PACKAGE_DECLARATION`***:  
+_**`PACKAGE_DECLARATION`**_:  
 `package IDENT;`
 
 Package declaration can appear only once in source file.
 
-***`CLASS_FILE`***: sequence of  
+_**`CLASS_FILE`**_: sequence of  
 `PACKAGE_DECLARATION CLASS...`
 
 <!-- -->
 
-***`MODULE_FILE`***:  
+_**`MODULE_FILE`**_:  
 `MODULE...`
 
 <!-- -->
 
-***`SOURCE_FILE`***:  
+_**`SOURCE_FILE`**_:  
 `MODULE_FILE|CLASS_FILE`
 
 ------------------------------------------------------------------------
@@ -237,14 +265,14 @@ Package declaration can appear only once in source file.
 A `CONSTANT_CELL` refers to an element in the constant pool. It may
 refer to the element either by its index or its value:
 
-***`CONSTANT_CELL`***:  
+_**`CONSTANT_CELL`**_:  
 `CONSTANT_INDEX`  
 `TAGGED_CONSTANT_VALUE`
 
 Generic rule for TAGGED\_CONSTANT\_VALUE is:
 
-***`TAGGED_CONSTANT_VALUE`***:  
-` [TAG] CONSTANT_VALUE`
+_**`TAGGED_CONSTANT_VALUE`**_:  
+`[TAG] CONSTANT_VALUE`
 
 A TAG may be omitted when the context only allows one kind of a tag. For
 example, the argument of an `anewarray` instruction should be a
@@ -280,7 +308,7 @@ Below, the tag implied by context will be included in the rules, e.g.:
 The exact notation of `CONSTANT_VALUE` depends on the (explicit or
 implicit) `TAG.`
 
-***`TAGGED_CONSTANT_VALUE`***:
+_**`TAGGED_CONSTANT_VALUE`**_:
 
 > <table data-border="0">
 > <tbody>
@@ -433,18 +461,18 @@ implicit) `TAG.`
 > </tbody>
 > </table>
 
-> <u>*Note*</u>  
+> <u>_Note_</u>  
 > When the JASM parser encounters an InvokeDynamic constant, it creates
-> an entry in the *BootstrapMethods* attribute (the *BootstrapMethods*
+> an entry in the _BootstrapMethods_ attribute (the _BootstrapMethods_
 > attribute is produced if it has not already been created). The entry
-> contains a reference to the *MethodHandle* item in the constant pool,
+> contains a reference to the _MethodHandle_ item in the constant pool,
 > and, optionally, a sequence of references to additional static
-> arguments (*ldc*-type constants) to the *bootstrap method*
+> arguments (_ldc_-type constants) to the _bootstrap method_
 
 INVOKESUBTAGs for MethodHandle and (const) InvokeDynamic are defined as
 follows and can be presented as either an index or a tag:
 
-***`INVOKESUBTAG:             [INVOKESUBTAG_INDEX]`***
+_**`INVOKESUBTAG:             [INVOKESUBTAG_INDEX]`**_
 
 > <table data-border="0">
 > <tbody>
@@ -489,13 +517,13 @@ follows and can be presented as either an index or a tag:
 
 Static arguments for an InvokeDynamic constant are defined as follows:
 
-***`INVOKEDYNAMIC_STATIC_ARGUMENTS`***:  
-` INVOKEDYNAMIC_STATIC_ARG ',' ...`
+_**`INVOKEDYNAMIC_STATIC_ARGUMENTS`**_:  
+`INVOKEDYNAMIC_STATIC_ARG ',' ...`
 
-***`INVOKEDYNAMIC_STATIC_ARG`***: (one of)  
-` INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE`
+_**`INVOKEDYNAMIC_STATIC_ARG`**_: (one of)  
+`INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE`
 
-***`INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE`***:
+_**`INVOKEDYNAMIC_STATIC_ARG_CONSTANT_VALUE`**_:
 
 > <table data-border="0">
 > <tbody>
@@ -564,28 +592,26 @@ Thus,
     and the same as
        float 2.8026e-45f
 
- 
-
-***`CONSTANT_NAME`***:  
-` CONSTANT_INDEX`  
+_**`CONSTANT_NAME`**_:  
+`CONSTANT_INDEX`  
 `EXTERNAL_NAME`
 
-***`EXTERNAL_NAME`***:  
-` IDENT STRING`
+_**`EXTERNAL_NAME`**_:  
+`IDENT STRING`
 
 External names are names of class, method, field, or type, which stay in
 resulting .class file, and may be represented both by `IDENT` or by
 `STRING` (which is useful when name contains non-letter characters).
 
-***`NAME_AND_TYPE`***:  
+_**`NAME_AND_TYPE`**_:  
 `CONSTANT_INDEX`  
 `CONSTANT_NAME:CONSTANT_NAME`
 
 In this second example, the first `CONSTANT_NAME` denotes the name of a
 field and second denotes its type.
 
-***`CONSTANT_FIELD`***:  
-` CONSTANT_INDEX`  
+_**`CONSTANT_FIELD`**_:  
+`CONSTANT_INDEX`  
 `[CONSTANT_NAME.]NAME_AND_TYPE`
 
 In this third example, `CONSTANT_NAME` denotes to the class of a field.
@@ -604,13 +630,13 @@ Constant declarations are demonstrated in the examples below:
           , #3=Method get:I
        ;
 
-***`CONSTANT_DECLARATION`***:  
-` const CONSTANT_DECLARATORS ;`
+_**`CONSTANT_DECLARATION`**_:  
+`const CONSTANT_DECLARATORS ;`
 
-***`CONSTANT_DECLARATORS`***: list of  
+_**`CONSTANT_DECLARATORS`**_: list of  
 `CONSTANT_DECLARATOR`
 
-***`CONSTANT_DECLARATOR`***:  
+_**`CONSTANT_DECLARATOR`**_:  
 `CONSTANT_INDEX = TAGGED_CONSTANT_VALUE`
 
 ------------------------------------------------------------------------
@@ -619,13 +645,13 @@ Constant declarations are demonstrated in the examples below:
 
 # Field Variables
 
-***`FIELD_DECLARATION`***:  
+_**`FIELD_DECLARATION`**_:  
 `ANNOTATIONS ``FIELD_ACCESS Field FIELD_DECLARATORS ;`
 
-***`FIELD_DECLARATORS`***: list of  
+_**`FIELD_DECLARATORS`**_: list of  
 `FIELD_DECLARATOR`
 
-***`FIELD_DECLARATOR`***:  
+_**`FIELD_DECLARATOR`**_:  
 `EXTERNAL_NAME:CONSTANT_NAME [:SIGNATURE] [ = TAGGED_CONSTANT_VALUE ]`
 
 <span style="font-weight: bold; font-style: italic;">`FIELD_ACCESS`</span>`: list of`  
@@ -649,14 +675,14 @@ denotes its type, `TAGGED_CONSTANT_VALUE` denotes initial value.
 
 # Method Declarations
 
-***`METHOD_DECLARATION`***: sequence of  
+_**`METHOD_DECLARATION`**_: sequence of  
 `ANNOTATIONS ``METHOD_ACCESS Method`  
 `EXTERNAL_NAME:CONSTANT_NAME`  
 `[THROWS]`  
 `STACK_SIZE`  
 `[LOCAL_VAR_SIZE]`  
 `{ INSTRUCTION_STATEMENT...`  
-`  ANNOTATIONS }`
+`ANNOTATIONS }`
 
 The `EXTERNAL_NAME` denotes the name of the method, `CONSTANT_NAME`
 denotes its type.
@@ -666,22 +692,22 @@ denotes its type.
 
 <!-- -->
 
-***`THROWS`***:  
+_**`THROWS`**_:  
 `throws EXCEPTIONS`
 
-***`EXCEPTIONS`***: list of  
+_**`EXCEPTIONS`**_: list of  
 `CONSTANT_CELL(class)`
 
 The meaning of the `THROWS` clause is the same as in Java Language
 Specification - it forms Exceptions attribute of a method. Jasm itself
 does not use this attribute in any way.
 
-***`STACK_SIZE`***:  
+_**`STACK_SIZE`**_:  
 `stack NUMBER`
 
 The `NUMBER` denotes maximum operand stack size of the method.
 
-***`LOCAL_VAR_SIZE`***:  
+_**`LOCAL_VAR_SIZE`**_:  
 `locals NUMBER`
 
 The `NUMBER` denotes number of local variables of the method. If
@@ -698,7 +724,7 @@ method and local variable declarations.
 >
 > ## VM Instructions
 >
-> ***`INSTRUCTION_STATEMENT`***:  
+> _**`INSTRUCTION_STATEMENT`**_:  
 > `[NUMBER] [LABEL:] INSTRUCTION|PSEUDO_INSTRUCTION ;`
 >
 > Jasm allows for a `NUMBER` (which is ignored) at the beginning of each
@@ -706,63 +732,63 @@ method and local variable declarations.
 > disassembler. Jdis puts line numbers in disassembled code that may be
 > reassembled using Jasm without any additional modifications.
 >
-> ***`INSTRUCTION`***:  
-> `OPCODE [ARGUMENTS] `
+> _**`INSTRUCTION`**_:  
+> `OPCODE [ARGUMENTS]`
 >
-> ***`ARGUMENTS`***: list of  
+> _**`ARGUMENTS`**_: list of  
 > `ARGUMENT`
 >
-> ***`ARGUMENT`***:  
+> _**`ARGUMENT`**_:  
 > `NUMBER LABEL LOCAL_VARIABLE TRAP_IDENT CONSTANT_CELL SWITCHTABLE TYPE`
 >
-> ***`LABEL`***:  
+> _**`LABEL`**_:  
 > `NUMBER IDENT`
 >
-> ***`LOCAL_VARIABLE`***:  
+> _**`LOCAL_VARIABLE`**_:  
 > `NUMBER IDENT`
 >
-> ***`TRAP_IDENT`***:  
+> _**`TRAP_IDENT`**_:  
 > `IDENT`
 >
-> ***`TYPE`***:  
+> _**`TYPE`**_:  
 > `NUMBER boolean byte char int float long double class`
 >
-> ***`SWITCHTABLE`***:  
+> _**`SWITCHTABLE`**_:  
 > `{ [NUMBER:LABEL...] [default:LABEL] }`
 >
 > SWITCHTABLE example: Java\_text
 >
 >          switch (x) {
->          case 11:
->         x=1;
->         break;
->          case 12:
->          x=2;
->         break;
->          default:
->          x=3;
->          }
+>      case 11:
+>     x=1;
+>     break;
+>      case 12:
+>      x=2;
+>     break;
+>      default:
+>      x=3;
+>      }
 >
->       
+>   
 >
 > will be coded in assembler as follows:
 >
 >          tableswitch  {
->        11: L24;
->         12: L29;
->         default: L34
->          }
->     L24: iconst_1; 
->          istore_1;
->          goto  L36;
->     L29: iconst_2 ;
->          istore_1;
->          goto  L36;
->     L34: iconst_3; 
->          istore_1;
->     L36:    ....
+>    11: L24;
+>     12: L29;
+>     default: L34
+>      }
+> L24: iconst_1; 
+>      istore_1;
+>      goto  L36;
+> L29: iconst_2 ;
+>      istore_1;
+>      goto  L36;
+> L34: iconst_3; 
+>      istore_1;
+> L36:    ....
 >
->       
+>   
 >
 > OPCODE is any mnemocode from the instruction set. If mnemocode needs
 > an ARGUMENT, it cannot be omitted. Moreover, the kind (and number) of
@@ -836,28 +862,28 @@ method and local variable declarations.
 > <td><code>CONSTANT_CELL(InvokeDynamic)</code></td>
 > </tr>
 > <tr class="odd">
-> <td style="vertical-align: top"> aaload,  aastore,  aconst_null, 
-> aload_0,  aload_1,  aload_2,  aload_3,  aload_w ,  areturn, 
-> arraylength,  astore_0,  astore_1,  astore_2,  astore_3,  astore_w, 
-> athrow,  baload,  bastore,  caload,  castore,  d2f,  d2i,  d2l,  dadd, 
-> daload,  dastore,  dcmpg,  dcmpl,  dconst_0,  dconst_1,  ddiv,  dead, 
-> dload_0,  dload_1,  dload_2,  dload_3,  dload_w ,  dmul,  dneg,  drem, 
-> dreturn,  dstore_0,  dstore_1,  dstore_2,  dstore_3,  dstore_w,  dsub, 
-> dup,  dup2,  dup2_x1,  dup2_x2,  dup_x1,  dup_x2,  f2d,  f2i,  f2l, 
-> fadd,  faload,  fastore,  fcmpg,  fcmpl,  fconst_0,  fconst_1, 
-> fconst_2,  fdiv,  fload_0,  fload_1,  fload_2,  fload_3,  fload_w, 
-> fmul,  fneg,  frem,  freturn ,  fstore_0,  fstore_1,  fstore_2, 
-> fstore_3,  fstore_w,  fsub ,  i2b,  i2c,  i2d,  i2f,  i2l,  i2s,  iadd, 
-> iaload,  iand,  iastore,  iconst_0,  iconst_1,  iconst_2,  iconst_3, 
-> iconst_4,  iconst_5,  iconst_m1,  idiv,  iinc_w,  iload_0,  iload_1, 
-> iload_2,  iload_3,  iload_w,  imul,  ineg,  int2byte,  int2char, 
-> int2short,  ior,  irem,  ireturn,  ishl,  ishr,  istore_0,  istore_1, 
-> istore_2,  istore_3,  istore_w,  isub,  iushr,  ixor,  l2d,  l2f,  l2i, 
-> label,  ladd,  laload,  land,  lastore,  lcmp,  lconst_0,  lconst_1, 
-> ldiv,  lload_0,  lload_1,  lload_2,  lload_3,  lload_w,  lmul,  lneg, 
-> lor,  lrem,  lreturn,  lshl,  lshr,  lstore_0,  lstore_1,  lstore_2, 
-> lstore_3,  lstore_w,  lsub,  lushr,  lxor,  monitorenter,  monitorexit, 
-> nonpriv,  nop,  pop,  pop2,  priv,  ret,  return,  ret_w,  saload, 
+> <td style="vertical-align: top"> aaload,  aastore,  aconst_null,
+> aload_0,  aload_1,  aload_2,  aload_3,  aload_w ,  areturn,
+> arraylength,  astore_0,  astore_1,  astore_2,  astore_3,  astore_w,
+> athrow,  baload,  bastore,  caload,  castore,  d2f,  d2i,  d2l,  dadd,
+> daload,  dastore,  dcmpg,  dcmpl,  dconst_0,  dconst_1,  ddiv,  dead,
+> dload_0,  dload_1,  dload_2,  dload_3,  dload_w ,  dmul,  dneg,  drem,
+> dreturn,  dstore_0,  dstore_1,  dstore_2,  dstore_3,  dstore_w,  dsub,
+> dup,  dup2,  dup2_x1,  dup2_x2,  dup_x1,  dup_x2,  f2d,  f2i,  f2l,
+> fadd,  faload,  fastore,  fcmpg,  fcmpl,  fconst_0,  fconst_1,
+> fconst_2,  fdiv,  fload_0,  fload_1,  fload_2,  fload_3,  fload_w,
+> fmul,  fneg,  frem,  freturn ,  fstore_0,  fstore_1,  fstore_2,
+> fstore_3,  fstore_w,  fsub ,  i2b,  i2c,  i2d,  i2f,  i2l,  i2s,  iadd,
+> iaload,  iand,  iastore,  iconst_0,  iconst_1,  iconst_2,  iconst_3,
+> iconst_4,  iconst_5,  iconst_m1,  idiv,  iinc_w,  iload_0,  iload_1,
+> iload_2,  iload_3,  iload_w,  imul,  ineg,  int2byte,  int2char,
+> int2short,  ior,  irem,  ireturn,  ishl,  ishr,  istore_0,  istore_1,
+> istore_2,  istore_3,  istore_w,  isub,  iushr,  ixor,  l2d,  l2f,  l2i,
+> label,  ladd,  laload,  land,  lastore,  lcmp,  lconst_0,  lconst_1,
+> ldiv,  lload_0,  lload_1,  lload_2,  lload_3,  lload_w,  lmul,  lneg,
+> lor,  lrem,  lreturn,  lshl,  lshr,  lstore_0,  lstore_1,  lstore_2,
+> lstore_3,  lstore_w,  lsub,  lushr,  lxor,  monitorenter,  monitorexit,
+> nonpriv,  nop,  pop,  pop2,  priv,  ret,  return,  ret_w,  saload,
 > sastore,  swap,   wide<br />
 > </td>
 > <td style="vertical-align: top"><code>&lt;No Arguments&gt; </code></td>
@@ -869,32 +895,32 @@ method and local variable declarations.
 >
 > ## InvokeDynamic Instructions
 >
-> *InvokeDynamic instructions* are instructions that allow dynamic
+> _InvokeDynamic instructions_ are instructions that allow dynamic
 > binding of methods to a call site. These instructions in JASM form are
 > rather complex, and the JASM assembler does some of the necessary work
-> to create a *BootstrapMethods* attribute for entries of binding
+> to create a _BootstrapMethods_ attribute for entries of binding
 > methods.
 >
 > >     class Test
-> >           version 51:0
+> >       version 51:0
+> > {
+> >     Method m:"()V"
+> >       stack 0 locals 1
 > >     {
-> >         Method m:"()V"
-> >           stack 0 locals 1
-> >         {
-> >            invokedynamic InvokeDynamic REF_invokeSpecial:bsmName:"()V"   // information about bootstrap method
-> >                                                         :methName:"(I)I" // dynamic call-site name ("methName") plus the argument and return types of the call ("(I)I")
-> >                                                          int 1, long 2l; // optional sequence of additional static arguments to the bootstrap method (ldc-type constants)
-> >         }
-> >     } // end Class Test
+> >        invokedynamic InvokeDynamic REF_invokeSpecial:bsmName:"()V"   // information about bootstrap method
+> >                                                     :methName:"(I)I" // dynamic call-site name ("methName") plus the argument and return types of the call ("(I)I")
+> >                                                      int 1, long 2l; // optional sequence of additional static arguments to the bootstrap method (ldc-type constants)
+> >     }
+> > } // end Class Test
 >
-> This JASM code has an *invokedynamic* instruction of the form:
-> ***invokedynamic InvokeDynamic (CONSTANT\_CELL(INVOKEDYNAMIC))***
+> This JASM code has an _invokedynamic_ instruction of the form:
+> _**invokedynamic InvokeDynamic (CONSTANT\_CELL(INVOKEDYNAMIC))**_
 > where the INVOKEDYNAMIC constant is represented as
 > [specified](#invokedynamicconstant)  
->   
-> (i.e. *invokedynamic InvokeDynamic INVOKESUBTAG : CONSTANT\_FIELD
+> 
+> (i.e. _invokedynamic InvokeDynamic INVOKESUBTAG : CONSTANT\_FIELD
 > (bootstrapmethod signature) : NAME\_AND\_TYPE (CallSite) \[Arguments
-> (Optional)\]* ).
+> (Optional)\]_ ).
 >
 > The JASM assembler creates the appropriate constant entries and
 > entries into the BootstrapMethods attribute in a resulting class file.
@@ -903,48 +929,48 @@ method and local variable declarations.
 > explicitly:
 >
 > >        #22; //class Test3
-> >       version 51:0
-> >     {
+> >   version 51:0
+> > {
 > >
-> >     const #1 = InvokeDynamic   0:#11;  //  REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l
-> >     const #2 = Asciz    "Test3";
-> >     const #3 = long 2l;
-> >     const #5 = class #6; //  java/lang/Object
-> >     const #6 = Asciz    "java/lang/Object";
-> >     const #7 = Asciz "name";
-> >     const #8 = int   1;
-> >     const #9 = Asciz  "SourceFile";
-> >     const #10 = Asciz  "Test3.jasm";
-> >     const #11 = NameAndType    #7:#21; //  name:"(I)I"
-> >     const #12 = Asciz    "()V";
-> >     const #13 = Method    #22.#17;    //  Test3.bsmName:"()V"
-> >     const #14 = Asciz    "Code";
-> >     const #15 = Asciz    "m";
-> >     const #16 = Asciz   "BootstrapMethods";
-> >     const #17 = NameAndType  #20:#12;    //  bsmName:"()V"
-> >     const #18 = Asciz  "LineNumberTable";
-> >     const #19 = MethodHandle  7:#13;  //  REF_invokeSpecial:Test3.bsmName:"()V"
-> >     const #20 = Asciz  "bsmName";
-> >     const #21 = Asciz "(I)I";
-> >     const #22 = class    #2; //  Test3
-> >     const #23 = class  #6; //  java/lang/Object
+> > const #1 = InvokeDynamic   0:#11;  //  REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l
+> > const #2 = Asciz    "Test3";
+> > const #3 = long 2l;
+> > const #5 = class #6; //  java/lang/Object
+> > const #6 = Asciz    "java/lang/Object";
+> > const #7 = Asciz "name";
+> > const #8 = int   1;
+> > const #9 = Asciz  "SourceFile";
+> > const #10 = Asciz  "Test3.jasm";
+> > const #11 = NameAndType    #7:#21; //  name:"(I)I"
+> > const #12 = Asciz    "()V";
+> > const #13 = Method    #22.#17;    //  Test3.bsmName:"()V"
+> > const #14 = Asciz    "Code";
+> > const #15 = Asciz    "m";
+> > const #16 = Asciz   "BootstrapMethods";
+> > const #17 = NameAndType  #20:#12;    //  bsmName:"()V"
+> > const #18 = Asciz  "LineNumberTable";
+> > const #19 = MethodHandle  7:#13;  //  REF_invokeSpecial:Test3.bsmName:"()V"
+> > const #20 = Asciz  "bsmName";
+> > const #21 = Asciz "(I)I";
+> > const #22 = class    #2; //  Test3
+> > const #23 = class  #6; //  java/lang/Object
 > >
 > >
 > >
-> >     Method #15:#12
-> >       stack 0 locals 1
-> >     {
-> >        0:  invokedynamic InvokeDynamic #1; //  InvokeDynamic REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l;
-> >     }
+> > Method #15:#12
+> >   stack 0 locals 1
+> > {
+> >    0:  invokedynamic InvokeDynamic #1; //  InvokeDynamic REF_invokeSpecial:Test3.bsmName:"()V":name:"(I)I" int 1, long 2l;
+> > }
 > >
-> >     BootstrapMethod #19 #8 #3;
+> > BootstrapMethod #19 #8 #3;
 > >
-> >     } // end Class Test3
+> > } // end Class Test3
 >
 > In this example, `const #1 = InvokeDynamic 0:#11;` is the
 > InvokeDynamic constant that refers to BootstrapMethod at index '0' in
 > the BootstrapMethods Attribute (`BootstrapMethod #19 #8 #3;` which
-> refers to the *MethodHandle* at const \#19, plus 2 other static args
+> refers to the _MethodHandle_ at const \#19, plus 2 other static args
 > (at const \#8 and const \#3).
 
 <span id="pseudoinstructions"></span>
@@ -960,11 +986,11 @@ method and local variable declarations.
 >
 > ### Code-Generating Pseudo-Instructions
 >
-> The *bytecode* directive instructs the assembler to put a collection
+> The _bytecode_ directive instructs the assembler to put a collection
 > of raw bytes into the code attribute of a methodK  
->   
+> 
 >
-> ***`bytecode NUMBERS`***  
+> _**`bytecode NUMBERS`**_  
 > NUMBERS is list of NUMBERs (divided by COMMA).  
 > Insert bytes in place of the instruction. May have any number of
 > numeric arguments, each of them to be converted into a byte and
@@ -981,49 +1007,49 @@ method and local variable declarations.
 >
 > > #### Local Variable Table Attribute Generation
 > >
-> > ***`var LOCAL_VARIABLE`***  
+> > _**`var LOCAL_VARIABLE`**_  
 > > Starts local variable range
 > >
-> > ***`endvar LOCAL_VARIABLE`***  
+> > _**`endvar LOCAL_VARIABLE`**_  
 > > Ends local variable range. LOCAL\_VARIABLE means name or index of
 > > local variable table entry.
 > >
 > > <u>Example</u>:
 > >
 > >         static void main (String[] args) {
-> >      Tester inst = new Tester();
-> >             inst.callSub();
-> >         }
+> >  Tester inst = new Tester();
+> >         inst.callSub();
+> >     }
 > >
 > > will be coded in assembler as follows:
 > >
 > > > > >     static Method #8:#9   // main:"([Ljava/lang/String;)V"
-> > > > >        stack 2 locals 2
-> > > > >     {
-> > > > >     4       var 0; // args:"[Ljava/lang/String;"
-> > > > >      0:  new #1; //  class Tester;
-> > > > >        3:  dup;
-> > > > >         4:  invokespecial   #2; //  Method "<init>":"()V";
-> > > > >         7:  astore_1;
-> > > > >     6       var 1; // inst:"LTester;"
-> > > > >         8:  aload_1;
-> > > > >         9:  invokevirtual   #3; //  Method callSub:"()V";
-> > > > >     7  12: return;
-> > > > >             endvar 0, 1;
-> > > > >      
-> > > > >     }
+> > > > >    stack 2 locals 2
+> > > > > {
+> > > > > 4       var 0; // args:"[Ljava/lang/String;"
+> > > > >  0:  new #1; //  class Tester;
+> > > > >    3:  dup;
+> > > > >     4:  invokespecial   #2; //  Method "<init>":"()V";
+> > > > >     7:  astore_1;
+> > > > > 6       var 1; // inst:"LTester;"
+> > > > >     8:  aload_1;
+> > > > >     9:  invokevirtual   #3; //  Method callSub:"()V";
+> > > > > 7  12: return;
+> > > > >         endvar 0, 1;
+> > > > >  
+> > > > > }
 > >
 > > #### Exception Table Attribute Generation
 > >
 > > To generate exception table, three pseudo-instructions are used.
 > >
-> > > ***`try TRAP_IDENT`***  
+> > > _**`try TRAP_IDENT`**_  
 > > > Starts rangePC range
 > > >
-> > > ***`endtry TRAP_IDENT`***  
+> > > _**`endtry TRAP_IDENT`**_  
 > > > Ends rangePC range
 > > >
-> > > ***`catch TRAP_IDENT CONSTANT_CELL(class)`***  
+> > > _**`catch TRAP_IDENT CONSTANT_CELL(class)`**_  
 > > > Starts exception handler.
 > >
 > > `TRAP_IDENT` represents the name or number of an exception table
@@ -1045,55 +1071,55 @@ method and local variable declarations.
 > > Example:
 > >
 > >          try {
-> >           try {
-> >               throw new Exception("EXC");
-> >           } catch (NullPointerException e){
-> >               throw e;
-> >              } catch (Exception e){
-> >              throw e;
-> >              }
-> >        } catch (Throwable e){
+> >       try {
+> >           throw new Exception("EXC");
+> >       } catch (NullPointerException e){
 > >           throw e;
-> >         }
+> >          } catch (Exception e){
+> >          throw e;
+> >          }
+> >    } catch (Throwable e){
+> >       throw e;
+> >     }
 > >
 > > will be coded in assembler as follows:
 > >
 > > >         try R1, R2; // single "try" or "endtry" can start several regions
-> > >             new class java/lang/Exception;
-> > >           dup;
-> > >             ldc String "EXC";
-> > >            invokespecial java/lang/Exception.<init>:"(Ljava/lang/String;)V";
-> > >          athrow;
-> > >         endtry R1;
-> > >         catch R1 java/lang/NullPointerException; // only one "catch" per entry allowed
-> > >            astore_1;
-> > >            aload_1;
-> > >             athrow;
-> > >         catch R1 java/lang/Exception; // same region (R1) can appear in different catches
-> > >             astore_1;
-> > >            aload_1;
-> > >             athrow;
-> > >         endtry R2;
-> > >         catch R2 java/lang/Throwable;
-> > >             astore_1;
-> > >            aload_1;
-> > >             athrow;
+> > >         new class java/lang/Exception;
+> > >       dup;
+> > >         ldc String "EXC";
+> > >        invokespecial java/lang/Exception.<init>:"(Ljava/lang/String;)V";
+> > >      athrow;
+> > >     endtry R1;
+> > >     catch R1 java/lang/NullPointerException; // only one "catch" per entry allowed
+> > >        astore_1;
+> > >        aload_1;
+> > >         athrow;
+> > >     catch R1 java/lang/Exception; // same region (R1) can appear in different catches
+> > >         astore_1;
+> > >        aload_1;
+> > >         athrow;
+> > >     endtry R2;
+> > >     catch R2 java/lang/Throwable;
+> > >         astore_1;
+> > >        aload_1;
+> > >         athrow;
 > > >
-> > >           
+> > >       
 > >
 > > #### StackMap Table Attribute Generation
 > >
-> > Stack Maps are denoted by the pseudo-op opcode *stack\_map, and they
-> > can be identified by three basic items:*
+> > Stack Maps are denoted by the pseudo-op opcode _stack\_map, and they
+> > can be identified by three basic items:_
 > >
-> > ***`StackMapStatement =`***` `stack\_map
-> > ***`(stackMap_Item_MapType |stackMap_Item_Object | stackMap_Item_NewObject)`***` `
+> > _**`StackMapStatement =`**_``stack\_map
+> > _**`(stackMap_Item_MapType |stackMap_Item_Object | stackMap_Item_NewObject)`**_``
 > >
-> > ***`stackMap_Item_MapType = (`***bogus | int | float | double | long
-> > | null | this | CP***`)`***` `  
-> >   
-> > ***`stackMap_Item_Object = CONSTANT_CELL_CLASS`***  
-> > ***`stackMap_Item_NewObject =`***` `at` `***`LABEL`***` `
+> > _**`stackMap_Item_MapType = (`_**bogus | int | float | double | long
+> > | null | this | CP**_`)`**_``  
+> > 
+> > _**`stackMap_Item_Object = CONSTANT_CELL_CLASS`**_  
+> > _**`stackMap_Item_NewObject =`**_``at``_**`LABEL`**_``
 > >
 > > All stack\_map directives are collected by the assembler, and are
 > > used to create a StackMap Table attribute.
@@ -1102,41 +1128,41 @@ method and local variable declarations.
 > > (MapType):</span>  
 > >
 > >     public Method "<init>":"()V"
-> >         stack 1 locals 1
-> >     {
-> >             aload_0;
-> >             invokespecial    Method java/lang/Object."<init>":"()V";
-> >             return;
-> >             stack_frame_type full;
-> >             stack_map bogus;
-> >             ...
-> >     }
+> >     stack 1 locals 1
+> > {
+> >         aload_0;
+> >         invokespecial    Method java/lang/Object."<init>":"()V";
+> >         return;
+> >         stack_frame_type full;
+> >         stack_map bogus;
+> >         ...
+> > }
 > >
-> >   
+> > 
 > > <u>Example 2 (Object):</u>  
-> >   
+> > 
 > > <span style="font-family: monospace;">public Method
 > > "&lt;init&gt;":"()V"  
-> >     stack 2 locals 1  
+> > stack 2 locals 1  
 > > {  
-> >         ...  
-> > ***        stack\_map class java/lang/Object;***  
-> >         nop;  
-> >         return;  
+> > ...  
+> > ***stack\_map class java/lang/Object;***  
+> > nop;  
+> > return;  
 > > }  
 > > </span>  
 > > <u>Example 3 (NewObject):</u>  
-> >   
+> > 
 > > <span style="font-family: monospace;">public Method
 > > "&lt;init&gt;":"()V"  
-> >     stack 2 locals 1  
+> > stack 2 locals 1  
 > > {  
-> >         ...  
-> > ***        stack\_map at L5;***  
-> >         nop;  
-> >         return;  
+> > ...  
+> > ***stack\_map at L5;***  
+> > nop;  
+> > return;  
 > > }  
-> >   
+> > 
 > > </span>  
 > >
 > > #### StackFrameType Table Attribute Generation
@@ -1145,79 +1171,79 @@ method and local variable declarations.
 > > directives can appear anywhere in the code, and the assembler will
 > > collect them to produce a StackFrameType attribute.
 > >
-> > ***`StackFrameStatement =`***` `stack\_frame\_type` `***`frame_type`***
+> > _**`StackFrameStatement =`**_``stack\_frame\_type``_**`frame_type`**_
 > >
-> > ***`frame_type = (`*** same | stack1 | stack1\_ex | chop1 | chop2 |
-> > chop3 | same\_ex | append | full ***`)`***  
-> >   
-> > <u>Example 1 (full *stack frame type*):</u>  
+> > _**`frame_type = (`**_ same | stack1 | stack1\_ex | chop1 | chop2 |
+> > chop3 | same\_ex | append | full _**`)`**_  
+> > 
+> > <u>Example 1 (full _stack frame type_):</u>  
 > >
 > >     public Method "<init>":"()V"
-> >         stack 1 locals 1
-> >     {
-> >             aload_0;
-> >             invokespecial    Method java/lang/Object."<init>":"()V";
-> >             return;
-> >             stack_frame_type full;
-> >             stack_map bogus;
-> >             ...
-> >     }
+> >     stack 1 locals 1
+> > {
+> >         aload_0;
+> >         invokespecial    Method java/lang/Object."<init>":"()V";
+> >         return;
+> >         stack_frame_type full;
+> >         stack_map bogus;
+> >         ...
+> > }
 > >
-> > <u>Example 2 (append, chop2, and same *stack frame types*):</u>  
+> > <u>Example 2 (append, chop2, and same _stack frame types_):</u>  
 > >
 > >     public Method foo:"(Z)V"
-> >        stack 2 locals 5
-> >     {
-> >             ...
-> >          iload_2;
-> >             iconst_2;
-> >            if_icmpge   L30;
-> >         L27:    stack_frame_type append;
-> >          locals_map int, int;
-> >             iconst_2;
-> >            istore  4;
-> >         L30:    stack_frame_type chop2;
-> >           goto    L9;
-> >         L33:    stack_frame_type same;
-> >            getstatic   Field java/lang/System.out:"Ljava/io/PrintStream;";
-> >          ldc String "Chop2 attribute test";
-> >           invokevirtual   Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
-> >          return;
-> >             ...
-> >     }
+> >    stack 2 locals 5
+> > {
+> >         ...
+> >      iload_2;
+> >         iconst_2;
+> >        if_icmpge   L30;
+> >     L27:    stack_frame_type append;
+> >      locals_map int, int;
+> >         iconst_2;
+> >        istore  4;
+> >     L30:    stack_frame_type chop2;
+> >       goto    L9;
+> >     L33:    stack_frame_type same;
+> >        getstatic   Field java/lang/System.out:"Ljava/io/PrintStream;";
+> >      ldc String "Chop2 attribute test";
+> >       invokevirtual   Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+> >      return;
+> >         ...
+> > }
 > >
 > > #### LocalsMap Table
 > >
-> > Locals Maps are typically associated with a *stack\_frame\_type*,
+> > Locals Maps are typically associated with a _stack\_frame\_type_,
 > > and are accumulated per stack frame. They typically follow a
-> > *stack\_frame\_type* directive.
+> > _stack\_frame\_type_ directive.
 > >
-> > ***`LocalsMapStatement =`***` `locals\_map` `***`locals_type (, locals_type )*`***
+> > _**`LocalsMapStatement =`**_``locals\_map``_**`locals_type (, locals_type )*`**_
 > >
-> > ***`locals_type = stackMap_Item_MapType | CONSTANT_CELL_CLASS`***` `  
-> >   
-> > <u>Example (a *locals map* specifying 2 ints):</u>
+> > _**`locals_type = stackMap_Item_MapType | CONSTANT_CELL_CLASS`**_``  
+> > 
+> > <u>Example (a _locals map_ specifying 2 ints):</u>
 > >
 > >     public Method foo:"(Z)V"
-> >        stack 2 locals 5
-> >     {
-> >             ...
-> >          iload_2;
-> >             iconst_2;
-> >            if_icmpge   L30;
-> >         L27:    stack_frame_type append;
-> >             locals_map int, int;
-> >          iconst_2;
-> >            istore  4;
-> >       L30:    stack_frame_type chop2;
-> >          goto    L9;
-> >      L33:    stack_frame_type same;
-> >           getstatic   Field java/lang/System.out:"Ljava/io/PrintStream;";
-> >          ldc String "Chop2 attribute test";
-> >           invokevirtual   Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
-> >          return;
-> >             ...
-> >     }
+> >    stack 2 locals 5
+> > {
+> >         ...
+> >      iload_2;
+> >         iconst_2;
+> >        if_icmpge   L30;
+> >     L27:    stack_frame_type append;
+> >         locals_map int, int;
+> >      iconst_2;
+> >        istore  4;
+> >   L30:    stack_frame_type chop2;
+> >      goto    L9;
+> >  L33:    stack_frame_type same;
+> >       getstatic   Field java/lang/System.out:"Ljava/io/PrintStream;";
+> >      ldc String "Chop2 attribute test";
+> >       invokevirtual   Method java/io/PrintStream.println:"(Ljava/lang/String;)V";
+> >      return;
+> >         ...
+> > }
 
 ------------------------------------------------------------------------
 
@@ -1225,29 +1251,27 @@ method and local variable declarations.
 
 # Inner Class Declarations
 
-***`INNER_CLASS_DECLARATIONS`***: list of  
+_**`INNER_CLASS_DECLARATIONS`**_: list of  
 `INNER_CLASS_DECLARATION`
 
-***`INNER_CLASS_DECLARATION`***:  
-`INNER_CLASS_ACCESS `**`InnerClass`**` [INNER_CLASS_NAME`**`=`**`]? INNER_CLASS_INFO [`**`of`**` OUTER_CLASS_INFO]? ;`
+_**`INNER_CLASS_DECLARATION`**_:  
+`INNER_CLASS_ACCESS`**`InnerClass`**`[INNER_CLASS_NAME`**`=`**`]? INNER_CLASS_INFO [`**`of`**`OUTER_CLASS_INFO]? ;`
 
-***`INNER_CLASS_NAME`***:  
+_**`INNER_CLASS_NAME`**_:  
 `IDENT | CPX_name`
 
-***`INNER_CLASS_INFO`***:  
-`CONSTANT_CELL(class) `
-
-***`OUTER_CLASS_INFO`***:  
+_**`INNER_CLASS_INFO`**_:  
 `CONSTANT_CELL(class)`
 
-***`INNER_CLASS_ACCESS`***`: list of`  
+_**`OUTER_CLASS_INFO`**_:  
+`CONSTANT_CELL(class)`
+
+_**`INNER_CLASS_ACCESS`**_`: list of`  
 `[public|protected|private][static][final][interface][abstract][synthetic][annotation][enum]`
 
 Example:
 
         InnerClass InCl=class test$InCl of class test;
-
- 
 
 ------------------------------------------------------------------------
 
@@ -1268,49 +1292,49 @@ the token **@**, while invisible annotations are denoted by the token
 
 #### <u>Synopsis</u>
 
-***`ANNOTATIONS`***:    
+_**`ANNOTATIONS`**_:
 `[ANNOTATION_DECLARATION]+`;
 
-***`ANNOTATION_DECLARATION`***:  
-**`@+`**`|`**`@-`**` ANNOTATION_NAME [ANNOTATION_VALUE_DECLARATIONS]`
+_**`ANNOTATION_DECLARATION`**_:  
+**`@+`**`|`**`@-`**`ANNOTATION_NAME [ANNOTATION_VALUE_DECLARATIONS]`
 
 The '**@+**' token identifies a Runtime Visible Annotation, where the
 '**@-' token identifies a Runtime Invisible Annotation.**
 
-***`ANNOTATION_NAME`***:  
+_**`ANNOTATION_NAME`**_:  
 `IDENT`
 
-***`ANNOTATION_VALUE_DECLARATIONS`***: list of (comma separated)    
+_**`ANNOTATION_VALUE_DECLARATIONS`**_: list of (comma separated)
 `ANNOTATION_VALUE_DECLARATION`
 
-***`ANNOTATION_VALUE_DECLARATION`***:  
+_**`ANNOTATION_VALUE_DECLARATION`**_:  
 `[ANNOTATION_VALUE_IDENT=] [ANNOTATION_VALUE]`
 
-***`ANNOTATION_VALUE_IDENT`***:  
+_**`ANNOTATION_VALUE_IDENT`**_:  
 `IDENT`
 
-***`ANNOTATION_VALUE`***:  
+_**`ANNOTATION_VALUE`**_:  
 `ANNOTATION_VALUE_PRIMITIVE | Array of ANNOTATION_VALUE_PRIMITIVE`
 
-***`ANNOTATION_VALUE_PRIMITIVE`***:  
+_**`ANNOTATION_VALUE_PRIMITIVE`**_:  
 `PRIMITIVE_TYPE | STRING | CLASS | ENUM | ANNOTATION_DECLARATION`
 
 <!-- -->
 
-***`CLASS`***:  
-**`class`**` CONSTANT_CELL(class)`
+_**`CLASS`**_:  
+**`class`**`CONSTANT_CELL(class)`
 
 <!-- -->
 
-***`ENUM`***:  
+_**`ENUM`**_:  
 **`enum CONSTANT_CELL(class) CONSTANT_CELL(string) (where string is Enum type name)`**
 
 <!-- -->
 
-***`PRIMITIVE_TYPE`***:  
+_**`PRIMITIVE_TYPE`**_:  
 `BOOLEAN | BYTE | CHAR | SHORT | INTEGER | LONG | FLOAT | DOUBLE`
 
-***<u>Note</u>***  
+_**<u>Note</u>**_  
     Types (Boolean, Byte, Char, and Short) are normalized into Integer's
 within the constant pool.  
     Annotation values with these types may be identified with a keyword
@@ -1323,7 +1347,7 @@ in front of an integer value.
   
     Other primitive types are parsed according to normal prefix and
 suffix conventions  
-    (eg. Double = xxx.x**d**, Float = xxx.x**f**, Long = xxx**L**).   
+    (eg. Double = xxx.x**d**, Float = xxx.x**f**, Long = xxx**L**).
     Strings are identified and delimited by '"' (quotation marks).  
   
    Keywords '**class**' and '**enum**' identify those annotation types
@@ -1357,12 +1381,9 @@ delimited by ',' (comma).
     {
      ...
 
-  
-
 <span style="text-decoration: underline;">Example 2 (Field Annotation,
 Invisible)</span>  
   
-
     @-FieldPreamble {
          author = "Mustafa", 
          date = "3/17/2009", 
@@ -1372,11 +1393,9 @@ Invisible)</span>
 
 ...  
   
-  
 <span style="text-decoration: underline;">Example 3 (Field Annotation,
 All subtypes)</span>  
   
-
     @+FieldPreamble { 
      boolAnnot      = boolean 1,                     // Boolean
       charBear       = char 97,                   // Char
@@ -1407,8 +1426,6 @@ All subtypes)</span>
     {
      ...
 
-  
-
 Note:  
  JASM does not enforce the annotation value declarations like a compiler
 would.  It only checks to see that an annotation structure is
@@ -1425,43 +1442,27 @@ the token **@T+**, while invisible annotations are denoted by the token
 
 #### <u>Synopsis</u>
 
-***`TYPE_ANNOTATION_DECLARATION`***:
+_**`TYPE_ANNOTATION_DECLARATION`**_:
 
-**`@T+`**`|`**`@T-`**` ANNOTATION_NAME [TYPE_ANNOTATION_VALUE_DECLARATIONS]`
+**`@T+`**`|`**`@T-`**`ANNOTATION_NAME [TYPE_ANNOTATION_VALUE_DECLARATIONS]`
 
-  
-  
-
-***`TYPE_ANNOTATION_VALUE_DECLARATIONS`***: list of (comma separated)  
+_**`TYPE_ANNOTATION_VALUE_DECLARATIONS`**_: list of (comma separated)  
 
 `TYPE_ANNOTATION_VALUE_DECLARATION`
 
-  
-  
+_**`TYPE_ANNOTATION_VALUE_DECLARATION`**_:
 
-***`TYPE_ANNOTATION_VALUE_DECLARATION`***:
+**`{`**``**`{`**`ANNOTATION_VALUE_DECLARATION`**<sup>`+`</sup>**``**`}`**` TARGET PATH`` `**`}`**
 
-**`{`**` `**`{`**` ANNOTATION_VALUE_DECLARATION`**<sup>`+`</sup>**` `**`}`**` TARGET PATH`` `**`}`**
-
-  
-
-  
-
-***`TARGET`***:
+_**`TARGET`**_:
 
 **`{`**` TARGET_TYPE TARGET_INFO `**`}`**  
 
-  
-
 ****  
 
-***`TARGET_TYPE`***`: `
+_**`TARGET_TYPE`**_`:`
 
-` `
-
-  
-
-           
+``
 
 <table data-border="0">
 <colgroup>
@@ -1617,11 +1618,9 @@ style="vertical-align: top; font-style: italic"><strong><code>TYPEARG</code><em>
 </tbody>
 </table>
 
-  
+_**`TARGET_INFO`**_<span style="font-weight: bold;">`_TYPE`</span>`:`
 
-***`TARGET_INFO`***<span style="font-weight: bold;">`_TYPE`</span>`: `
-
-` `
+``
 
 `TYPEPARAM | SUPERTYPE | TYPEPARAM_BOUND | EMPTY | METHODPARAM | EXCEPTION | LOCALVAR | CATCH |`` OFFSET |  TYPEARG`
 
@@ -1629,153 +1628,83 @@ style="vertical-align: top; font-style: italic"><strong><code>TYPEARG</code><em>
 
 **`TYPEPARAM`**`:`  
 
-`paramIndex(`*`INTEGER`*`)`` `
-
-  
-
-  
-
-  
+`paramIndex(`_`INTEGER`_`)`` `
 
 **`SUPERTYPE`**`:`  
 
-`typeIndex(`*`INTEGER`*`)``typeIndex(``INTEGER``)`` `
-
-  
-
-  
+`typeIndex(`_`INTEGER`_`)``typeIndex(``INTEGER``)`` `
 
 **`TYPEPARAM_BOUND`**`:`  
 
-`paramIndex(`*`INTEGER`*`) ``boundIndex(`*`INTEGER`*`)`` `
-
-  
-
-  
-
-  
+`paramIndex(`_`INTEGER`_`) ``boundIndex(`_`INTEGER`_`)`` `
 
 **`EMPTY`**`:`
 
-` `  
+``  
 
-  
-
-  
 **`METHODPARAM`**`:`  
 
 `index(`
 
-`paramIndex(`*`INTEGER`*`)`
+`paramIndex(`_`INTEGER`_`)`
 
-  
 **`EXCEPTION`**`:`  
 
-`typeIndex(`*`INTEGER`*`)`*` `*` `
-
-  
+`typeIndex(`_`INTEGER`_`)`_``_``
 
 ****  
 
-  
-***`LOCALVAR`***`:`  
+_**`LOCALVAR`**_`:`  
 
-<span style="font-weight: bold;">`{`</span>` `**`LVENTRY }`<sup>`+numEntries`</sup>**` `
+<span style="font-weight: bold;">`{`</span>``**`LVENTRY }`<sup>`+numEntries`</sup>**``
 
-  
-` `
+``
 
-  
+_**`LVENTRY`**_`:`  
 
-***`LVENTRY`***`:`  
-
-`startpc(`*`INTEGER) `*`length``(`*`INTEGER) `*`index(`*`INTEGER)`<span style="font-weight: bold;"></span>*` `
-
-  
-
-  
+`startpc(`_`INTEGER)`_`length``(`_`INTEGER)`_`index(`_`INTEGER)`<span style="font-weight: bold;"></span>_``
 
 **`CATCH`**`:`  
 
-  
+`catch(`_`INTEGER)`_
 
-`catch(`*`INTEGER)`*
+``  
 
-` `  
+_**`OFFSET`**_`:`  
 
-  
+``
 
-  
+`offset(`_`INTEGER)`_
 
-  
-
-***`OFFSET`***`:`  
-
-` `
-
-`offset(`*`INTEGER)`*
-
-  
-
-` `
+``
 
 **`TYPEARG`**`:`  
 
-`offset(`*`INTEGER`*`) ``typeIndex(`*`INTEGER`*`)`` `
+`offset(`_`INTEGER`_`) ``typeIndex(`_`INTEGER`_`)`` `
 
-  
+_**`PATH`**_`: list of (space separated)`  
+``
 
-  
+**`{`**_``<span style="font-weight: bold;">`PATH_ENTRY`</span>_<sup>**`+`**</sup>``**`}`**
 
-  
+_**`PATH_ENTRY`**_`:`  
 
-  
+``
 
-***`PATH`***`: list of (space separated)`  
-` `
+<span style="font-style: italic;">`{`<span style="font-weight: bold;">`PATH_KIND PATH_INDEX }`</span></span>  
 
-**`{`***` `<span style="font-weight: bold;">`PATH_ENTRY`</span>*<sup>**`+`**</sup>` `**`}`**
+_**`PATH_KIND`**_`:`
 
-  
-
-  
-
-***`PATH_ENTRY`***`:`  
-
-` `
-
-<span style="font-style: italic;">`{ `<span style="font-weight: bold;">`PATH_KIND PATH_INDEX }`</span></span>  
-
-  
-
-***`PATH_KIND`***`: `
-
-` `
+``
 
 `ARRAY | INNER_TYPE | WILDCARD | TYPE_ARGUMENT`
 
-  
-
-  
-
 **`PATH_INDEX`**`:`  
 
-*`INTEGER`*` `
-
-  
-  
-
-  
-
-  
-
-  
-
-  
+_`INTEGER`_``
 
 ****  
 
-  
 **** <span id="paramannots"></span>
 
 ## Parameter Names and Parameter Annotations
@@ -1787,40 +1716,34 @@ invisibly (not accessible at runtime). In JASM, visible parameter
 annotations are denoted by the token **@+**, while invisible parameter
 annotations are denoted by the token **@-**.  
 
-Parameter names come from an attribute introduced in JDK 8.0 (1.8). 
+Parameter names come from an attribute introduced in JDK 8.0 (1.8).
 These are fixed parameter names that are used to ornament parameters on
 methods.  In Jasm, parameter names are identified by the token \#
 followed by { } braclets  
 
 #### <u>Synopsis</u>
 
-***`METHOD DECLARATION`***:    
+_**`METHOD DECLARATION`**_:
 `MODIFIERS Method METHOD_NAME:"METHOD_SIGNATURE" [STACK_DECL] [LOCALS_DECL] [PARAMETERS_DECL] {[CODE]}`
 
-  
+_**`PARAMETERS_DECL`**_:
+`[PARAMETER_DECL]`<sup>`N`</sup>`(where N < number of params in method, each N is a unique param number)`
 
-***`PARAMETERS_DECL`***:    
-`[PARAMETER_DECL]`<sup>`N`</sup>` (where N < number of params in method, each N is a unique param number)`
-
-  
-
-***`PARAMETER_DECL`***:    
+_**`PARAMETER_DECL`**_:
 `PARAM_NUM : [PARAM_NAME_DECL] [ANNOTATION_DECLARATIONS]`
 
 <!-- -->
 
-***`PARAM_NAME_DECL`***:    
+_**`PARAM_NAME_DECL`**_:
 `#{ name PARAM_ACCESS}`
 
-  
-  
-***`PARAM_ACCESS`***`: list of`  
+_**`PARAM_ACCESS`**_`: list of`  
 `[final][synthetic][mandated]`
 
 #### Examples
 
 <u>Example 1 (Parameter Annotation)</u>  
-***<u>Java Code</u>***  
+_**<u>Java Code</u>**_  
 
     public class MyClass2 {
         
@@ -1836,8 +1759,7 @@ followed by { } braclets
      ...
     }
 
-  
-***<u>JASM Code</u>***  
+_**<u>JASM Code</u>**_  
   
 <span style="text-decoration: underline;">Note</span>:  The first two
 parameters are named ('P0'- 'P3').  Since this is a compiler controlled
@@ -1861,7 +1783,6 @@ option, there is no way to specify parameter naming in Java source.
 
     } // end Class MyClass2
 
-  
 <span id="paramannots"></span>
 
 ## Default Annotations
@@ -1874,23 +1795,19 @@ a given annotation field.
 
 #### <u>Synopsis</u>
 
-***`ANNOTATION INTERFACE DECLARATION`***:    
-`@interface ANNOTATION_NAME { ANNOTATION_FIELD_DECL`<sup>`+`</sup>` }`  
+_**`ANNOTATION INTERFACE DECLARATION`**_:
+`@interface ANNOTATION_NAME { ANNOTATION_FIELD_DECL`<sup>`+`</sup>`}`  
 
-  
-
-***`ANNOTATION_FIELD_DECL`***:    
+_**`ANNOTATION_FIELD_DECL`**_:
 `ANNOT_FIELD_TYPE ANNOTATION_NAME [ANNOTATION_DEFAULT_VALUE_DECL];`  
 
-  
-
-***`ANNOTATION_DEFAULT_VALUE_DECL`***:    
+_**`ANNOTATION_DEFAULT_VALUE_DECL`**_:
 `default ANNOTATION_VALUE (where value must be of the type ANNOT_FIELD_TYPE)`  
 
 #### <u>Examples</u>
 
 <u>Example 1 (Default Annotation)</u>  
-***<u>Java Code</u>***  
+_**<u>Java Code</u>**_  
 
     import java.lang.annotation.*; 
     @Retention(RetentionPolicy.RUNTIME)
@@ -1899,8 +1816,7 @@ a given annotation field.
        String author() default "John Steinbeck";
     }
 
-  
-***<u>JASM Code</u>***  
+_**<u>JASM Code</u>**_  
 
     interface  Meth2Preamble
         implements java/lang/annotation/Annotation
@@ -1920,10 +1836,10 @@ a given annotation field.
 
 ## Requires
 
-***`MODULE_REQUIRES`***: sequence of  
+_**`MODULE_REQUIRES`**_: sequence of  
 requires `REQUIRES_FLAGS` `CONSTANT_CELL(moduleContent)`;
 
-***`REQUIRES_FLAGS`***: set of  
+_**`REQUIRES_FLAGS`**_: set of  
 \[`transitive`\] \[`static`\]
 
 Example:
@@ -1934,10 +1850,10 @@ Example:
 
 ## Exports
 
-***`MODULE_EXPORTS`***: sequence of  
+_**`MODULE_EXPORTS`**_: sequence of  
 exports `CONSTANT_CELL(package)` \[to `EXPORT_TO_MODULES`\];
 
-***`EXPORT_TO_MODULES`***: list of  
+_**`EXPORT_TO_MODULES`**_: list of  
 `CONSTANT_CELL(moduleContent)`
 
 Example:
@@ -1952,10 +1868,10 @@ Example:
 
 ## Opens
 
-***`MODULE_OPENS`***: sequence of  
+_**`MODULE_OPENS`**_: sequence of  
 opens `CONSTANT_CELL(package)` \[to `OPENS_TO_MODULES`\];
 
-***`OPENS_TO_MODULES`***: list of  
+_**`OPENS_TO_MODULES`**_: list of  
 `CONSTANT_CELL(moduleContent)`
 
 Example:
@@ -1970,7 +1886,7 @@ Example:
 
 ## Uses
 
-***`MODULE_USES`***: sequence of  
+_**`MODULE_USES`**_: sequence of  
 uses `CONSTANT_CELL(class)`;
 
 Example:
@@ -1981,10 +1897,10 @@ Example:
 
 ## Provides
 
-***`MODULE_PROVIDES`***: sequence of  
+_**`MODULE_PROVIDES`**_: sequence of  
 provides `CONSTANT_CELL(class)` \[with `MODULE_PROVIDES_WITH_CLASSES`\];
 
-***`MODULE_PROVIDES_WITH_CLASSES`***: list of  
+_**`MODULE_PROVIDES_WITH_CLASSES`**_: list of  
 `CONSTANT_CELL(class)`
 
 Example:
@@ -2006,11 +1922,6 @@ and 255 for privileged) and the opcode itself. These instructions can be
 coded in assembler in 2 ways: as single mnemocode identical to the
 description or using "priv" and "nonpriv" instructions followed with an
 integer representing the opcode.
-
-  
-
-  
-  
 
 <table data-border="0" data-cellpadding="0" data-cellspacing="0"
 width="100%">

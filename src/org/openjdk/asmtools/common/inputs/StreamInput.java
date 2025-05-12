@@ -55,7 +55,7 @@ public class StreamInput extends ByteInput {
     }
 
     @Override
-    public String getFileName() {
+    public String getName() {
         //get parent is used
         return "stream/stream";
     }

@@ -1,0 +1,252 @@
+class javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00401m1/atrcvl00401m1 {
+  0xCAFEBABE;
+  0;                                       // minor version
+  67;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Method #2 #3;                          // #1
+    Class #4;                              // #2
+    NameAndType #5 #6;                     // #3
+    Utf8 "java/lang/Object";               // #4
+    Utf8 "<init>";                         // #5
+    Utf8 "()V";                            // #6
+    String #8;                             // #7
+    Utf8 "javasoft.sqe.tests.vm.classfmt.atr.atrcvl004.atrcvl00401m1.atrcvl00401m1p";  // #8
+    Method #10 #11;                        // #9
+    Class #12;                             // #10
+    NameAndType #13 #14;                   // #11
+    Utf8 "java/lang/Class";                // #12
+    Utf8 "forName";                        // #13
+    Utf8 "(Ljava/lang/String;)Ljava/lang/Class;";  // #14
+    Method #10 #16;                        // #15
+    NameAndType #17 #18;                   // #16
+    Utf8 "newInstance";                    // #17
+    Utf8 "()Ljava/lang/Object;";           // #18
+    Class #20;                             // #19
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00401m1/atrcvl00401m1n";  // #20
+    Class #22;                             // #21
+    Utf8 "java/lang/Exception";            // #22
+    Method #24 #25;                        // #23
+    Class #26;                             // #24
+    NameAndType #27 #28;                   // #25
+    Utf8 "java/lang/String";               // #26
+    Utf8 "valueOf";                        // #27
+    Utf8 "(Ljava/lang/Object;)Ljava/lang/String;";  // #28
+    InvokeDynamic 0s #30;                  // #29
+    NameAndType #31 #32;                   // #30
+    Utf8 "makeConcatWithConstants";        // #31
+    Utf8 "(Ljava/lang/String;)Ljava/lang/String;";  // #32
+    Method #34 #35;                        // #33
+    Class #36;                             // #34
+    NameAndType #37 #38;                   // #35
+    Utf8 "java/io/PrintStream";            // #36
+    Utf8 "println";                        // #37
+    Utf8 "(Ljava/lang/String;)V";          // #38
+    Class #40;                             // #39
+    Utf8 "java/lang/Throwable";            // #40
+    InvokeDynamic 1s #30;                  // #41
+    InterfaceMethod #19 #43;               // #42
+    NameAndType #44 #45;                   // #43
+    Utf8 "get_i1";                         // #44
+    Utf8 "()I";                            // #45
+    Integer 0x0130BF9D;                    // #46
+    String #48;                            // #47
+    Utf8 "invalid value i1";               // #48
+    InterfaceMethod #19 #50;               // #49
+    NameAndType #51 #45;                   // #50
+    Utf8 "get_i2";                         // #51
+    Integer 0x0130E6AE;                    // #52
+    String #54;                            // #53
+    Utf8 "invalid value i2";               // #54
+    Field #56 #57;                         // #55
+    Class #58;                             // #56
+    NameAndType #59 #60;                   // #57
+    Utf8 "java/lang/System";               // #58
+    Utf8 "out";                            // #59
+    Utf8 "Ljava/io/PrintStream;";          // #60
+    Method #62 #63;                        // #61
+    Class #64;                             // #62
+    NameAndType #65 #66;                   // #63
+    Utf8 "javasoft/sqe/tests/vm/classfmt/atr/atrcvl004/atrcvl00401m1/atrcvl00401m1";  // #64
+    Utf8 "run";                            // #65
+    Utf8 "([Ljava/lang/String;Ljava/io/PrintStream;)I";  // #66
+    Method #56 #68;                        // #67
+    NameAndType #69 #70;                   // #68
+    Utf8 "exit";                           // #69
+    Utf8 "(I)V";                           // #70
+    Utf8 "Code";                           // #71
+    Utf8 "LineNumberTable";                // #72
+    Utf8 "StackMapTable";                  // #73
+    Utf8 "main";                           // #74
+    Utf8 "([Ljava/lang/String;)V";         // #75
+    Utf8 "SourceFile";                     // #76
+    Utf8 "atrcvl00401m1.java";             // #77
+    Utf8 "BootstrapMethods";               // #78
+    String #80;                            // #79
+    Utf8 "failed create an instance of atrcvl00401m1p:\u0001";  // #80
+    String #82;                            // #81
+    Utf8 "failed to load class atrcvl00401m1p:\u0001";  // #82
+    MethodHandle 6b #84;                   // #83
+    Method #85 #86;                        // #84
+    Class #87;                             // #85
+    NameAndType #31 #88;                   // #86
+    Utf8 "java/lang/invoke/StringConcatFactory";  // #87
+    Utf8 "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";  // #88
+    Utf8 "InnerClasses";                   // #89
+    Class #91;                             // #90
+    Utf8 "java/lang/invoke/MethodHandles$Lookup";  // #91
+    Class #93;                             // #92
+    Utf8 "java/lang/invoke/MethodHandles";  // #93
+    Utf8 "Lookup";                         // #94
+  }
+
+  0x0021;                                  // access
+  #62;                                     // this_cpx
+  #2;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+    {                                      // method
+      0x0001;                              // access
+      #5;                                  // name_index
+      #6;                                  // descriptor_index
+      [] {                                 // Attributes
+        Attr(#71) {                        // Code
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB7 0x00 0x01 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#72) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   13;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #65;                                 // name_index
+      #66;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#71) {                        // Code
+          2;                               // max_stack
+          5;                               // max_locals
+          Bytes[]{
+            0x12 0x07 0xB8 0x00 0x09 0x4D 0x2C 0xB6 0x00 0x0F 0xC0 0x00;
+            0x13 0x4E 0xA7 0x00 0x27 0x3A 0x04 0x2B 0x19 0x04 0xB8 0x00;
+            0x17 0xBA 0x00 0x1D 0x00 0x00 0xB6 0x00 0x21 0x05 0xAC 0x3A;
+            0x04 0x2B 0x19 0x04 0xB8 0x00 0x17 0xBA 0x00 0x29 0x00 0x00;
+            0xB6 0x00 0x21 0x05 0xAC 0x2D 0xB9 0x00 0x2A 0x01 0x00 0x12;
+            0x2E 0x9F 0x00 0x0B 0x2B 0x12 0x2F 0xB6 0x00 0x21 0x05 0xAC;
+            0x2D 0xB9 0x00 0x31 0x01 0x00 0x12 0x34 0x9F 0x00 0x0B 0x2B;
+            0x12 0x35 0xB6 0x00 0x21 0x05 0xAC 0x03 0xAC;
+          }
+          [] {                             // Traps
+               0   14   17  21;
+               0   14   35  39;
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#72) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   18;
+                   6   19;
+                  14   26;
+                  17   20;
+                  19   21;
+                  33   22;
+                  35   23;
+                  37   24;
+                  51   25;
+                  53   27;
+                  64   28;
+                  70   29;
+                  72   31;
+                  83   32;
+                  89   33;
+                  91   35;
+              }
+            }                              // end of LineNumberTable
+            ;
+            Attr(#73) {                    // StackMapTable
+              [] {                         // 
+                81b, []z{O,#21};           // same_locals_1_stack_item_frame
+                81b, []z{O,#39};           // same_locals_1_stack_item_frame
+                253b, 17, []z{O,#10; O,#19};  // append_frame 2
+                18b;                       // same_frame
+                18b;                       // same_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method
+      0x0009;                              // access
+      #74;                                 // name_index
+      #75;                                 // descriptor_index
+      [] {                                 // Attributes
+        Attr(#71) {                        // Code
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[]{
+            0x2A 0xB2 0x00 0x37 0xB8 0x00 0x3D 0x10 0x5F 0x60 0xB8 0x00;
+            0x43 0xB1;
+          }
+          [] {                             // Traps
+          }                                // end of Traps
+          [] {                             // Attributes
+            Attr(#72) {                    // LineNumberTable
+              [] {                         // line_number_table
+                   0   39;
+                  13   40;
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#76) {                            // SourceFile
+      #77;
+    }                                      // end of SourceFile
+    ;
+    Attr(#78) {                            // BootstrapMethods
+      [] {                                 // bootstrap_methods
+        {                                  // bootstrap_method
+          #83;                             // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #79;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+        ;
+        {                                  // bootstrap_method
+          #83;                             // bootstrap_method_ref
+          [] {                             // bootstrap_arguments
+            #81;
+          }                                // bootstrap_arguments
+        }                                  // bootstrap_method
+      }
+    }                                      // end of BootstrapMethods
+    ;
+    Attr(#89) {                            // InnerClasses
+      [] {                                 // classes
+          #90   #92   #94  25;
+      }
+    }                                      // end of InnerClasses
+  }                                        // end of Attributes
+}

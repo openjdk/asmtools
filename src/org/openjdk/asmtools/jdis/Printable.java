@@ -25,9 +25,18 @@ package org.openjdk.asmtools.jdis;
 import java.io.IOException;
 
 public interface Printable {
+
     void print() throws IOException;
 
     default boolean isPrintable() {
         return true;
     }
+
+    /**
+     * @return true if a table format is supported
+     */
+    default boolean tableFormatSupported() {
+        return false;
+    }
+
 }

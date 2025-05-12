@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,10 +22,8 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import org.openjdk.asmtools.common.SyntaxError;
 import org.openjdk.asmtools.common.structure.ClassFileContext;
 import org.openjdk.asmtools.common.structure.EModifier;
-
 
 import static org.openjdk.asmtools.common.structure.EModifier.*;
 import static org.openjdk.asmtools.jasm.JasmTokens.Token;
@@ -35,7 +33,8 @@ import static org.openjdk.asmtools.jasm.JasmTokens.Token;
  */
 public class Checker {
 
-    private Checker() {}
+    private Checker() {
+    }
 
     /*
      * Check that only one of the Access flags is set.
@@ -52,6 +51,10 @@ public class Checker {
         return (flags & ~getFlags(MM_FIELD)) == 0;
     }
 
+    public static int notValidField(int flags) {
+        return getNotPermitted(flags, MM_FIELD);
+    }
+
     /*
      * Methods of classes may have any of the flags in Table 4.6-A set. (MM_METHOD)
      * However, each method of a class may have at most one of its ACC_PUBLIC, ACC_PRIVATE, and ACC_PROTECTED flags set (JLS §8.4.3).
@@ -61,7 +64,6 @@ public class Checker {
     }
 
     public static boolean validAbstractMethod(int flags) {
-
         return (flags & ~getFlags(MM_ABSTRACT_METHOD)) == 0;
     }
 
@@ -74,7 +76,8 @@ public class Checker {
      * they may have their ACC_SYNTHETIC flag set and must not have any of the other flags in Table 4.5-A set (JLS §9.3).
      */
     public static boolean validInterfaceField(int mod) {
-        final int flags = isSynthetic(mod) ? mod & ~ACC_SYNTHETIC.getFlag() : mod;
+        int flags = isSynthetic(mod) ? mod & ~ACC_SYNTHETIC.getFlag() : mod;
+        flags = isStrict(flags) ? flags & ~ACC_STRICT.getFlag() : flags;
         return noFlagsExcept(flags, ACC_PUBLIC, ACC_STATIC, ACC_FINAL);
     }
 
@@ -92,6 +95,10 @@ public class Checker {
         return noFlagsExcept(mod, MM_CLASS);
     }
 
+    public static boolean isValueObjectsContext() {
+        return EModifier.GlobalContext() == ClassFileContext.VALUE_OBJECTS;
+    }
+
     /**
      * Check the modifier flags for the class
      *
@@ -99,10 +106,22 @@ public class Checker {
      * @param scanner The file parser
      */
     public static void checkClassModifiers(int mod, Scanner scanner) {
-        if( scanner.token != Token.CLASS && ! EModifier.isInterface(mod) ) {
-            scanner.environment.warning(scanner.pos, "warn.one.of.two.token.expected", Token.CLASS.parseKey(), Token.INTERFACE.parseKey());
+        // Check "Value Classes and Objects" Context
+        if (EModifier.isValueObjects(mod)) {
+            EModifier.setGlobalContext(ClassFileContext.VALUE_OBJECTS);
         }
-        mod = EModifier.cleanFlags(mod, DEPRECATED_ATTRIBUTE, SYNTHETIC_ATTRIBUTE);
+
+        mod = EModifier.cleanFlags(mod, DEPRECATED_ATTRIBUTE, SYNTHETIC_ATTRIBUTE, VALUE_OBJECTS_ATTRIBUTE);
+
+        // check Ambiguous use of similar modifiers
+        if (EModifier.moreThanOne(mod, ACC_PUBLIC, ACC_PROTECTED, ACC_PRIVATE)) {
+            scanner.environment.warning(scanner.pos, "warn.repeated.modifier");
+        }
+
+        if (scanner.token != Token.CLASS && !EModifier.isInterface(mod)) {
+            scanner.environment.warning(scanner.pos, "warn.one.of.two.token.expected",
+                    Token.CLASS.parseKey(), Token.INTERFACE.parseKey(), Token.CLASS.parseKey());
+        }
 // Interface
         if (isInterface(mod)) {
             // If the ACC_INTERFACE flag is set, the ACC_ABSTRACT flag must also be set.
@@ -110,27 +129,39 @@ public class Checker {
                 scanner.environment.warning(scanner.pos, "warn.invalid.modifier.int.abs",
                         EModifier.asNames(mod, ClassFileContext.CLASS));
             }
-            // If the ACC_INTERFACE flag is set, the ACC_FINAL, ACC_PRIMITIVE, ACC_ENUM, and ACC_MODULE flags must not be set.
-            if (anyOf(mod, ACC_FINAL, ACC_PRIMITIVE, ACC_ENUM, ACC_MODULE)) {
-                scanner.environment.warning(scanner.pos, "warn.invalid.modifier.interface.set",
-                        EModifier.asNames(mod, ClassFileContext.CLASS));
+            // If the ACC_INTERFACE flag is set, the ACC_FINAL, ACC_IDENTITY, ACC_ENUM, and ACC_MODULE flags must not be set.
+            if (anyOf(mod, ACC_FINAL, ACC_ENUM, ACC_IDENTITY, ACC_MODULE)) {
+                if (isValueObjectsContext()) {
+                    scanner.environment.warning(scanner.pos, "warn.invalid.modifier.interface.set.vo",
+                            EModifier.asNames(mod, ClassFileContext.CLASS));
+                } else {
+                    scanner.environment.warning(scanner.pos, "warn.invalid.modifier.interface.set",
+                            EModifier.asNames(mod, ClassFileContext.CLASS));
+                }
             }
-            if (!validInterface(mod)) {
-                scanner.environment.warning(scanner.pos, "warn.invalid.modifier.int",
-                        EModifier.asNames(mod & ~getFlags(MM_INTERFACE), ClassFileContext.CLASS));
-            }
-            if (isEnum(mod)) {
-                scanner.environment.warning(scanner.pos, "warn.invalid.modifier.class.intenum",
-                        EModifier.asNames(mod, ClassFileContext.CLASS));
-            }
-// class
+// Class
         } else {
+            // If the ACC_INTERFACE flag is not set, any of the other flags in Table 4.1-B may be set except ACC_ANNOTATION and ACC_MODULE.
+            if (anyOf(mod, ACC_ANNOTATION, ACC_MODULE)) {
+                scanner.environment.warning(scanner.pos, "warn.invalid.modifier.not.interface.set",
+                        EModifier.asNames(mod, ClassFileContext.CLASS));
+            }
+            if (isValueObjectsContext()) {
+                // However, such a class file must have at least one of its ACC_FINAL, ACC_IDENTITY, or ACC_ABSTRACT flags set,
+                if (!anyOf(mod, ACC_FINAL, ACC_IDENTITY, ACC_ABSTRACT)) {
+                    String buf = EModifier.asNames(mod, ClassFileContext.CLASS);
+                    buf = (buf.isEmpty() ? "ACC_VALUE" : "ACC_VALUE, ".concat(buf));
+                    scanner.environment.warning(scanner.pos, "warn.invalid.modifier.not.interface.set.vo", buf);
+                }
+
+            }
             if (!validClass(mod)) {
                 scanner.environment.warning(scanner.pos, "warn.invalid.modifier.class",
                         EModifier.asNames(mod & ~getFlags(MM_CLASS), ClassFileContext.CLASS));
             }
         }
-// any
+
+        // Must not have both its ACC_FINAL and ACC_ABSTRACT flags set (JLS §8.1.1.2).
         if (both(mod, ACC_ABSTRACT, ACC_FINAL)) {
             scanner.environment.warning(scanner.pos, "warn.invalid.modifier.class.finabs",
                     EModifier.asNames(mod, ClassFileContext.CLASS));
@@ -140,27 +171,42 @@ public class Checker {
     /**
      * Check the modifier flags for the field
      *
-     * @param classData  The ClassData for the current class
-     * @param mod The modifier flags being checked
-     * @param pos the position of the parser in the file
+     * @param classData The ClassData for the current class
+     * @param mod       The modifier flags being checked
+     * @param pos       the position of the parser in the file
      */
-    public static void checkFieldModifiers(ClassData classData, int mod, int pos) {
+    public static void checkFieldModifiers(ClassData classData, int mod, long pos) {
         JasmEnvironment environment = classData.getEnvironment();
         mod = EModifier.cleanFlags(mod, DEPRECATED_ATTRIBUTE, SYNTHETIC_ATTRIBUTE);
         if (classData.isInterface()) { // For interfaces fields.
             // Fields of interfaces must have their ACC_PUBLIC, ACC_STATIC, and ACC_FINAL flags set;
-            // they may have their ACC_SYNTHETIC flag set and must not have any of the other flags in Table 4.5-A set (JLS §9.3).
+            //they may have their ACC_STRICT_INIT or ACC_SYNTHETIC flag set, and must not have any of the other flags in Table 4.5-A set (JLS §9.3).
             if (!validInterfaceField(mod)) {
                 environment.warning(pos, "warn.invalid.modifier.intfield",
                         EModifier.asNames(mod, ClassFileContext.FIELD));
             }
+            //
+            if( !isPublic(mod)) {
+                environment.warning(pos, "warn.invalid.modifier.intfield",
+                        EModifier.asNames(mod, ClassFileContext.FIELD));
+            }
         } else { // For non-interface fields.
+            if (isValueObjectsContext()) {
+                // Each field of a value class must have at least one of its ACC_STATIC or ACC_STRICT_INIT flags set.
+                if (classData.isValue()) {
+                    if (!EModifier.anyOf(mod, ACC_STATIC, ACC_STRICT)) {
+                        environment.warning(pos, "warn.invalid.modifier.for.value",
+                                EModifier.asNames(mod, ClassFileContext.FIELD));
+                    }
+                }
+            }
             //Fields of classes may set any of the flags in Table 4.5-A.
             // However, each field of a class may have at most one of its ACC_PUBLIC, ACC_PRIVATE, and ACC_PROTECTED flags set (JLS §8.3.1),
             // and must not have both its ACC_FINAL and ACC_VOLATILE flags set (JLS §8.3.1.4).
-            if (!validField(mod)) {
+            int invalidFlags = notValidField(mod);
+            if (invalidFlags != 0) {
                 environment.warning(pos, "warn.invalid.modifier.field",
-                        EModifier.asNames(mod & ~getFlags(MM_FIELD), ClassFileContext.FIELD));
+                        EModifier.asNames(invalidFlags, ClassFileContext.FIELD));
             }
             if (!validAccess(mod)) {
                 environment.warning(pos, "warn.invalid.modifier.acc",
@@ -170,31 +216,19 @@ public class Checker {
                 environment.warning(pos, "warn.invalid.modifier.fiva",
                         EModifier.asNames(mod, ClassFileContext.FIELD));
             }
-            // In a primitive class, each field must have at least one of its ACC_STATIC or ACC_FINAL flags set.
-            if (classData.isPrimitive()) {
-                if (!EModifier.anyOf(mod, ACC_STATIC, ACC_FINAL) || !EModifier.both(mod, ACC_STATIC, ACC_FINAL)) {
-                    environment.warning(pos, "warn.invalid.modifier.primitive.flags",
-                            EModifier.asNames(mod, ClassFileContext.FIELD));
-                }
-                // In an abstract class, each field must have its ACC_STATIC flag set.
-                if (classData.isAbstract() && !isStatic(mod)) {
-                    environment.warning(pos, "warn.invalid.modifier.primitive.abstract",
-                            EModifier.asNames(mod, ClassFileContext.FIELD));
-                }
-            }
         }
     }
 
     /**
      * Check the modifier flags for the method
      *
-     * @param classData  The ClassData for the current class
-     * @param mod The modifier flags being checked
-     * @param pos the position of the parser in the file
-     * @param isInit is the method constructor
-     * @param isClinit is the method static initializer
+     * @param classData The ClassData for the current class
+     * @param mod       The modifier flags being checked
+     * @param pos       the position of the parser in the file
+     * @param isInit    is the method constructor
+     * @param isClinit  is the method static initializer
      */
-    public static void checkMethodModifiers(ClassData classData, int mod, int pos, boolean isInit, boolean isClinit) {
+    public static void checkMethodModifiers(ClassData classData, int mod, long pos, boolean isInit, boolean isClinit) {
         final JasmEnvironment environment = classData.getEnvironment();
         final int cfvMajorVersion = classData.cfv.major_version();
         mod = EModifier.cleanFlags(mod, DEPRECATED_ATTRIBUTE, SYNTHETIC_ATTRIBUTE);
@@ -222,18 +256,18 @@ public class Checker {
                 } else {
                     validateInterfaceMethod(mod, classData, pos);
                 }
-            // class methods
+                // class methods
             } else {
                 if (isInit && !validInitMethod(mod)) {
                     wrongFlags = mod & ~EModifier.getFlags(MM_INIT_METHOD);
                     environment.warning(pos, "warn.invalid.modifier.init",
                             EModifier.asNames(wrongFlags, ClassFileContext.METHOD));
                 } else if (isAbstract(mod)) {
-                    if ( !validAbstractMethod(mod) ) {
+                    if (!validAbstractMethod(mod)) {
                         wrongFlags = mod & ~EModifier.getFlags(MM_ABSTRACT_METHOD);
                         environment.warning(pos, "warn.invalid.modifier.abst",
                                 EModifier.asNames(wrongFlags, ClassFileContext.METHOD));
-                    } else if (isStrict(mod) &&  (cfvMajorVersion >= 46 && cfvMajorVersion <= 60) ) {
+                    } else if (isStrict(mod) && (cfvMajorVersion >= 46 && cfvMajorVersion <= 60)) {
                         environment.warning(pos, "warn.invalid.modifier.strict");
                     }
                 }
@@ -244,11 +278,11 @@ public class Checker {
     /**
      * Check the modifier flags for the inner-class
      *
-     * @param classData  The ClassData for the current class
-     * @param mod The modifier flags being checked
-     * @param pos the position of the parser in the file
+     * @param classData The ClassData for the current class
+     * @param mod       The modifier flags being checked
+     * @param pos       the position of the parser in the file
      */
-    public static void checkInnerClassModifiers(ClassData classData, int mod, int pos) {
+    public static void checkInnerClassModifiers(ClassData classData, int mod, long pos) {
         JasmEnvironment environment = classData.getEnvironment();
         mod = EModifier.cleanFlags(mod, DEPRECATED_ATTRIBUTE, SYNTHETIC_ATTRIBUTE);
         if (!validNestedClass(mod)) {
@@ -262,7 +296,7 @@ public class Checker {
     // and ACC_NATIVE (JLS §9.4). In a class file whose version number is less than 52.0, each method of an interface
     // must have its ACC_PUBLIC and ACC_ABSTRACT flags set; in a class file whose version number is 52.0 or above,
     // each method of an interface must have exactly one of its ACC_PUBLIC and ACC_PRIVATE flags set.
-    public static void validateInterfaceMethod(int mod, ClassData cd, int pos) {
+    public static void validateInterfaceMethod(int mod, ClassData cd, long pos) {
         final int cfvMajorVersion = cd.cfv.major_version();
         final JasmEnvironment environment = cd.getEnvironment();
         if (EModifier.anyOf(mod, ACC_PROTECTED, ACC_FINAL, ACC_SYNCHRONIZED, ACC_NATIVE)) {

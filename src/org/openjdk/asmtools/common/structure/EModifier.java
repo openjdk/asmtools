@@ -37,7 +37,7 @@ import static org.openjdk.asmtools.common.structure.ClassFileContext.*;
  */
 public enum EModifier {
 
-    ACC_NONE(0x0000, "", NONE),                                 // <<everywhere>>
+    ACC_NONE(0x0000, "", NONE),                                     // <<everywhere>>
     ACC_PUBLIC(0x0001, "public", CLASS, INNER_CLASS, FIELD, METHOD),
     ACC_PRIVATE(0x0002, "private", INNER_CLASS, FIELD, METHOD),
     ACC_PROTECTED(0x0004, "protected", INNER_CLASS, FIELD, METHOD),
@@ -45,9 +45,9 @@ public enum EModifier {
 
     ACC_FINAL(0x0010, "final", CLASS, INNER_CLASS, FIELD, METHOD, METHOD_PARAMETERS),
 
-    ACC_SUPER(0x0020, "super", CLASS),   // although this seems to be easily ignored, but not including it to the class, where it originally was,
-                                                      // will cause running hotswap to fail, with
-                                                      //java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
+    ACC_SUPER(0x0020, "super", CLASS),
+    ACC_IDENTITY(0x0020, "identity", CLASS, INNER_CLASS, VALUE_OBJECTS),     // Value Classes and Objects
+    ACC_VALUE(0x0000, "value", CLASS, INNER_CLASS, VALUE_OBJECTS),           // Value Classes and Objects
 
     ACC_TRANSITIVE(0x0020, "transitive", REQUIRES),
     ACC_SYNCHRONIZED(0x0020, "synchronized", METHOD),
@@ -56,20 +56,17 @@ public enum EModifier {
     ACC_VOLATILE(0x0040, "volatile", FIELD),
     ACC_BRIDGE(0x0040, "bridge", METHOD),
     ACC_STATIC_PHASE(0x0040, "static", REQUIRES),
-    ACC_PERMITS_VALUE(0x0040, "permits_value", CLASS, INNER_CLASS),       // valhalla
 
     ACC_TRANSIENT(0x0080, "transient", FIELD),
     ACC_VARARGS(0x0080, "varargs", METHOD),
 
     ACC_NATIVE(0x0100, "native", METHOD),
-    ACC_VALUE(0x0100, "value", CLASS, INNER_CLASS),                         // valhalla
 
     ACC_INTERFACE(0x0200, "interface", CLASS, INNER_CLASS),
 
     ACC_ABSTRACT(0x0400, "abstract", CLASS, INNER_CLASS, METHOD),
 
-    ACC_STRICT(0x0800, "strict", METHOD),
-    ACC_PRIMITIVE(0x0800, "primitive", CLASS, INNER_CLASS),                  // valhalla
+    ACC_STRICT(0x0800, "strict", METHOD, FIELD, VALUE_OBJECTS),              // FIELD added for VALUE_OBJECTS CONTEXT
 
     ACC_SYNTHETIC(0x1000, "synthetic", CLASS, INNER_CLASS, FIELD, METHOD, MODULE, REQUIRES, EXPORTS, OPENS, METHOD_PARAMETERS),
 
@@ -81,35 +78,45 @@ public enum EModifier {
     ACC_MANDATED(0x8000, "mandated", MODULE, REQUIRES, EXPORTS, OPENS, METHOD_PARAMETERS),
 
     SYNTHETIC_ATTRIBUTE(0x00010000, "Synthetic(Pseudo)", CLASS, INNER_CLASS, FIELD, METHOD),
-    DEPRECATED_ATTRIBUTE(0x00020000, "Deprecated(Pseudo)", CLASS, INNER_CLASS, FIELD, METHOD);
+    DEPRECATED_ATTRIBUTE(0x00020000, "Deprecated(Pseudo)", CLASS, INNER_CLASS, FIELD, METHOD),
+
+    VALUE_OBJECTS_ATTRIBUTE(0x010000000, "ValueObjects(Pseudo)", CLASS, INNER_CLASS, FIELD);
 
     // Method access and property flags (Table 4.6-A)
     public static final EModifier[] MM_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED, ACC_STATIC, ACC_FINAL,
             ACC_SYNCHRONIZED, ACC_BRIDGE, ACC_VARARGS, ACC_NATIVE, ACC_ABSTRACT,
-            ACC_STRICT, ACC_SYNTHETIC};
+            ACC_SYNTHETIC,
+            ACC_STRICT };           // Valhalla SPECIFIC
     // Class access and property modifiers (Table 4.1-A)
-    public static final EModifier[] MM_CLASS = {ACC_PUBLIC, ACC_FINAL, ACC_SUPER,
-            ACC_PRIMITIVE, ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC,
-            ACC_ANNOTATION, ACC_ENUM, ACC_MODULE, ACC_VALUE, ACC_PERMITS_VALUE, ACC_PRIMITIVE};
+    public static final EModifier[] MM_CLASS = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED, ACC_FINAL,
+            ACC_SUPER, ACC_IDENTITY, ACC_INTERFACE,
+            ACC_ABSTRACT, ACC_SYNTHETIC,
+            ACC_ANNOTATION, ACC_ENUM, ACC_MODULE};
 
     // Valid interface flags.
-    public static final EModifier[] MM_INTERFACE = {ACC_PUBLIC, ACC_INTERFACE,
+    public static final EModifier[] MM_INTERFACE = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
+            ACC_INTERFACE,
             ACC_ABSTRACT, ACC_SYNTHETIC, ACC_ANNOTATION};
     // Field access and property flags (Table 4.5-A)
     public static final EModifier[] MM_FIELD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
             ACC_STATIC, ACC_FINAL, ACC_VOLATILE, ACC_TRANSIENT,
-            ACC_SYNTHETIC, ACC_ENUM};
+            ACC_SYNTHETIC, ACC_ENUM,
+            ACC_STRICT};            // Valhalla SPECIFIC
     // Abstract method
-    public static final EModifier[] MM_ABSTRACT_METHOD = {ACC_PUBLIC, ACC_PROTECTED, ACC_BRIDGE, ACC_VARARGS, ACC_ABSTRACT,
+    public static final EModifier[] MM_ABSTRACT_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
+            ACC_BRIDGE, ACC_VARARGS, ACC_ABSTRACT,
             ACC_SYNTHETIC};
     // <init>, <clinit> method
-    public static final EModifier[] MM_INIT_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED, ACC_VARARGS, ACC_SYNTHETIC,
+    public static final EModifier[] MM_INIT_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
+            ACC_VARARGS, ACC_SYNTHETIC,
             ACC_STRICT, ACC_STATIC};
     //  Nested class access and property flags  (Table 4.7.6-A)
-    public static final EModifier[] MM_NESTED_CLASS = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED, ACC_STATIC, ACC_FINAL,
+    public static final EModifier[] MM_NESTED_CLASS = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
+            ACC_STATIC, ACC_FINAL,
             ACC_INTERFACE, ACC_ABSTRACT, ACC_SYNTHETIC, ACC_ANNOTATION, ACC_ENUM};
     // Interface method
-    private static final EModifier[] MM_INTERFACE_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_STATIC, ACC_BRIDGE, ACC_VARARGS,
+    private static final EModifier[] MM_INTERFACE_METHOD = {ACC_PUBLIC, ACC_PRIVATE, ACC_PROTECTED,
+            ACC_STATIC, ACC_BRIDGE, ACC_VARARGS,
             ACC_ABSTRACT, ACC_STRICT, ACC_SYNTHETIC};
     private static final EModifier[] MM_MODULE = {ACC_OPEN, ACC_SYNTHETIC, ACC_MANDATED};
     private static final EModifier[] MM_MODULE_REQUIRES = {ACC_TRANSITIVE, ACC_STATIC_PHASE, ACC_SYNTHETIC, ACC_MANDATED};
@@ -117,13 +124,16 @@ public enum EModifier {
     private static final EModifier[] MM_MODULE_OPENS = {ACC_SYNTHETIC, ACC_MANDATED};
     // ToString converters
     public static String NAMES_DELIMITER = ", ";
-    public static String NAMES_SUFFIX = " ";
+    public static String NAMES_SUFFIX = "";
     public static String KEYWORDS_DELIMITER = " ";
     public static String KEYWORDS_SUFFIX = " ";
     private final int flag;
     private final String keyword;
     private final Set<ClassFileContext> contexts;
     private int contextMask = 0;
+
+    // Externally changed switchers
+    private static ClassFileContext globalContext = ORDINARY;
 
     EModifier(int flag, String keyword, ClassFileContext... contexts) {
         this.flag = flag;
@@ -135,6 +145,14 @@ public enum EModifier {
                 contextMask |= c.getID();
             }
         }
+    }
+
+    public static void setGlobalContext(ClassFileContext globalContext) {
+        EModifier.globalContext = globalContext;
+    }
+
+    public static ClassFileContext GlobalContext() {
+        return EModifier.globalContext;
     }
 
     // Wrappers
@@ -206,6 +224,31 @@ public enum EModifier {
         return (flags & ACC_STRICT.flag) != 0;
     }
 
+    public static int getNotPermitted(int flags, EModifier[] set) {
+        int notPermitted = 0;
+        for (EModifier mod : set) {
+            if ((flags & mod.flag) != 0) {
+                flags &= ~mod.flag;
+                ClassFileContext context = mod.getGlobalContext();
+                if( globalContext != context && context != ORDINARY) {
+                    notPermitted |= mod.flag;
+                }
+            }
+        }
+        notPermitted |= flags;
+        return notPermitted;
+    }
+
+    public ClassFileContext getGlobalContext() {
+        for (ClassFileContext c : contexts) {
+            if (c.isGlobal()) {
+                return c;
+            }
+        }
+        return ORDINARY;
+    }
+
+
     public static boolean isSynthetic(int flags) {
         return (flags & ACC_SYNTHETIC.flag) != 0;
     }
@@ -234,16 +277,13 @@ public enum EModifier {
         return (flags & DEPRECATED_ATTRIBUTE.flag) != 0;
     }
 
-    public static boolean isValue(int flags) {
-        return (flags & ACC_VALUE.flag) != 0;
+    //  Value Classes and Objects
+    public static boolean isValueObjects(int flags) {
+        return (flags & VALUE_OBJECTS_ATTRIBUTE.flag) != 0;
     }
 
-    public static boolean isPermitsValue(int flags) {
-        return (flags & ACC_PERMITS_VALUE.flag) != 0;
-    }
-
-    public static boolean isPrimitive(int flags) {
-        return (flags & ACC_PRIMITIVE.flag) != 0;
+    public static boolean isIdentity(int flags) {
+        return (flags & ACC_IDENTITY.flag) != 0;
     }
 
     public static boolean hasPseudoMod(int flags) {
@@ -280,13 +320,25 @@ public enum EModifier {
         return flag;
     }
 
-
     /*
      * Are both flags set?
      */
     public static boolean both(int flags, EModifier modifierA, EModifier modifierB) {
         final int bothFlags = modifierA.getFlag() | modifierB.getFlag();
         return (flags & bothFlags) == bothFlags;
+    }
+
+    /*
+     * Is more than one flag set in the list?
+     */
+    public static boolean moreThanOne(int flags, EModifier... modifiers) {
+        int count = 0;
+        for (EModifier m : modifiers) {
+            if( (flags & m.flag) != 0) {
+                count++;
+            }
+        }
+        return count > 1;
     }
 
     /*
@@ -312,7 +364,7 @@ public enum EModifier {
             modifiers = EModifier.values();
         }
         for (EModifier m : modifiers) {
-            if( m.contexts.contains(context) ) {
+            if (m.contexts.contains(context)) {
                 flag |= m.flag;
             }
         }
@@ -340,8 +392,8 @@ public enum EModifier {
     /**
      * Get either a keyword or a name of a flags according to the context.
      *
-     * @param flags   the flags to choose a corresponding names or keywords.
-     * @param isName  either the JVMS modifier names ot JLS keywords are selected
+     * @param flags   the flags to choose the corresponding names or keywords.
+     * @param isName  either the JVMS modifier names or JLS keywords are selected
      * @param context the entity for which the names/keywords are selected
      * @return the List of the names or the keywords according to the parameter isName
      */
@@ -350,9 +402,11 @@ public enum EModifier {
         // run through all access flags
         if (isPublic(flags) && context.belongToContextOf(ACC_PUBLIC)) {
             flags = addTo(list, flags, isName, ACC_PUBLIC);
-        } else if (isPrivate(flags) && context.belongToContextOf(ACC_PRIVATE)) {
+        }
+        if (isPrivate(flags) && context.belongToContextOf(ACC_PRIVATE)) {
             flags = addTo(list, flags, isName, ACC_PRIVATE);
-        } else if (isProtected(flags) && context.belongToContextOf(ACC_PROTECTED)) {
+        }
+        if (isProtected(flags) && context.belongToContextOf(ACC_PROTECTED)) {
             flags = addTo(list, flags, isName, ACC_PROTECTED);
         }
         // ACC_STATIC
@@ -373,7 +427,12 @@ public enum EModifier {
                     // and the flags no longer had any effect.
                     // still we have to keep it in here (if it was here), as if the new class is used for hotswap, it s absence would casue
                     // java.lang.UnsupportedOperationException: class redefinition failed: attempted to change the class modifiers
-                    flags = addTo(list, flags, isName, ACC_SUPER);
+                    flags = addTo(list, flags, isName, (globalContext == VALUE_OBJECTS) ? ACC_IDENTITY : ACC_SUPER);
+                }
+                case INNER_CLASS -> {
+                    if(globalContext == VALUE_OBJECTS) {
+                        flags = addTo(list, flags, isName, ACC_IDENTITY);
+                    }
                 }
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_TRANSITIVE);
                 case METHOD -> flags = addTo(list, flags, isName, ACC_SYNCHRONIZED);
@@ -386,7 +445,6 @@ public enum EModifier {
                 case FIELD -> flags = addTo(list, flags, isName, ACC_VOLATILE);
                 case METHOD -> flags = addTo(list, flags, isName, ACC_BRIDGE);
                 case REQUIRES -> flags = addTo(list, flags, isName, ACC_STATIC_PHASE);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_PERMITS_VALUE);
             }
         }
         // ACC_TRANSIENT ACC_VARARGS
@@ -400,7 +458,6 @@ public enum EModifier {
         if (isNative(flags)) {                           // == isValue(flags)
             switch (context) {
                 case METHOD -> flags = addTo(list, flags, isName, ACC_NATIVE);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_VALUE);
             }
         }
         // ACC_INTERFACE
@@ -416,11 +473,15 @@ public enum EModifier {
             flags = addTo(list, flags, isName, ACC_ABSTRACT);
         }
 
-        // ACC_STRICT ACC_PRIMITIVE
-        if (isStrict(flags)) {                          // == isPrimitive(flags)
+        // ACC_STRICT
+        if (isStrict(flags)) {
             switch (context) {
                 case METHOD -> flags = addTo(list, flags, isName, ACC_STRICT);
-                case CLASS, INNER_CLASS -> flags = addTo(list, flags, isName, ACC_PRIMITIVE);
+                case FIELD -> {
+                    if (globalContext == VALUE_OBJECTS) {
+                        flags = addTo(list, flags, isName, ACC_STRICT);
+                    }
+                }
             }
         }
         // ACC_SYNTHETIC

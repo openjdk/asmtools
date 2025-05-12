@@ -36,7 +36,7 @@ import java.util.List;
  * u2 classes[number_of_classes];
  * }
  */
-public class NestMembersAttr extends ClassArrayAttr {
+public class NestMembersAttr extends ArrayAttr {
     public NestMembersAttr(ConstantPool pool, List<ConstCell> classes) {
         super( pool, EAttribute.ATT_NestMembers, classes);
     }

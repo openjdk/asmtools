@@ -32,8 +32,10 @@ import java.nio.charset.StandardCharsets;
  */
 public abstract class TextInput {
 
-    public int position;
-    protected int charPos;
+    public long position;
+    protected int charPos = 0;
+    protected int linepos = 1;
+
 
     // Buffer to keep the text file content
     protected final String strData;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,22 @@
  */
 package org.openjdk.asmtools.jdis;
 
+import org.openjdk.asmtools.jasm.JasmTokens;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import static java.lang.String.format;
-
 /**
- * Base class of the "classes[]" data of attributes
+ * Base class of the "classes[]" data of attributes:
+ * <p>
+ * Exceptions_attribute {
+ * u2 attribute_name_index;
+ * u4 attribute_length;
+ * u2 number_of_exceptions;
+ * u2 exception_index_table[number_of_exceptions];
+ * }
+ * The exception_index_table[i] is an index of a CONSTANT_Class_info structure representing a class type
+ * that this method is declared to throw.
  * <p>
  * JEP 181 (Nest-based Access Control): class file 55.0
  * NestMembers_attribute {
@@ -48,44 +57,81 @@ import static java.lang.String.format;
  * </p>
  */
 public class ClassArrayData extends MemberData {
-    String name;
-    int[] classIndexes;
+    JasmTokens.Token token;
+    int[] indexes;
 
-    protected ClassArrayData(ClassData classData, String attrName) {
+    protected <M extends MemberData<ClassData>> ClassArrayData(M classData, JasmTokens.Token token) {
         super(classData);
-        this.name = attrName;
+        this.token = token;
     }
 
     public ClassArrayData read(DataInputStream in, int attribute_length) throws IOException, ClassFormatError {
-        int number_of_classes = in.readUnsignedShort();
-        if (attribute_length != 2 + number_of_classes * 2) {
-            throw new ClassFormatError(name + "_attribute: Invalid attribute length");
+        int number_of_entities = in.readUnsignedShort();
+        if (attribute_length != 2 + number_of_entities * 2) {
+            throw new ClassFormatError("%s_attribute: Invalid attribute length".formatted(token.parseKey()));
         }
-        classIndexes = new int[number_of_classes];
-        for (int i = 0; i < number_of_classes; i++) {
-            classIndexes[i] = in.readUnsignedShort();
+        indexes = new int[number_of_entities];
+        for (int i = 0; i < number_of_entities; i++) {
+            indexes[i] = in.readUnsignedShort();
         }
         return this;
     }
 
     @Override
-    public void print() {
+    public void jasmPrint() {
+        if (indexes.length > 3) {
+            jasmPrintLong();
+        } else {
+            jasmPrintShort();
+        }
+    }
+
+    public void jasmPrintShort() {
         StringBuilder indexes = new StringBuilder();
         StringBuilder names = new StringBuilder();
-        for (int classIndex : classIndexes) {
+        int lastIndex = this.indexes.length - 1;
+        String eoNames = (printCPIndex) ? "" : ";";
+        for (int i = 0; i <= lastIndex; i++) {
             if (printCPIndex) {
-                indexes.append((indexes.length() == 0) ? "" : ", ").append("#").append(classIndex);
+                indexes.append("#").append(this.indexes[i]).append(i == lastIndex ? ";" : ", ");
             }
-            names.append((names.length() == 0) ? "" : ", ").append(pool.StringValue(classIndex));
+            names.append(pool.StringValue(this.indexes[i])).append(i == lastIndex ? eoNames : ", ");
         }
+        printIndent(PadRight(token.parseKey(), getPrintAttributeKeyPadding()));
         if (printCPIndex) {
-            if( skipComments ) {
-                printIndentLn("%s %s;", name, indexes);
-            }  else {
-                printIndent(PadRight(format("%s %s;", name, indexes), getCommentOffset() - 1)).println(" // " + names);
+            if (skipComments) {
+                println(indexes.toString());
+            } else {
+                print(PadRight(indexes.toString(), getPrintAttributeCommentPadding())).println(" // " + names);
             }
         } else {
-            printIndentLn("%s %s;", name, names.toString());
+            println(names.toString());
         }
+    }
+
+    public void jasmPrintLong() {
+        String name = token.parseKey();
+        String locIndent = " ".repeat(name.length());
+        int lastIndex = indexes.length - 1;
+        for (int i = 0; i <= lastIndex; i++) {
+            if (printCPIndex) {
+                if (skipComments) {
+                    printIndent(PadRight((i == 0) ? name : locIndent, getPrintAttributeKeyPadding())).
+                            print("#%d".formatted(indexes[i])).println(i == lastIndex ? ";" : ",");
+                } else {
+                    printIndent(PadRight((i == 0) ? name : locIndent, getPrintAttributeKeyPadding())).
+                            print(PadRight("#%d%s".formatted(indexes[i], (i == lastIndex) ? ";" : ","), getPrintAttributeCommentPadding())).
+                            println(" // %s".formatted(pool.StringValue(indexes[i])));
+                }
+            } else {
+                printIndent(PadRight((i == 0) ? name : locIndent, getPrintAttributeKeyPadding())).
+                        print(pool.StringValue(indexes[i])).println(i == lastIndex ? ";" : ",");
+            }
+        }
+    }
+
+    @Override
+    protected void tablePrint() {
+        jasmPrint();
     }
 }

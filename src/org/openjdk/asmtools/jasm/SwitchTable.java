@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,20 +23,63 @@
 package org.openjdk.asmtools.jasm;
 
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 
 /**
+ *  tableswitch
+ *      <0-3 byte pad>
+ *      defaultbyte1
+ *      defaultbyte2
+ *      defaultbyte3
+ *      defaultbyte4
+ *      lowbyte1
+ *      lowbyte2
+ *      lowbyte3
+ *      lowbyte4
+ *      highbyte1
+ *      highbyte2
+ *      highbyte3
+ *      highbyte4
+ *      jump offsets...
  *
- */
+ *  tableswitch
+ *   default:   <default_offset> u4
+ *   low:       <low_value>      u4
+ *   high:      <high_value>     u4
+ *   jump offsets:
+ *          <offset_1>
+ *          <offset_2>
+ *     ...
+ *          <offset_n>
+ *  or
+ *  lookupswitch
+ *      <0-3 byte pad>
+ *      defaultbyte1
+ *      defaultbyte2
+ *      defaultbyte3
+ *      defaultbyte4
+ *      npairs1
+ *      npairs2
+ *      npairs3
+ *      npairs4
+ *      match-offset pairs...
+ *
+ *  lookupswitch
+ *   default:       <default_offset>        u4
+ *   match_count:   <number_of_cases>       u4
+ *          match_1:    <value_1> <case_offset_1>
+ *          match_2:    <value_2> <case_offset_2>
+ *          ...
+ *          match_n:    <value_n> <case_offset_n>
+ * */
 class SwitchTable {
 
     Indexer defLabel = null;
     ArrayList<Indexer> labels = new ArrayList<>();
     ArrayList<Integer> keys = new ArrayList<>();
 
-// for tableswitch:
+    // for tableswitch:
     Indexer[] resLabels;
     int high, low;
 
@@ -52,7 +95,7 @@ class SwitchTable {
         labels.add(label);
     }
 
-// for lookupswitch:
+    // for lookupswitch:
     int calcLookupSwitch(int pc) {
         this.pc = pc;
         pad = ((3 - pc) & 0x3);
@@ -64,7 +107,7 @@ class SwitchTable {
     }
 
     void writeLookupSwitch(CheckedDataOutputStream out) throws IOException {
-        environment.traceln("  writeLookupSwitch: pc=" + pc + " pad=" + pad + " deflabel=" + defLabel.cpIndex);
+        environment.traceln(() -> "  writeLookupSwitch: pc=" + pc + " pad=" + pad + " deflabel=" + defLabel.cpIndex);
         int k;
         for (k = 0; k < pad; k++) {
             out.writeByte(0);
@@ -94,7 +137,7 @@ class SwitchTable {
             }
             numslots = high1 - low1 + 1;
         }
-        environment.traceln("  recalcTableSwitch: low=" + low1 + " high=" + high1);
+        environment.traceln("  recalcTableSwitch: low=%d high=%d".formatted(low1, high1));
         this.pc = pc;
         pad = ((3 - pc) & 0x3);
         int len = 1 + pad + (numslots + 3) * 4;
@@ -106,7 +149,7 @@ class SwitchTable {
             resLabels1[k] = defLabel;
         }
         for (k = 0; k < numpairs; k++) {
-            environment.traceln("   keys.data[" + k + "]=" + keys.get(k));
+            environment.traceln("   keys.data[%d]=%s".formatted(k, keys.get(k)));
             resLabels1[keys.get(k) - low1] = labels.get(k);
         }
         this.resLabels = resLabels1;

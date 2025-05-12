@@ -26,6 +26,7 @@ package org.openjdk.asmtools.lib.transform;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,16 @@ public class ResultChecker {
             s -> Arrays.stream(OUT_LINE_PREFIXES_TO_IGNORE).anyMatch(p -> s.startsWith(p));
 
     Class<?> trClass;
+
+    public Optional<Object> load() {
+        try {
+            Object obj = trClass.getDeclaredConstructor().newInstance();
+            return Optional.of(obj);
+        } catch (InstantiationException | IllegalAccessException |
+                 InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void run() {
         try {

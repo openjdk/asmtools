@@ -1,0 +1,759 @@
+package org/openjdk/asmtools/attribute/StackMapTable/data;
+
+public super class #10 /* StackMapData */ version 69:0
+{
+  const #1    = Method        #2.#3;               // java/lang/Object."<init>":"()V"
+  const #2    = class         #4;                  // java/lang/Object
+  const #3    = NameAndType   #5:#6;               // "<init>":"()V"
+  const #4    = Utf8          "java/lang/Object";
+  const #5    = Utf8          "<init>";
+  const #6    = Utf8          "()V";
+  const #7    = String        #8;                  // "string"
+  const #8    = Utf8          "string";
+  const #9    = Field         #10.#11;             // StackMapData.fldS:"Ljava/lang/String;"
+  const #10   = class         #12;                 // StackMapData
+  const #11   = NameAndType   #13:#14;             // fldS:"Ljava/lang/String;"
+  const #12   = Utf8          "org/openjdk/asmtools/attribute/StackMapTable/data/StackMapData";
+  const #13   = Utf8          "fldS";
+  const #14   = Utf8          "Ljava/lang/String;";
+  const #15   = Field         #10.#16;             // StackMapData.fldFS:"Ljava/lang/String;"
+  const #16   = NameAndType   #17:#14;             // fldFS:"Ljava/lang/String;"
+  const #17   = Utf8          "fldFS";
+  const #18   = Method        #2.#19;              // java/lang/Object.toString:"()Ljava/lang/String;"
+  const #19   = NameAndType   #20:#21;             // toString:"()Ljava/lang/String;"
+  const #20   = Utf8          "toString";
+  const #21   = Utf8          "()Ljava/lang/String;";
+  const #22   = class         #23;                 // java/lang/ArithmeticException
+  const #23   = Utf8          "java/lang/ArithmeticException";
+  const #24   = Field         #25.#26;             // java/lang/System.out:"Ljava/io/PrintStream;"
+  const #25   = class         #27;                 // java/lang/System
+  const #26   = NameAndType   #28:#29;             // out:"Ljava/io/PrintStream;"
+  const #27   = Utf8          "java/lang/System";
+  const #28   = Utf8          "out";
+  const #29   = Utf8          "Ljava/io/PrintStream;";
+  const #30   = String        #31;                 // "frame"
+  const #31   = Utf8          "frame";
+  const #32   = Method        #33.#34;             // java/io/PrintStream.println:"(Ljava/lang/String;)V"
+  const #33   = class         #35;                 // java/io/PrintStream
+  const #34   = NameAndType   #36:#37;             // println:"(Ljava/lang/String;)V"
+  const #35   = Utf8          "java/io/PrintStream";
+  const #36   = Utf8          "println";
+  const #37   = Utf8          "(Ljava/lang/String;)V";
+  const #38   = float         100.0f;
+  const #39   = Method        #40.#41;             // java/lang/Math.round:"(F)I"
+  const #40   = class         #42;                 // java/lang/Math
+  const #41   = NameAndType   #43:#44;             // round:"(F)I"
+  const #42   = Utf8          "java/lang/Math";
+  const #43   = Utf8          "round";
+  const #44   = Utf8          "(F)I";
+  const #45   = InvokeDynamic 0:#46;               // #0:makeConcatWithConstants:"(I)Ljava/lang/String;"
+  const #46   = NameAndType   #47:#48;             // makeConcatWithConstants:"(I)Ljava/lang/String;"
+  const #47   = Utf8          "makeConcatWithConstants";
+  const #48   = Utf8          "(I)Ljava/lang/String;";
+  const #49   = float         3.14f;
+  const #50   = InvokeDynamic 1:#46;               // #1:makeConcatWithConstants:"(I)Ljava/lang/String;"
+  const #51   = float         10.0f;
+  const #52   = float         110.0f;
+  const #53   = double        100.0d;
+  const #55   = Method        #40.#56;             // java/lang/Math.round:"(D)J"
+  const #56   = NameAndType   #43:#57;             // round:"(D)J"
+  const #57   = Utf8          "(D)J";
+  const #58   = InvokeDynamic 2:#59;               // #2:makeConcatWithConstants:"(J)Ljava/lang/String;"
+  const #59   = NameAndType   #47:#60;             // makeConcatWithConstants:"(J)Ljava/lang/String;"
+  const #60   = Utf8          "(J)Ljava/lang/String;";
+  const #61   = double        99.99d;
+  const #63   = InvokeDynamic 3:#64;               // #3:makeConcatWithConstants:"(D)Ljava/lang/String;"
+  const #64   = NameAndType   #47:#65;             // makeConcatWithConstants:"(D)Ljava/lang/String;"
+  const #65   = Utf8          "(D)Ljava/lang/String;";
+  const #66   = String        #67;                 // "chop_frame"
+  const #67   = Utf8          "chop_frame";
+  const #68   = String        #69;                 // "_frame_"
+  const #69   = Utf8          "_frame_";
+  const #70   = Method        #33.#71;             // java/io/PrintStream.println:"(D)V"
+  const #71   = NameAndType   #36:#72;             // println:"(D)V"
+  const #72   = Utf8          "(D)V";
+  const #73   = String        #74;                 // "n_frame"
+  const #74   = Utf8          "n_frame";
+  const #75   = InvokeDynamic 4:#76;               // #4:makeConcatWithConstants:"(Ljava/lang/String;CI)Ljava/lang/String;"
+  const #76   = NameAndType   #47:#77;             // makeConcatWithConstants:"(Ljava/lang/String;CI)Ljava/lang/String;"
+  const #77   = Utf8          "(Ljava/lang/String;CI)Ljava/lang/String;";
+  const #78   = class         #79;                 // java/lang/String
+  const #79   = Utf8          "java/lang/String";
+  const #80   = Method        #2.#81;              // java/lang/Object.hashCode:"()I"
+  const #81   = NameAndType   #82:#83;             // hashCode:"()I"
+  const #82   = Utf8          "hashCode";
+  const #83   = Utf8          "()I";
+  const #84   = class         #85;                 // java/lang/RuntimeException
+  const #85   = Utf8          "java/lang/RuntimeException";
+  const #86   = String        #87;                 // "Test exception"
+  const #87   = Utf8          "Test exception";
+  const #88   = Method        #84.#89;             // java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V"
+  const #89   = NameAndType   #5:#37;              // "<init>":"(Ljava/lang/String;)V"
+  const #90   = String        #91;                 // "positive"
+  const #91   = Utf8          "positive";
+  const #92   = String        #93;                 // "non-positive"
+  const #93   = Utf8          "non-positive";
+  const #94   = String        #95;                 // "Computing result"
+  const #95   = Utf8          "Computing result";
+  const #96   = Method        #10.#3;              // StackMapData."<init>":"()V"
+  const #97   = Method        #10.#98;             // StackMapData.generateFrames:"(I)V"
+  const #98   = NameAndType   #99:#100;            // generateFrames:"(I)V"
+  const #99   = Utf8          "generateFrames";
+  const #100  = Utf8          "(I)V";
+  const #101  = String        #102;                // "test"
+  const #102  = Utf8          "test";
+  const #103  = Method        #10.#104;            // StackMapData.complexMethod:"(ILjava/lang/Object;)I"
+  const #104  = NameAndType   #105:#106;           // complexMethod:"(ILjava/lang/Object;)I"
+  const #105  = Utf8          "complexMethod";
+  const #106  = Utf8          "(ILjava/lang/Object;)I";
+  const #107  = Method        #10.#108;            // StackMapData.generateFullFrame:"(I)I"
+  const #108  = NameAndType   #109:#110;           // generateFullFrame:"(I)I"
+  const #109  = Utf8          "generateFullFrame";
+  const #110  = Utf8          "(I)I";
+  const #111  = Field         #10.#112;            // StackMapData.fldL:"J"
+  const #112  = NameAndType   #113:#114;           // fldL:"J"
+  const #113  = Utf8          "fldL";
+  const #114  = Utf8          "J";
+  const #115  = Utf8          "fldI";
+  const #116  = Utf8          "I";
+  const #117  = Utf8          "ConstantValue";
+  const #118  = int           0;
+  const #119  = Utf8          "Code";
+  const #120  = Utf8          "StackMapTable";
+  const #121  = class         #122;                // java/lang/Throwable
+  const #122  = Utf8          "java/lang/Throwable";
+  const #123  = Utf8          "main";
+  const #124  = Utf8          "([Ljava/lang/String;)V";
+  const #125  = Utf8          "<clinit>";
+  const #126  = Utf8          "BootstrapMethods";
+  const #127  = String        #128;                // "item_frame\u0001"
+  const #128  = Utf8          "item_frame\u0001";
+  const #129  = String        #130;                // "item_frame_\u0001"
+  const #130  = Utf8          "item_frame_\u0001";
+  const #131  = String        #132;                // "_frame: \u0001"
+  const #132  = Utf8          "_frame: \u0001";
+  const #133  = String        #134;                // "Before chop_frame: \u0001"
+  const #134  = Utf8          "Before chop_frame: \u0001";
+  const #135  = String        #136;                // "\u0001: \u0001\u0001"
+  const #136  = Utf8          "\u0001: \u0001\u0001";
+  const #137  = MethodHandle  6:#138;              // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #138  = Method        #139.#140;           // java/lang/invoke/StringConcatFactory.makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #139  = class         #141;                // java/lang/invoke/StringConcatFactory
+  const #140  = NameAndType   #47:#142;            // makeConcatWithConstants:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #141  = Utf8          "java/lang/invoke/StringConcatFactory";
+  const #142  = Utf8          "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+  const #143  = Utf8          "InnerClasses";
+  const #144  = class         #145;                // java/lang/invoke/MethodHandles$Lookup
+  const #145  = Utf8          "java/lang/invoke/MethodHandles$Lookup";
+  const #146  = class         #147;                // java/lang/invoke/MethodHandles
+  const #147  = Utf8          "java/lang/invoke/MethodHandles";
+  const #148  = Utf8          "Lookup";
+
+  static final Field #115:#116 = #118;             // fldI:I = int 0
+  static Field #113:#114;                          // fldL:J
+  protected Field #13:#14;                         // fldS:"Ljava/lang/String;"
+  public final Field #17:#14 = #7;                 // fldFS:"Ljava/lang/String;" = String "string"
+
+  public Method #5:#6                              // "<init>":"()V" 
+    stack 2  locals 1
+  {
+     0:    aload_0;
+     1:    invokespecial     #1;                   // Method java/lang/Object."<init>":"()V"
+     4:    aload_0;
+     5:    ldc               #7;                   // String "string"
+     7:    putfield          #9;                   // Field fldS:"Ljava/lang/String;"
+    10:    aload_0;
+    11:    ldc               #7;                   // String "string"
+    13:    putfield          #15;                  // Field fldFS:"Ljava/lang/String;"
+    16:    return;
+  }
+
+  public Method #99:#100                           // generateFrames:"(I)V" 
+    stack 5  locals 10
+  {
+     0:    iconst_0;
+     1:    istore_2;
+     2:    aconst_null;
+     3:    astore_3;
+           try               T0, T1;
+     4:    iconst_1;
+     5:    iload_2;
+     6:    idiv;
+     7:    istore_2;
+           endtry            T0,T1;
+     8:    aload_3;
+     9:    invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    12:    pop;
+    13:    goto              44;
+           catch             T0 #22;               // java/lang/ArithmeticException
+           try               T2;
+    16:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16;                  // fldFS:"Ljava/lang/String;";
+             frame_type      full;                 // frame_type 255
+               locals_map    #10, 1, 1, #2;        // class StackMapData, int, int, class java/lang/Object;
+               stack_map     #22;                  // class java/lang/ArithmeticException;
+           astore            4;
+    18:    new               #2;                   // class java/lang/Object
+    21:    dup;
+    22:    invokespecial     #1;                   // Method java/lang/Object."<init>":"()V"
+    25:    astore_3;
+           endtry            T2;
+    26:    aload_3;
+    27:    invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    30:    pop;
+    31:    goto              44;
+           catch             T1 #0;                // any
+           catch             T2 #0;                // any
+           catch             T3 #0;                // any
+           try               T3;
+    34:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16;                  // fldFS:"Ljava/lang/String;";
+             frame_type      stack1;               // frame_type 81
+               stack_map     #121;                 // class java/lang/Throwable;
+           astore            5;
+           endtry            T3;
+    36:    aload_3;
+    37:    invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    40:    pop;
+    41:    aload             5;
+    43:    athrow;
+    44:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #26,                  // out:"Ljava/io/PrintStream;",
+                             #16;                  // fldFS:"Ljava/lang/String;";
+             frame_type      same;                 // frame_type 9
+           iload_2;
+    45:    ifne              50;
+    48:    aconst_null;
+    49:    astore_3;
+    50:    stack_frame_type  same;                 // frame_type 5
+           iload_2;
+    51:    lookupswitch      {                     // 2
+                1:      76;
+                2:      87;
+               default: 87   };
+    76:    stack_frame_type  same;                 // frame_type 25
+           new               #2;                   // class java/lang/Object
+    79:    dup;
+    80:    invokespecial     #1;                   // Method java/lang/Object."<init>":"()V"
+    83:    astore_3;
+    84:    goto              87;
+    87:    stack_frame_type  same;                 // frame_type 10
+           iload_1;
+    88:    ifne              99;
+    91:    getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    94:    ldc               #30;                  // String "frame"
+    96:    invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    99:    stack_frame_type  same;                 // frame_type 11
+           iload_1;
+    100:   iconst_1;
+    101:   if_icmpne         127;
+    104:   bipush            42;
+    106:   istore            4;
+    108:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    111:   iload             4;
+    113:   ldc               #38;                  // float 100.0f
+    115:   invokestatic      #39;                  // Method java/lang/Math.round:"(F)I"
+    118:   imul;
+    119:   invokedynamic     #45;                  // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                   // makeConcatWithConstants:"(I)Ljava/lang/String;" {
+                                                   //   String "item_frame\u0001"
+                                                   // }
+    124:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    127:   stack_frame_type  same;                 // frame_type 27
+           iload_1;
+    128:   iconst_2;
+    129:   if_icmpne         184;
+    132:   iconst_0;
+    133:   istore            4;
+    135:   iconst_0;
+    136:   istore            5;
+    138:   stack_frame_type  early_larval;         // frame_type 246
+             unset_fields;
+             frame_type      append;               // frame_type 253
+               locals_map    1, 1;                 // int, int;
+           iload             5;
+    140:   sipush            3000;
+    143:   if_icmpge         171;
+    146:   ldc               #49;                  // float 3.14f
+    148:   fstore            6;
+    150:   iload             4;
+    152:   fload             6;
+    154:   ldc               #38;                  // float 100.0f
+    156:   invokestatic      #39;                  // Method java/lang/Math.round:"(F)I"
+    159:   i2f;
+    160:   fmul;
+    161:   f2i;
+    162:   iadd;
+    163:   istore            4;
+    165:   iinc              5, 1;
+    168:   goto              138;
+    171:   stack_frame_type  chop1;                // frame_type 250
+           getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    174:   iload             4;
+    176:   invokedynamic     #50;                  // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                   // makeConcatWithConstants:"(I)Ljava/lang/String;" {
+                                                   //   String "item_frame_\u0001"
+                                                   // }
+    181:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    184:   stack_frame_type  chop1;                // frame_type 250
+           ldc               #51;                  // float 10.0f
+    186:   invokestatic      #39;                  // Method java/lang/Math.round:"(F)I"
+    189:   istore            4;
+    191:   iload_1;
+    192:   iconst_3;
+    193:   if_icmpne         232;
+    196:   ldc               #52;                  // float 110.0f
+    198:   invokestatic      #39;                  // Method java/lang/Math.round:"(F)I"
+    201:   istore            5;
+    203:   ldc2_w            #53;                  // double 100.0d
+    206:   invokestatic      #55;                  // Method java/lang/Math.round:"(D)J"
+    209:   lstore            6;
+    211:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    214:   iload             5;
+    216:   i2l;
+    217:   lload             6;
+    219:   ladd;
+    220:   iload             4;
+    222:   i2l;
+    223:   lmul;
+    224:   invokedynamic     #58;                  // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                   // makeConcatWithConstants:"(J)Ljava/lang/String;" {
+                                                   //   String "_frame: \u0001"
+                                                   // }
+    229:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    232:   stack_frame_type  append;               // frame_type 252
+             locals_map      1;                    // int;
+           iload_1;
+    233:   iconst_4;
+    234:   if_icmpne         273;
+    237:   bipush            50;
+    239:   iload             4;
+    241:   imul;
+    242:   istore            5;
+    244:   ldc2_w            #61;                  // double 99.99d
+    247:   iload             4;
+    249:   i2d;
+    250:   dmul;
+    251:   dstore            6;
+    253:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    256:   iload             5;
+    258:   i2d;
+    259:   dload             6;
+    261:   dadd;
+    262:   invokedynamic     #63;                  // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                   // makeConcatWithConstants:"(D)Ljava/lang/String;" {
+                                                   //   String "Before chop_frame: \u0001"
+                                                   // }
+    267:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    270:   goto              281;
+    273:   stack_frame_type  same;                 // frame_type 40
+           getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    276:   ldc               #66;                  // String "chop_frame"
+    278:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    281:   stack_frame_type  same;                 // frame_type 7
+           iload_1;
+    282:   iconst_5;
+    283:   if_icmpne         379;
+    286:   iconst_0;
+    287:   istore            5;
+    289:   iconst_0;
+    290:   istore            6;
+    292:   stack_frame_type  append;               // frame_type 253
+             locals_map      1, 1;                 // int, int;
+           iload             6;
+    294:   sipush            2500;
+    297:   if_icmpge         326;
+    300:   ldc               #49;                  // float 3.14f
+    302:   fstore            7;
+    304:   iload             5;
+    306:   fload             7;
+    308:   iload             6;
+    310:   i2f;
+    311:   invokestatic      #39;                  // Method java/lang/Math.round:"(F)I"
+    314:   i2f;
+    315:   fmul;
+    316:   f2i;
+    317:   iadd;
+    318:   istore            5;
+    320:   iinc              6, 1;
+    323:   goto              292;
+    326:   stack_frame_type  early_larval;         // frame_type 246
+             unset_fields;
+             frame_type      chop1;                // frame_type 250
+           iload             5;
+    328:   bipush            100;
+    330:   if_icmple         344;
+    333:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    336:   ldc               #68;                  // String "_frame_"
+    338:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    341:   goto              379;
+    344:   stack_frame_type  same;                 // frame_type 17
+           iload             5;
+    346:   bipush            50;
+    348:   if_icmpge         379;
+    351:   bipush            50;
+    353:   iload             4;
+    355:   imul;
+    356:   istore            6;
+    358:   ldc2_w            #61;                  // double 99.99d
+    361:   iload             4;
+    363:   i2d;
+    364:   dmul;
+    365:   dstore            7;
+    367:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    370:   iload             6;
+    372:   i2d;
+    373:   dload             7;
+    375:   dadd;
+    376:   invokevirtual     #70;                  // Method java/io/PrintStream.println:"(D)V"
+    379:   stack_frame_type  chop1;                // frame_type 250
+           iload_1;
+    380:   bipush            6;
+    382:   if_icmpne         414;
+    385:   ldc               #73;                  // String "n_frame"
+    387:   astore            5;
+    389:   bipush            70;
+    391:   istore            6;
+    393:   bipush            100;
+    395:   istore            7;
+    397:   getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    400:   aload             5;
+    402:   iload             6;
+    404:   iload             7;
+    406:   invokedynamic     #75;                  // InvokeDynamic REF_invokeStatic:Method java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                   // makeConcatWithConstants:"(Ljava/lang/String;CI)Ljava/lang/String;" {
+                                                   //   String "\u0001: \u0001\u0001"
+                                                   // }
+    411:   invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    414:   stack_frame_type  same;                 // frame_type 34
+           iconst_0;
+    415:   istore            5;
+    417:   aconst_null;
+    418:   astore            6;
+           try               T4, T5;
+    420:   iconst_1;
+    421:   iload             5;
+    423:   idiv;
+    424:   istore            5;
+           endtry            T4,T5;
+    426:   aload             6;
+    428:   invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    431:   pop;
+    432:   goto              466;
+           catch             T4 #22;               // java/lang/ArithmeticException
+           try               T6;
+    435:   stack_frame_type  full;                 // frame_type 255
+             locals_map      #10, 1, 1, #2, 1, 1, #2; // class StackMapData, int, int, class java/lang/Object, int, int, class java/lang/Object;
+             stack_map       #22;                     // class java/lang/ArithmeticException;
+           astore            7;
+    437:   new               #2;                   // class java/lang/Object
+    440:   dup;
+    441:   invokespecial     #1;                   // Method java/lang/Object."<init>":"()V"
+    444:   astore            6;
+           endtry            T6;
+    446:   aload             6;
+    448:   invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    451:   pop;
+    452:   goto              466;
+           catch             T5 #0;                // any
+           catch             T6 #0;                // any
+           catch             T7 #0;                // any
+           try               T7;
+    455:   stack_frame_type  stack1;               // frame_type 83
+             stack_map       #121;                 // class java/lang/Throwable;
+           astore            9;
+           endtry            T7;
+    457:   aload             6;
+    459:   invokevirtual     #18;                  // Method java/lang/Object.toString:"()Ljava/lang/String;"
+    462:   pop;
+    463:   aload             9;
+    465:   athrow;
+    466:   stack_frame_type  same;                 // frame_type 10
+           iload             5;
+    468:   ifne              474;
+    471:   aconst_null;
+    472:   astore            6;
+    474:   stack_frame_type  same;                 // frame_type 7
+           iload_2;
+    475:   lookupswitch      {                     // 2
+                1:      500;
+                2:      512;
+               default: 512  };
+    500:   stack_frame_type  same;                 // frame_type 25
+           new               #2;                   // class java/lang/Object
+    503:   dup;
+    504:   invokespecial     #1;                   // Method java/lang/Object."<init>":"()V"
+    507:   astore            6;
+    509:   goto              512;
+    512:   stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16,                  // fldFS:"Ljava/lang/String;",
+                             #26,                  // out:"Ljava/io/PrintStream;",
+                             #112;                 // fldL:"J";
+             frame_type      same;                 // frame_type 11
+           return;
+  }
+
+  public Method #105:#106                          // complexMethod:"(ILjava/lang/Object;)I" 
+    stack 3  locals 7
+  {
+     0:    iconst_0;
+     1:    istore_3;
+     2:    iconst_1;
+     3:    istore            4;
+     5:    aconst_null;
+     6:    astore            5;
+           try               T0;
+     8:    iload_1;
+     9:    ifle              47;
+    12:    iload_1;
+    13:    iconst_1;
+    14:    iadd;
+    15:    istore_3;
+    16:    aload_2;
+    17:    instanceof        #78;                  // class java/lang/String
+    20:    ifeq              39;
+    23:    aload_2;
+    24:    checkcast         #78;                  // class java/lang/String
+    27:    astore            5;
+    29:    aload             5;
+    31:    invokevirtual     #80;                  // Method java/lang/Object.hashCode:"()I"
+    34:    istore            4;
+    36:    iload             4;
+           endtry            T0;
+    38:    ireturn;
+           try               T1;
+    39:    stack_frame_type  append;               // frame_type 254
+             locals_map      1, 1, #2;             // int, int, class java/lang/Object;
+           iload_3;
+    40:    iconst_2;
+    41:    imul;
+    42:    istore            4;
+    44:    goto              104;
+    47:    stack_frame_type  same;                 // frame_type 7
+           iload_1;
+    48:    iconst_m1;
+    49:    if_icmpne         70;
+    52:    iload_1;
+    53:    ineg;
+    54:    istore_3;
+    55:    iload_3;
+    56:    iconst_3;
+    57:    iadd;
+    58:    istore            4;
+    60:    new               #84;                  // class java/lang/RuntimeException
+    63:    dup;
+    64:    ldc               #86;                  // String "Test exception"
+    66:    invokespecial     #88;                  // Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V"
+    69:    athrow;
+    70:    stack_frame_type  same;                 // frame_type 22
+           iconst_0;
+    71:    istore            6;
+    73:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16,                  // fldFS:"Ljava/lang/String;",
+                             #26,                  // out:"Ljava/io/PrintStream;",
+                             #112;                 // fldL:"J";
+             frame_type      append;               // frame_type 252
+               locals_map    1;                    // int;
+           iload             6;
+    75:    iconst_2;
+    76:    if_icmpge         104;
+    79:    iload_3;
+    80:    iload             6;
+    82:    iadd;
+    83:    istore_3;
+    84:    iload_3;
+    85:    iconst_1;
+    86:    if_icmple         98;
+    89:    iload_3;
+    90:    iload             6;
+    92:    isub;
+    93:    istore            4;
+    95:    goto              104;
+    98:    stack_frame_type  same;                 // frame_type 24
+           iinc              6, 1;
+    101:   goto              73;
+           endtry            T1;
+    104:   stack_frame_type  chop1;                // frame_type 250
+           goto              118;
+           catch             T0 #84;               // java/lang/RuntimeException
+           catch             T1 #84;               // java/lang/RuntimeException
+    107:   stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16,                  // fldFS:"Ljava/lang/String;",
+                             #26,                  // out:"Ljava/io/PrintStream;",
+                             #112;                 // fldL:"J";
+             frame_type      stack1;               // frame_type 66
+               stack_map     #84;                  // class java/lang/RuntimeException;
+           astore            6;
+    109:   aload             6;
+    111:   astore            5;
+    113:   iload_3;
+    114:   iconst_5;
+    115:   iadd;
+    116:   istore            4;
+    118:   stack_frame_type  same;                 // frame_type 10
+           iload_3;
+    119:   iload             4;
+    121:   iadd;
+    122:   ireturn;
+  }
+
+  public Method #109:#110                          // generateFullFrame:"(I)I" 
+    stack 3  locals 6
+  {
+     0:    iconst_0;
+     1:    istore_2;
+     2:    aconst_null;
+     3:    astore_3;
+     4:    iconst_0;
+     5:    istore            4;
+           try               T0;
+     7:    iload_1;
+     8:    ifle              25;
+    11:    ldc               #90;                  // String "positive"
+    13:    astore_3;
+    14:    iconst_1;
+    15:    istore            4;
+    17:    aload_3;
+    18:    invokevirtual     #80;                  // Method java/lang/Object.hashCode:"()I"
+    21:    istore_2;
+    22:    goto              39;
+    25:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16,                  // fldFS:"Ljava/lang/String;",
+                             #26,                  // out:"Ljava/io/PrintStream;",
+                             #112;                 // fldL:"J";
+             frame_type      append;               // frame_type 254
+               locals_map    1, #2, 1;             // int, class java/lang/Object, int;
+           iload_1;
+    26:    iconst_2;
+    27:    imul;
+    28:    istore_2;
+    29:    new               #84;                  // class java/lang/RuntimeException
+    32:    dup;
+    33:    ldc               #92;                  // String "non-positive"
+    35:    invokespecial     #88;                  // Method java/lang/RuntimeException."<init>":"(Ljava/lang/String;)V"
+    38:    athrow;
+           endtry            T0;
+    39:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16,                  // fldFS:"Ljava/lang/String;",
+                             #26;                  // out:"Ljava/io/PrintStream;";
+             frame_type      same;                 // frame_type 13
+           goto              53;
+           catch             T0 #84;               // java/lang/RuntimeException
+    42:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11,                  // fldS:"Ljava/lang/String;",
+                             #16;                  // fldFS:"Ljava/lang/String;";
+             frame_type      stack1;               // frame_type 66
+               stack_map     #84;                  // class java/lang/RuntimeException;
+           astore            5;
+    44:    aload             5;
+    46:    astore_3;
+    47:    iconst_0;
+    48:    istore            4;
+    50:    iload_1;
+    51:    ineg;
+    52:    istore_2;
+    53:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields    #11;                  // fldS:"Ljava/lang/String;";
+             frame_type      same;                 // frame_type 10
+           iload             4;
+    55:    ifeq              62;
+    58:    iload_2;
+    59:    iconst_1;
+    60:    iadd;
+    61:    ireturn;
+    62:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields;
+             frame_type      same;                 // frame_type 8
+           getstatic         #24;                  // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    65:    ldc               #94;                  // String "Computing result"
+    67:    invokevirtual     #32;                  // Method java/io/PrintStream.println:"(Ljava/lang/String;)V"
+    70:    iload_2;
+    71:    ireturn;
+  }
+
+  public static Method #123:#124                   // main:"([Ljava/lang/String;)V" 
+    stack 3  locals 3
+  {
+     0:    new               #10;                  // class StackMapData
+     3:    dup;
+     4:    invokespecial     #96;                  // Method "<init>":"()V"
+     7:    astore_1;
+     8:    iconst_0;
+     9:    istore_2;
+    10:    stack_frame_type  early_larval;         // frame_type 246
+             unset_fields;
+             frame_type      append;               // frame_type 253
+               locals_map    #10, 1;               // class StackMapData, int;
+           iload_2;
+    11:    bipush            6;
+    13:    if_icmpgt         27;
+    16:    aload_1;
+    17:    iload_2;
+    18:    invokevirtual     #97;                  // Method generateFrames:"(I)V"
+    21:    iinc              2, 1;
+    24:    goto              10;
+    27:    stack_frame_type  chop1;                // frame_type 250
+           aload_1;
+    28:    iconst_0;
+    29:    ldc               #101;                 // String "test"
+    31:    invokevirtual     #103;                 // Method complexMethod:"(ILjava/lang/Object;)I"
+    34:    pop;
+    35:    aload_1;
+    36:    bipush            23;
+    38:    invokevirtual     #107;                 // Method generateFullFrame:"(I)I"
+    41:    pop;
+    42:    return;
+  }
+
+  static Method #125:#6                            // "<clinit>":"()V" 
+    stack 2  locals 0
+  {
+     0:    lconst_1;
+     1:    putstatic         #111;                 // Field fldL:"J"
+     4:    return;
+  }
+
+  InnerClass                 public static final #148 = #144 of #146;  // Lookup = class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+
+  BootstrapMethod            #137;                 // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #127              // String "item_frame\u0001"
+                             }
+
+  BootstrapMethod            #137;                 // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #129              // String "item_frame_\u0001"
+                             }
+
+  BootstrapMethod            #137;                 // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #131              // String "_frame: \u0001"
+                             }
+
+  BootstrapMethod            #137;                 // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #133              // String "Before chop_frame: \u0001"
+                             }
+
+  BootstrapMethod            #137;                 // REF_invokeStatic:java/lang/invoke/StringConcatFactory.makeConcatWithConstants:
+                                                   // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #135              // String "\u0001: \u0001\u0001"
+                             }
+} // end Class org/openjdk/asmtools/attribute/StackMapTable/data/StackMapData

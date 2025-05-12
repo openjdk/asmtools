@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -49,25 +49,25 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
     }
 
     @Override
-    public void setInputFile(ToolInput inputFileName) throws IOException, URISyntaxException {
+    public void setToolInput(ToolInput toolInput) throws IOException, URISyntaxException {
         try {
             // content of the jasm input file
-            super.setInputFile(inputFileName);
+            super.setToolInput(toolInput);
             this.inputFile = new InputFile(getDataInputStream());
         } catch (IOException ioe) {
-            error("err.cannot.read", inputFileName);
+            error("err.cannot.read", toolInput);
             throw ioe;
         }
     }
 
     // proxy methods
     @Override
-    public void warning(int where, String id, Object... args) {
+    public void warning(long where, String id, Object... args) {
         getLogger().warning(where, id, args);
     }
 
     @Override
-    public void error(int where, String id, Object... args) {
+    public void error(long where, String id, Object... args) {
         getLogger().error(where, id, args);
     }
 
@@ -82,8 +82,9 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
     }
 
     // Jasm specific methods
-    public long getErrorCount() {
-        return getLogger().getCount(EMessageKind.ERROR);
+    @Override
+    public long getCount(EMessageKind kind) {
+        return getLogger().getCount(kind);
     }
 
     public boolean hasMessages() {
@@ -91,12 +92,17 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
     }
 
     // get line number by scanner position
-    public int lineNumber(int where) {
+    public long lineNumber(long where) {
         return getLogger().lineNumber(where);
     }
 
+    // get line number by scanner position
+    public long lineOffset(long lineNumber, long where) {
+        return getLogger().lineOffset(lineNumber, where);
+    }
+
     /**
-     * Throws an error that is not associated with scanner position in an input file
+     * Throws an error not associated with scanner position in an input file
      *
      * @param id   id of a string resource in I18NResourceBundle
      * @param args arguments referenced by the format specifiers in the resource string
@@ -108,14 +114,14 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
     }
 
     /**
-     * Throws an error that is associated with scanner position in an input file
+     * Throws an error associated with scanner position in an input file
      *
      * @param where position in an input file
      * @param id    id of a string resource in I18NResourceBundle
      * @param args  arguments referenced by the format specifiers in the resource string
      * @throws Error exception
      */
-    public void throwErrorException(int where, String id, Object... args) throws Error {
+    public void throwErrorException(long where, String id, Object... args) throws Error {
         error(where, id, args);
         throw new Error();
     }
@@ -129,7 +135,7 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
         return super.getLogger().flush(printTotals);
     }
 
-    public int getPosition() {
+    public long getPosition() {
         return inputFile == null ? 0 : inputFile.position;
     }
 
@@ -158,11 +164,9 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
     }
 
     private class InputFile extends TextInput {
-        private int linepos = 1;
 
         InputFile(DataInputStream dataInputStream) throws IOException {
             super(dataInputStream);
-            charPos = 0;
         }
 
         int lookForwardUTF() {
@@ -176,7 +180,7 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
         @Override
         public int readUTF() {
             char ch;
-            position = (linepos << OFFSET_BITS) | charPos;
+            position = ((long) linepos << OFFSET_BITS) | charPos;
             try {
                 ch = strData.charAt(charPos);
                 charPos++;

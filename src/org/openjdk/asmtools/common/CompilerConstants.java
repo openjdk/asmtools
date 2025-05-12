@@ -32,12 +32,11 @@ public interface CompilerConstants {
     int EOF = -1;
 
     // Jasm: Number of bits used in file offsets
-    int OFFSET_BITS = 19;
+    int OFFSET_BITS = 32;
 
     //Jcoder: The increment for each character.
     int OFFSET_INC = 1;
-    // The increment for each line.
-    int LINE_INC = 1 << OFFSET_BITS;
+
     // BACKSLASH is a special code indicating a pushback of a backslash that
     // definitely isn't the start of a unicode sequence.
     int BACKSLASH = -2;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,8 +42,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
+import static org.openjdk.asmtools.Main.*;
+import static org.openjdk.asmtools.common.EMessageKind.ERROR;
 import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
+import static org.openjdk.asmtools.common.outputs.FSOutput.FSDestination.DIR;
 import static org.openjdk.asmtools.util.ProductInfo.FULL_VERSION;
 
 /**
@@ -68,6 +71,7 @@ public class Main extends JasmTool {
     private boolean debugCP = false;
     private boolean debugAnnot = false;
     private boolean debugInstr = false;
+    private boolean debugAttribute = false;
 
     public Main(ToolOutput toolOutput, String... argv) {
         super(toolOutput);
@@ -125,36 +129,38 @@ public class Main extends JasmTool {
         System.exit(compiler.compile());
     }
 
-    // Run jasm compiler with args
-    public synchronized boolean compile(String... argv) {
-        parseArgs(argv);
-        return this.compile() == OK;
-    }
-
     // Run jasm compiler when args already parsed
+    @Override
     public synchronized int compile() {
         // compile all input files
         int rc = OK;
         try {
             for (ToolInput inputFileName : fileList) {
-                environment.setInputFile(inputFileName);
+                environment.setToolInput(inputFileName);
                 Parser parser = new Parser(environment, cfv);
                 // Set hidden options: Parser debug flags
-                parser.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr);
+                parser.setDebugFlags(debugScanner, debugMembers, debugCP, debugAnnot, debugInstr, debugAttribute);
                 parser.parseFile();
-                if (environment.getErrorCount() > 0) break;
-                if (noWriteFlag) continue;
+                if (environment.getCount(ERROR) > 0) {
+                    break;
+                }
+                if (noWriteFlag) {
+                    continue;
+                }
                 ClassData[] clsData = parser.getClassesData();
                 for (ClassData cd : clsData) {
-                    String fqn = cd.myClassName;
-                    environment.getToolOutput().startClass(fqn, Optional.of(cd.fileExtension), environment);
+                    String fullyQualifiedName = cd.myClassName;
+                    ToolOutput toolOutput = environment.getToolOutput();
+                    toolOutput.startClass(fullyQualifiedName, Optional.of(cd.fileExtension), environment);
                     if (byteLimit > 0) {
                         cd.setByteLimit(byteLimit);
                     }
-                    cd.write(environment.getToolOutput());
-                    environment.getToolOutput().finishClass(fqn);
+                    cd.write(toolOutput);
+                    toolOutput.finishClass(fullyQualifiedName);
                 }
-                if (environment.hasMessages()) rc += environment.flush(true);
+                if (environment.hasMessages()) {
+                    rc += environment.flush(true);
+                }
             }
         } catch (IOException | URISyntaxException | Error exception) {
             environment.printException(exception);
@@ -174,6 +180,7 @@ public class Main extends JasmTool {
         environment.usage(List.of(
                 "info.usage",
                 "info.opt.d",
+                "info.opt.w",
                 "info.opt.nowrite",
                 "info.opt.nowarn",
                 "info.opt.strict",
@@ -202,13 +209,16 @@ public class Main extends JasmTool {
                     case "-strict" -> environment.setStrictWarningsOn();
                     case "-nowarn" -> environment.setIgnoreWarningsOn();
                     case "-nowrite" -> noWriteFlag = true;
-                    case org.openjdk.asmtools.Main.VERSION_SWITCH -> {
+                    case VERSION_SWITCH -> {
                         environment.println(FULL_VERSION);
                         System.exit(OK);
                     }
-                    case org.openjdk.asmtools.Main.DIR_SWITCH -> setDestDir(++i, argv);
-                    case org.openjdk.asmtools.Main.DUAL_LOG_SWITCH ->
-                            this.environment.setOutputs(new DualOutputStreamOutput());
+                    case WRITE_SWITCH -> {                              // -w
+                        environment.setIgnorePackage(true);
+                        setFSDestination(DIR, ++i, argv);
+                    }
+                    case DIR_SWITCH -> setFSDestination(DIR, ++i, argv);
+                    case DUAL_LOG_SWITCH -> this.environment.setOutputs(new DualOutputStreamOutput());
                     case "-h", "-help", "-?" -> {
                         usage();
                         System.exit(OK);
@@ -239,12 +249,12 @@ public class Main extends JasmTool {
                                 }
                                 Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versionsThreshold[0]),
                                         Integer.parseInt(versionsThreshold[1]));
-                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                     throw new NumberFormatException();
                                 }
                                 cfv.setThreshold(versionsPair.first, versionsPair.second);
                                 versionsPair = new Pair<>(Integer.parseInt(versionsUpdate[0]), Integer.parseInt(versionsUpdate[1]));
-                                if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                     throw new NumberFormatException();
                                 }
                                 cfv.setVersion(versionsPair.first, versionsPair.second).setByParameter(true).setFrozen(true);
@@ -252,7 +262,7 @@ public class Main extends JasmTool {
                                 String[] versions = cfvArg.split("[.:]+", 2);
                                 if (versions.length == 2) {
                                     Pair<Integer, Integer> versionsPair = new Pair<>(Integer.parseInt(versions[0]), Integer.parseInt(versions[1]));
-                                    if( versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF ) {
+                                    if (versionsPair.second > 0xFFFF || versionsPair.first > 0xFFFF) {
                                         throw new NumberFormatException();
                                     }
                                     cfv.setVersion(Integer.parseInt(versions[0]), Integer.parseInt(versions[1])).
@@ -277,12 +287,14 @@ public class Main extends JasmTool {
                     case "-XdCP" -> debugCP = true;
                     case "-XdInstr" -> debugInstr = true;
                     case "-XdAnnot" -> debugAnnot = true;
+                    case "-XdAttr" -> debugAttribute = true;
                     case "-XdAll" -> {
                         debugScanner = true;
                         debugMembers = true;
                         debugCP = true;
                         debugInstr = true;
                         debugAnnot = true;
+                        debugAttribute = true;
                     }
                     case "-Xdlimit" -> {
                         // parses file until the specified byte number
