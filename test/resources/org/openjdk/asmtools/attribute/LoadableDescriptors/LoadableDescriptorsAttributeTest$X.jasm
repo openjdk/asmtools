@@ -1,0 +1,108 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+final class LoadableDescriptorsAttributeTest$X version 69:65535
+{
+  final strict Field v1:"[LLoadableDescriptorsAttributeTest$V1;";
+  final strict Field v7:"LLoadableDescriptorsAttributeTest$V7;";
+  final strict Field v10:"LLoadableDescriptorsAttributeTest$V10;";
+
+  Method       "<init>":"()V"
+    stack 2  locals 1
+  {
+         aload_0;
+         aconst_null;
+         putfield          Field v1:"[LLoadableDescriptorsAttributeTest$V1;";
+         aload_0;
+         aconst_null;
+         putfield          Field v7:"LLoadableDescriptorsAttributeTest$V7;";
+         aload_0;
+         aconst_null;
+         putfield          Field v10:"LLoadableDescriptorsAttributeTest$V10;";
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+  }
+
+  Method       foo:"()LLoadableDescriptorsAttributeTest$V2;"
+    stack 1  locals 1
+  {
+         aconst_null;
+         areturn;
+  }
+
+  Method       foo:"(LLoadableDescriptorsAttributeTest$V3;)V"
+    stack 0  locals 2
+  {
+         return;
+  }
+
+  Method       foo:"(I)V"
+    stack 1  locals 3
+  {
+         aconst_null;
+         astore_2;
+         return;
+  }
+
+  Method       goo:"([LLoadableDescriptorsAttributeTest$V6;)V"
+    stack 1  locals 4
+  {
+         aconst_null;
+         astore_2;
+         aload_2;
+         ifnonnull         L9;
+         goto              L11;
+  L9:    stack_frame_type  append;
+           locals_map      class LoadableDescriptorsAttributeTest$V5;
+         aconst_null;
+         astore_3;
+  L11:   stack_frame_type  same;
+         return;
+  }
+
+  Method       goo:"([LLoadableDescriptorsAttributeTest$V9;)[LLoadableDescriptorsAttributeTest$V8;"
+    stack 1  locals 2
+  {
+         aconst_null;
+         areturn;
+  }
+
+  SourceFile               "LoadableDescriptorsAttributeTest.java";
+
+  NestHost                 "LoadableDescriptorsAttributeTest";
+
+  InnerClass               static final X = class LoadableDescriptorsAttributeTest$X of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V1 = class LoadableDescriptorsAttributeTest$V1 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V7 = class LoadableDescriptorsAttributeTest$V7 of class LoadableDescriptorsAttributeTest;
+  InnerClass               abstract V10 = class LoadableDescriptorsAttributeTest$V10 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V2 = class LoadableDescriptorsAttributeTest$V2 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V3 = class LoadableDescriptorsAttributeTest$V3 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V6 = class LoadableDescriptorsAttributeTest$V6 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V5 = class LoadableDescriptorsAttributeTest$V5 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V9 = class LoadableDescriptorsAttributeTest$V9 of class LoadableDescriptorsAttributeTest;
+  InnerClass               final V8 = class LoadableDescriptorsAttributeTest$V8 of class LoadableDescriptorsAttributeTest;
+
+  LoadableDescriptors      "LLoadableDescriptorsAttributeTest$V3;",
+                           "LLoadableDescriptorsAttributeTest$V7;",
+                           "LLoadableDescriptorsAttributeTest$V2;";
+} // end Class LoadableDescriptorsAttributeTest$X compiled from "LoadableDescriptorsAttributeTest.java"

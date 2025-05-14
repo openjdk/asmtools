@@ -1,0 +1,174 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+final class #2 /* LoadableDescriptorsAttributeTest$X */ version 69:65535
+{
+  const #1   = Field       #2.#3;               // LoadableDescriptorsAttributeTest$X.v1:"[LLoadableDescriptorsAttributeTest$V1;"
+  const #2   = class       #4;                  // LoadableDescriptorsAttributeTest$X
+  const #3   = NameAndType #5:#6;               // v1:"[LLoadableDescriptorsAttributeTest$V1;"
+  const #4   = Utf8        "LoadableDescriptorsAttributeTest$X";
+  const #5   = Utf8        "v1";
+  const #6   = Utf8        "[LLoadableDescriptorsAttributeTest$V1;";
+  const #7   = Field       #2.#8;               // LoadableDescriptorsAttributeTest$X.v7:"LLoadableDescriptorsAttributeTest$V7;"
+  const #8   = NameAndType #9:#10;              // v7:"LLoadableDescriptorsAttributeTest$V7;"
+  const #9   = Utf8        "v7";
+  const #10  = Utf8        "LLoadableDescriptorsAttributeTest$V7;";
+  const #11  = Field       #2.#12;              // LoadableDescriptorsAttributeTest$X.v10:"LLoadableDescriptorsAttributeTest$V10;"
+  const #12  = NameAndType #13:#14;             // v10:"LLoadableDescriptorsAttributeTest$V10;"
+  const #13  = Utf8        "v10";
+  const #14  = Utf8        "LLoadableDescriptorsAttributeTest$V10;";
+  const #15  = Method      #16.#17;             // java/lang/Object."<init>":"()V"
+  const #16  = class       #18;                 // java/lang/Object
+  const #17  = NameAndType #19:#20;             // "<init>":"()V"
+  const #18  = Utf8        "java/lang/Object";
+  const #19  = Utf8        "<init>";
+  const #20  = Utf8        "()V";
+  const #21  = Utf8        "Code";
+  const #22  = Utf8        "LineNumberTable";
+  const #23  = Utf8        "foo";
+  const #24  = Utf8        "()LLoadableDescriptorsAttributeTest$V2;";
+  const #25  = Utf8        "(LLoadableDescriptorsAttributeTest$V3;)V";
+  const #26  = Utf8        "(I)V";
+  const #27  = Utf8        "goo";
+  const #28  = Utf8        "([LLoadableDescriptorsAttributeTest$V6;)V";
+  const #29  = Utf8        "StackMapTable";
+  const #30  = class       #31;                 // LoadableDescriptorsAttributeTest$V5
+  const #31  = Utf8        "LoadableDescriptorsAttributeTest$V5";
+  const #32  = Utf8        "([LLoadableDescriptorsAttributeTest$V9;)[LLoadableDescriptorsAttributeTest$V8;";
+  const #33  = Utf8        "SourceFile";
+  const #34  = Utf8        "LoadableDescriptorsAttributeTest.java";
+  const #35  = Utf8        "NestHost";
+  const #36  = class       #37;                 // LoadableDescriptorsAttributeTest
+  const #37  = Utf8        "LoadableDescriptorsAttributeTest";
+  const #38  = Utf8        "InnerClasses";
+  const #39  = Utf8        "X";
+  const #40  = class       #41;                 // LoadableDescriptorsAttributeTest$V1
+  const #41  = Utf8        "LoadableDescriptorsAttributeTest$V1";
+  const #42  = Utf8        "V1";
+  const #43  = class       #44;                 // LoadableDescriptorsAttributeTest$V7
+  const #44  = Utf8        "LoadableDescriptorsAttributeTest$V7";
+  const #45  = Utf8        "V7";
+  const #46  = class       #47;                 // LoadableDescriptorsAttributeTest$V10
+  const #47  = Utf8        "LoadableDescriptorsAttributeTest$V10";
+  const #48  = Utf8        "V10";
+  const #49  = class       #50;                 // LoadableDescriptorsAttributeTest$V2
+  const #50  = Utf8        "LoadableDescriptorsAttributeTest$V2";
+  const #51  = Utf8        "V2";
+  const #52  = class       #53;                 // LoadableDescriptorsAttributeTest$V3
+  const #53  = Utf8        "LoadableDescriptorsAttributeTest$V3";
+  const #54  = Utf8        "V3";
+  const #55  = class       #56;                 // LoadableDescriptorsAttributeTest$V6
+  const #56  = Utf8        "LoadableDescriptorsAttributeTest$V6";
+  const #57  = Utf8        "V6";
+  const #58  = Utf8        "V5";
+  const #59  = class       #60;                 // LoadableDescriptorsAttributeTest$V9
+  const #60  = Utf8        "LoadableDescriptorsAttributeTest$V9";
+  const #61  = Utf8        "V9";
+  const #62  = class       #63;                 // LoadableDescriptorsAttributeTest$V8
+  const #63  = Utf8        "LoadableDescriptorsAttributeTest$V8";
+  const #64  = Utf8        "V8";
+  const #65  = Utf8        "LoadableDescriptors";
+  const #66  = Utf8        "LLoadableDescriptorsAttributeTest$V3;";
+  const #67  = Utf8        "LLoadableDescriptorsAttributeTest$V2;";
+
+  final strict Field #5:#6;                     // v1:"[LLoadableDescriptorsAttributeTest$V1;"
+  final strict Field #9:#10;                    // v7:"LLoadableDescriptorsAttributeTest$V7;"
+  final strict Field #13:#14;                   // v10:"LLoadableDescriptorsAttributeTest$V10;"
+
+  Method       #19:#20                          // "<init>":"()V"
+    stack 2  locals 1
+  {
+     0:    aload_0;
+     1:    aconst_null;
+     2:    putfield          #1;                // Field v1:"[LLoadableDescriptorsAttributeTest$V1;"
+     5:    aload_0;
+     6:    aconst_null;
+     7:    putfield          #7;                // Field v7:"LLoadableDescriptorsAttributeTest$V7;"
+    10:    aload_0;
+    11:    aconst_null;
+    12:    putfield          #11;               // Field v10:"LLoadableDescriptorsAttributeTest$V10;"
+    15:    aload_0;
+    16:    invokespecial     #15;               // Method java/lang/Object."<init>":"()V"
+    19:    return;
+  }
+
+  Method       #23:#24                          // foo:"()LLoadableDescriptorsAttributeTest$V2;"
+    stack 1  locals 1
+  {
+     0:    aconst_null;
+     1:    areturn;
+  }
+
+  Method       #23:#25                          // foo:"(LLoadableDescriptorsAttributeTest$V3;)V"
+    stack 0  locals 2
+  {
+     0:    return;
+  }
+
+  Method       #23:#26                          // foo:"(I)V"
+    stack 1  locals 3
+  {
+     0:    aconst_null;
+     1:    astore_2;
+     2:    return;
+  }
+
+  Method       #27:#28                          // goo:"([LLoadableDescriptorsAttributeTest$V6;)V"
+    stack 1  locals 4
+  {
+     0:    aconst_null;
+     1:    astore_2;
+     2:    aload_2;
+     3:    ifnonnull         9;
+     6:    goto              11;
+     9:    stack_frame_type  append;            // frame_type 252
+             locals_map      #30;               // class LoadableDescriptorsAttributeTest$V5;
+           aconst_null;
+    10:    astore_3;
+    11:    stack_frame_type  same;              // frame_type 1
+           return;
+  }
+
+  Method       #27:#32                          // goo:"([LLoadableDescriptorsAttributeTest$V9;)[LLoadableDescriptorsAttributeTest$V8;"
+    stack 1  locals 2
+  {
+     0:    aconst_null;
+     1:    areturn;
+  }
+
+  SourceFile                 #34;               // LoadableDescriptorsAttributeTest.java
+
+  NestHost                   #36;               // LoadableDescriptorsAttributeTest
+
+  InnerClass                 static final #39 = #2 of #36;  // X = class LoadableDescriptorsAttributeTest$X of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #42 = #40 of #36;        // V1 = class LoadableDescriptorsAttributeTest$V1 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #45 = #43 of #36;        // V7 = class LoadableDescriptorsAttributeTest$V7 of class LoadableDescriptorsAttributeTest
+  InnerClass                 abstract #48 = #46 of #36;     // V10 = class LoadableDescriptorsAttributeTest$V10 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #51 = #49 of #36;        // V2 = class LoadableDescriptorsAttributeTest$V2 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #54 = #52 of #36;        // V3 = class LoadableDescriptorsAttributeTest$V3 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #57 = #55 of #36;        // V6 = class LoadableDescriptorsAttributeTest$V6 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #58 = #30 of #36;        // V5 = class LoadableDescriptorsAttributeTest$V5 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #61 = #59 of #36;        // V9 = class LoadableDescriptorsAttributeTest$V9 of class LoadableDescriptorsAttributeTest
+  InnerClass                 final #64 = #62 of #36;        // V8 = class LoadableDescriptorsAttributeTest$V8 of class LoadableDescriptorsAttributeTest
+
+  LoadableDescriptors        #66, #10, #67;     // "LLoadableDescriptorsAttributeTest$V3;", "LLoadableDescriptorsAttributeTest$V7;", "LLoadableDescriptorsAttributeTest$V2;"
+} // end Class LoadableDescriptorsAttributeTest$X compiled from "LoadableDescriptorsAttributeTest.java"
