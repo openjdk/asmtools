@@ -314,9 +314,6 @@ public class ParseAttribute extends ParseBase {
                 }
                 case RBRACE -> {
                     if (wrapLevel == 0) {
-//                        if (entryType == EARLY_LARVAL) {
-//                            environment.throwErrorException(scanner.pos, "err.base.frame.expected");
-//                        }
                         return list;
                     }
                     wrapLevel--;
@@ -362,11 +359,6 @@ public class ParseAttribute extends ParseBase {
                                 stackMapData = new StackMapData(environment, parser.curCodeAttr.isTypeCheckingVerifier());
                                 environment.warning(scanner.pos, "warn.stackmap.expected",
                                         "\"%s\"".formatted(expectedToken.parseKey()));
-//                            } else if (expectedToken == UNSETFIELDS) {
-//                                // missing means empty unset_fields
-//                                stackMapData.unsetFields = new DataVector<>();
-//                                list.add(stackMapData);
-//                                stackMapData = new StackMapData(environment, parser.curCodeAttr.isTypeCheckingVerifier());
                         } else {
                                 environment.throwErrorException(scanner.pos, "err.stackmap.expected",
                                         "\"%s\"".formatted(expectedToken.parseKey()));
@@ -561,11 +553,6 @@ public class ParseAttribute extends ParseBase {
                         continue;
                     }
                 }
-//                default -> {
-//                    if (wrapLevel == 0) {
-//                        environment.throwErrorException(scanner.pos, "err.token.expected", RBRACE.parseKey());
-//                    }
-//                }
             }
             scanner.scan();
         }

@@ -1,0 +1,326 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+class LoadableDescriptorsAttributeTest$X {
+  0xCAFEBABE;
+  65535;                                   // minor version
+  69;                                      // version
+  [68] {                                   // Constant Pool
+    ;                                      // first element is empty
+    Field #2 #3;                           // #1     at 0x0A
+    Class #4;                              // #2     at 0x0F
+    NameAndType #5 #6;                     // #3     at 0x12
+    Utf8 "LoadableDescriptorsAttributeTest$X";  // #4     at 0x17
+    Utf8 "v1";                             // #5     at 0x3C
+    Utf8 "[LLoadableDescriptorsAttributeTest$V1;";  // #6     at 0x41
+    Field #2 #8;                           // #7     at 0x6A
+    NameAndType #9 #10;                    // #8     at 0x6F
+    Utf8 "v7";                             // #9     at 0x74
+    Utf8 "LLoadableDescriptorsAttributeTest$V7;";  // #10     at 0x79
+    Field #2 #12;                          // #11     at 0xA1
+    NameAndType #13 #14;                   // #12     at 0xA6
+    Utf8 "v10";                            // #13     at 0xAB
+    Utf8 "LLoadableDescriptorsAttributeTest$V10;";  // #14     at 0xB1
+    Method #16 #17;                        // #15     at 0xDA
+    Class #18;                             // #16     at 0xDF
+    NameAndType #19 #20;                   // #17     at 0xE2
+    Utf8 "java/lang/Object";               // #18     at 0xE7
+    Utf8 "<init>";                         // #19     at 0xFA
+    Utf8 "()V";                            // #20     at 0x0103
+    Utf8 "Code";                           // #21     at 0x0109
+    Utf8 "LineNumberTable";                // #22     at 0x0110
+    Utf8 "foo";                            // #23     at 0x0122
+    Utf8 "()LLoadableDescriptorsAttributeTest$V2;";  // #24     at 0x0128
+    Utf8 "(LLoadableDescriptorsAttributeTest$V3;)V";  // #25     at 0x0152
+    Utf8 "(I)V";                           // #26     at 0x017D
+    Utf8 "goo";                            // #27     at 0x0184
+    Utf8 "([LLoadableDescriptorsAttributeTest$V6;)V";  // #28     at 0x018A
+    Utf8 "StackMapTable";                  // #29     at 0x01B6
+    Class #31;                             // #30     at 0x01C6
+    Utf8 "LoadableDescriptorsAttributeTest$V5";  // #31     at 0x01C9
+    Utf8 "([LLoadableDescriptorsAttributeTest$V9;)[LLoadableDescriptorsAttributeTest$V8;";  // #32     at 0x01EF
+    Utf8 "SourceFile";                     // #33     at 0x0240
+    Utf8 "LoadableDescriptorsAttributeTest.java";  // #34     at 0x024D
+    Utf8 "NestHost";                       // #35     at 0x0275
+    Class #37;                             // #36     at 0x0280
+    Utf8 "LoadableDescriptorsAttributeTest";  // #37     at 0x0283
+    Utf8 "InnerClasses";                   // #38     at 0x02A6
+    Utf8 "X";                              // #39     at 0x02B5
+    Class #41;                             // #40     at 0x02B9
+    Utf8 "LoadableDescriptorsAttributeTest$V1";  // #41     at 0x02BC
+    Utf8 "V1";                             // #42     at 0x02E2
+    Class #44;                             // #43     at 0x02E7
+    Utf8 "LoadableDescriptorsAttributeTest$V7";  // #44     at 0x02EA
+    Utf8 "V7";                             // #45     at 0x0310
+    Class #47;                             // #46     at 0x0315
+    Utf8 "LoadableDescriptorsAttributeTest$V10";  // #47     at 0x0318
+    Utf8 "V10";                            // #48     at 0x033F
+    Class #50;                             // #49     at 0x0345
+    Utf8 "LoadableDescriptorsAttributeTest$V2";  // #50     at 0x0348
+    Utf8 "V2";                             // #51     at 0x036E
+    Class #53;                             // #52     at 0x0373
+    Utf8 "LoadableDescriptorsAttributeTest$V3";  // #53     at 0x0376
+    Utf8 "V3";                             // #54     at 0x039C
+    Class #56;                             // #55     at 0x03A1
+    Utf8 "LoadableDescriptorsAttributeTest$V6";  // #56     at 0x03A4
+    Utf8 "V6";                             // #57     at 0x03CA
+    Utf8 "V5";                             // #58     at 0x03CF
+    Class #60;                             // #59     at 0x03D4
+    Utf8 "LoadableDescriptorsAttributeTest$V9";  // #60     at 0x03D7
+    Utf8 "V9";                             // #61     at 0x03FD
+    Class #63;                             // #62     at 0x0402
+    Utf8 "LoadableDescriptorsAttributeTest$V8";  // #63     at 0x0405
+    Utf8 "V8";                             // #64     at 0x042B
+    Utf8 "LoadableDescriptors";            // #65     at 0x0430
+    Utf8 "LLoadableDescriptorsAttributeTest$V3;";  // #66     at 0x0446
+    Utf8 "LLoadableDescriptorsAttributeTest$V2;";  // #67     at 0x046E
+  }                                        // end of Constant Pool
+
+  0x0010;                                  // access [ ACC_FINAL ]
+  #2;                                      // this_cpx
+  #16;                                     // super_cpx
+
+  [0] {                                    // Interfaces
+  }                                        // end of Interfaces
+
+  [3] {                                    // Fields
+    {                                      // field at 0x04A0
+      0x0810;                              // access
+      #5;                                  // name_index       : v1
+      #6;                                  // descriptor_index : [LLoadableDescriptorsAttributeTest$V1;
+      [0] {                                // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field at 0x04A8
+      0x0810;                              // access
+      #9;                                  // name_index       : v7
+      #10;                                 // descriptor_index : LLoadableDescriptorsAttributeTest$V7;
+      [0] {                                // Attributes
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // field at 0x04B0
+      0x0810;                              // access
+      #13;                                 // name_index       : v10
+      #14;                                 // descriptor_index : LLoadableDescriptorsAttributeTest$V10;
+      [0] {                                // Attributes
+      }                                    // end of Attributes
+    }
+  }                                        // end of Fields
+
+  [6] {                                    // Methods
+    {                                      // method at 0x04BA
+      0x0000;                              // access
+      #19;                                 // name_index       : <init>
+      #20;                                 // descriptor_index : ()V
+      [1] {                                // Attributes
+        Attr(#21, 60) {                    // Code at 0x04C2
+          2;                               // max_stack
+          1;                               // max_locals
+          Bytes[20]{
+            0x2A 0x01 0xB5 0x00 0x01 0x2A 0x01 0xB5 0x00 0x07 0x2A 0x01;
+            0xB5 0x00 0x0B 0x2A 0xB7 0x00 0x0F 0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#22, 22) {                // LineNumberTable at 0x04E8
+              [5] {                        // line_number_table
+                   0   50;                 // at 0x04F4
+                   5   67;                 // at 0x04F8
+                  10   71;                 // at 0x04FC
+                  15   49;                 // at 0x0500
+                  19   71;                 // at 0x0504
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0504
+      0x0000;                              // access
+      #23;                                 // name_index       : foo
+      #24;                                 // descriptor_index : ()LLoadableDescriptorsAttributeTest$V2;
+      [1] {                                // Attributes
+        Attr(#21, 26) {                    // Code at 0x050C
+          1;                               // max_stack
+          1;                               // max_locals
+          Bytes[2]{
+            0x01 0xB0;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#22, 6) {                 // LineNumberTable at 0x0520
+              [1] {                        // line_number_table
+                   0   52;                 // at 0x052C
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x052C
+      0x0000;                              // access
+      #23;                                 // name_index       : foo
+      #25;                                 // descriptor_index : (LLoadableDescriptorsAttributeTest$V3;)V
+      [1] {                                // Attributes
+        Attr(#21, 25) {                    // Code at 0x0534
+          0;                               // max_stack
+          2;                               // max_locals
+          Bytes[1]{
+            0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#22, 6) {                 // LineNumberTable at 0x0547
+              [1] {                        // line_number_table
+                   0   55;                 // at 0x0553
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0553
+      0x0000;                              // access
+      #23;                                 // name_index       : foo
+      #26;                                 // descriptor_index : (I)V
+      [1] {                                // Attributes
+        Attr(#21, 31) {                    // Code at 0x055B
+          1;                               // max_stack
+          3;                               // max_locals
+          Bytes[3]{
+            0x01 0x4D 0xB1;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#22, 10) {                // LineNumberTable at 0x0570
+              [2] {                        // line_number_table
+                   0   57;                 // at 0x057C
+                   2   58;                 // at 0x0580
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x0580
+      0x0000;                              // access
+      #27;                                 // name_index       : goo
+      #28;                                 // descriptor_index : ([LLoadableDescriptorsAttributeTest$V6;)V
+      [1] {                                // Attributes
+        Attr(#21, 63) {                    // Code at 0x0588
+          1;                               // max_stack
+          4;                               // max_locals
+          Bytes[12]{
+            0x01 0x4D 0x2C 0xC7 0x00 0x06 0xA7 0x00 0x05 0x01 0x4E 0xB1;
+;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [2] {                            // Attributes
+            Attr(#22, 18) {                // LineNumberTable at 0x05A6
+              [4] {                        // line_number_table
+                   0   60;                 // at 0x05B2
+                   2   61;                 // at 0x05B6
+                   9   64;                 // at 0x05BA
+                  11   66;                 // at 0x05BE
+              }
+            }                              // end of LineNumberTable
+            ;
+            Attr(#29, 9) {                 // StackMapTable at 0x05BE
+              [2] {                        //
+                252b, 9, [1]z{7b,#30};     // append_frame 1
+                1b;                        // same_frame
+              }
+            }                              // end of StackMapTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+    ;
+    {                                      // method at 0x05CD
+      0x0000;                              // access
+      #27;                                 // name_index       : goo
+      #32;                                 // descriptor_index : ([LLoadableDescriptorsAttributeTest$V9;)[LLoadableDescriptorsAttributeTest$V8;
+      [1] {                                // Attributes
+        Attr(#21, 26) {                    // Code at 0x05D5
+          1;                               // max_stack
+          2;                               // max_locals
+          Bytes[2]{
+            0x01 0xB0;
+          }
+          [0] {                            // Traps
+          }                                // end of Traps
+          [1] {                            // Attributes
+            Attr(#22, 6) {                 // LineNumberTable at 0x05E9
+              [1] {                        // line_number_table
+                   0   69;                 // at 0x05F5
+              }
+            }                              // end of LineNumberTable
+          }                                // end of Attributes
+        }                                  // end of Code
+      }                                    // end of Attributes
+    }
+  }                                        // end of Methods
+
+  [4] {                                    // Attributes
+    Attr(#33, 2) {                         // SourceFile at 0x05F7
+      #34;
+    }                                      // end of SourceFile
+    ;
+    Attr(#35, 2) {                         // NestHost at 0x05FF
+      #36;                                 // class: LoadableDescriptorsAttributeTest at 0x0607
+    }                                      // end of NestHost
+    ;
+    Attr(#38, 82) {                        // InnerClasses at 0x0607
+      [10] {                               // classes
+           #2   #36   #39  24;             // access [ ACC_STATIC, ACC_FINAL ]
+          #40   #36   #42  16;             // access [ ACC_FINAL ]
+          #43   #36   #45  16;             // access [ ACC_FINAL ]
+          #46   #36   #48 1024;            // access [ ACC_ABSTRACT ]
+          #49   #36   #51  16;             // access [ ACC_FINAL ]
+          #52   #36   #54  16;             // access [ ACC_FINAL ]
+          #55   #36   #57  16;             // access [ ACC_FINAL ]
+          #30   #36   #58  16;             // access [ ACC_FINAL ]
+          #59   #36   #61  16;             // access [ ACC_FINAL ]
+          #62   #36   #64  16;             // access [ ACC_FINAL ]
+      }
+    }                                      // end of InnerClasses
+    ;
+    Attr(#65, 8) {                         // LoadableDescriptors at 0x065F
+      [3] {                                // Utf8
+        #66;                               // descriptor: LLoadableDescriptorsAttributeTest$V3; at 0x0669
+        #10;                               // descriptor: LLoadableDescriptorsAttributeTest$V7; at 0x066B
+        #67;                               // descriptor: LLoadableDescriptorsAttributeTest$V2; at 0x066D
+      }
+    }                                      // end of LoadableDescriptors
+  }                                        // end of Attributes
+}                                          // end of class LoadableDescriptorsAttributeTest$X

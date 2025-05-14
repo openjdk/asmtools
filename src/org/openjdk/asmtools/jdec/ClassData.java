@@ -1089,7 +1089,7 @@ class ClassData {
                 //    u4 attribute_length;
                 //    u2 host_class_index;
                 //  }
-                case ATT_NestHost -> decodeTypes(in, 1);
+                case ATT_NestHost -> decodeTypes(in, 1, "class");
 
                 //  JEP 181 (Nest-based Access Control): class file 55.0
                 //  NestMembers_attribute {
@@ -1105,11 +1105,20 @@ class ClassData {
                 //    u2 number_of_classes;
                 //    u2 classes[number_of_classes];
                 //  }
-                case ATT_NestMembers, ATT_PermittedSubclasses -> {
+                case ATT_NestMembers -> {
                     int nsubtypes = in.readUnsignedShort();
                     startArrayCmt(nsubtypes, "classes");
                     try {
-                        decodeTypes(in, nsubtypes);
+                        decodeTypes(in, nsubtypes, "class");
+                    } finally {
+                        out_end("}");
+                    }
+                }
+                case ATT_PermittedSubclasses -> {
+                    int nsubtypes = in.readUnsignedShort();
+                    startArrayCmt(nsubtypes, "subclasses");
+                    try {
+                        decodeTypes(in, nsubtypes, "subclass");
                     } finally {
                         out_end("}");
                     }
@@ -1126,7 +1135,7 @@ class ClassData {
                     int nsubtypes = in.readUnsignedShort();
                     startArrayCmt(nsubtypes, "Utf8");
                     try {
-                        decodeTypes(in, nsubtypes);
+                        decodeTypes(in, nsubtypes, "descriptor");
                     } finally {
                         out_end("}");
                     }
@@ -1378,7 +1387,7 @@ class ClassData {
             environment.traceln("jdec.trace.numinterfaces", numinterfaces);
             startArrayCmt(numinterfaces, "Interfaces");
             try {
-                decodeTypes(inputStream, numinterfaces);
+                decodeTypes(inputStream, numinterfaces, "interface");
             } finally {
                 out_end("} // end of Interfaces");
                 environment.println();
@@ -1412,14 +1421,14 @@ class ClassData {
 
     private int checkWrapping(int wrappingLevel) {
         if (wrappingLevel > 0) {
-            for (int i = wrappingLevel-1; i >= 0; i--) {
+            for (int i = wrappingLevel - 1; i >= 0; i--) {
                 out_println(INDENT_STRING.repeat(i).concat("};"));
             }
         }
         return 0;
     }
 
-    private void decodeTypes(DataInputStream in, int count) throws IOException {
+    private void decodeTypes(DataInputStream in, int count, String typeName) throws IOException {
         for (int i = 0; i < count; i++) {
             int type_cpx = in.readUnsignedShort();
             environment.traceln("jdec.trace.type", i, type_cpx);
@@ -1428,9 +1437,9 @@ class ClassData {
                 Object cpObj = cpool[type_cpx];
                 String name;
                 if (cpObj instanceof Integer index) {
-                    name = getStringByIndex(index);
+                    name = "%s: %s".formatted(typeName, getStringByIndex(index));
                 } else {
-                    name = "Reference to a ConstantPool Object: %s".formatted(cpObj);
+                    name = "%s: %s".formatted(typeName, cpObj);
                 }
                 out_println(s + " // " + name + getStringPos());
             } else {
