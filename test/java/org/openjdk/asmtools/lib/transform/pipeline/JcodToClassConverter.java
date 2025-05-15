@@ -49,7 +49,7 @@ public class JcodToClassConverter extends Converter implements Function<Jcod, Cl
 
     @Override
     public Clazz apply(Jcod incoming) {
-        System.out.println("Compiling: jcod -> class");
+        logInfo("Compiling: jcod -> class");
         Objects.requireNonNull(incoming, "Incoming Jcod cannot be null");
 
         if (incoming.firstInput()) {
@@ -96,4 +96,3 @@ public class JcodToClassConverter extends Converter implements Function<Jcod, Cl
         return new Clazz(status);
     }
 }
-

@@ -55,6 +55,7 @@ public class ClassFileTests {
                                 "Class file version 69:0 does not conform to the new kind of objects; expected version")),
                 Arguments.of("ClassFile01.jasm",
                         List.of("Class file version 69:0 does not conform to the new kind of objects; expected version")),
+
                 Arguments.of("ClassFile02.jasm",
                         List.of("Class file version not specified in file or by -cv parameter. Defaulting to version \"%s\"".
                                 formatted(CFVersion.ValueObjectsVersion().asString()))),

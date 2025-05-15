@@ -1,0 +1,32 @@
+/*
+ * Ident: @(#)atrcvl00101m10p.jasm generated from: @(#)atrcvl00101m.jmpp 03/11/19
+ *
+ * Copyright (c) 1997, 2003, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package javasoft/sqe/tests/vm/classfmt/atr/atrcvl001/atrcvl00101m1;
+
+public class atrcvl00101m10p
+	version 45:3
+{
+
+final Field ifi:"I"	= int 200000;
+
+public Method "<init>":"()V"
+	throws java/lang/Exception
+	stack 2 locals 1
+{
+	aload_0;
+	invokespecial	Method java/lang/Object."<init>":"()V";
+	aload_0;
+	getfield	Field ifi:"I";
+	ifeq	OK;
+	new	class java/lang/Exception;
+	dup;
+	invokespecial	Method java/lang/Exception."<init>":"()V";
+	athrow;
+OK:
+	return;
+}
+} // end Class atrcvl00101m10p

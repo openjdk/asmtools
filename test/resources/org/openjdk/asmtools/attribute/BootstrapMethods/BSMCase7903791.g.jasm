@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package javasoft/sqe/tests/package;
+
+public super class #6 /* BSMCase7903791 */ version 50:0
+{
+  const #1   = Method        #13.#14;             // java/lang/Object."<init>":"()V"
+  const #2   = Field         #6.#15;              // BSMCase7903791.field:"I"
+  const #3   = InvokeDynamic 0:#28;               // #0:_:"()Ljava/lang/String;"
+  const #4   = InvokeDynamic 1:#35;               // #1:_:"()[I"
+  const #5   = Utf8          "javasoft/sqe/tests/package/BSMCase7903791";
+  const #6   = class         #5;                  // BSMCase7903791
+  const #7   = Utf8          "field";
+  const #8   = Utf8          "I";
+  const #9   = Utf8          "<init>";
+  const #10  = Utf8          "()V";
+  const #11  = Utf8          "Code";
+  const #12  = Utf8          "java/lang/Object";
+  const #13  = class         #12;                 // java/lang/Object
+  const #14  = NameAndType   #9:#10;              // "<init>":"()V"
+  const #15  = NameAndType   #7:#8;               // field:"I"
+  const #16  = Utf8          "StackMapTable";
+  const #17  = Utf8          "constantFilled2I";
+  const #18  = Utf8          "()[I";
+  const #19  = Utf8          "java/lang/runtime/ArrayCreation";
+  const #20  = class         #19;                 // java/lang/runtime/ArrayCreation
+  const #21  = Utf8          "constantFilled01";
+  const #22  = Utf8          "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;";
+  const #23  = NameAndType   #21:#22;             // constantFilled01:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #24  = Method        #20.#23;             // java/lang/runtime/ArrayCreation.constantFilled01:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #25  = MethodHandle  6:#24;               // REF_invokeStatic:java/lang/runtime/ArrayCreation.constantFilled01:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #26  = Utf8          "_";
+  const #27  = Utf8          "()Ljava/lang/String;";
+  const #28  = NameAndType   #26:#27;             // _:"()Ljava/lang/String;"
+  const #29  = Utf8          "BootstrapMethods";
+  const #30  = Utf8          "constantFilled3I";
+  const #31  = Utf8          "constantFilled";
+  const #32  = NameAndType   #31:#22;             // constantFilled:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #33  = Method        #20.#32;             // java/lang/runtime/ArrayCreation.constantFilled:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #34  = MethodHandle  6:#33;               // REF_invokeStatic:java/lang/runtime/ArrayCreation.constantFilled:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;"
+  const #35  = NameAndType   #26:#18;             // _:"()[I"
+  const #36  = Utf8          "java/lang/invoke/ConstantBootstraps";
+  const #37  = class         #36;                 // java/lang/invoke/ConstantBootstraps
+  const #38  = Utf8          "primitiveClass";
+  const #39  = Utf8          "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;";
+  const #40  = NameAndType   #38:#39;             // primitiveClass:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;"
+  const #41  = Method        #37.#40;             // java/lang/invoke/ConstantBootstraps.primitiveClass:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;"
+  const #42  = MethodHandle  6:#41;               // REF_invokeStatic:java/lang/invoke/ConstantBootstraps.primitiveClass:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;"
+  const #43  = Utf8          "Ljava/lang/Class;";
+  const #44  = NameAndType   #8:#43;              // I:"Ljava/lang/Class;"
+  const #45  = Dynamic       2:#44;               // #2:I:"Ljava/lang/Class;"
+  const #46  = int           0;
+  const #47  = int           3;
+  const #48  = int           -3;
+  const #49  = Utf8          "SourceFile";
+  const #50  = Utf8          "BSMCase7903791.jasm";
+
+  private Field #7:#8;                            // field:I
+
+  Method       #9:#10                             // "<init>":"()V"
+    stack 4  locals 1
+  {
+     0:    aload_0;
+     1:    invokespecial     #1;                  // Method java/lang/Object."<init>":"()V"
+     4:    return;
+     5:    stack_frame_type  full;                // frame_type 255
+             locals_map;
+             stack_map       #6, 2;               // class BSMCase7903791, float;
+           putfield          #2;                  // Field field:"I"
+     8:    return;
+  }
+
+  public static Method #17:#18                    // constantFilled2I:"()[I"
+    stack 1  locals 0
+  {
+     0:    invokedynamic     #3;                  // InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ArrayCreation.constantFilled01:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                  // _:"()Ljava/lang/String;"{}
+     5:    areturn;
+  }
+
+  public static Method #30:#18                    // constantFilled3I:"()[I"
+    stack 1  locals 0
+  {
+     0:    invokedynamic     #4;                  // InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ArrayCreation.constantFilled:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                                                  // _:"()[I" {
+                                                  //   Dynamic REF_invokeStatic:Method java/lang/invoke/ConstantBootstraps.primitiveClass:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;":
+                                                  //   I:"Ljava/lang/Class;"{},
+                                                  //   int 0,
+                                                  //   int 3,
+                                                  //   int -3
+                                                  // }
+     5:    areturn;
+  }
+
+  SourceFile                 #50;                 // BSMCase7903791.jasm
+
+  BootstrapMethod            #25;                 // REF_invokeStatic:java/lang/runtime/ArrayCreation.constantFilled01:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             { }
+
+  BootstrapMethod            #34;                 // REF_invokeStatic:java/lang/runtime/ArrayCreation.constantFilled:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;";
+                             {
+                                 #45,             // Dynamic REF_invokeStatic:java/lang/invoke/ConstantBootstraps.primitiveClass:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;":
+                                                  // I:"Ljava/lang/Class;"{}
+                                 #46,             // int 0
+                                 #47,             // int 3
+                                 #48              // int -3
+                             }
+
+  BootstrapMethod            #42;                 // REF_invokeStatic:java/lang/invoke/ConstantBootstraps.primitiveClass:
+                                                  // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;";
+                             { }
+} // end Class javasoft/sqe/tests/package/BSMCase7903791 compiled from "BSMCase7903791.jasm"

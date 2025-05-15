@@ -92,8 +92,9 @@ public class BootstrapMethodData extends Element<ClassData> {
                     BootstrapMethodBreakPositions)
             );
         }
+        printIndent(PadRight(" ", TABLE_PADDING)).print("{ ");
         if (numBsmArgs > 0) {
-            printIndent(PadRight(" ", TABLE_PADDING)).println("{");
+            println();
             incIndent(2);
             if (printCPIndex) {
                 for (int i = 0; i < numBsmArgs; i++) {
@@ -119,8 +120,9 @@ public class BootstrapMethodData extends Element<ClassData> {
                                 BootstrapArgumentsBreakPositions));
             }
             decIndent(2);
-            printIndent(PadRight(" ", TABLE_PADDING)).println("}");
+            printIndent(PadRight(" ", TABLE_PADDING));
         }
+        println("}");
         if (index < size - 1)
             println();
     }
@@ -186,7 +188,6 @@ public class BootstrapMethodData extends Element<ClassData> {
         }
     }
 
-
     private BsmInfo getBsmInfo() {
         String strBsm;
         ConstantPool.Constant<?> cnt = owner.pool.getConst(bsmRef);
@@ -196,7 +197,7 @@ public class BootstrapMethodData extends Element<ClassData> {
             strBsm = cpx.stringVal() + ";";
         } else {
             strBsm = owner.environment.getInfo("info.corrupted_bootstrap_method_ref");
-            if(!printCPIndex) {
+            if (!printCPIndex) {
                 strBsm = PadRight("#%d".formatted(bsmRef), CIRCULAR_COMMENT_OFFSET).concat(" // ").concat(strBsm);
             }
         }
@@ -204,5 +205,6 @@ public class BootstrapMethodData extends Element<ClassData> {
         return bsmInfo;
     }
 
-    private record BsmInfo(String strBsm, ConstantPool.CPX2 cpx2Const) {}
+    private record BsmInfo(String strBsm, ConstantPool.CPX2 cpx2Const) {
+    }
 }

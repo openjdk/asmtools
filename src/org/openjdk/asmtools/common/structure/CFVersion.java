@@ -22,6 +22,7 @@
  */
 package org.openjdk.asmtools.common.structure;
 
+import static org.openjdk.asmtools.common.structure.ClassFileContext.ORDINARY;
 import static org.openjdk.asmtools.common.structure.ClassFileContext.VALUE_OBJECTS;
 
 /*
@@ -57,6 +58,7 @@ public class CFVersion {
         setVersion(UNDEFINED_VERSION, UNDEFINED_VERSION);
         threshold_major_version = UNDEFINED_VERSION;
         threshold_minor_version = UNDEFINED_VERSION;
+        EModifier.setGlobalContext(ORDINARY);
         isSetByParameter = false;
         frozen = false;
     }
@@ -66,6 +68,11 @@ public class CFVersion {
         threshold_major_version = other.threshold_major_version;
         threshold_minor_version = other.threshold_minor_version;
         this.isSetByParameter = other.isSetByParameter;
+        if (isValueObjectContext()) {
+            EModifier.setGlobalContext(VALUE_OBJECTS);
+        } else {
+            EModifier.setGlobalContext(ORDINARY);
+        }
         this.frozen = other.frozen;
     }
 
@@ -74,6 +81,8 @@ public class CFVersion {
         this.minor_version = minor_version;
         if (isValueObjectContext()) {
             EModifier.setGlobalContext(VALUE_OBJECTS);
+        } else {
+            EModifier.setGlobalContext(ORDINARY);
         }
     }
 

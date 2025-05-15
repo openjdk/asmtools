@@ -1085,15 +1085,15 @@ public class ConstantPool extends Indenter {
         public String bsmArgsAsString(BootstrapMethodData bsmData, String LeftBracket, String RightBracket) {
             StringBuilder sb = new StringBuilder();
             int bsmArgsLen = bsmData.bsmArguments.size();
+            sb.append(LeftBracket);
             if (bsmArgsLen > 0) {
-                sb.append(LeftBracket);
                 for (int i = 0; i < bsmArgsLen; i++) {
                     int bsmArgIdx = bsmData.bsmArguments.get(i);
                     boolean notLastIdx = i != bsmArgsLen - 1;
                     sb.append(bsmArgAsString(bsmArgIdx, notLastIdx));
                 }
-                sb.append(RightBracket);
             }
+            sb.append(RightBracket);
             return sb.toString();
         }
 

@@ -50,7 +50,7 @@ public class JasmToClassConverter extends Converter implements Function<Jasm, Cl
 
     @Override
     public Clazz apply(Jasm incoming) {
-        System.out.println("Compiling: jasm -> class");
+        logInfo("Compiling: jasm -> class");
         Objects.requireNonNull(incoming, "Incoming Jcod cannot be null");
 
         if (incoming.firstInput()) {

@@ -23,7 +23,6 @@
 package org.openjdk.asmtools.attribute.ConstantValue;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,7 +48,6 @@ import java.util.stream.Stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Disabled
 // TODO: The -g option should be added to JDIS. It will allow keeping incorrect references to CP, and after the JASM-to-class step, the class will be loaded with CFE.
 public class ConstantValueAttributeTests extends ResultChecker {
     private static final boolean DEBUG = false;
@@ -151,7 +149,6 @@ public class ConstantValueAttributeTests extends ResultChecker {
         );
     }
 
-    @Disabled
     @Test
         //The field_info structure contains two ConstantValue attributes in the attributes table.
     void testClassJasmClassChainingX() throws IOException {

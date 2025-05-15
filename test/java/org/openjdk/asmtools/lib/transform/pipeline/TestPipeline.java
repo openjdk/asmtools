@@ -31,6 +31,7 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.openjdk.asmtools.lib.transform.pipeline.Pipeline.SUCCESS;
+import static org.openjdk.asmtools.lib.transform.pipeline.Pipeline.logInfo;
 
 /**
  * Class to play around pipeline implementation
@@ -60,7 +61,7 @@ public class TestPipeline {
         Clazz finalOutput = pipeline.execute(jcodInput);
 
         // Output the result
-        System.out.println("Final output file: " + finalOutput);
+        logInfo("Final output file: " + finalOutput);
         assertTrue(finalOutput.record().log().toString().isEmpty());
         assertEquals(SUCCESS, finalOutput.record().toolReturn());
         assertTrue(jcodToClass.log().toString().isEmpty());
@@ -95,7 +96,6 @@ public class TestPipeline {
         assertFalse(jcodToClass.record().log().toString().isEmpty());
     }
 
-    @Disabled       // TODO: "atrcvl00101m10p.jasm not found
     @Test
     public void testJasmClass01() {
         Pipeline<Jasm, Clazz> pipeline = new Pipeline<>(jasmToClass);
@@ -107,12 +107,11 @@ public class TestPipeline {
         Clazz finalOutput = pipeline.execute(new Jasm(new Pipeline.Status(Path.of(getInputFile(jasmFileName))), true));
 
         // Output the result
-        System.out.println("Final output file: " + finalOutput.record().file());
+        logInfo("Final output file: " + finalOutput.record().file());
         assertTrue(jasmToClass.log().toString().isEmpty());
         assertEquals(SUCCESS, finalOutput.record().toolReturn());
     }
 
-    @Disabled       // TODO: atrcvl00101m10p.jasm not found
     @Test
     public void testJasmClassJcod() {
         Pipeline<Jasm, Jcod> pipeline = new Pipeline<>(jasmToClass).addStage(classToJcod);
@@ -126,7 +125,7 @@ public class TestPipeline {
         Jcod finalOutput = pipeline.execute(input);
 
         // Output the result
-        System.out.println("Final output file: " + finalOutput);
+        logInfo("Final output file: " + finalOutput);
     }
 
     @Test
@@ -154,6 +153,6 @@ public class TestPipeline {
         Clazz finalOutput = pipeline.execute(jcodInput);
 
         // Output the result
-        System.out.println("Final output file: " + finalOutput.record().file());
+        logInfo("Final output file: " + finalOutput.record().file());
     }
 }
