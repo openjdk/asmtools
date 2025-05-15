@@ -27,6 +27,7 @@ import org.openjdk.asmtools.asmutils.Pair;
 import org.openjdk.asmtools.common.DecompilerLogger;
 import org.openjdk.asmtools.common.Environment;
 import org.openjdk.asmtools.common.FormatError;
+import org.openjdk.asmtools.common.SyntaxError;
 import org.openjdk.asmtools.common.inputs.FileInput;
 import org.openjdk.asmtools.common.inputs.ToolInput;
 import org.openjdk.asmtools.common.structure.CFVersion;
@@ -508,7 +509,7 @@ public class ClassData extends MemberData<ClassData> {
             for (IOException ioe : issues) {
                 environment.error(ioe);
             }
-            throw new RuntimeException();
+            throw new SyntaxError();
         }
     }
 

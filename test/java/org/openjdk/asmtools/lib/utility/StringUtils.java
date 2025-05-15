@@ -22,18 +22,30 @@
  */
 package org.openjdk.asmtools.lib.utility;
 
+import org.openjdk.asmtools.lib.action.DebugHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class StringUtils {
 
+
+
     public static BiFunction<String, String, Long> funcSubStrCount = (text, subStr) -> {
-        return IntStream.range(0, text.length() - subStr.length() + 1)
+        Long count =IntStream.range(0, text.length() - subStr.length() + 1)
                 .filter(i -> text.substring(i, i + subStr.length()).equals(subStr))
                 .count();
+        if(DebugHelper.isDebug()) {
+            System.out.println("count(\"%s\") = %d".formatted(subStr, count));
+        }
+        return count;
     };
+
+    public static Function<String, String> funcNormalizeText = s -> s.replaceAll("[\\r\\n]+", "")
+            .replaceAll("\\t", " ").replaceAll(" {2,}", " ");
 
     public static List<String> substrBetween(final String str, final String startStr, final String endStr) {
         if (isEmpty(str) || isEmpty(startStr) || isEmpty(endStr)) {

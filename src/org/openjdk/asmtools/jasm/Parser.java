@@ -108,7 +108,6 @@ class Parser extends ParseBase {
         this.annotParser = new ParseAnnotation(this);
         this.instrParser = new ParseInstruction(this, cpParser);
         this.attributeParser = new ParseAttribute(this);
-        EModifier.setGlobalContext(ClassFileContext.ORDINARY);
         this.currentCFV = copyOf(cfVersion);
     }
 
@@ -1009,7 +1008,7 @@ class Parser extends ParseBase {
         List<Token> expectedToken = List.of(INTVAL);
         int mhIndex = 0;
         ConstCell<?> MHCell = null;
-        ArrayList<ConstCell<?>> bsm_args = new ArrayList<>(256);
+        ArrayList<ConstCell<?>> bsm_args = new ArrayList<>(10);
         while (true) {
             switch (scanner.token) {
                 case INTVAL -> {
@@ -1038,7 +1037,7 @@ class Parser extends ParseBase {
                     scanner.expect(COLON);
                     cpParser.incLBRACE();
                     // scan Bootstrap arguments
-                    bsm_args.clear();
+                    bsm_args = new ArrayList<>(10);
                     expectedToken = List.of(CPINDEX, IDENT, CLASS);
                     while (true) {
                         if (scanner.token.in(CPINDEX, IDENT, CLASS)) {
@@ -1073,6 +1072,7 @@ class Parser extends ParseBase {
                     }
                     classData.addBootstrapMethod(new BootstrapMethodData(MHCell, bsm_args));
                     MHCell = null;
+                    bsm_args = new ArrayList<>(10);
                     expectedToken = List.of(INTVAL, RBRACE);
                 }
                 case RBRACE -> {

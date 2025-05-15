@@ -62,7 +62,7 @@ public class BootstrapMethodsAttributeTests {
 
     @BeforeAll
     public static void setUp() throws IOException {
-        jdis.setDestDir().setDebug(true);
+        jdis.setDestDir().setDebug(false);
     }
 
     @AfterAll

@@ -35,8 +35,8 @@ public class Pipeline<T, R> {
     static final String JASM_EXT = ".jasm";
     static final String JCOD_EXT = ".jcod";
     static final String JAVA_EXT = ".java";
-    private static final boolean DEBUG = true;
-    private static final boolean WARN = true;
+    private static final boolean DEBUG = false;
+    private static final boolean WARN = false;
     private final Function<T, R> currentStage;
 
     public Pipeline(Function<T, R> initialStage) {
@@ -57,6 +57,12 @@ public class Pipeline<T, R> {
         if (WARN)
             System.out.printf("WARN : [%s]%n", msg);
     }
+
+    static void logInfo(String msg) {
+        if (WARN)
+            System.out.printf("INFO : [%s]%n", msg);
+    }
+
 
     public <K> Pipeline<T, K> addStage(Function<R, K> nextStage) {
         return new Pipeline<>(input -> nextStage.apply(currentStage.apply(input)));

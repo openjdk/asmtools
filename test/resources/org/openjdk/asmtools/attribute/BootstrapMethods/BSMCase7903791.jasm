@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package javasoft/sqe/tests/package;
+
+public super class BSMCase7903791 version 50:0
+{
+  private Field field:I;
+
+  Method       "<init>":"()V"
+    stack 4  locals 1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+         stack_frame_type  full;
+           locals_map;
+           stack_map       class BSMCase7903791, float;
+         putfield          Field field:"I";
+         return;
+  }
+
+  public static Method constantFilled2I:"()[I"
+    stack 1  locals 0
+  {
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ArrayCreation.constantFilled01:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                           _:"()Ljava/lang/String;"{};
+         areturn;
+  }
+
+  public static Method constantFilled3I:"()[I"
+    stack 1  locals 0
+  {
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ArrayCreation.constantFilled:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/reflect/RuntimeType;IILjava/lang/Object;)Ljava/lang/invoke/CallSite;":
+                           _:"()[I" {
+                             Dynamic REF_invokeStatic:Method java/lang/invoke/ConstantBootstraps.primitiveClass:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Class;":
+                             I:"Ljava/lang/Class;"{},
+                             int 0,
+                             int 3,
+                             int -3
+                           };
+         areturn;
+  }
+
+  SourceFile               "BSMCase7903791.jasm";
+} // end Class javasoft/sqe/tests/package/BSMCase7903791 compiled from "BSMCase7903791.jasm"

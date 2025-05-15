@@ -52,7 +52,8 @@ public class ClassToJasmConverter extends Converter implements Function<Clazz, J
 
     @Override
     public Jasm apply(Clazz incoming) {
-        System.out.println("Generating: class -> jasm");
+
+        logInfo("Generating: class -> jasm");
         Objects.requireNonNull(incoming, "Incoming Clazz cannot be null");
 
         logDebug(stageName(), incoming.firstInput() ? "Received first input: " + incoming : "Received from previous stage: " + incoming);

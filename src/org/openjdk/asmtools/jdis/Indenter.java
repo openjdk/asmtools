@@ -42,6 +42,9 @@ public abstract class Indenter implements Printable {
     // Global formatting strings
     public static final String ARGUMENT_DELIMITER = "^";
     public static final String LINE_SPLITTER = "⾀";
+    public static final String NO_BSM_ARGUMENTS = "{}";
+    public static final String NO_BSM_ARGUMENTS_REGEX = "\\{\\}";
+    public static final String REPLACEMENT_NO_BSM_ARGUMENTS = "<!>";
 
     // Global numbers
     public static final int PROGRAM_COUNTER_PLACEHOLDER_LENGTH = 7;
@@ -454,6 +457,10 @@ public abstract class Indenter implements Printable {
      * @return formatted operand line
      */
     protected String formatOperandLine(String str, int offset, String prefix, Map<Integer, List<Integer>> breakPositions) {
+        boolean noArgs = str.contains(NO_BSM_ARGUMENTS);
+        if (noArgs) {
+            str = str.replaceAll(NO_BSM_ARGUMENTS_REGEX, REPLACEMENT_NO_BSM_ARGUMENTS);
+        }
         StringTokenizer st = new StringTokenizer(str, ":\"{}\\" + ARGUMENT_DELIMITER + LINE_SPLITTER, true);
         StringBuilder sb = new StringBuilder(80);
         boolean processTokens = true;
@@ -520,7 +527,11 @@ public abstract class Indenter implements Printable {
             }
             prevToken = token;
         }
-        return sb.toString();
+        str = sb.toString();
+        if (noArgs) {
+            str = str.replaceAll(REPLACEMENT_NO_BSM_ARGUMENTS, NO_BSM_ARGUMENTS);
+        }
+        return str;
     }
 
     public static class NotImplementedException extends RuntimeException {

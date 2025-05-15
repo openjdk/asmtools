@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jasm;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -44,7 +45,7 @@ class BootstrapMethodData extends Indexer implements DataWriter {
     public BootstrapMethodData(int methodAttrIndex) {
         super();
         this.bootstrapMethodHandle = null;
-        this.arguments = null;
+        this.arguments = new ArrayList<>();
         super.cpIndex = methodAttrIndex;
     }
 

@@ -167,7 +167,7 @@ public abstract class ToolLogger implements ILogger {
         }
 
         public String apply(EMessageKind kind, String name, String format, Object... args) {
-            return triFunc.apply(kind, name, format(format, args));
+            return (format == null || name == null) ? "" : triFunc.apply(kind, name, format(format, args));
         }
 
         public String apply(String name, Message message) {

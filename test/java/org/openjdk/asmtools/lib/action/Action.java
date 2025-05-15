@@ -33,7 +33,6 @@ public class Action {
 
     private final EAsmTool tool;
     protected final String toolName;
-    private DebugHelper debugHelper = new DebugHelper();
     private FSAction fsAction = new FSAction();
 
     protected EToolArguments currentToolArgs;
@@ -111,12 +110,12 @@ public class Action {
     }
 
     public Action setDebug(boolean value) {
-        this.debugHelper.setDebug(value);
+        DebugHelper.setDebug(value);
         return this;
     }
 
     public void trace(Supplier<String> info) {
-        this.debugHelper.trace(info);
+        DebugHelper.trace(info);
     }
 
 }

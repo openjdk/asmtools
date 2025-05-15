@@ -657,7 +657,7 @@ public class ParseConstPool extends ParseBase {
                     }
                     int cpx = scanner.intValue;
                     scanner.scan();
-                    // Put a placeholder in place of BSM.
+                      // Put a placeholder in place of BSM.
                     // resolve placeholder after the attributes are scanned.
                     BootstrapMethodData bsmData = new BootstrapMethodData(bsmIndex);
                     obj = ctor.apply(bsmData, parser.pool.getCell(cpx));

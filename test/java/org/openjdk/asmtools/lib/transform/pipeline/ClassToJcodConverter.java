@@ -50,7 +50,7 @@ public class ClassToJcodConverter extends Converter implements Function<Clazz, J
 
     @Override
     public Jcod apply(Clazz incoming) {
-        System.out.println("Generating: class -> jcod");
+        logInfo("Generating: class -> jcod");
         Objects.requireNonNull(incoming, "Incoming Jcod cannot be null");
 
         if (incoming.firstInput()) {

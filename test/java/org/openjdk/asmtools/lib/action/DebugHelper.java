@@ -25,19 +25,19 @@ package org.openjdk.asmtools.lib.action;
 import java.util.function.Supplier;
 
 public class DebugHelper {
-    protected boolean Debug = false;
 
-    public DebugHelper setDebug(boolean debug) {
+    protected static boolean Debug = false;
+
+    public static void setDebug(boolean debug) {
         Debug = debug;
-        return this;
     }
 
-    public boolean isDebug() {
+    public static boolean isDebug() {
         return Debug;
     }
 
 
-    public void trace(Supplier<String> info) {
+    public static void trace(Supplier<String> info) {
         if (Debug) {
             System.out.format("TRACE: %s%n".formatted(info.get()));
         }
