@@ -117,20 +117,24 @@ class ClassData {
      * @param in              input stream to get bytes for printing
      * @param len             number of bytes
      * @param printSeparately defines a format  of printed lines which will be either  0x04 0x3C 0x04 0x3D; or 0x043C043D043E1B1C;
+     * @param ignoreException Whether to propagate the exception or ignore it
      * @throws IOException exception might happen while reading DataInputStream
      **/
-    private void printBytes(DataInputStream in, int len, boolean printSeparately) throws IOException {
+    private void printBytes(DataInputStream in, int len, boolean printSeparately, boolean ignoreException) throws IOException {
         int i = 0;
+        boolean printed = false;
         final int BYTES_IN_LINE = printSeparately ? BYTES_IN_LINE_SPACED_OUT : BYTES_IN_LINE_CONDENSED;
         try {
             for (; i < len; i++) {
+                byte b = in.readByte();
                 if (i % BYTES_IN_LINE == 0) {
                     out_print(printSeparately ? "" : "0x");
                 }
                 if (printSeparately) {
                     environment.print("0x");
                 }
-                printByteHex(in.readByte());
+                printByteHex(b);
+                printed = true;
                 if (printSeparately) {
                     if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
                         environment.println(";");
@@ -143,12 +147,18 @@ class ClassData {
                     }
                 }
             }
+        } catch (EOFException ignored) {
+            if(!ignoreException) {
+                throw ignored;
+            }
         } finally {
-            if (len % 8 != 0) {
-                if (i > 0)
-                    environment.println(";");
-                else
-                    out_println(";");
+            if( printed ) {
+                if (len % 8 != 0) {
+                    if (i > 0)
+                        environment.println(";");
+                    else
+                        out_println(";");
+                }
             }
         }
     }
@@ -427,7 +437,7 @@ class ClassData {
     private void decodeCPXAttrM(DataInputStream in, int len, String attrName, int expectedIndices) throws IOException {
         if (len != expectedIndices * 2) {
             out_println("// == invalid length of " + attrName + " attr: " + len + " (should be " + (expectedIndices * 2) + ") ==");
-            printBytes(in, len, false);
+            printBytes(in, len, false, false);
         } else {
             StringBuilder outputString = new StringBuilder();
             for (int k = 1; k <= expectedIndices; k++) {
@@ -781,7 +791,7 @@ class ClassData {
                     int code_len = in.readInt();
                     out_begin("Bytes" + startArray(code_len) + "{");
                     try {
-                        printBytes(in, code_len, true);
+                        printBytes(in, code_len, true, false);
                     } finally {
                         out_end("}");
                     }
@@ -1150,11 +1160,10 @@ class ClassData {
                     endingComment = "Attr(#" + name_cpx + ")";
                 }
                 default -> {
-                    printBytes(in, len, true);
+                    printBytes(in, len, true, false);
                     endingComment = "Attr(#" + name_cpx + ")";
                 }
             }
-
         } catch (EOFException e) {
             environment.println(getOutString("") + "// == The unexpected end of attribute array while parsing. ==");
         } finally {
@@ -1162,7 +1171,7 @@ class ClassData {
             if (rest > 0) {
                 environment.println(getOutString("") +
                         "// == The attribute array started at" + posComment + " has " + rest + " bytes more than expected. ==");
-                printBytes(in, rest, true);
+                printBytes(in, rest, true, true);
             }
             out_end("} // end of " + endingComment);
             arrayInputStream.leave();
