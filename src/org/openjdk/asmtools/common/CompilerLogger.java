@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static org.openjdk.asmtools.asmutils.StringUtils.repeat;
 import static org.openjdk.asmtools.common.CompilerConstants.OFFSET_BITS;
@@ -217,10 +218,13 @@ public class CompilerLogger extends ToolLogger implements ILogger {
 
     // Removes tabs from a source line to get the correct line position while printing.
     private void printAffectedSourceLine(ToolOutput output, Pair<Long, Long> filePosition) {
-        String line = fileContent.get((int) (filePosition.first - 1));
+        int ln = (int) (filePosition.first - 1);
+        boolean eof = filePosition.first > fileContent.size();
+        String line = fileContent.get(min(fileContent.size() - 1, ln));
         long countOfExtraSpaces = line.chars().filter(ch -> ch == '\t').count();
-        long linePosition = (filePosition.second + countOfExtraSpaces * TAB_REPLACEMENT.length()) - countOfExtraSpaces;
         line = line.replace("\t", TAB_REPLACEMENT);
+        long linePosition = (eof) ? line.length() :
+                (filePosition.second + countOfExtraSpaces * TAB_REPLACEMENT.length()) - countOfExtraSpaces;
         output.printlns(line);
         output.printlns(repeat(" ", (int) linePosition) + "^");
     }
