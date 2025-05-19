@@ -117,7 +117,7 @@ public class TextOutput extends NamedToolOutput {
                                 %s
                                 /**
                                 %s
-                                **/        
+                                **/
                                 """, fname, body, fname);
         private final String fullyQualifiedName;
         private final String body;
