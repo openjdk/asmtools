@@ -413,6 +413,11 @@ public class ClassData extends MemberData<ClassData> {
             } catch (Exception ignored) {
             }
         }
+        try {
+            environment.getToolOutput().finishClass(className);
+        } catch (IOException ignored) {
+        }
+        environment.getOutputs().flush();
     }
 
     /**

@@ -1,0 +1,432 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+class #84 /* CondyNestedResolution */ version 55:0
+{
+  const #1   = String       #22;                 // "In bsm2arg"
+  const #2   = String       #61;                 // "In bsm4arg"
+  const #3   = String       #11;                 // "In bsm1arg"
+  const #4   = Dynamic      8:#12;               // #8:name:"Ljava/lang/String;"
+  const #5   = Method       #51.#10;             // java/lang/Object."<init>":"()V"
+  const #6   = Method       #13.#39;             // java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+  const #7   = Field        #50.#81;             // java/lang/System.out:"Ljava/io/PrintStream;"
+  const #8   = Method       #84.#45;             // CondyNestedResolution.test_condy:"()V"
+  const #9   = Utf8         "java/io/PrintStream";
+  const #10  = NameAndType  #71:#47;             // "<init>":"()V"
+  const #11  = Utf8         "In bsm1arg";
+  const #12  = NameAndType  #18:#17;             // name:"Ljava/lang/String;"
+  const #13  = class        #9;                  // java/io/PrintStream
+  const #14  = Utf8         "SourceFile";
+  const #15  = Utf8         "bsm3arg";
+  const #16  = Utf8         "CondyNestedResolution.jasm";
+  const #17  = Utf8         "Ljava/lang/String;";
+  const #18  = Utf8         "name";
+  const #19  = Utf8         "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+  const #20  = Utf8         "test_condy";
+  const #21  = NameAndType  #15:#19;             // bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #22  = Utf8         "In bsm2arg";
+  const #23  = Utf8         "Code";
+  const #24  = Utf8         "([Ljava/lang/String;)V";
+  const #25  = Utf8         "bsm4arg";
+  const #26  = Utf8         "out";
+  const #27  = NameAndType  #69:#55;             // bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #28  = Utf8         "BootstrapMethods";
+  const #29  = MethodHandle 6:#44;               // REF_invokeStatic:CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #30  = Method       #84.#63;             // CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #31  = Utf8         "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+  const #32  = Method       #84.#27;             // CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #33  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #34  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #35  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #36  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #37  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #38  = MethodHandle 6:#30;               // REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #39  = NameAndType  #40:#41;             // println:"(Ljava/lang/Object;)V"
+  const #40  = Utf8         "println";
+  const #41  = Utf8         "(Ljava/lang/Object;)V";
+  const #42  = Utf8         "java/lang/Object";
+  const #43  = Utf8         "java/lang/System";
+  const #44  = Method       #84.#21;             // CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #45  = NameAndType  #20:#47;             // test_condy:"()V"
+  const #46  = MethodHandle 6:#82;               // REF_invokeStatic:CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #47  = Utf8         "()V";
+  const #48  = String       #62;                 // "hello6"
+  const #49  = String       #64;                 // "hello5"
+  const #50  = class        #43;                 // java/lang/System
+  const #51  = class        #42;                 // java/lang/Object
+  const #52  = String       #65;                 // "hello4"
+  const #53  = String       #66;                 // "hello3"
+  const #54  = String       #67;                 // "hello2"
+  const #55  = Utf8         "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+  const #56  = Utf8         "main";
+  const #57  = String       #68;                 // "hello1"
+  const #58  = MethodHandle 6:#32;               // REF_invokeStatic:CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #59  = Utf8         "bsm1arg";
+  const #60  = NameAndType  #25:#83;             // bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #61  = Utf8         "In bsm4arg";
+  const #62  = Utf8         "hello6";
+  const #63  = NameAndType  #59:#31;             // bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #64  = Utf8         "hello5";
+  const #65  = Utf8         "hello4";
+  const #66  = Utf8         "hello3";
+  const #67  = Utf8         "hello2";
+  const #68  = Utf8         "hello1";
+  const #69  = Utf8         "bsm2arg";
+  const #70  = Utf8         "Ljava/io/PrintStream;";
+  const #71  = Utf8         "<init>";
+  const #72  = Utf8         "CondyNestedResolution";
+  const #73  = Dynamic      7:#12;               // #7:name:"Ljava/lang/String;"
+  const #74  = Dynamic      6:#12;               // #6:name:"Ljava/lang/String;"
+  const #75  = Dynamic      5:#12;               // #5:name:"Ljava/lang/String;"
+  const #76  = Dynamic      4:#12;               // #4:name:"Ljava/lang/String;"
+  const #77  = Dynamic      3:#12;               // #3:name:"Ljava/lang/String;"
+  const #78  = Dynamic      0:#12;               // #0:name:"Ljava/lang/String;"
+  const #79  = Dynamic      1:#12;               // #1:name:"Ljava/lang/String;"
+  const #80  = Dynamic      2:#12;               // #2:name:"Ljava/lang/String;"
+  const #81  = NameAndType  #26:#70;             // out:"Ljava/io/PrintStream;"
+  const #82  = Method       #84.#60;             // CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+  const #83  = Utf8         "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+  const #84  = class        #72;                 // CondyNestedResolution
+
+  public Method #71:#47                          // "<init>":"()V"
+    stack 1  locals 1
+  {
+     0:    aload_0;
+     1:    invokespecial     #5;                 // Method java/lang/Object."<init>":"()V"
+     4:    return;
+  }
+
+  public static Method #59:#31                   // bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+    stack 4  locals 4
+  {
+     0:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     3:    ldc               #3;                 // String "In bsm1arg"
+     5:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+     8:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    11:    aload_3;
+    12:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    15:    aload_3;
+    16:    areturn;
+  }
+
+  public static Method #69:#55                   // bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+    stack 8  locals 8
+  {
+     0:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     3:    ldc               #1;                 // String "In bsm2arg"
+     5:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+     8:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    11:    aload_3;
+    12:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    15:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    18:    aload             4;
+    20:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    23:    aload_3;
+    24:    areturn;
+  }
+
+  public static Method #15:#19                   // bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+    stack 19  locals 19
+  {
+     0:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     3:    ldc               #2;                 // String "In bsm4arg"
+     5:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+     8:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    11:    aload_3;
+    12:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    15:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    18:    aload             4;
+    20:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    23:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    26:    aload             5;
+    28:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    31:    aload_3;
+    32:    areturn;
+  }
+
+  public static Method #25:#83                   // bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+    stack 19  locals 19
+  {
+     0:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+     3:    ldc               #2;                 // String "In bsm4arg"
+     5:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+     8:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    11:    aload_3;
+    12:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    15:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    18:    aload             4;
+    20:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    23:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    26:    aload             5;
+    28:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    31:    getstatic         #7;                 // Field java/lang/System.out:"Ljava/io/PrintStream;"
+    34:    aload             6;
+    36:    invokevirtual     #6;                 // Method java/io/PrintStream.println:"(Ljava/lang/Object;)V"
+    39:    aload_3;
+    40:    areturn;
+  }
+
+  public static Method #20:#47                   // test_condy:"()V"
+    stack 12  locals 12
+  {
+     0:    ldc               #4;                 // Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello1"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello2"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello4"
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello6"
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         Dynamic  0:#12;          <circular reference to Dynamic #78>,
+                                                 //         Dynamic  1:#12;          <circular reference to Dynamic #79>,
+                                                 //         Dynamic  6:#12;          <circular reference to Dynamic #74>,
+                                                 //         Dynamic  7:#12;          <circular reference to Dynamic #73>
+                                                 //       }
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello5"
+                                                 //     }
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:Method CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello3"
+                                                 //   }
+                                                 // }
+     2:    return;
+  }
+
+  public static Method #56:#24                   // main:"([Ljava/lang/String;)V"
+    stack 2  locals 2
+  {
+     0:    invokestatic      #8;                 // Method test_condy:"()V"
+     3:    return;
+  }
+
+  SourceFile                 #16;                // CondyNestedResolution.jasm
+
+  BootstrapMethod            #36;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #57             // String "hello1"
+                             }
+
+  BootstrapMethod            #37;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #54             // String "hello2"
+                             }
+
+  BootstrapMethod            #38;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #52             // String "hello4"
+                             }
+
+  BootstrapMethod            #35;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #48             // String "hello6"
+                             }
+
+  BootstrapMethod            #58;                // REF_invokeStatic:CondyNestedResolution.bsm2arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #77,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello6"
+                                                 // }
+                                 #4              // Dynamic REF_invokeStatic:CondyNestedResolution.bsm4arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello1"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello2"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello4"
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello6"
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         Dynamic  0:#12;          <circular reference to Dynamic #78>,
+                                                 //         Dynamic  1:#12;          <circular reference to Dynamic #79>,
+                                                 //         Dynamic  6:#12;          <circular reference to Dynamic #74>,
+                                                 //         Dynamic  7:#12;          <circular reference to Dynamic #73>
+                                                 //       }
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello5"
+                                                 //     }
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello3"
+                                                 //   }
+                                                 // }
+                             }
+
+  BootstrapMethod            #34;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #49             // String "hello5"
+                             }
+
+  BootstrapMethod            #29;                // REF_invokeStatic:CondyNestedResolution.bsm3arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #80,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello4"
+                                                 // }
+                                 #76,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm2arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello6"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello1"
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello2"
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello4"
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         Dynamic  3:#12;          <circular reference to Dynamic #77>,
+                                                 //         Dynamic  8:#12;          <circular reference to Dynamic #4>
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello5"
+                                                 //       }
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello3"
+                                                 //     }
+                                                 //   }
+                                                 // }
+                                 #75             // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello5"
+                                                 // }
+                             }
+
+  BootstrapMethod            #33;                // REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #53             // String "hello3"
+                             }
+
+  BootstrapMethod            #46;                // REF_invokeStatic:CondyNestedResolution.bsm4arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                             {
+                                 #78,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello1"
+                                                 // }
+                                 #79,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello2"
+                                                 // }
+                                 #74,            // Dynamic REF_invokeStatic:CondyNestedResolution.bsm3arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello4"
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm2arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       String "hello6"
+                                                 //     },
+                                                 //     Dynamic REF_invokeStatic:CondyNestedResolution.bsm4arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //     name:"Ljava/lang/String;" {
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello1"
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello2"
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm3arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         Dynamic  2:#12;          <circular reference to Dynamic #80>,
+                                                 //         Dynamic  4:#12;          <circular reference to Dynamic #76>,
+                                                 //         Dynamic  5:#12;          <circular reference to Dynamic #75>
+                                                 //       },
+                                                 //       Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":name:"Ljava/lang/String;" {
+                                                 //         String "hello3"
+                                                 //       }
+                                                 //     }
+                                                 //   },
+                                                 //   Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 //   name:"Ljava/lang/String;" {
+                                                 //     String "hello5"
+                                                 //   }
+                                                 // }
+                                 #73             // Dynamic REF_invokeStatic:CondyNestedResolution.bsm1arg:
+                                                 // "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;":
+                                                 // name:"Ljava/lang/String;" {
+                                                 //   String "hello3"
+                                                 // }
+                             }
+} // end Class CondyNestedResolution compiled from "CondyNestedResolution.jasm"

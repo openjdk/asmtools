@@ -28,12 +28,12 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Historically, the output loggers for compilers had two stderrs, one to sdout and secon to stderr.
- * That should be removed, in favour of just dualstream tool output, printing output to stdout and log into stderr
+ * Historically, the output loggers for compilers had two stderrs, one to stdout and second to stderr.
+ * That should be removed, in favour of just dual stream tool output, printing output to stdout and log into stderr
  */
 public abstract class NamedToolOutput implements ToolOutput {
 
-    protected String fullyQualifiedName;
+    protected String fullyQualifiedName = "";
     /**
      * If the output is a file, then the destinationFileName is used to form the filename of the output.
      * 1. File FILENAME or class file CLASSNAME takes the highest priority. This filename cannot be overridden.
@@ -54,10 +54,6 @@ public abstract class NamedToolOutput implements ToolOutput {
         return fullyQualifiedName;
     }
 
-    public String getFullyQualifiedName() {
-        return fullyQualifiedName;
-    }
-
     @Override
     public void startClass(String fullyQualifiedName, Optional<String> suffix, Environment logger) throws IOException {
         this.fullyQualifiedName = fullyQualifiedName;
@@ -67,8 +63,8 @@ public abstract class NamedToolOutput implements ToolOutput {
 
     @Override
     public void finishClass(String fullyQualifiedName) throws IOException {
-        this.fullyQualifiedName = null;
         this.destinationFileName = null;
+        this.fullyQualifiedName = null;
     }
 
     public String getDestinationFileName() {

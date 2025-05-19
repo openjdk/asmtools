@@ -44,6 +44,7 @@ public class BruteForceHelper {
         add("SourceDebugExtensionNegative03.class");
         add("LoadableDescriptorsAttributeTest$X.class");
         add("InvalidSourceDebugExtension.class");
+        add("CondyNestedResolution.class");
     }};
 
     public static final String FRESHLY_BUILT_ASMTOOLS = "target/classes";
