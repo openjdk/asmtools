@@ -60,12 +60,15 @@ public class ByteOutput extends NamedToolOutput {
 
     @Override
     public void finishClass(String fullyQualifiedName) throws IOException {
-        if (!getCurrentClassName().equals(fullyQualifiedName)) {
+        String fqn = getCurrentClassName();
+        if ( fqn != null && !fqn.equals(fullyQualifiedName)) {
             throw new RuntimeException("Ended different class: %s then was started %s".
-                    formatted(fullyQualifiedName, super.fullyQualifiedName));
+                    formatted(fullyQualifiedName, fqn));
         }
-        outputs.add(new NamedBinary(fullyQualifiedName, currentClass.toByteArray()));
-        super.fullyQualifiedName = null;
+        if (currentClass != null) {
+            outputs.add(new NamedBinary(fullyQualifiedName, currentClass.toByteArray()));
+        }
+        super.finishClass(fullyQualifiedName);
         currentClass = null;
 
     }

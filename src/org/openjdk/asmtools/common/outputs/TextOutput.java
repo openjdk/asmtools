@@ -48,7 +48,8 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public String toString() {
-        return outputs.stream().map(a -> a.toString()).collect(Collectors.joining(System.lineSeparator()));
+        return outputs.stream().map(a -> a.toString()).
+                collect(Collectors.joining(System.lineSeparator()));
     }
 
     @Override
@@ -64,11 +65,15 @@ public class TextOutput extends NamedToolOutput {
 
     @Override
     public void finishClass(String fullyQualifiedName) throws IOException {
-        if (!getCurrentClassName().equals(fullyQualifiedName)) {
-            throw new RuntimeException("Ended different class - " + fullyQualifiedName + " - then started - " + super.fullyQualifiedName);
+        String fqn = getCurrentClassName();
+        if (fqn != null && !fqn.equals(fullyQualifiedName)) {
+            throw new RuntimeException("Ended different class: %s then was started %s".
+                    formatted(fullyQualifiedName, fqn));
         }
-        outputs.add(new NamedSource(fullyQualifiedName, curClsStringBuilder.toString(), namedSourceOrnament));
-        super.fullyQualifiedName = null;
+        if (curClsStringBuilder != null) {
+            outputs.add(new NamedSource(fullyQualifiedName, curClsStringBuilder.toString(), namedSourceOrnament));
+        }
+        super.finishClass(fullyQualifiedName);
         curClsStringBuilder = null;
     }
 
@@ -106,14 +111,14 @@ public class TextOutput extends NamedToolOutput {
         private BiFunction<String, String, String> ornament = (fname, body) ->
                 format(
                         """
-                        /**
-                        %s
-                        **/
-                        %s
-                        /**
-                        %s
-                        **/        
-                        """, fname, body, fname);
+                                /**
+                                %s
+                                **/
+                                %s
+                                /**
+                                %s
+                                **/
+                                """, fname, body, fname);
         private final String fullyQualifiedName;
         private final String body;
 
