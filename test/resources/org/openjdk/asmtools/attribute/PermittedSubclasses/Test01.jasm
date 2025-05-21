@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+super public class org/openjdk/asmtools/attribute/PermittedSubclasses/Test01
+        version 62:0
+{
+  public Method "<init>":"()V"
+        stack 1 locals 1
+  {
+                aload_0;
+                invokespecial   Method java/lang/Object."<init>":"()V";
+                return;
+  }
+
+  InnerClass               public NestMember01 = class NestMember01 of class Test01;
+  InnerClass               public NestMember02 = class NestMember02 of class Test01;
+  InnerClass               public NestMember03 = class NestMember03 of class Test01;
+  InnerClass               public NestMember04 = class NestMember04 of class Test01;
+
+  PermittedSubclasses      SubClass01, SubClass02, SubClass03, SubClass04;
+
+  NestMembers              NestMember01, NestMember02, NestMember03, NestMember04;
+} // end Class Test01

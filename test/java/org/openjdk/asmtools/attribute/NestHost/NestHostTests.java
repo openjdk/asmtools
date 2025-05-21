@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.attribute.LoadableDescriptors;
+package org.openjdk.asmtools.attribute.NestHost;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +48,7 @@ import static org.openjdk.asmtools.lib.utility.StringUtils.funcNormalizeText;
 import static org.openjdk.asmtools.lib.utility.StringUtils.funcSubStrCount;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class LoadableDescriptorsTests {
+public class NestHostTests {
 
     private Jasm jasm = new Jasm();
     private Jcoder jcoder = new Jcoder();
@@ -56,36 +56,43 @@ public class LoadableDescriptorsTests {
 
     private static Stream<Arguments> getJasmParameters() {
         return Stream.of(
-                Arguments.of("Test01.jasm", EToolArguments.JDIS_G_T, List.of(
+                Arguments.of("Test01.jasm", EToolArguments.JDIS_G, List.of(
                                 (Consumer<String>) (text) -> assertThat(text, allOf(
-                                                matchesPattern(".*const #\\d = Utf8 \"LLoadableDescriptors01;\";.*"),
-                                                matchesPattern(".*const #\\d = Utf8 \"LLoadableDescriptors02;\";.*"),
-                                                matchesPattern(".*LoadableDescriptors #\\d, #\\d; // \"LLoadableDescriptors01;\", \"LLoadableDescriptors02;\".*")
-                                        )
-                                ),
+                                        matchesPattern(".*const #\\d = class #\\d; // NestHost01.*"),
+                                        matchesPattern(".*NestHost #\\d; // org/openjdk/asmtools/attribute/NestHost/NestHost01.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(10, funcSubStrCount.apply(text, "LoadableDescriptors"))
+                                        Assertions.assertEquals(11, funcSubStrCount.apply(text, "NestHost"))
                         )
                 ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.jasm", EToolArguments.JDIS, List.of(
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
+                Arguments.of("Test01.jasm", EToolArguments.JDIS, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*NestHost org/openjdk/asmtools/attribute/NestHost/NestHost01;.*")
+                                ))
                         )
                 ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.jasm", EToolArguments.JDIS_G_T, List.of(
+                Arguments.of("Test01.g.jasm", EToolArguments.JDIS_G_T, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*const #\\d = Class #\\d; // NestHost01.*"),
+                                        matchesPattern(".*NestHost #\\d; // org/openjdk/asmtools/attribute/NestHost/NestHost01.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
+                                        Assertions.assertEquals(11, funcSubStrCount.apply(text, "NestHost"))
                         )
                 ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.t.jasm", EToolArguments.JDIS_G, List.of(
+                Arguments.of("Test02.jasm", EToolArguments.JDIS_G, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*const #\\d = class #\\d; // NestHost02.*"),
+                                        matchesPattern(".*NestHost #\\d; // org/openjdk/asmtools/attribute/NestHost/NestHost02.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
+                                        Assertions.assertEquals(11, funcSubStrCount.apply(text, "NestHost"))
+                        )
+                ),
+                Arguments.of("Test02.jasm", EToolArguments.JDIS, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*NestHost org/openjdk/asmtools/attribute/NestHost/NestHost02;.*")
+                                ))
                         )
                 )
         );
@@ -93,20 +100,13 @@ public class LoadableDescriptorsTests {
 
     private static Stream<Arguments> getJcodParameters() {
         return Stream.of(
-                Arguments.of("LoadableDescriptorsAttributeTest$X.jcod", EToolArguments.JDEC_G, List.of(
-                        (Consumer<String>) (text) -> assertThat(text, allOf(
-                                        matchesPattern(".*Attr\\(#\\d\\d, \\d\\) \\{ // LoadableDescriptors at.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V3.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V7.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V2.*")
-                                )
-                        ))
-                ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.jcod", EToolArguments.JDEC, List.of(
+                Arguments.of("Test01.jcod", EToolArguments.JDEC_G, List.of(
                                 (Consumer<String>) (text) -> assertThat(text, allOf(
-                                        matchesPattern(".*Attr\\(#\\d\\d\\) \\{ // LoadableDescriptors.*"))),
+                                        matchesPattern(".*#\\d; // class: org/openjdk/asmtools/attribute/NestHost/NestHost01.*"),
+                                        matchesPattern(".*Attr.#\\d, 2. \\{ // NestHost.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(26, funcSubStrCount.apply(text, "LoadableDescriptors"))
+                                        Assertions.assertEquals(11, funcSubStrCount.apply(text, "NestHost"))
                         )
                 )
         );

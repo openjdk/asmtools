@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ */
+class org/openjdk/asmtools/attribute/NestHost/Test01 {
+  0xCAFEBABE;
+  0;                                       // minor version
+  55;                                      // version
+  [14] {                                   // Constant Pool
+    ;                                      // first element is empty
+    Utf8 "org/openjdk/asmtools/attribute/NestHost/Test01";  // #1     at 0x0A
+    Class #1;                              // #2     at 0x36
+    Utf8 "org/openjdk/asmtools/attribute/NestHost/NestHost01";  // #3     at 0x39
+    Utf8 "NestHost";                       // #4     at 0x69
+    Class #3;                              // #5     at 0x74
+    Utf8 "Test01";                         // #6     at 0x77
+    Utf8 "org/openjdk/asmtools/attribute/NestHost/OuterClass";  // #7     at 0x80
+    Class #7;                              // #8     at 0xB0
+    Utf8 "InnerClasses";                   // #9     at 0xB3
+    Utf8 "Test01.jasm";                    // #10     at 0xC2
+    Utf8 "SourceFile";                     // #11     at 0xD0
+    Utf8 "java/lang/Object";               // #12     at 0xDD
+    Class #12;                             // #13     at 0xF0
+  }                                        // end of Constant Pool
+
+  0x0001;                                  // access [ ACC_PUBLIC ]
+  #2;                                      // this_cpx
+  #13;                                     // super_cpx
+
+  [0] {                                    // Interfaces
+  }                                        // end of Interfaces
+
+  [0] {                                    // Fields
+  }                                        // end of Fields
+
+  [0] {                                    // Methods
+  }                                        // end of Methods
+
+  [3] {                                    // Attributes
+    Attr(#11, 2) {                         // SourceFile at 0x0101
+      #10;
+    }                                      // end of SourceFile
+    ;
+    Attr(#9, 10) {                         // InnerClasses at 0x0109
+      [1] {                                // classes
+           #2    #8    #6   1;             // access [ ACC_PUBLIC ]
+      }
+    }                                      // end of InnerClasses
+    ;
+    Attr(#4, 2) {                          // NestHost at 0x0119
+      #5;                                  // class: org/openjdk/asmtools/attribute/NestHost/NestHost01 at 0x0121
+    }                                      // end of NestHost
+  }                                        // end of Attributes
+}                                          // end of class org/openjdk/asmtools/attribute/NestHost/Test01

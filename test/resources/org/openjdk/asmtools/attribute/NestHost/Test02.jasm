@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package org/openjdk/asmtools/attribute/NestHost;
+
+public class Test02 version 55:0
+{
+  SourceFile               "Test02.jasm";
+
+  NestHost                 org/openjdk/asmtools/attribute/NestHost/NestHost02;
+
+  InnerClass               public Test02 = class Test02 of class OuterClass;
+} // end Class org/openjdk/asmtools/attribute/NestHost/Test02 compiled from "Test02.jasm"

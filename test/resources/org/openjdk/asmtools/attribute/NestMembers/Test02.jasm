@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package javasoft/sqe/tests/api/java/lang/reflect/RecordComponent;
+
+public final super class Test02 extends java/lang/Record version 69:0
+{
+  private final Field cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;";
+
+  public Method "<init>":"(Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;)V"
+    stack 2  locals 2
+  {
+         aload_0;
+         invokespecial     Method java/lang/Record."<init>":"()V";
+         aload_0;
+         aload_1;
+         putfield          Field cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;";
+         return;
+  }
+
+  public final Method toString:"()Ljava/lang/String;"
+    stack 1  locals 1
+  {
+         aload_0;
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ObjectMethods.bootstrap:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;":
+                           toString:"(Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02;)Ljava/lang/String;" {
+                             class Test02,
+                             String "cir",
+                             MethodHandle REF_getField:Test02.cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;"
+                           };
+         areturn;
+  }
+
+  public final Method hashCode:"()I"
+    stack 1  locals 1
+  {
+         aload_0;
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ObjectMethods.bootstrap:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;":
+                           hashCode:"(Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02;)I" {
+                             class Test02,
+                             String "cir",
+                             MethodHandle REF_getField:Test02.cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;"
+                           };
+         ireturn;
+  }
+
+  public final Method equals:"(Ljava/lang/Object;)Z"
+    stack 2  locals 2
+  {
+         aload_0;
+         aload_1;
+         invokedynamic     InvokeDynamic REF_invokeStatic:Method java/lang/runtime/ObjectMethods.bootstrap:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;":
+                           equals:"(Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02;Ljava/lang/Object;)Z" {
+                             class Test02,
+                             String "cir",
+                             MethodHandle REF_getField:Test02.cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;"
+                           };
+         ireturn;
+  }
+
+  public Method cir:"()Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;"
+    stack 1  locals 1
+  {
+         aload_0;
+         getfield          Field cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;";
+         areturn;
+  }
+
+  SourceFile               "Test02.java";
+
+  Record {
+    Component              cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;";
+  }
+
+  InnerClass               ClassInsideRecord = class Test02$ClassInsideRecord of class Test02;
+  InnerClass               static ClassInsideRecord2 = class Test02$ClassInsideRecord2 of class Test02;
+  InnerClass               static final InnerRecord = class Test02$InnerRecord of class Test02;
+  InnerClass               static abstract InnerInteface = class Test02$ClassInsideRecord2$InnerInteface of class Test02$ClassInsideRecord2;
+  InnerClass               static final InnerInnerRecord = class Test02$InnerRecord$InnerInnerRecord of class Test02$InnerRecord;
+  InnerClass               public static final Lookup = class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles;
+
+  NestMembers              Test02$ClassInsideRecord2,
+                           Test02$ClassInsideRecord2$InnerInteface,
+                           Test02$ClassInsideRecord,
+                           Test02$InnerRecord,
+                           Test02$InnerRecord$InnerInnerRecord;
+
+  BootstrapMethod          REF_invokeStatic:java/lang/runtime/ObjectMethods.bootstrap:
+                           "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;";
+                           {
+                             class Test02,
+                             String "cir",
+                             MethodHandle REF_getField:Test02.cir:"Ljavasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02$ClassInsideRecord;"
+                           }
+} // end Class javasoft/sqe/tests/api/java/lang/reflect/RecordComponent/Test02 compiled from "Test02.java"

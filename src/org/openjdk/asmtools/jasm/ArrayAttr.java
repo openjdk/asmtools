@@ -33,18 +33,18 @@ import java.util.List;
  * <p>
  * JEP 181 (Nest-based Access Control): class file 55.0
  * NestMembers_attribute {
- * u2 attribute_name_index;
- * u4 attribute_length;
- * u2 number_of_classes;
- * u2 classes[number_of_classes];
+ *      u2 attribute_name_index;
+ *      u4 attribute_length;
+ *      u2 number_of_classes;
+ *      u2 classes[number_of_classes];
  * }
  * <p>
  * JEP 360 (Sealed types): class file 59.65535
  * PermittedSubclasses_attribute {
- * u2 attribute_name_index;
- * u4 attribute_length;
- * u2 number_of_classes;
- * u2 classes[number_of_classes];
+ *      u2 attribute_name_index;
+ *      u4 attribute_length;
+ *      u2 number_of_classes;
+ *      u2 classes[number_of_classes];
  * }
  * <p>
  * Valhalla:
@@ -62,7 +62,7 @@ public class ArrayAttr extends AttrData {
     public ArrayAttr(ConstantPool pool, EAttribute attribute, List<ConstCell> constCellList) {
         super(pool, attribute);
         for (ConstCell<?> cell : constCellList) {
-            this.cells.add(cell);
+            this.cells.add(classifyConstCell(pool, cell));
         }
     }
 

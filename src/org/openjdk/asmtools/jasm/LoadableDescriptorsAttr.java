@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,16 +26,14 @@ import org.openjdk.asmtools.common.structure.EAttribute;
 
 import java.util.List;
 
-import static org.openjdk.asmtools.jasm.ClassFileConst.ConstType.CONSTANT_UTF8;
-
 /**
  * Valhalla:
  * <p>
  * LoadableDescriptors_attribute {
- * u2 attribute_name_index;
- * u4 attribute_length;
- * u2 number_of_descriptors;
- * u2 descriptors[number_of_descriptors];
+ *      u2 attribute_name_index;
+ *      u4 attribute_length;
+ *      u2 number_of_descriptors;
+ *      u2 descriptors[number_of_descriptors];
  * }
  */
 public class LoadableDescriptorsAttr extends ArrayAttr {
@@ -45,6 +43,6 @@ public class LoadableDescriptorsAttr extends ArrayAttr {
 
     @Override
     protected ConstCell<?> classifyConstCell(ConstantPool pool, ConstCell<?> cell) {
-        return pool.findCell(CONSTANT_UTF8, cell);
+        return cell;
     }
 }

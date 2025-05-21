@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package org/openjdk/asmtools/attribute/NestHost;
+
+public class #2 /* Test01 */ version 55:0
+{
+  const #1   = Utf8  "org/openjdk/asmtools/attribute/NestHost/Test01";
+  const #2   = Class #1;                  // Test01
+  const #3   = Utf8  "org/openjdk/asmtools/attribute/NestHost/NestHost01";
+  const #4   = Utf8  "NestHost";
+  const #5   = Class #3;                  // NestHost01
+  const #6   = Utf8  "Test01";
+  const #7   = Utf8  "org/openjdk/asmtools/attribute/NestHost/OuterClass";
+  const #8   = Class #7;                  // OuterClass
+  const #9   = Utf8  "InnerClasses";
+  const #10  = Utf8  "Test01.jasm";
+  const #11  = Utf8  "SourceFile";
+  const #12  = Utf8  "java/lang/Object";
+  const #13  = Class #12;                 // java/lang/Object
+
+  SourceFile                 #10;         // Test01.jasm
+
+  NestHost                   #5;          // org/openjdk/asmtools/attribute/NestHost/NestHost01
+
+  InnerClasses {
+    public #6 = #2 of #8;                 // Test01 = class Test01 of class OuterClass
+  }
+} // end Class org/openjdk/asmtools/attribute/NestHost/Test01 compiled from "Test01.jasm"

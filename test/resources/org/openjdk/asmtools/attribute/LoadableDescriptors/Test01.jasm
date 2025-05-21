@@ -1,0 +1,12 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package org/openjdk/asmtools/attribute/LoadableDescriptors;
+
+public class Test01 version 55:0
+{
+  LoadableDescriptors     "LLoadableDescriptors01;", "LLoadableDescriptors02;";
+
+  InnerClass               public Test01 = class Test01 of class OuterClass;
+} // end Class org/openjdk/asmtools/attribute/NestHost/Test01
