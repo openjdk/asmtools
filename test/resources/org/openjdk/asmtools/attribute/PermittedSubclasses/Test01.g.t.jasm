@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package org/openjdk/asmtools/attribute/PermittedSubclasses;
+
+public super class #3 /* Test01 */ version 62:0
+{
+  const #1   = Methodref   #9.#10;              // java/lang/Object."<init>":"()V"
+  const #2   = Utf8        "org/openjdk/asmtools/attribute/PermittedSubclasses/Test01";
+  const #3   = Class       #2;                  // Test01
+  const #4   = Utf8        "<init>";
+  const #5   = Utf8        "()V";
+  const #6   = Utf8        "Code";
+  const #7   = Utf8        "LineNumberTable";
+  const #8   = Utf8        "java/lang/Object";
+  const #9   = Class       #8;                  // java/lang/Object
+  const #10  = NameAndType #4:#5;               // "<init>":"()V"
+  const #11  = Utf8        "NestMember01";
+  const #12  = Class       #11;                 // NestMember01
+  const #13  = Utf8        "Test01";
+  const #14  = Class       #13;                 // Test01
+  const #15  = Utf8        "InnerClasses";
+  const #16  = Utf8        "NestMember02";
+  const #17  = Class       #16;                 // NestMember02
+  const #18  = Utf8        "NestMember03";
+  const #19  = Class       #18;                 // NestMember03
+  const #20  = Utf8        "NestMember04";
+  const #21  = Class       #20;                 // NestMember04
+  const #22  = Utf8        "SubClass01";
+  const #23  = Utf8        "SubClass02";
+  const #24  = Utf8        "SubClass03";
+  const #25  = Utf8        "SubClass04";
+  const #26  = Utf8        "PermittedSubclasses";
+  const #27  = Class       #22;                 // SubClass01
+  const #28  = Class       #23;                 // SubClass02
+  const #29  = Class       #24;                 // SubClass03
+  const #30  = Class       #25;                 // SubClass04
+  const #31  = Utf8        "NestMembers";
+  const #32  = Utf8        "Test01.jasm";
+  const #33  = Utf8        "SourceFile";
+
+  public Method #4:#5                           // "<init>":"()V"
+    stack 1  locals 1
+  {
+     0:    aload_0;
+     1:    invokespecial     #1;                // Method java/lang/Object."<init>":"()V"
+     4:    return;
+  }
+
+  SourceFile                 #32;               // Test01.jasm
+
+  InnerClasses {
+    public #11 = #12 of #14;                    // NestMember01 = class NestMember01 of class Test01
+    public #16 = #17 of #14;                    // NestMember02 = class NestMember02 of class Test01
+    public #18 = #19 of #14;                    // NestMember03 = class NestMember03 of class Test01
+    public #20 = #21 of #14;                    // NestMember04 = class NestMember04 of class Test01
+  }
+
+  NestMembers                #12,               // NestMember01
+                             #17,               // NestMember02
+                             #19,               // NestMember03
+                             #21;               // NestMember04
+
+  PermittedSubclasses        #27,               // SubClass01
+                             #28,               // SubClass02
+                             #29,               // SubClass03
+                             #30;               // SubClass04
+} // end Class org/openjdk/asmtools/attribute/PermittedSubclasses/Test01 compiled from "Test01.jasm"

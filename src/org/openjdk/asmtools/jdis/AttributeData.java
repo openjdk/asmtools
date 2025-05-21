@@ -24,7 +24,6 @@ package org.openjdk.asmtools.jdis;
 
 import org.openjdk.asmtools.common.FormatError;
 import org.openjdk.asmtools.common.ToolLogger;
-import org.openjdk.asmtools.common.structure.EAttribute;
 import org.openjdk.asmtools.jasm.TableFormatModel;
 
 import java.io.DataInputStream;
@@ -70,10 +69,15 @@ public abstract class AttributeData<A extends AttributeData<A>> extends Indenter
         logger = classData.data.environment.getLogger();
         tableToken = token;
         switch (tableToken) {
-            case NEST_HOST, SOURCE_FILE -> {
+            case SOURCE_FILE -> {
                 attribute_length = 2;
                 idxStringSupplier = () -> "#%d;".formatted(cpx);
                 namePrinter = () -> println("\"%s\";".formatted(name != null ? name : "???"));
+            }
+            case NEST_HOST -> {
+                attribute_length = 2;
+                idxStringSupplier = () -> "#%d;".formatted(cpx);
+                namePrinter = () -> println("%s;".formatted(name != null ? name : "\"???\""));
             }
             case ENCLOSING_METHOD -> {
                 attribute_length = 4;

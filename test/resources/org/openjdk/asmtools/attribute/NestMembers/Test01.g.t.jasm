@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ package org/openjdk/asmtools/attribute/NestMembers/Test01;
+
+public class #2 /* Test01 */ version 55:0
+{
+  const #1   = Utf8  "org/openjdk/asmtools/attribute/NestMembers/Test01/Test01";
+  const #2   = Class #1;                  // Test01
+  const #3   = Utf8  "NestMember01";
+  const #4   = Utf8  "org/openjdk/asmtools/attribute/NestMembers/Test01/NestMember01";
+  const #5   = Class #4;                  // NestMember01
+  const #6   = Utf8  "InnerClasses";
+  const #7   = Utf8  "NestMembers";
+  const #8   = Utf8  "Test01.jasm";
+  const #9   = Utf8  "SourceFile";
+  const #10  = Utf8  "java/lang/Object";
+  const #11  = Class #10;                 // java/lang/Object
+
+  SourceFile                 #8;          // Test01.jasm
+
+  InnerClasses {
+    public #3 = #5 of #2;                 // NestMember01 = class NestMember01 of class Test01
+  }
+
+  NestMembers                #5;          // NestMember01
+} // end Class org/openjdk/asmtools/attribute/NestMembers/Test01/Test01 compiled from "Test01.jasm"

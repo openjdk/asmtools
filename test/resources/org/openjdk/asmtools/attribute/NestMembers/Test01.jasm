@@ -1,0 +1,12 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+package org/openjdk/asmtools/attribute/NestMembers/Test01;
+
+public class Test01 version 55:0
+{
+  InnerClass               public NestMember01 = class NestMember01 of class Test01;
+
+  NestMembers              NestMember01;
+} // end Class org/openjdk/asmtools/attribute/NestMembers/Test01

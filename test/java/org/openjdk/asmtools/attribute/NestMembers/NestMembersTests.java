@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package org.openjdk.asmtools.attribute.LoadableDescriptors;
+package org.openjdk.asmtools.attribute.NestMembers;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +48,7 @@ import static org.openjdk.asmtools.lib.utility.StringUtils.funcNormalizeText;
 import static org.openjdk.asmtools.lib.utility.StringUtils.funcSubStrCount;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class LoadableDescriptorsTests {
+public class NestMembersTests {
 
     private Jasm jasm = new Jasm();
     private Jcoder jcoder = new Jcoder();
@@ -58,34 +58,27 @@ public class LoadableDescriptorsTests {
         return Stream.of(
                 Arguments.of("Test01.jasm", EToolArguments.JDIS_G_T, List.of(
                                 (Consumer<String>) (text) -> assertThat(text, allOf(
-                                                matchesPattern(".*const #\\d = Utf8 \"LLoadableDescriptors01;\";.*"),
-                                                matchesPattern(".*const #\\d = Utf8 \"LLoadableDescriptors02;\";.*"),
-                                                matchesPattern(".*LoadableDescriptors #\\d, #\\d; // \"LLoadableDescriptors01;\", \"LLoadableDescriptors02;\".*")
-                                        )
-                                ),
+                                        matchesPattern(".*const #\\d = Class #\\d; // NestMember01.*"),
+                                        matchesPattern(".*NestMembers #\\d; // NestMember01.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(10, funcSubStrCount.apply(text, "LoadableDescriptors"))
+                                        Assertions.assertEquals(6, funcSubStrCount.apply(text, "NestMembers"))
                         )
                 ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.jasm", EToolArguments.JDIS, List.of(
+                Arguments.of("Test01.g.t.jasm", EToolArguments.JDIS, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*NestMembers NestMember01.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
+                                        Assertions.assertEquals(6, funcSubStrCount.apply(text, "NestMember"))
                         )
                 ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.jasm", EToolArguments.JDIS_G_T, List.of(
+                Arguments.of("Test02.jasm", EToolArguments.JDIS_G_T, List.of(
+                                (Consumer<String>) (text) -> assertThat(text, allOf(
+                                        matchesPattern(".*NestMembers #\\d\\d, // Test02\\$ClassInsideRecord2.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
-                        )
-                ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.t.jasm", EToolArguments.JDIS_G, List.of(
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(1, funcSubStrCount.apply(text, "LoadableDescriptors ")),
-                                (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(3, funcSubStrCount.apply(text, "strict "))
+                                        Assertions.assertEquals(2, funcSubStrCount.apply(text, "NestMembers"))
                         )
                 )
         );
@@ -93,20 +86,13 @@ public class LoadableDescriptorsTests {
 
     private static Stream<Arguments> getJcodParameters() {
         return Stream.of(
-                Arguments.of("LoadableDescriptorsAttributeTest$X.jcod", EToolArguments.JDEC_G, List.of(
-                        (Consumer<String>) (text) -> assertThat(text, allOf(
-                                        matchesPattern(".*Attr\\(#\\d\\d, \\d\\) \\{ // LoadableDescriptors at.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V3.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V7.*"),
-                                        matchesPattern(".*descriptor: LLoadableDescriptorsAttributeTest\\$V2.*")
-                                )
-                        ))
-                ),
-                Arguments.of("LoadableDescriptorsAttributeTest$X.g.jcod", EToolArguments.JDEC, List.of(
+                Arguments.of("Test01.jcod", EToolArguments.JDEC_G, List.of(
                                 (Consumer<String>) (text) -> assertThat(text, allOf(
-                                        matchesPattern(".*Attr\\(#\\d\\d\\) \\{ // LoadableDescriptors.*"))),
+                                        matchesPattern(".*#\\d; // class: org/openjdk/asmtools/attribute/NestMembers/Test01/NestMember01 at.*"),
+                                        matchesPattern(".*Attr.#\\d, 4. \\{ // NestMembers.*")
+                                )),
                                 (Consumer<String>) (text) ->
-                                        Assertions.assertEquals(26, funcSubStrCount.apply(text, "LoadableDescriptors"))
+                                        Assertions.assertEquals(8, funcSubStrCount.apply(text, "NestMembers"))
                         )
                 )
         );
@@ -114,8 +100,7 @@ public class LoadableDescriptorsTests {
 
     @BeforeAll
     public void init() throws IOException {
-        resourceDir = new File(Objects.requireNonNull(this.getClass().
-                getResource("Test01.jasm")).getFile()).getParentFile();
+        resourceDir = new File(Objects.requireNonNull(this.getClass().getResource("Test01.jasm")).getFile()).getParentFile();
     }
 
     @ParameterizedTest
