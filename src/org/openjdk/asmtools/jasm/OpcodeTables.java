@@ -296,7 +296,7 @@ public class OpcodeTables {
         opc_monitorenter(194, "monitorenter", 1),
         opc_monitorexit(195, "monitorexit", 1),
         // Wide Marker (not really an opcode) - Extend local variable index by additional bytes
-        opc_wide(196, null, 0),
+        opc_wide(196, null, "wide", 0),
         opc_multianewarray(197, "multianewarray", 4),
         opc_ifnull(198, "ifnull", 3),
         opc_ifnonnull(199, "ifnonnull", 3),
@@ -518,6 +518,13 @@ public class OpcodeTables {
             parseKey = parse;
             alias = als;
             length = len;
+        }
+
+        public String getPrintName() {
+            if (alias != null) {
+                return alias;
+            }
+            return parseKey;
         }
 
         public Integer value() {

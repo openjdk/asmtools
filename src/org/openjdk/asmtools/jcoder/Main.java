@@ -147,7 +147,8 @@ public class Main extends JcoderTool {
                     continue;
                 }
                 parser.write();
-                if (environment.hasMessages()) rc += environment.flush(true);
+                if (environment.hasMessages())
+                    rc += environment.flush(true);
             }
         } catch (IOException | URISyntaxException | Error exception) {
             environment.printException(exception);
@@ -156,7 +157,8 @@ public class Main extends JcoderTool {
             environment.printException(exception);
             environment.error(exception);
         }
-        if (environment.hasMessages()) rc += environment.flush(true);
+        if (environment.hasMessages())
+            rc += environment.flush(true);
         return rc;
     }
 

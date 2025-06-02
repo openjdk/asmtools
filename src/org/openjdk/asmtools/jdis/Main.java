@@ -105,7 +105,7 @@ public class Main extends JdisTool {
 
     // Runs disassembler when args already parsed
     public synchronized int disasm() {
-        int rc = 0;
+        int rc = OK;
         for (ToolInput toolInput : fileList) {
             ClassData classData = null;
             try {
@@ -120,7 +120,7 @@ public class Main extends JdisTool {
                 classData.print();
                 environment.getToolOutput().finishClass(classData.className);
                 environment.getOutputs().flush();
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
                 environment.getLogger().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
@@ -131,22 +131,22 @@ public class Main extends JdisTool {
                 classData.postPrint();
                 environment.error(ioe);
                 environment.printException(ioe);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Error error) {
                 classData.postPrint();
                 environment.error(error);
                 environment.printException(error);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Exception ex) {
                 classData.postPrint();
                 environment.error(ex);
                 environment.printException(ex);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             }
             environment.getLogger().flush();
-            return rc;
+            break;
         }
-        return OK;
+        return rc;
     }
 
     @Override

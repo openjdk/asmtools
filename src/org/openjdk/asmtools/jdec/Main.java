@@ -153,14 +153,14 @@ public class Main extends JdecTool {
      */
     @Override
     public synchronized int decode() {
-        int rc = 0;
+        int rc = OK;
         for (ToolInput toolInput : fileList) {
             try {
                 environment.setToolInput(toolInput);
                 ClassData classData = new ClassData(environment);
                 classData.decodeClass();
                 environment.getOutputs().flush();
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
                 environment.getLogger().flush();
                 continue;
             } catch (FileNotFoundException fnf) {
@@ -170,19 +170,19 @@ public class Main extends JdecTool {
             } catch (IOException | ClassFormatError ioe) {
                 environment.error(ioe);
                 environment.printException(ioe);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Error error) {
                 environment.error(error);
                 environment.printException(error);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             } catch (Exception ex) {
                 environment.error(ex);
                 environment.printException(ex);
-                rc = environment.getLogger().registerTotalIssues(rc, toolInput);
+                rc += environment.getLogger().registerTotalIssues(rc, toolInput);
             }
             environment.getLogger().flush();
-            return rc;
+            break;
         }
-        return OK;
+        return rc;
     }
 }
