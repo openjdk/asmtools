@@ -96,6 +96,5 @@ public class SourceDebugExtensionAttr extends AttrData {
             case BYTE -> out.write(toByteArray(byteDebugExtension));
             default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
         }
-        ;
     }
 }

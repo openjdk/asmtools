@@ -146,13 +146,16 @@ public class StringUtils {
             add(new StringBuilder());
         }};
         StringBuilder sb = byteLines.get(0);
-        byte[] buffer = new byte[length];
+        byte[] buffer;
         String utfString = null;
         int count = 0;
         try {
+            buffer = new byte[length + 2];
+            buffer[0] = (byte) (length >> 8);
+            buffer[1] = (byte) length;
             for (int i = 0; i < length; i++) {
                 byte b = in.readByte();
-                buffer[i] = b;
+                buffer[i + 2] = b;
                 count++;
                 sb.append("0x").append(hexTable[(b >> 4) & 0xF]).append(hexTable[b & 0xF]);
                 if (i % BYTES_IN_LINE == BYTES_IN_LINE - 1) {
@@ -166,8 +169,12 @@ public class StringUtils {
                     utfString = DataInputStream.readUTF(dis);
                 } catch (UTFDataFormatException utfDataFormatException) {
                     byteLines.add(0, new StringBuilder(format("// == %s ==", sharedI18n.getString("main.error.wrong.utf8"))));
-                } catch (IOException ignored) { /*ignored*/ }
+                } catch (IOException ignored) {
+                    /*ignored*/
+                }
             }
+        } catch (NegativeArraySizeException negativeArraySizeException ) {
+            throw new IOException("Requested array size exceeds VM limit", negativeArraySizeException);
         } finally {
             if (count > 0) {
                 List<String> utf8Lines = getPrintable(utfString, CHARS_IN_LINE);
