@@ -102,23 +102,37 @@ public class CodeData extends MemberData<MethodData> {
         return (n + 3) & ~3;
     }
 
-    private int getByte(int pc) {
+    private int getByte(int pc) throws IndexOutOfBoundsException {
+        if (pc < 0 || pc >= code.length) {
+            throw new IndexOutOfBoundsException(environment.getInfo("err.out.of.range", pc));
+
+        }
         return code[pc];
     }
 
-    private int getUByte(int pc) {
+    private int getUByte(int pc) throws IndexOutOfBoundsException {
+        if (pc < 0 || pc >= code.length) {
+            throw new IndexOutOfBoundsException(environment.getInfo("err.out.of.range", pc));
+
+        }
         return code[pc] & 0xFF;
     }
 
-    private int getShort(int pc) {
+    private int getShort(int pc) throws IndexOutOfBoundsException {
+        if (pc < 0 || pc + 1 >= code.length) {
+            throw new IndexOutOfBoundsException(environment.getInfo("err.out.of.range", pc));
+        }
         return (code[pc] << 8) | (code[pc + 1] & 0xFF);
     }
 
-    private int getUShort(int pc) {
+    private int getUShort(int pc) throws IndexOutOfBoundsException {
+        if (pc < 0 || pc + 1 >= code.length) {
+            throw new IndexOutOfBoundsException(environment.getInfo("err.out.of.range", pc));
+        }
         return ((code[pc] << 8) | (code[pc + 1] & 0xFF)) & 0xFFFF;
     }
 
-    private int getInt(int pc) {
+    private int getInt(int pc) throws IndexOutOfBoundsException {
         return (getShort(pc) << 16) | (getShort(pc + 2) & 0xFFFF);
     }
 
@@ -319,36 +333,59 @@ public class CodeData extends MemberData<MethodData> {
         int opc = getUByte(pc);
         Opcode opcode = opcode(opc);
         try {
+            if (opcode == null) {
+                // nonexistent opcode - but we have to print something
+                getInstructionAttribute(pc).referred = true;
+                return 1;
+            }
             switch (opcode) {
                 case opc_tableswitch -> {
-                    int tb = align(pc + 1);
-                    int default_skip = getInt(tb); /* default skip pamount */
+                    try {
+                        int tb = align(pc + 1);
+                        int default_skip = getInt(tb); /* default skip pamount */
 
-                    int low = getInt(tb + 4);
-                    int high = getInt(tb + 8);
-                    int count = high - low;
-                    for (int i = 0; i <= count; i++) {
-                        getInstructionAttribute(pc + getInt(tb + 12 + 4 * i)).referred = true;
+                        int low = getInt(tb + 4);
+                        int high = getInt(tb + 8);
+                        int count = high - low;
+                        for (int i = 0; i <= count; i++) {
+                            getInstructionAttribute(pc + getInt(tb + 12 + 4 * i)).referred = true;
+                        }
+                        getInstructionAttribute(default_skip + pc).referred = true;
+                        return tb - pc + 16 + count * 4;
+                    } catch (IndexOutOfBoundsException e) {
+                        environment.error(e);
+                        getInstructionAttribute(pc).referred = true;
+                        return 1;
                     }
-                    getInstructionAttribute(default_skip + pc).referred = true;
-                    return tb - pc + 16 + count * 4;
                 }
                 case opc_lookupswitch -> {
-                    int tb = align(pc + 1);
-                    int default_skip = getInt(tb); /* default skip pamount */
+                    try {
+                        int tb = align(pc + 1);
+                        int default_skip = getInt(tb); /* default skip pamount */
 
-                    int npairs = getInt(tb + 4);
-                    for (int i = 1; i <= npairs; i++) {
-                        getInstructionAttribute(pc + getInt(tb + 4 + i * 8)).referred = true;
+                        int npairs = getInt(tb + 4);
+                        for (int i = 1; i <= npairs; i++) {
+                            getInstructionAttribute(pc + getInt(tb + 4 + i * 8)).referred = true;
+                        }
+                        getInstructionAttribute(default_skip + pc).referred = true;
+                        return tb - pc + (npairs + 1) * 8;
+                    } catch (IndexOutOfBoundsException e) {
+                        environment.error(e);
+                        getInstructionAttribute(pc).referred = true;
+                        return 1;
                     }
-                    getInstructionAttribute(default_skip + pc).referred = true;
-                    return tb - pc + (npairs + 1) * 8;
                 }
                 case opc_jsr, opc_goto, opc_ifeq, opc_ifge, opc_ifgt, opc_ifle, opc_iflt, opc_ifne, opc_if_icmpeq,
                      opc_if_icmpne, opc_if_icmpge, opc_if_icmpgt, opc_if_icmple, opc_if_icmplt, opc_if_acmpeq,
                      opc_if_acmpne, opc_ifnull, opc_ifnonnull -> {
-                    getInstructionAttribute(pc + getShort(pc + 1)).referred = true;
-                    return 3;
+                    try {
+                        getInstructionAttribute(pc + getShort(pc + 1)).referred = true;
+                        return 3;
+                    } catch (IndexOutOfBoundsException e) {
+                        environment.error(e);
+                        getInstructionAttribute(pc).referred = true;
+                        return 1;
+                    }
                 }
                 case opc_jsr_w, opc_goto_w -> {
                     getInstructionAttribute(pc + getInt(pc + 1)).referred = true;
@@ -359,8 +396,12 @@ public class CodeData extends MemberData<MethodData> {
                     opcode = opcode(opc2);
                 }
             }
-            int opclen = opcode.length();
-            return opclen == 0 ? 1 : opclen;  // bugfix for 4614404
+            if (opcode != null) {
+                int opclen = opcode.length();
+                return opclen == 0 ? 1 : opclen;  // bugfix for 4614404
+            } else {
+                return 1;
+            }
         } catch (ArrayIndexOutOfBoundsException e) {
             return 1;
         }
@@ -430,6 +471,12 @@ public class CodeData extends MemberData<MethodData> {
         int opc = getUByte(pc), opc2;
         Opcode opcode = opcode(opc), opcode2;
         String mnem;
+        if (opcode == null) {
+            // nonexistent opcode - but we have to print something
+            print(PadRight("bytecode", OPERAND_PLACEHOLDER_LENGTH + 1)).
+                    println((printHEX ? toHex(opc) : opc) + ";");
+            return 1;
+        }
         switch (opcode) {
             case opc_nonpriv, opc_priv -> {
                 int count = 1;
@@ -438,14 +485,15 @@ public class CodeData extends MemberData<MethodData> {
                     opc2 = getUByte(pc + 1);
                     int finalopc = (opc << 8) + opc2;
                     opcode2 = opcode(finalopc);
+
                     if (opcode2 == null) {
                         // assume all (even nonexistent) priv and nonpriv instructions
                         // are 2 bytes long
-                        mnem = opcode.parseKey() + " " + opc2;
+                        print(PadRight(opcode.parseKey(), OPERAND_PLACEHOLDER_LENGTH + 1)).
+                                println((printHEX ? toHex(opc2) : opc2) + ";");
                     } else {
-                        mnem = opcode2.parseKey();
+                        println(opcode2.parseKey() + ";");
                     }
-                    println(mnem);
                 } else
                     printBytes(opcode.byteValue(), validBytes, shift);
                 return 2;
@@ -462,7 +510,8 @@ public class CodeData extends MemberData<MethodData> {
                 opcode2 = opcode(finalopcwide);
                 if (opcode2 == null) {
                     // nonexistent opcode - but we have to print something
-                    print(PadRight(opc_bytecode.parseKey(), OPERAND_PLACEHOLDER_LENGTH + 1)).println(opcode + ";");
+                    print(PadRight(opc_bytecode.parseKey(), OPERAND_PLACEHOLDER_LENGTH + 1)).
+                            println(opcode.getPrintName() + ";");
                     return 1;
                 } else {
                     mnem = opcode2.parseKey();
@@ -521,48 +570,70 @@ public class CodeData extends MemberData<MethodData> {
                 return 3;
             }
             case opc_tableswitch -> {
-                // TODO:  add checkBounds
-                int tb = align(pc + 1);
-                int default_skip = getInt(tb); /* default skip pamount */
+                boolean notPrinted = true;
+                try {
+                    int tb = align(pc + 1);
+                    int default_skip = getInt(tb); /* default skip pamount */
 
-                int low = getInt(tb + 4);
-                int high = getInt(tb + 8);
-                int count = high - low;
-
-                printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset());
-                println(printCPIndex && !skipComments ? " // " + low + " to " + high : "");
-                for (int i = 0; i <= count; i++) {
-                    // 9 == "default: ".length()
-                    print(enlargedIndent(PadRight(format("%2d: ", i + low), 9), shift)).
-                            println(data.getLabelPrefix() + (pc + getInt(tb + 12 + 4 * i)) + ";");
+                    int low = getInt(tb + 4);
+                    int high = getInt(tb + 8);
+                    int count = high - low;
+                    printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset());
+                    println(printCPIndex && !skipComments ? " // " + low + " to " + high : "");
+                    notPrinted = false;
+                    for (int i = 0; i <= count; i++) {
+                        // 9 == "default: ".length()
+                        print(enlargedIndent(PadRight(format("%2d: ", i + low), 9), shift)).
+                                println(data.getLabelPrefix() + (pc + getInt(tb + 12 + 4 * i)) + ";");
+                    }
+                    print(enlargedIndent(
+                            PadRight("default: " + data.getLabelPrefix() + (default_skip + pc),
+                                    OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)
+                    ).println(" };");
+                    return tb - pc + 16 + count * 4;
+                } catch (IndexOutOfBoundsException e) {
+                    if (notPrinted) {
+                        println("%s { ".formatted(operand));
+                        printIndentLn(enlargedIndent("BOGUS;", shift));
+                        println(enlargedIndent(" };", shift));
+                    } else {
+                        println("BOGUS;").println(enlargedIndent(" };", shift));
+                    }
+                    environment.error(e);
+                    return 1;
                 }
-                print(enlargedIndent(
-                        PadRight("default: " + data.getLabelPrefix() + (default_skip + pc),
-                                OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)
-                ).println(" };");
-                return tb - pc + 16 + count * 4;
             }
             case opc_lookupswitch -> {
-                // TODO:  add checkBounds
-                int tb = align(pc + 1);
+                boolean notPrinted = true;
+                try {
+                    int tb = align(pc + 1);
 
-                int default_skip = getInt(tb);
-                int nPairs = getInt(tb + 4);
-
-                printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset());
-                println(printCPIndex && !skipComments ? " // " + nPairs : "");
-                Pair<Integer, Integer>[] lookupswitchPairs = getLookupswitchPairs(tb, nPairs);
-                // 9 == "default: ".length()
-                int caseLength = Math.max(9, Arrays.stream(lookupswitchPairs).
-                        mapToInt(p -> String.valueOf(p.first).length()).max().orElse(0) + 2);
-                for (int i = 0; i < nPairs; i++) {
-                    print(enlargedIndent(PadRight(format("%2d:", lookupswitchPairs[i].first), caseLength), shift)).
-                            println(data.getLabelPrefix() + (pc + lookupswitchPairs[i].second) + ";");
+                    int default_skip = getInt(tb);
+                    int nPairs = getInt(tb + 4);
+                    printPadRight(format("%s { ", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)), getCommentOffset());
+                    println(printCPIndex && !skipComments ? " // " + nPairs : "");
+                    notPrinted = false;
+                    Pair<Integer, Integer>[] lookupswitchPairs = getLookupswitchPairs(tb, nPairs);
+                    // 9 == "default: ".length()
+                    int caseLength = Math.max(9, Arrays.stream(lookupswitchPairs).
+                            mapToInt(p -> String.valueOf(p.first).length()).max().orElse(0) + 2);
+                    for (int i = 0; i < nPairs; i++) {
+                        print(enlargedIndent(PadRight(format("%2d:", lookupswitchPairs[i].first), caseLength), shift)).
+                                println(data.getLabelPrefix() + (pc + lookupswitchPairs[i].second) + ";");
+                    }
+                    print(enlargedIndent(
+                            PadRight(PadRight("default: ", caseLength) + data.getLabelPrefix() + (default_skip + pc),
+                                    OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)).println(" };");
+                    return tb - pc + (nPairs + 1) * 8;
+                } catch (IndexOutOfBoundsException e) {
+                    if (notPrinted) {
+                        println("%s { ".formatted(operand));
+                    }
+                    printIndentLn(enlargedIndent("BOGUS;", shift));
+                    println(enlargedIndent(" };", shift));
+                    environment.error(e);
+                    return 1;
                 }
-                print(enlargedIndent(
-                        PadRight(PadRight("default: ", caseLength) + data.getLabelPrefix() + (default_skip + pc),
-                                OPERAND_PLACEHOLDER_LENGTH - getIndentStep() - 2), shift)).println(" };");
-                return tb - pc + (nPairs + 1) * 8;
             }
             case opc_newarray -> {
                 int count = 1;
@@ -582,45 +653,56 @@ public class CodeData extends MemberData<MethodData> {
                 return 2;
             }
             case opc_ldc, opc_ldc_w, opc_ldc2_w, opc_invokedynamic -> {
-                // TODO:  add checkBounds
-                // added printing of the tag: Method/Interface to clarify
-                // interpreting CONSTANT_MethodHandle_info:reference_kind
-                // Example: ldc_w Dynamic REF_invokeStatic:Method CondyIndy.condy_bsm
-                int index, opLength;
-                Map<Integer, List<Integer>> breakPositions = new HashMap<>();
-                if (opcode == Opcode.opc_ldc) {
-                    opLength = 2;
-                    breakPositions = LdwBreakPositions;
-                    index = getUByte(pc + 1);
-                } else if (opcode == Opcode.opc_invokedynamic) {
-                    opLength = 5;
-                    breakPositions = InvokeDynamicBreakPositions;
-                    index = getUShort(pc + 1); // getUbyte(pc + 3); // getUbyte(pc + 4); // reserved bytes
-                } else {    // opc_ldc*_w
-                    opLength = 3;
-                    breakPositions = LdwBreakPositions;
-                    index = getUShort(pc + 1);
-                }
-                pool.setPrintTAG(true);
-                if (printCPIndex) {
-                    if (skipComments) {
-                        println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
-                    } else {
-                        printPadRight(
-                                format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index), getCommentOffset()).
-                                print(" // ");
-                        println(
-                                formatOperandLine(pool.ConstantStrValue(index), getCommentOffset() + shift,
-                                        " // ", breakPositions));
+                try {
+                    int index, opLength;
+                    Map<Integer, List<Integer>> breakPositions = new HashMap<>();
+                    if (opcode == Opcode.opc_ldc) {
+                        opLength = 2;
+                        breakPositions = LdwBreakPositions;
+                        index = getUByte(pc + 1);
+                    } else if (opcode == Opcode.opc_invokedynamic) {
+                        opLength = 5;
+                        breakPositions = InvokeDynamicBreakPositions;
+                        index = getUShort(pc + 1); // getUbyte(pc + 3); // getUbyte(pc + 4); // reserved bytes
+                    } else {    // opc_ldc*_w
+                        opLength = 3;
+                        breakPositions = LdwBreakPositions;
+                        index = getUShort(pc + 1);
                     }
-                } else {
-                    // TODO: Check Offset calculation
-                    print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
-                    println(formatOperandLine(pool.ConstantStrValue(index), OPERAND_PLACEHOLDER_LENGTH + shift + 1,
-                            "", breakPositions) + ";");
+                    pool.setPrintTAG(true);
+                    if (printCPIndex) {
+                        if (skipComments) {
+                            println(format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index));
+                        } else {
+                            printPadRight(
+                                    format("%s #%d;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH), index), getCommentOffset()).
+                                    print(" // ");
+                            println(
+                                    formatOperandLine(pool.ConstantStrValue(index), getCommentOffset() + shift,
+                                            " // ", breakPositions));
+                        }
+                    } else {
+                        // TODO: Check Offset calculation
+                        print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1));
+                        println(formatOperandLine(pool.ConstantStrValue(index), OPERAND_PLACEHOLDER_LENGTH + shift + 1,
+                                "", breakPositions) + ";");
+                    }
+                    pool.setPrintTAG(false);
+                    return opLength;
+                } catch (IndexOutOfBoundsException e) {
+                    if (printCPIndex) {
+                        if (skipComments) {
+                            println(format("%s BOGUS;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)));
+                        } else {
+                            printPadRight(format("%s BOGUS;", PadRight(operand, OPERAND_PLACEHOLDER_LENGTH)),
+                                    getCommentOffset()).println(" // " + e.getMessage());
+                        }
+                    } else {
+                        print(PadRight(operand, OPERAND_PLACEHOLDER_LENGTH + 1)).println("BOGUS;");
+                    }
+                    environment.error(e);
+                    return 1;
                 }
-                pool.setPrintTAG(false);
-                return opLength;
             }
             case opc_anewarray, opc_instanceof, opc_checkcast, opc_new, opc_putstatic, opc_getstatic, opc_putfield,
                  opc_getfield, opc_invokevirtual, opc_invokespecial, opc_invokestatic -> {
@@ -747,14 +829,17 @@ public class CodeData extends MemberData<MethodData> {
         return list;
     }
 
-    private Pair<Integer, Integer>[] getLookupswitchPairs(int pad, int count) {
-        Pair[] pairs = new Pair[count];
-        for (int i = 1; i <= count; i++) {
-            pairs[i - 1] = new Pair<>(getInt(pad + i * 8), getInt(pad + 4 + i * 8));
+    private Pair<Integer, Integer>[] getLookupswitchPairs(int pad, int count)  {
+        try {
+            Pair[] pairs = new Pair[count];
+            for (int i = 1; i <= count; i++) {
+                pairs[i - 1] = new Pair<>(getInt(pad + i * 8), getInt(pad + 4 + i * 8));
+            }
+            return pairs;
+        } catch (NegativeArraySizeException e) {
+            throw new IndexOutOfBoundsException(environment.getInfo("err.out.of.range", count));
         }
-        return pairs;
     }
-
 
     /**
      * Prints the code data to the current output stream if code exists (method isn't abstract)
@@ -805,7 +890,8 @@ public class CodeData extends MemberData<MethodData> {
                 incIndent();
                 printIndent(PadRight(format("%2d:", pc), instructionOffset));
             } else {
-                printIndent(PadRight(((insAttr != null) && insAttr.referred) ? data.getLabelPrefix() + pc + ":" : " ", instructionOffset));
+                printIndent(PadRight(((insAttr != null) && insAttr.referred) ? data.getLabelPrefix() + pc + ":" : " ",
+                        instructionOffset));
                 incIndent();
             }
 

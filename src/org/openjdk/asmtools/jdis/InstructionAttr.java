@@ -160,7 +160,7 @@ class InstructionAttr extends MemberData<MethodData> {
                 prefix += INDENT_STRING;
 //              println("{").print(enlargedIndent(attributeOffset));
             }
-            listPrefix = prefix + INDENT_STRING;;
+            listPrefix = prefix + INDENT_STRING;
             printPadRight(prefix + opCodeName, STACKMAP_TYPE_PLACEHOLDER_LENGTH);
             if (printCPIndex && !skipComments) {
                 print(PadRight(stackMapEntry.stackEntryType.tagName() + ";", mapShift)).
@@ -255,14 +255,17 @@ class InstructionAttr extends MemberData<MethodData> {
 
     private int printEntries(Pair<String, String> entriesLine, String title, int shift, int mapShift) {
         if (entriesLine != null) {
-            print(this.enlargedIndent(PadRight(title, STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
+            boolean isEmpty = entriesLine.first.isEmpty() && entriesLine.second.isEmpty();
+            print(this.enlargedIndent(PadRight(title + (isEmpty ? ";" : ""), STACKMAP_TYPE_PLACEHOLDER_LENGTH), shift));
             if (printCPIndex) {
                 if (skipComments) {
                     println(entriesLine.first);
                 } else {
                     print(PadRight(entriesLine.first, mapShift));
                     mapShift = max(mapShift, entriesLine.first.length());
-                    print(" // ");
+                    if( !isEmpty ) {
+                        print(" // ");
+                    }
                 }
             }
             if (!printCPIndex || (printCPIndex && !skipComments)) {

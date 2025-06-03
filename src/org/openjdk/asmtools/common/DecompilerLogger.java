@@ -149,7 +149,8 @@ DecompilerLogger extends ToolLogger implements ILogger {
         int nErrors = (int) getCount(ERROR);
         int nWarnings = (int) getCount(WARNING);
         if (nWarnings > 0 || nErrors > 0) {
-            ret = max(rc, nWarnings + nErrors);
+            // don't take into account warnings
+            ret = max(rc, nErrors);
             String sWarnings = (nWarnings > 0) ?
                     "%d warning(s)".formatted(nWarnings).concat((nErrors > 0) ? ", " : "") : "";
             String sErrors = (nErrors > 0) ? "%d error(s) ".formatted(nErrors) : " ";

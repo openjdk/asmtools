@@ -117,7 +117,17 @@ public class ParseInstruction extends ParseBase {
                     // pseudo-instructions:
                     case opc_bytecode:
                         for (; ; ) {
-                            parser.curCodeAttr.addInstr(mnenoc_pos, Opcode.opc_bytecode, parser.parseUInt(1), null);
+                            if (scanner.token == Token.IDENT) {
+                                Opcode oc = OpcodeTables.opcode(scanner.stringValue);
+                                if (oc == null) {
+                                    environment.error(scanner.pos, "err.unknown.bytecode", scanner.stringValue);
+                                    throw new SyntaxError();
+                                }
+                                parser.curCodeAttr.addInstr(mnenoc_pos, opc_bytecode, new Indexer(oc.value()), null);
+                                scanner.scan();
+                            } else {
+                                parser.curCodeAttr.addInstr(mnenoc_pos, Opcode.opc_bytecode, parser.parseUInt(1), null);
+                            }
                             if (scanner.token != Token.COMMA) {
                                 return;
                             }
