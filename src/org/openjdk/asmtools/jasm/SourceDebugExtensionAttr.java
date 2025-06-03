@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2023, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -83,7 +83,7 @@ public class SourceDebugExtensionAttr extends AttrData {
         // 4.4.7. The CONSTANT_Utf8_info Structure
         // u2 length; + (u1 bytes[length]).length();
         return switch (type) {
-            case UTF8 -> 2 + utf8DebugExtension.toString().getBytes(UTF_8).length;
+            case UTF8 -> utf8DebugExtension.toString().getBytes(UTF_8).length;
             case BYTE -> byteDebugExtension.size();
             default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
         };
@@ -92,7 +92,7 @@ public class SourceDebugExtensionAttr extends AttrData {
     public void write(CheckedDataOutputStream out) throws IOException {
         super.write(out);  // attr name, attr length
         switch (type) {
-            case UTF8 -> out.writeUTF(utf8DebugExtension.toString());
+            case UTF8 -> out.writeBytes(utf8DebugExtension.toString());
             case BYTE -> out.write(toByteArray(byteDebugExtension));
             default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
         }
