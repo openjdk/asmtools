@@ -107,21 +107,33 @@ public class SequenceCallsTests {
                     map(f -> resourceDir + File.separator + f).collect(Collectors.toList());
             if (index % 2 == 0) {
                 assertAll(() -> {
-                            var l = jasm.apply(jasmFiles);
+                            LogAndBinResults l = jasm.apply(jasmFiles);
+//                            if( l.result != 0) {
+//                                System.out.println("%d] Jasm failed with result: %s".formatted(index, l.log.toString() ));
+//                            }
                             intResults.add(l.result);
                         },
                         () -> {
-                            var l = jcoder.apply(jcodFiles);
+                            LogAndBinResults l = jcoder.apply(jcodFiles);
+//                            if( l.result != 0) {
+//                                System.out.println("%d] Jcoder failed with result: %s".formatted(index, l.log.toString() ));
+//                            }
                             intResults.add(l.result);
                         }
                 );
             } else {
                 assertAll(() -> {
-                            var l = jcoder.apply(jcodFiles);
+                            LogAndBinResults l = jcoder.apply(jcodFiles);
+//                            if( l.result != 0) {
+//                                System.out.println("%d] Jcoder failed with result: %s".formatted(index, l.log.toString() ));
+//                            }
                             intResults.add(l.result);
                         },
                         () -> {
-                            var l = jasm.apply(jasmFiles);
+                            LogAndBinResults l = jasm.apply(jasmFiles);
+//                            if( l.result != 0) {
+//                                System.out.println("%d] Jasm failed with result: %s".formatted(index, l.log.toString() ));
+//                            }
                             intResults.add(l.result);
                         }
                 );
@@ -216,8 +228,13 @@ public class SequenceCallsTests {
         assertEquals(12, intResults.size());
         Collections.sort(intResults);
         assertEquals(0, intResults.get(0));
+        assertEquals(0, intResults.get(1));
+        assertEquals(0, intResults.get(2));
+        assertEquals(0, intResults.get(3));
+        assertEquals(0, intResults.get(4));
         assertEquals(0, intResults.get(5));
         assertEquals(1, intResults.get(6));
+        assertEquals(1, intResults.get(7));
         assertEquals(1, intResults.get(8));
         assertEquals(2, intResults.get(9));
         assertEquals(2, intResults.get(10));
