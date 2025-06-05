@@ -23,6 +23,7 @@
 package org.openjdk.asmtools.jcoder;
 
 import org.openjdk.asmtools.common.SyntaxError;
+import org.openjdk.asmtools.common.structure.EAttribute;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -41,6 +42,7 @@ class Jcoder {
 
     protected JcoderEnvironment environment;
     protected Scanner scanner;
+    protected Hashtable<Integer, EAttribute> attributes = new Hashtable<>();
 
     /*-------------------------------------------------------- */
     /* Jcoder Fields */
@@ -110,6 +112,9 @@ class Jcoder {
         private boolean hasInterfaces;
         private boolean hasFields;
 
+        // Index of the constant pool entry, used for identity of the Attribute
+        private int cpIndex = 0;
+
         Context() {
             stack = new Stack<>();
             init();
@@ -119,12 +124,17 @@ class Jcoder {
             return !stack.empty() && (stack.peek().tag == ContextTag.CONSTANTPOOL);
         }
 
+        boolean isAttribute() {
+            return !stack.empty() && (stack.peek().tag == ContextTag.ATTRIBUTE);
+        }
+
         public void init() {
             stack.removeAllElements();
             hasCP = false;
             hasMethods = false;
             hasInterfaces = false;
             hasFields = false;
+            cpIndex = 0;
         }
 
         void update() {
@@ -193,6 +203,14 @@ class Jcoder {
                 }
             }
             return retval;
+        }
+
+        public void setConstantPoolIndex(int cpx) {
+            cpIndex = cpx;
+        }
+
+        public int getConstantPoolIndex() {
+            return cpIndex;
         }
     }
 
@@ -355,6 +373,7 @@ class Jcoder {
         int cpx; // index int const. pool
         if (scanner.token == Token.INTVAL) {
             cpx = scanner.intValue;
+            context.setConstantPoolIndex(cpx);
             scanner.scan();
         } else {
             environment.error(scanner.pos, "err.attrname.expected");
@@ -486,7 +505,13 @@ class Jcoder {
                         addElem = 1;
                         break;
                     case STRINGVAL:
-                        parseUTF();
+                        String name = parseUTF();
+                        if (context.isConstantPool()) {
+                            EAttribute attr = EAttribute.get(name);
+                            if (attr != EAttribute.ATT_Unrecognized) {
+                                attributes.put(num, attr);
+                            }
+                        }
                         // SEMICOLON was already parsed in
                         num++;
                         addElem = 0;
@@ -547,7 +572,7 @@ class Jcoder {
     }
 
     // Parse multiline UTF strings
-    private void parseUTF() throws IOException {
+    private String parseUTF() throws IOException {
         StringBuilder sb = new StringBuilder();
         boolean prevSemicolonParsed = true;
         while (true) {
@@ -576,11 +601,13 @@ class Jcoder {
                         environment.error(scanner.pos, "err.token.expected", SEMICOLON.parseKey());
                         throw new SyntaxError();
                     }
-                    if( context.isConstantPool() )
-                        outStream.writeUTF(sb.toString());
-                    else
+                    if (context.isAttribute() &&
+                            attributes.get(context.getConstantPoolIndex()) == EAttribute.ATT_SourceDebugExtension) {
                         outStream.writeBytes(sb.toString());
-                    return;
+                    } else {
+                        outStream.writeUTF(sb.toString());
+                    }
+                    return sb.toString();
             }
         }
     }
