@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
+ */
+package javasoft/sqe/tests/api/java/lang/classfile/resources/jasm/atr;
+
+public super class SourceDebugExt02 version 66:0
+{
+  public Method "<init>":"()V"
+    stack 1  locals 1
+  {
+         aload_0;
+         invokespecial     Method java/lang/Object."<init>":"()V";
+         return;
+  }
+
+  SourceDebugExtension {
+    "";
+  }
+} // end Class SourceDebugExt02 compiled from "SourceDebugExt02.java"

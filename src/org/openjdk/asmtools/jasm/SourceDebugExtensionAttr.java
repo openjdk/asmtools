@@ -61,7 +61,7 @@ public class SourceDebugExtensionAttr extends AttrData {
         return switch (type) {
             case UTF8 -> utf8DebugExtension.isEmpty();
             case BYTE -> byteDebugExtension.isEmpty();
-            default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
+            case NONE -> true; // not initialized
         };
     }
 
@@ -85,7 +85,7 @@ public class SourceDebugExtensionAttr extends AttrData {
         return switch (type) {
             case UTF8 -> utf8DebugExtension.toString().getBytes(UTF_8).length;
             case BYTE -> byteDebugExtension.size();
-            default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
+            case NONE -> 0;
         };
     }
 
@@ -94,7 +94,7 @@ public class SourceDebugExtensionAttr extends AttrData {
         switch (type) {
             case UTF8 -> out.writeBytes(utf8DebugExtension.toString());
             case BYTE -> out.write(toByteArray(byteDebugExtension));
-            default -> throw new RuntimeException("SourceDebugExtension_attribute is not initialized");
+            case  NONE -> out.write(0);
         }
     }
 }

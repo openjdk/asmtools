@@ -213,7 +213,7 @@ public class JasmEnvironment extends Environment<CompilerLogger> {
                         case 'a', 'b', 'c', 'd', 'e', 'f' -> d = (d << 4) + 10 + ch - 'a';
                         case 'A', 'B', 'C', 'D', 'E', 'F' -> d = (d << 4) + 10 + ch - 'A';
                         default -> {
-                            error(position, "invalid.escape.char");
+                            error(position, "err.invalid.escape.char");
                             return d;
                         }
                     }

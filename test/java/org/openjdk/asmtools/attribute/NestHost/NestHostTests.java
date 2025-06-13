@@ -32,6 +32,7 @@ import org.openjdk.asmtools.common.inputs.StringInput;
 import org.openjdk.asmtools.lib.action.*;
 import org.openjdk.asmtools.lib.log.LogAndBinResults;
 import org.openjdk.asmtools.lib.log.LogAndTextResults;
+import org.openjdk.asmtools.lib.script.TestScript;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +49,7 @@ import static org.openjdk.asmtools.lib.utility.StringUtils.funcNormalizeText;
 import static org.openjdk.asmtools.lib.utility.StringUtils.funcSubStrCount;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class NestHostTests {
+public class NestHostTests extends TestScript {
 
     private Jasm jasm = new Jasm();
     private Jcoder jcoder = new Jcoder();
@@ -114,69 +115,19 @@ public class NestHostTests {
 
     @BeforeAll
     public void init() throws IOException {
-        resourceDir = new File(Objects.requireNonNull(this.getClass().
-                getResource("Test01.jasm")).getFile()).getParentFile();
+        // initialize resource directory
+        super.init("Test01.jasm");
     }
 
     @ParameterizedTest
     @MethodSource("getJasmParameters")
     public void jasmTest(String resourceName, EToolArguments args, List<Consumer<String>> tests) {
-        // jasm to class in memory
-        // jasm.setDebug(true);
-        LogAndBinResults binResult = jasm.compile(List.of(resourceDir + File.separator + resourceName));
-        // class produced correctly
-        Assertions.assertTrue(binResult.log.toString().isEmpty());
-        Assertions.assertEquals(0, binResult.result);
-
-        // class to jasm
-        LogAndTextResults textResult = new Jdis().setArgs(args).decode(binResult.getAsByteInput());
-
-        Assertions.assertEquals(0, textResult.result);
-        String jasmText = textResult.getResultAsString(Function.identity());
-        String normJasmText = funcNormalizeText.apply(jasmText);
-        for (Consumer<String> testConsumer : tests) {
-            testConsumer.accept(normJasmText);
-        }
-        // jasm to class
-        binResult = jasm.compile(new StringInput(jasmText));
-        // class produced correctly
-        Assertions.assertEquals(0, binResult.result);
-        Assertions.assertTrue(binResult.log.toString().isEmpty());
-        // class to jasm
-        textResult = new Jdis().setArgs(args).decode(binResult.getAsByteInput());
-        Assertions.assertEquals(0, textResult.result);
-        jasmText = textResult.getResultAsString(Function.identity());
-        normJasmText = funcNormalizeText.apply(jasmText);
-        for (Consumer<String> testConsumer : tests) {
-            testConsumer.accept(normJasmText);
-        }
-        // class to jcod
-        textResult = new Jdec().setArgs(EToolArguments.JDEC_G).decode(binResult.getAsByteInput());
-        Assertions.assertEquals(0, textResult.result);
-        // jcod to class
-        binResult = jcoder.compile(new StringInput(textResult.getResultAsString(Function.identity())));
-        Assertions.assertEquals(0, binResult.result);
+        super.jasmTest(resourceName, args, tests);
     }
 
     @ParameterizedTest
     @MethodSource("getJcodParameters")
     public void jcoderTest(String resourceName, EToolArguments args, List<Consumer<String>> tests) {
-        // jcod to class in memory
-        LogAndBinResults binResult = jcoder.compile(List.of(resourceDir + File.separator + resourceName));
-        // class produced correctly
-        Assertions.assertEquals(0, binResult.result);
-        Assertions.assertTrue(binResult.log.toString().isEmpty());
-        // class to jcod
-        LogAndTextResults textResult = new Jdec().setArgs(args).decode(binResult.getAsByteInput());
-        String jcoderText = textResult.getResultAsString(funcNormalizeText);
-        Assertions.assertEquals(0, textResult.result);
-        for (Consumer<String> testConsumer : tests) {
-            testConsumer.accept(jcoderText);
-        }
-        // class to jasm twice
-        textResult = new Jdis().setArgs(EToolArguments.JDIS_G_T_LNT_LVT).decode(binResult.getAsByteInput());
-        Assertions.assertEquals(0, textResult.result);
-        textResult = new Jdis().setArgs(EToolArguments.JDIS_GG_NC_LNT_LVT).decode(binResult.getAsByteInput());
-        Assertions.assertEquals(0, textResult.result);
+        super.jcoderTest(resourceName, args, tests);
     }
 }

@@ -37,7 +37,11 @@ import static java.lang.String.format;
 import static org.openjdk.asmtools.Main.sharedI18n;
 
 /**
- * Utility class to share common tools/methods.
+ * Utility class for string operations related to ASM tools.
+ * <p>
+ * This class provides methods for removing comments from strings,
+ * converting UTF-8 strings to printable formats, and handling character
+ * encoding in a way that is suitable for assembly tools.
  */
 public class StringUtils {
 
@@ -96,21 +100,56 @@ public class StringUtils {
         final String rightBracket = enclosingString.length > 1 ? enclosingString[1] : leftBracket;
         StringBuilder sb = new StringBuilder(leftBracket);
         for (int k = 0; k < utf8.length(); k++) {
-            char c = utf8.charAt(k);
-            switch (c) {
-                case '\t' -> sb.append('\\').append('t');
-                case '\n' -> sb.append('\\').append('n');
-                case '\r' -> sb.append('\\').append('r');
-                case '\b' -> sb.append('\\').append('b');
-                case '\f' -> sb.append('\\').append('f');
-                case '\"' -> sb.append('\\').append('\"');
-                case '\'' -> sb.append('\\').append('\'');
-                case '\\' -> sb.append('\\').append('\\');
-                default -> sb.append(Character.isISOControl(c) ? String.format("\\u%04x", (int) c) : c);
-            }
+            sb.append(charToUtf8String(utf8.charAt(k)));
         }
         return sb.append(rightBracket).toString();
     }
+
+    /**
+     * Converts CONSTANT_Utf8_info string to a printable list of strings
+     * @param utf8      UTF8 string taken from within ConstantPool of a class file
+     * @param strLength the maximum length of each string in the resulting list
+     * @return list of strings for jcod/jasm
+     */
+    public static List<String> Utf8ToStringList(String utf8, int strLength) {
+        List<String> list = new ArrayList<>();
+        String s = "";
+        for (int k = 0; k < utf8.length(); k++) {
+            if (s.length() >= strLength) {
+                list.add(s);
+                s = "";
+            }
+            s += charToUtf8String(utf8.charAt(k));
+        }
+        if (!s.isEmpty()) {
+            list.add(s);
+        }
+        return list;
+    }
+
+    /**
+     * Converts a character to its UTF-8 string representation.
+     * <p>
+     * Control characters and special characters are escaped using the appropriate escape sequences.
+     * Other characters are returned as is.
+     *
+     * @param c the character to convert
+     * @return the UTF-8 string representation of the character
+     */
+    public static String charToUtf8String(char c) {
+        return switch (c) {
+            case '\t' -> "\\".concat("t");
+            case '\n' -> "\\".concat("n");
+            case '\r' -> "\\".concat("r");
+            case '\b' -> "\\".concat("b");
+            case '\f' -> "\\".concat("f");
+            case '\"' -> "\\".concat("\"");
+            case '\'' -> "\\".concat("\'");
+            case '\\' -> "\\".concat("\\");
+            default -> Character.isISOControl(c) ? String.format("\\u%04x", (int) c) : Character.toString(c);
+        };
+    }
+
 
     /**
      * Checks that ch is in the list
@@ -173,7 +212,7 @@ public class StringUtils {
                     /*ignored*/
                 }
             }
-        } catch (NegativeArraySizeException negativeArraySizeException ) {
+        } catch (NegativeArraySizeException negativeArraySizeException) {
             throw new IOException("Requested array size exceeds VM limit", negativeArraySizeException);
         } finally {
             if (count > 0) {
@@ -212,29 +251,56 @@ public class StringUtils {
     public static List<String> getPrintable(String rawString, final int CHARS_IN_LINE) {
         List<String> list = null;
         if (rawString != null) {
-            String formattedStr = Utf8ToString(rawString);
-            if (formattedStr.chars().filter(c -> !isPrintableChar((char) c)).findAny().isEmpty()) {
-                int length = formattedStr.length();
-                list = new ArrayList<>();
-                for (int i = 0; i < length; i += CHARS_IN_LINE) {
-                    // The case when subSequence splits string in between \ && n, \ && t etc.
-                    int idx = Math.min(length, i + CHARS_IN_LINE);
-                    String item = formattedStr.substring(i, idx);
-                    if (item.endsWith("\\") && !item.endsWith("\\\\")) {
-                        item = item.concat(formattedStr.substring(idx, idx + 1));
-                        i++;
-                    }
-                    list.add(item);
-                }
+            String cleanedString = removeNonPrintableAscii(rawString);
+            if (cleanedString != null && !cleanedString.isEmpty() && !cleanedString.chars().anyMatch(c -> !isPrintableChar((char) c))) {
+                list = Utf8ToStringList(rawString, CHARS_IN_LINE);
             }
         }
         return list;
     }
 
+    /**
+     * Removes non-printable ASCII characters from the given input string.
+     * <p>
+     * Non-printable ASCII characters are those with ASCII values outside the range of 32 (space) to 126 (tilde).
+     *
+     * @param input the input string to be processed
+     * @return a new string with non-printable ASCII characters removed, or null if the input is null
+     */
+    public static String removeNonPrintableAscii(String input) {
+        if (input == null) return null;
+        StringBuilder result = new StringBuilder();
+        for (char c : input.toCharArray()) {
+            if (c >= 32 && c <= 126) {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Converts a list of strings to a formatted string representation.
+     * The output is enclosed in parentheses and elements are separated by commas.
+     *
+     * @param list the list of strings to convert
+     * @return a formatted string representation of the list
+     */
     public static String ListToString(List<String> list) {
         return ListToString(list, "(,)");
     }
 
+    /**
+     * Converts a list of strings to a formatted string representation.
+     * The output is enclosed in square brackets and elements are separated by a specified delimiter.
+     *
+     * @param list       the list of strings to convert
+     * @param separators a string containing the prefix, delimiter, and postfix characters
+     *                  (e.g., "[,]"), where:
+     *                  - first character is the prefix,
+     *                  - second character is the delimiter,
+     *                  - third character is the postfix.
+     * @return a formatted string representation of the list
+     */
     public static String ListToString(List<String> list, String separators) {
         int l = separators.length();
         String prefix = separators != null && l > 0 ? separators.substring(0, 1) : "[";
@@ -243,6 +309,13 @@ public class StringUtils {
         return prefix.concat(" ") + String.join(delim.concat(" "), list) + " ".concat(postfix);
     }
 
+    /**
+     * Converts an array of integers to a hex string representation.
+     * Each integer is converted to its hexadecimal format and joined with commas.
+     *
+     * @param array the array of integers to convert
+     * @return a string representation of the array in hexadecimal format
+     */
     public static String mapToHexString(int[] array) {
         return format("{%s}",
                 Arrays.stream(array).mapToObj(HexUtils::toHex).collect(Collectors.joining(", ")));
@@ -252,6 +325,14 @@ public class StringUtils {
         return count <= 0 ? "" : new String(new char[count]).replace("\0", str);
     }
 
+    /**
+     * Checks if the character is printable.
+     * A character is considered printable if it is not a control character,
+     * is not undefined, and belongs to a valid Unicode block that is not SPECIALS.
+     *
+     * @param c the character to check
+     * @return true if the character is printable, false otherwise
+     */
     public static boolean isPrintableChar(char c) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
         return (!Character.isISOControl(c)) &&
