@@ -656,7 +656,9 @@ class Parser extends ParseBase {
                 case ABSTRACT -> nextmod = ACC_ABSTRACT.getFlag();
                 case STRICT -> nextmod = ACC_STRICT.getFlag();
                 case ENUM -> nextmod = ACC_ENUM.getFlag();
-                case SYNTHETIC -> nextmod = ACC_SYNTHETIC.getFlag();
+                case SYNTHETIC -> nextmod = this.classData.cfv.isSyntheticAttributeContext()
+                        ? SYNTHETIC_ATTRIBUTE.getFlag()
+                        : ACC_SYNTHETIC.getFlag();
                 case ANNOTATION_ACCESS -> nextmod = ACC_ANNOTATION.getFlag();
                 case DEPRECATED -> nextmod = DEPRECATED_ATTRIBUTE.getFlag();
                 case MANDATED -> nextmod = ACC_MANDATED.getFlag();

@@ -220,4 +220,16 @@ public class CFVersion {
     public static CFVersion ValueObjectsVersion() {
         return new CFVersion(VALUE_OBJECTS_MAJOR_VERSION, VALUE_OBJECTS_MINOR_VERSION);
     }
+
+    /**
+     * Returns true if the class file version only supports Synthetic attribute and doesn't support the ACC_SYNTHETIC flag
+     * <p>
+     * When jasm processes files with classfile version &lt;= 45, it shouldn't set the ACC_SYNTHETIC bit
+     * but add the Synthetic attribute instead. The ACC_SYNTHETIC bit wasn't introduced until classfile version 46.
+     *
+     * @return true if only Synthetic attribute is supported, false otherwise
+     */
+    public boolean isSyntheticAttributeContext() {
+        return major_version <= 45;
+    }
 }
