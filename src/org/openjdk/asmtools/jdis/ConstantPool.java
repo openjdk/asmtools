@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -401,22 +401,6 @@ public class ConstantPool extends Indenter {
     public String getShortClassName(int cpx, String packageName) {
         String name = Utils.javaName(getClassName(cpx));
         return getShortClassName(name, packageName);
-    }
-
-    /**
-     * Pulls the class name out of a string (at the CP index). (drops any array
-     * descriptors, and the class descriptors ("L" and ";")
-     */
-    public String decodeClassDescriptor(int cpx) {
-        // enum type is encoded as a descriptor
-        // need to remove '"'s and L (class descriptor)
-
-        // TODO: might have to count '['s at the beginning for Arrays
-        String rawEnumName = getName(cpx);
-        int len = rawEnumName.length();
-        int begin = (rawEnumName.startsWith("\"L")) ? 2 : 0;
-        int end = (begin > 0) ? len - 2 : len;
-        return rawEnumName.substring(begin, end);
     }
 
     /**

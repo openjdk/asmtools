@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -142,15 +142,42 @@ class MethodData extends MemberData<JasmEnvironment> {
         super(classData.pool, classData.getEnvironment(), access);
         this.classData = classData;
         this.attributeLocation = ELocation.method_info;
+        this.addExceptions(exc_table);
         nameCell = name;
         sigCell = signature;
-        if ((exc_table != null) && (!exc_table.isEmpty())) {
-            exceptions = new DataVectorAttr<>(classData.pool, EAttribute.ATT_Exceptions, exc_table);
-        }
         // Normalize the modifiers to access flags
         if (EModifier.hasPseudoMod(access)) {
             createPseudoMod();
         }
+    }
+
+    public void addExceptions(ArrayList<ConstCell<?>> exc_table) {
+        if ((exc_table != null) && (!exc_table.isEmpty())) {
+            if (exceptions == null) {
+                exceptions = new DataVectorAttr<>(classData.pool, EAttribute.ATT_Exceptions, exc_table);
+            } else {
+                exceptions.addAll(exc_table);
+            }
+        }
+    }
+
+    public DataVectorAttr<ConstCell<?>> getExceptions() {
+        return exceptions;
+    }
+
+    public boolean hasExceptions() {
+        return (exceptions != null) && (!exceptions.isEmpty());
+    }
+
+    /**
+     * Retrieves the default annotation attribute associated with this method.
+     * The default annotation is used to store the default value of an annotation
+     * method.
+     *
+     * @return the default annotation attribute, or null if it has not been set
+     */
+    public DefaultAnnotationAttr getDefaultAnnotation() {
+        return defaultAnnot;
     }
 
     public void addMethodParameter(int totalParams, int paramNum, ConstCell<?> name, int access) {
@@ -170,7 +197,7 @@ class MethodData extends MemberData<JasmEnvironment> {
         return code;
     }
 
-    public void addDefaultAnnotation(DefaultAnnotationAttr data) {
+    public void setDefaultAnnotation(DefaultAnnotationAttr data) {
         defaultAnnot = data;
     }
 

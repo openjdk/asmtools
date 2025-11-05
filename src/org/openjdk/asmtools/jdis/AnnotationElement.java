@@ -201,8 +201,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
                 case AE_BOOLEAN -> sb.append(valueAsString(elementType.printValue(),
                         () -> ((ConstantPool.CP_Int) pool.getConst(cpx)).value == 0 ? "false" : "true"));
                 // Class
-                case AE_CLASS -> sb.append(valueAsString(elementType.printValue(),
-                        () -> pool.decodeClassDescriptor(cpx)));
+                case AE_CLASS -> sb.append(valueAsString(elementType.printValue(), () -> pool.getName(cpx)));
                 default -> {
                 }
             }
@@ -227,7 +226,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         public void print() {
             AnnotationElementState state = getAnnotationElementState();
             if (state == HAS_DEFAULT_VALUE) {
-                print(DEFAULT_VALUE_PREFIX + "%s }", stringVal());
+                print(getDefaultValuePrefix() + "%s }", stringVal());
             } else if (state == RIGHT_OPERAND) {
                 print(" %s }", stringVal());
             } else {
@@ -257,17 +256,16 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
             // Enum
             if (elementType == AnnotationElementType.AE_ENUM) {
                 // print the enum type and constant name
-                String className = pool.decodeClassDescriptor(cpx1);
+                String className = pool.getName(cpx1);
                 String name = pool.getName(cpx2);
                 sb.append(elementType.printValue()).append(' ');
                 if (printCPIndex) {
-                    if (skipComments) {
-                        sb.append(format("#%d", cpx1)).append(format(" #%d", cpx2));
-                    } else {
-                        sb.append(format("#%d /* %s */", cpx1, className)).append(format(" #%d /* %s */", cpx2, name));
+                    sb.append(format("#%d.#%d", cpx1, cpx2));
+                    if (!skipComments) {
+                        sb.append(format(" /* %s.%s */", className, name));
                     }
                 } else {
-                    sb.append(className).append(" ").append(name);
+                    sb.append(className).append(".").append(name);
                 }
             }
             return sb.toString();
@@ -281,7 +279,7 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         @Override
         public void print() {
             if (getAnnotationElementState() == HAS_DEFAULT_VALUE) {
-                print(DEFAULT_VALUE_PREFIX + "%s }", stringVal());
+                print(getDefaultValuePrefix() + "%s }", stringVal());
             } else {
                 print(stringVal());
             }
@@ -315,43 +313,45 @@ public class AnnotationElement<T extends MemberData<T>> extends MemberData<T> {
         public void print() throws IOException {
             int count = annotationValues.size();
             if (annotationValues.size() > 0) {
-                switch (getAnnotationElementState()) {
-                    case HAS_DEFAULT_VALUE -> printDefaultAnnotationElement(count, getItemsPerLine(count, annotationValues.get(0)));
-                    case INLINED_ELEMENT -> printDefaultAnnotationElement(count, 1);
-                    default -> printAnnotationElement(count);
+                AnnotationElementState state = getAnnotationElementState();
+                if (state == HAS_DEFAULT_VALUE || state == INLINED_ELEMENT) {
+                    printDefaultAnnotationElement(count);
+                } else {
+                    printAnnotationElement(count);
                 }
             } else {
                 // Empty default array value.
-                print(DEFAULT_VALUE_PREFIX + "{ } }");
+                print(getDefaultValuePrefix() + "{ } }");
             }
         }
 
         private <P extends AnnotationValue<T>> int getIndent(P value) {
             if (value instanceof Annotation_AnnotationValue || value instanceof CPX_AnnotationValue) {
-                // commentShift + "default { { ".length()
                 return getCommentOffset() + DEFAULT_VALUE_PREFIX.length() + getIndentSize();
             }
             return 1;
         }
 
-        private <P extends AnnotationValue<T>> int getItemsPerLine(int count, P value) {
-            if (value instanceof Annotation_AnnotationValue) {
-                return 1;
-            } else if (value instanceof CPX_AnnotationValue) {
-                return (count > 10) ? (count % 2 == 0 ? 4 : 6) : (count % 2 == 0 ? 2 : 3);
-            }
-            return 1;
+        private int getItemsPerLine(int count, AnnotationElementType type) {
+            return switch (type) {
+                case AE_CLASS, AE_ANNOTATION, AE_ENUM, AE_ARRAY -> 1;
+                default -> (count > 10) ? (count % 2 == 0 ? 4 : 6) : (count % 2 == 0 ? 2 : 3);
+            };
         }
 
-        public void printDefaultAnnotationElement(int count, int ItemsPerLine) throws IOException {
+        public void printDefaultAnnotationElement(int count) throws IOException {
             int i = 0, lineIndent = getIndent(annotationValues.get(0));
-            println(DEFAULT_VALUE_PREFIX + "{ ");
+            int ItemsPerLine = getAnnotationElementState() == INLINED_ELEMENT ? 1 :
+                    getItemsPerLine(count, annotationValues.get(0).elementType);
+
+            println(getDefaultValuePrefix() + "{ ");
             printPadLeft(INDENT_STRING, INDENT_OFFSET * 2);
             for (AnnotationValue<T> annotationValue : annotationValues) {
                 annotationValue.setElementState(INLINED_ELEMENT);
                 annotationValue.setCommentOffset(lineIndent);
                 if (annotationValue instanceof Annotation_AnnotationValue ||
-                        annotationValue instanceof CPX_AnnotationValue) {
+                        annotationValue instanceof CPX_AnnotationValue ||
+                        annotationValue instanceof CPX2_AnnotationValue) {
                     if (i % ItemsPerLine == 0 && i != 0)
                         printPadLeft(INDENT_STRING, INDENT_OFFSET * 2);
                 }

@@ -44,7 +44,7 @@ import static org.openjdk.asmtools.jasm.JasmTokens.keyword_token_ident;
  * The scan() method advances the scanner to the next token in the input.<p>
  * <p>
  * The match() method is used to quickly match opening brackets (ie: '(', '{', or '[')
- * with their closing counter part. This is useful during error recovery.<p>
+ * with their closing counterpart. This is useful during error recovery.<p>
  * <p>
  * The compiler treats either "\n", "\r" or "\r\n" as the end of a line.<p>
  */
@@ -171,10 +171,9 @@ public class Scanner extends ParseBase {
             list = "[ %s,%s ]".formatted(list, Arrays.stream(tokens).
                     map(t -> "\"%s\"".formatted(t.parseKey())).
                     collect(Collectors.joining(",")));
-            environment.error(pos, "err.one.of.tokens.expected", list);
+            environment.error(pos, "err.one.of.N.token.expected", list);
         }
     }
-
 
     /**
      * Expects one of the token in the list, scans the next token or throws an exception.
@@ -960,5 +959,4 @@ public class Scanner extends ParseBase {
             debugScan("[%4d,%-2d] ".formatted(lineNumber,linePos).concat(debStr));
         }
     }
-
 }

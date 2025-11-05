@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2024, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,10 +27,20 @@ package org.openjdk.asmtools.common.structure;
  * Table 4.7-C. Predefined class file attributes (by location)
  */
 public enum ELocation {
-    UNKNOWN,
-    ClassFile,
-    field_info,
-    method_info,
-    record_component_info,
-    Code
+    unknown("Unknown"),
+    class_file("ClassFile"),
+    field_info("field_info"),
+    method_info("method_info"),
+    record_component_info("record_component_info"),
+    code_atribute("Code");
+
+    public String getDescription() {
+        return description;
+    }
+
+    private final String description;
+
+    ELocation(String description) {
+        this.description = description;
+    }
 }

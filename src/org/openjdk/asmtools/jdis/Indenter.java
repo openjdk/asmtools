@@ -281,6 +281,7 @@ public abstract class Indenter implements Printable {
         this.length = that.length;
         this.offset = that.offset;
         this.step = that.step;
+        this.commentOffset = that.commentOffset;
         this.fillString = that.fillString;
         return this;
     }

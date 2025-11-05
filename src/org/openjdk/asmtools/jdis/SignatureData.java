@@ -49,6 +49,7 @@ public class SignatureData extends MemberData<ClassData> {
     private int cpIndex;
     private Type signatureType = null;
     private int keywordPadding = -1;
+    private String attributeTerminator = ";";
 
     // in some cases, the new line should not end the printed signature
     private String eol = System.getProperty("line.separator");
@@ -128,13 +129,13 @@ public class SignatureData extends MemberData<ClassData> {
         String sign = pool.StringValue(cpIndex);
         if (printCPIndex) {
             if (skipComments) {
-                print("#%d;".formatted(cpIndex).concat(eol));
+                print("#%d%s".formatted(cpIndex,this.attributeTerminator).concat(eol));
             } else {
-                print(PadRight("#%d;".formatted(cpIndex), getPrintAttributeCommentPadding())).
+                print(PadRight("#%d%s".formatted(cpIndex,this.attributeTerminator), getPrintAttributeCommentPadding())).
                         print(" // ".concat(sign).concat(eol));
             }
         } else {
-            print(sign.concat(";").concat(eol));
+            print(sign.concat("%s".formatted(this.attributeTerminator)).concat(eol));
         }
     }
 
@@ -144,13 +145,13 @@ public class SignatureData extends MemberData<ClassData> {
         String sign = pool.StringValue(cpIndex);
         if (printCPIndex) {
             if (skipComments) {
-                print("#%d;".formatted(cpIndex).concat(eol));
+                print("#%d%s".formatted(cpIndex,this.attributeTerminator).concat(eol));
             } else {
-                print(PadRight("#%d;".formatted(cpIndex), getPrintAttributeCommentPadding())).
+                print(PadRight("#%d%s".formatted(cpIndex,this.attributeTerminator), getPrintAttributeCommentPadding())).
                         print(" // ".concat(sign).concat(eol));
             }
         } else {
-            print(sign.concat(";").concat(eol));
+            print(sign.concat("%s".formatted(this.attributeTerminator)).concat(eol));
         }
     }
 
@@ -166,5 +167,9 @@ public class SignatureData extends MemberData<ClassData> {
                 new Pair<>(format(":#%d", cpIndex),
                         checkRange.apply(cpIndex) ? ":" + pool.StringValue(cpIndex) :
                                 ":?%d Invalid constant_pool index".formatted(cpIndex));
+    }
+
+    public void terminateMethodSignature(boolean value) {
+        this.attributeTerminator = value ? ";" : ",";
     }
 }

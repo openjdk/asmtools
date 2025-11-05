@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -202,29 +202,35 @@ public class ParseAnnotation extends ParseBase {
      * @throws SyntaxError if a scanner error occurs
      */
     private AnnotationData parseTypeAnnotation() throws SyntaxError {
-        boolean invisible = isInvisibleAnnotationToken(scanner.stringValue);
+        TypeAnnotationData ta;
+        boolean isInvisible = isInvisibleAnnotationToken(scanner.stringValue);
         scanner.scan();
-        scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]: id = " + scanner.stringValue + " ");
-        String annoName = "L" + scanner.stringValue + ";";
-        TypeAnnotationData anno = new TypeAnnotationData(parser.pool.findUTF8Cell(annoName), invisible);
-        scanner.scan();
-        scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]:new Type annotation: " + annoName + " ");
+        if (scanner.token == CPINDEX) {
+            int cpIndex = scanner.intValue;
+            scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]: cpIndex = #%d".formatted(cpIndex));
+            ta = new TypeAnnotationData(parser.pool.getCell(cpIndex), isInvisible);
+        } else {
+            String value = scanner.stringValue;
+            scanner.debugScan("     [ParserAnnotation.parseTypeAnnotation]: value = %s".formatted(value));
+            ta = new TypeAnnotationData(parser.pool.findUTF8Cell(value), isInvisible);
+        }
 
+        scanner.scan();
         scanner.expect(Token.LBRACE);
 
         // Scan the usual annotation data
-        _scanAnnotation(anno);
+        _scanAnnotation(ta);
 
         // scan the Target (u1: target_type, union{...}: target_info)
-        _scanTypeTarget(anno);
+        _scanTypeTarget(ta);
 
         if (scanner.token != Token.RBRACE) {
             // scan the Location (type_path: target_path)
-            _scanTargetPath(anno);
+            _scanTargetPath(ta);
         }
 
         scanner.expect(Token.RBRACE);
-        return anno;
+        return ta;
     }
 
     /**
@@ -234,17 +240,24 @@ public class ParseAnnotation extends ParseBase {
      * @throws SyntaxError if a scanner error occurs
      */
     private AnnotationData parseAnnotation() throws SyntaxError {
+        AnnotationData ad;
+        boolean isInvisible = isInvisibleAnnotationToken(scanner.stringValue);
         scanner.debugScan(" - - - > [ParserAnnotation.parseAnnotation]: Begin ");
-        boolean invisible = isInvisibleAnnotationToken(scanner.stringValue);
         scanner.scan();
-        String annoName = "L" + scanner.stringValue + ";";
 
-        AnnotationData anno = new AnnotationData(parser.pool.findUTF8Cell(annoName), invisible);
+        if (scanner.token == CPINDEX) {
+            int cpIndex = scanner.intValue;
+            scanner.debugScan("     [ParserAnnotation.parseAnnotation]: cpIndex = #%d".formatted(cpIndex));
+            ad = new AnnotationData(parser.pool.getCell(cpIndex), isInvisible);
+        } else {
+            String value = scanner.stringValue;
+            scanner.debugScan("     [ParserAnnotation.parseAnnotation]: value = %s".formatted(value));
+            ad = new AnnotationData(parser.pool.findUTF8Cell(value), isInvisible);
+        }
+
         scanner.scan();
-        scanner.debugScan("[ParserAnnotation.parseAnnotation]: new annotation: " + annoName);
-        _scanAnnotation(anno);
-
-        return anno;
+        _scanAnnotation(ad);
+        return ad;
     }
 
     /**
@@ -350,8 +363,6 @@ public class ParseAnnotation extends ParseBase {
         scanner.expect(Token.RBRACE);
     }
 
-    /* ************************* Private Members  *************************** */
-
     /**
      * _scanTypeLocation
      * <p>
@@ -438,11 +449,10 @@ public class ParseAnnotation extends ParseBase {
         // if it is an Ident, consume it as the class name.
         scanner.scan();
         switch (scanner.token) {
-            case IDENT:
+            case IDENT, STRINGVAL:
                 environment.traceln("[ParserAnnotation.scanAnnotationData]:: Constant Class Field: " + name + " = " + scanner.stringValue);
                 //need to encode the stringval as an (internal) descriptor.
-                String desc = parser.encodeClassString(scanner.stringValue);
-
+                String desc = scanner.stringValue;
                 // note: for annotations, a class field points to a string with the class descriptor.
                 constVal = new ConstElemValue(AE_CLASS.tag(), parser.pool.findUTF8Cell(desc));
                 scanner.scan();
@@ -458,56 +468,75 @@ public class ParseAnnotation extends ParseBase {
                 environment.error(scanner.pos, "err.incorrect.annot.class", scanner.stringValue);
                 throw new SyntaxError();
         }
-
         return constVal;
     }
 
     /**
-     * Scans an annotation enum val.
+     * Scans an annotation enum value.
      *
-     * @param name Annotation Name
      * @return Enumeration Element Value
      * @throws SyntaxError if a scanner error occurs
      */
-    private EnumElemValue scanAnnotationEnum(String name) throws SyntaxError {
+    private EnumElemValue scanAnnotationEnum() throws SyntaxError {
         scanner.scan();
-        EnumElemValue enumval = null;
+        EnumElemValue enumval;
         switch (scanner.token) {
-            case IDENT:
+            case IDENT, STRINGVAL:
                 // could be a string identifying enum class and name
-                String enumClassName = scanner.stringValue;
+                String type = scanner.stringValue;
+                ConstElemValue typeConst = new ConstElemValue(AE_STRING.tag(), parser.pool.findUTF8Cell(type));
                 scanner.scan();
-                // could be a string identifying enum class and name
+                scanner.expect(Token.FIELD);
                 switch (scanner.token) {
-                    case IDENT:
-                        // could be a string identifying enum class and name
-                        String enumTypeName = scanner.stringValue;
-                        environment.traceln("[ParserAnnotation.scanAnnotationEnum]:: Constant Enum Field: " + name + " = " + enumClassName + " " + enumTypeName);
-                        String encodedClass = parser.encodeClassString(enumClassName);
-                        ConstElemValue classConst = new ConstElemValue(AE_STRING.tag(), parser.pool.findUTF8Cell(encodedClass));
-                        ConstElemValue typeConst = new ConstElemValue(AE_STRING.tag(), parser.pool.findUTF8Cell(enumTypeName));
-                        enumval = new EnumElemValue(classConst.constCell, typeConst.constCell);
+                    case IDENT, STRINGVAL:
+                        String name = scanner.stringValue;
+                        ConstElemValue nameConst = new ConstElemValue(AE_STRING.tag(), parser.pool.findUTF8Cell(name));
+                        enumval = new EnumElemValue(typeConst.constCell, nameConst.constCell);
+                        scanner.scan();
+                        break;
+                    case CPINDEX:
+                        int nameCpx = scanner.intValue;
+                        enumval = new EnumElemValue(typeConst.constCell, parser.pool.getCell(nameCpx));
                         scanner.scan();
                         break;
                     default:
-                        environment.error(scanner.pos, "err.incorrect.annot.enum", scanner.stringValue);
+                        environment.error(scanner.pos, "err.incorrect.annot.enum.name", scanner.stringValue);
                         throw new SyntaxError();
                 }
                 break;
             case CPINDEX:
-                int typeNmCPX = Integer.parseInt(scanner.stringValue);
+                int typeCpx = scanner.intValue;
                 scanner.scan();
-                //need two indexes to form a proper enum
-                if (scanner.token == CPINDEX) {
-                    int ConstNmCPX = Integer.parseInt(scanner.stringValue);
-                    environment.traceln("[ParserAnnotation.scanAnnotationEnum]:: Enumeration Field: " + name + " = #" + typeNmCPX + " #" + ConstNmCPX);
-                    enumval = new EnumElemValue(parser.pool.getCell(typeNmCPX), parser.pool.getCell(ConstNmCPX));
+                if( scanner.token == Token.FIELD ) {
+                    // skip "." if found
+                    // the new format uses "." to separate type and name:
+                    // @+#24 /* java/lang/annotation/Retention */ {
+                    //   #11 /* value */ = enum #16.#17 /* "Ljava/lang/annotation/RetentionPolicy;".RUNTIME */
+                    // }
                     scanner.scan();
-                } else {
-                    environment.error(scanner.pos, "err.incorrect.annot.enum.cpx");
-                    throw new SyntaxError();
+                }
+                //need two indexes to form a proper enum
+                switch (scanner.token) {
+                    case CPINDEX:
+                        int nameCpx = scanner.intValue;
+                        enumval = new EnumElemValue(parser.pool.getCell(typeCpx), parser.pool.getCell(nameCpx));
+                        scanner.scan();
+                        break;
+                    case IDENT, STRINGVAL:
+                        // could be a string identifying enum class and name
+                        String enumName = scanner.stringValue;
+                        ConstElemValue nameConst = new ConstElemValue(AE_STRING.tag(), parser.pool.findUTF8Cell(enumName));
+                        enumval = new EnumElemValue(parser.pool.getCell(typeCpx), nameConst.constCell);
+                        scanner.scan();
+                        break;
+                    default:
+                        environment.error(scanner.pos, "err.incorrect.annot.enum.name", scanner.stringValue);
+                        throw new SyntaxError();
                 }
                 break;
+            default:
+                environment.error(scanner.pos, "err.incorrect.annot.enum.type", scanner.stringValue);
+                throw new SyntaxError();
         }
         return enumval;
     }
@@ -568,7 +597,7 @@ public class ParseAnnotation extends ParseBase {
                 // scan the next two identifiers (eg ident.ident), or 2 CPRefs.
                 // if it is an Ident, use consume it as the class name.
                 environment.traceln("[ParserAnnotation.scanAnnotationData]:: Enum) keyword: " + scanner.stringValue);
-                dataWriter = scanAnnotationEnum(name);
+                dataWriter = scanAnnotationEnum();
                 break;
             case IDENT:
                 environment.traceln("[ParserAnnotation.scanAnnotationData]:: JASM Keyword: (annotation field name: " + name + ") keyword: " + scanner.stringValue);
@@ -895,23 +924,28 @@ public class ParseAnnotation extends ParseBase {
     }
 
     /**
-     * Element Value for Enums
+     * Element Value for Enums:
+     * type_name_index
+     * The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a field descriptor(4.3.2).
+     *
+     * const_name_index
+     * The constant_pool entry gives the simple name of the enum constant represented by this element_value structure.
      */
     static class EnumElemValue implements ConstantPoolDataVisitor {
 
         ConstCell type;
-        ConstCell value;
+        ConstCell name;
 
-        EnumElemValue(ConstCell type, ConstCell value) {
+        EnumElemValue(ConstCell type, ConstCell name) {
             this.type = type;
-            this.value = value;
+            this.name = name;
         }
 
         @Override
         public void write(CheckedDataOutputStream out) throws IOException {
             out.writeByte(AE_ENUM.tag());
             type.write(out);
-            value.write(out);
+            name.write(out);
         }
 
         @Override
@@ -922,7 +956,7 @@ public class ParseAnnotation extends ParseBase {
         @Override
         public <T extends DataWriter> T visit(ConstantPool pool) {
             this.type = visitConstCell(this.type, pool);
-            this.value = visitConstCell(this.value, pool);
+            this.name = visitConstCell(this.name, pool);
             return (T) this;
         }
     }

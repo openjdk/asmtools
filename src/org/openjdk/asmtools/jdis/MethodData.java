@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,6 @@ import org.openjdk.asmtools.jdis.notations.Type;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.Math.max;
@@ -281,13 +280,22 @@ public class MethodData extends MemberData<ClassData> {
 
     /**
      * Prints the method data to the current output stream. Called from ClassData.
+     * [SystemInfo]?
+     * [@(=|-)Annotations]*
+     * [modifiers]* Method name:descriptor[:signature]?(1) [;]?(2)
+     * 1) :signature if !table
+     * 2) if !tableSignatureFormat AND !hasCode AND !hasAnnotationParameters AND !hasException
+     * [default(;|,)(3)]  3) ; if
+     *
      */
     @Override
     protected void jasmPrint(int index, int size) throws IOException {
         boolean isSignaturePrintable = this.signature != null && this.signature.isPrintable();
         boolean tableSignatureFormat = isSignaturePrintable && this.signature.isTableOutput();
         boolean hasExceptions = exceptions != null;
-        boolean hasCodeInfo = code != null || hasAnnotationParameters() || hasExceptions;
+        boolean hasCode = code != null;
+
+        boolean hasCodeInfo = hasCode || hasAnnotationParameters() || hasExceptions;
         boolean noExtraInfo = !hasCodeInfo && !tableSignatureFormat;
         if (index > 0) {
             // Print empty line between methods
@@ -308,7 +316,7 @@ public class MethodData extends MemberData<ClassData> {
         if (printCPIndex) {
             // print the CPX method descriptor
             methSignature = methSignature.concat("#%d:#%d".formatted(name_cpx, descriptor_cpx)).concat(jasmSignInfo.first);
-            if (noExtraInfo) {
+            if (noExtraInfo && !hasDefaultAnnotation()) {
                 methSignature = methSignature.concat(";");
             }
             if (skipComments) {
@@ -329,12 +337,8 @@ public class MethodData extends MemberData<ClassData> {
             methSignature = methSignature.concat(data.pool.getName(name_cpx) + ":").
                     concat(data.pool.getName(descriptor_cpx)).
                     concat(jasmSignInfo.second);
-            if (noExtraInfo) {
+            if (noExtraInfo && !hasDefaultAnnotation()) {
                 methSignature = methSignature.concat(";");
-            } else if (!hasAnnotationParameters() && tableSignatureFormat) {
-                methSignature = methSignature.concat(": ");
-            } else {
-                methSignature = methSignature.concat(" ");
             }
             printIndent(methSignature);
         }
@@ -347,8 +351,8 @@ public class MethodData extends MemberData<ClassData> {
             defaultAnnotation.setElementState(HAS_DEFAULT_VALUE);
             defaultAnnotation.print();
             // finish up the method declaration
-            if (noExtraInfo) {
-                print(";");
+            if (!hasCodeInfo) {
+                print(!tableSignatureFormat ? ";" : ",");
             }
         }
 
@@ -357,6 +361,7 @@ public class MethodData extends MemberData<ClassData> {
             println();
             signature.disableNewLine().setKeywordPadding(keywordPadding).incIndent().
                     setCommentOffset(this.getCommentOffset() - getIndentStep());
+            signature.terminateMethodSignature(!hasExceptions);
             signature.print();
         }
 
@@ -375,8 +380,6 @@ public class MethodData extends MemberData<ClassData> {
         } else {
             if (hasAnnotationParameters()) {
                 printMethodParameters();
-            } else if (index == size - 1) {
-                println();
             }
         }
     }
