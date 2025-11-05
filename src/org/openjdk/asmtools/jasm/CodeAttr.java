@@ -486,8 +486,8 @@ class CodeAttr extends AttrData {
 
     @Override
     public int attrLength() {
-        return 2 + 2 + 4 // for max_stack, max_locals, and cur_pc
-                + curPC //      + 2+trap_table.size()*8
+        return 2 + 2 + 4    // for max_stack, max_locals, and cur_pc
+                + curPC     //      + 2+trap_table.size()*8
                 + exceptionTable.getLength() + attributes.getLength();
     }
 
@@ -507,6 +507,15 @@ class CodeAttr extends AttrData {
         attributes.write(out);
     }
 
+    /**
+     * Checks if the code attribute is empty, i.e., it contains no instructions.
+     *
+     * @return true if the code attribute is empty, false otherwise
+     */
+    public boolean isEmpty() {
+        return curPC == 0;
+    }
+
     /* CodeAttr inner classes */
     static public class Local extends Indexer {
         String name;
@@ -517,18 +526,12 @@ class CodeAttr extends AttrData {
         }
     }
 
-    /**
-     *
-     */
     static public class Label extends Local {
         public Label(String name) {
             super(name);
         }
     }
 
-    /**
-     *
-     */
     static class RangePC extends Local {
         int start_pc = Indexer.NotSet;
         int end_pc = Indexer.NotSet;

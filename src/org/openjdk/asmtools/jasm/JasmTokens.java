@@ -22,10 +22,7 @@
  */
 package org.openjdk.asmtools.jasm;
 
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -79,7 +76,7 @@ public class JasmTokens {
         JASM_IDENT("Jasm identifier"),
         MODULE_NAME("Module Name"),             // The token can be used as Module Name
         TYPE_PATH_KIND("Type path kind"),       // Table 4.7.20.2-A Interpretation of type_path_kind values
-        CLASS_NAME("Class Name");              // The token can be used as Class Name
+        CLASS_NAME("Class Name");               // The token can be used as Class Name
 
         private final String printValue;
 
@@ -535,5 +532,16 @@ public class JasmTokens {
 
     public static Token keyword_token_ident(String idValue) {
         return Token.get(idValue, KeywordType.KEYWORD).orElse(Token.IDENT);
+    }
+
+    public static String asString(List<Token> tokens) {
+        StringBuilder sb = new StringBuilder("");
+        for (Token token : tokens) {
+            if(sb .length() > 0) {
+                sb.append(", ");
+            }
+            sb.append('\'').append(token.parseKey()).append('\'');
+        }
+        return sb.toString();
     }
 }

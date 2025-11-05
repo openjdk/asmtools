@@ -47,6 +47,7 @@ public abstract class MemberData<T extends MemberData> extends Indenter {
     protected Environment environment;          // Environment of this data
     protected ConstantPool pool;
     protected String memberType = "";
+    private String contextDefaultValuePrefix = null;
 
     public MemberData<T> setOwner(MemberData<? extends MemberData<T>> owner) {
         this.owner = owner;
@@ -345,5 +346,12 @@ public abstract class MemberData<T extends MemberData> extends Indenter {
                         ? PROGRAM_COUNTER_PLACEHOLDER_LENGTH + getIndentStep() * 2 + Header.length() - getIndentSize()
                         : INSTR_PREFIX_LENGTH + getIndentStep() * 2 + Header.length() - getIndentSize() * 2
         ) - getIndentSize();
+    }
+
+    protected String getDefaultValuePrefix() {
+        if( contextDefaultValuePrefix == null ) {
+            contextDefaultValuePrefix = printCPIndex ? DEFAULT_VALUE_PREFIX : " " + DEFAULT_VALUE_PREFIX;
+        }
+        return contextDefaultValuePrefix;
     }
 }

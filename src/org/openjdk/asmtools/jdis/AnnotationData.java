@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,20 +59,27 @@ public class AnnotationData<T extends MemberData> extends MemberData {
         printBody();
     }
 
+    // Prints the annotation header.
     protected void printHeader() {
         //Print annotation Header, which consists of the
         // Annotation Token ('@'), visibility ('+', '-'),
         // and the annotation name (type index, CPX).
         // Mark whether it is invisible or not.
-        String annotationName = pool.getString(type_cpx, index -> "#" + index);
-        // converts class type to java class name
-        if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
-            annotationName = annotationName.substring(1, annotationName.length() - 1);
+        String annotationName = pool.getString(type_cpx, index -> null);
+        if (printCPIndex) {
+            annotationName = "#" + type_cpx + (annotationName != null && (!skipComments) ? " /* %s */".formatted(annotationName) : "");
+        } else {
+            if (annotationName == null) {
+                annotationName = "#" + type_cpx;
+            } else {
+                annotationName = "\"" + annotationName + "\"";
+            }
         }
         switch (getAnnotationElementState()) {
             case HAS_DEFAULT_VALUE -> {
-                print(DEFAULT_VALUE_PREFIX).print(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
-                setCommentOffset(getCommentOffset() + DEFAULT_VALUE_PREFIX.length());
+                println(" " + DEFAULT_VALUE_PREFIX);
+                printIndent(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
+                setCommentOffset(getCommentOffset());
             }
             case PARAMETER_ANNOTATION, INLINED_ELEMENT -> print(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
             default -> printIndent(invisible ? invisibleAnnotationToken : visibleAnnotationToken).print(annotationName);
@@ -90,7 +97,9 @@ public class AnnotationData<T extends MemberData> extends MemberData {
                 case HAS_DEFAULT_VALUE -> {
                     println(" {");
                     printBodyOfDefaultData();
-                    print(" }");
+                    println();
+                    decIndent();
+                    printIndent("}");
                 }
                 case INLINED_ELEMENT -> {
                     incIndent().printIndentLn("{");
@@ -98,7 +107,7 @@ public class AnnotationData<T extends MemberData> extends MemberData {
                     printIndent("}").decIndent();
                 }
                 default -> {
-                    println("{");
+                    println(" {");
                     printBodyOfData();
                     printIndent("}");
                 }
@@ -130,10 +139,6 @@ public class AnnotationData<T extends MemberData> extends MemberData {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         String annotationName = pool.getString(type_cpx, index -> "#" + index);
-        // converts class type to java class name
-        if ((annotationName.startsWith("L") || annotationName.startsWith("Q")) && annotationName.endsWith(";")) {
-            annotationName = annotationName.substring(1, annotationName.length() - 1);
-        }
         sb.append(invisible ? invisibleAnnotationToken : visibleAnnotationToken);
         sb.append(annotationName).append("{");
         sb.append(annotationElements.stream().map(AnnotationElement::toString).collect(Collectors.joining(",")));

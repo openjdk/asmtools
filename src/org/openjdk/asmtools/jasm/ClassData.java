@@ -92,7 +92,7 @@ class ClassData extends MemberData<JasmEnvironment> {
      */
     public ClassData(JasmEnvironment environment, CFVersion cfv) {
         super(new ConstantPool(environment), environment);  // for a class, these get initialized in the super - later.
-        this.attributeLocation = ELocation.ClassFile;
+        this.attributeLocation = ELocation.class_file;
         this.environment = environment;
         this.cdos = new CDOutputStream();
         this.cfv = cfv;

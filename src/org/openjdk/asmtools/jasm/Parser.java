@@ -122,10 +122,6 @@ class Parser extends ParseBase {
         attributeParser.setDebugFlag(debugAttribute);
     }
 
-    String encodeClassString(String classname) {
-        return "L" + classname + ";";
-    }
-
     public long getPosition() {
         return environment.getPosition();
     }
@@ -842,7 +838,6 @@ class Parser extends ParseBase {
         boolean is_clinit = name.equals("<clinit>");
         // TODO: not a good way to detect factories...
         boolean is_init = name.equals("<init>") && !EModifier.isStatic(mod);
-        DefaultAnnotationAttr defAnnot = null;
 
         // check access modifiers:
         Checker.checkMethodModifiers(classData, mod, scannerPosition, is_init, is_clinit);
@@ -857,86 +852,150 @@ class Parser extends ParseBase {
             environment.warning(scanner.pos, "warn.msig.more255", Integer.toString(paramCount));
         }
 
-        // Parse the optional attribute: signature
-        ConstCell signatureCell = null;
+        MethodData curMethod = (MethodData) classData.StartMethod(mod, nameCell, typeCell, null).addAnnotations(memberAnnotations);
 
-        if (scanner.token.in(COLON, SIGNATURE)) {
-            // Signature expected
-            if (scanner.token == COLON) {
-                scanner.scan();
-                if (scanner.token == SIGNATURE) {
-                    scanner.scan();
-                }
-                signatureCell = parseName();
-            } else if (scanner.token == SIGNATURE) {
-                scanner.scan();
-                signatureCell = parseName();
+        // Parse the optional attribute(s): signature
+        // :SIGNATURE or :#d
+        if (scanner.token == COLON) {
+            scanner.scan();
+            if (!scanner.expectOneOfToken(CPINDEX, IDENT, STRINGVAL)) {
+                environment.error(scanner.pos, "err.name.expected",
+                        "\"" + scanner.token.parseKey() + "\"");
+                throw new SyntaxError();
             }
-            if (scanner.token == SEMICOLON) {
-                scanner.scan();
+            // Signature expected
+            ConstCell signatureCell = parseName();
+            if (signatureCell != null) {
+                curMethod.setSignatureAttr(signatureCell);
             }
         }
-        ArrayList<ConstCell<?>> exceptionList = null;
+        boolean nextAttributeExpected = false, endClassExpected = false;
+        if (scanner.token == SEMICOLON) {
+            // probably method header is closed
+            // public varargs abstract Method #5:#6:#15;
+            endClassExpected = true;
+        }
+        // Parse the optional attribute(s): signature, exceptions, default annotation
         boolean parseNext = true;
         do {
             switch (scanner.token) {
-                // Parse throws clause
-                case THROWS -> exceptionList = parseThrowsClause();
+                // Parse throws clause, it expected to be the last clause.
+                case THROWS -> {
+                    if (curMethod.hasExceptions()) {
+                        environment.warning(scanner.pos, "warn.method_info.attribute.repeated",
+                                ATT_Exceptions.parseKey());
+                    }
+                    nextAttributeExpected = false;
+                    ArrayList<ConstCell<?>> exceptions = parseThrowsClause(curMethod.getExceptions());
+                    curMethod.addExceptions(exceptions);
+                    if( scanner.token == SEMICOLON ) {
+                        parseNext = false;
+                        scanner.scan();
+                    } else if( scanner.expectOneOfToken(STACK, LOCAL, LBRACE) ) {
+                        parseNext = false;
+                    }
+                }
                 // Parse default clause
-                case DEFAULT -> defAnnot = annotParser.parseDefaultAnnotation();
-                default -> parseNext = false;
+                case DEFAULT -> {
+                    if (curMethod.getDefaultAnnotation() != null) {
+                        environment.throwErrorException(scanner.pos, "err.method_info.attribute.repeated",
+                                ATT_AnnotationDefault.parseKey());
+                    }
+                    DefaultAnnotationAttr defAnnot = annotParser.parseDefaultAnnotation();
+                    if (defAnnot != null) {
+                        curMethod.setDefaultAnnotation(defAnnot);
+                    }
+                    if (scanner.token == SEMICOLON) {
+                        endClassExpected = true;
+                        parseNext = false;
+                    } else if (scanner.expectOneOfToken(SIGNATURE, THROWS)) {
+                        continue;
+                    }
+                    scanner.scan();
+                }
+                // parse signature
+                case SIGNATURE -> {
+                    scanner.scan();
+                    if (curMethod.getSignatureAttr() != null) {
+                        environment.warning(scanner.pos, "warn.method_info.attribute.repeated",
+                                ATT_Signature.parseKey());
+                    }
+                    nextAttributeExpected = false;
+                    ConstCell signatureCell = parseName();
+                    if (signatureCell != null) {
+                        curMethod.setSignatureAttr(signatureCell);
+                    }
+                }
+                case SEMICOLON -> {
+                    parseNext = false;
+                    scanner.scan();
+                }
+                case COMMA -> {
+                    nextAttributeExpected = true;
+                    scanner.scan();
+                }
+                default -> {
+                    if (nextAttributeExpected) {
+                        ArrayList<JasmTokens.Token> expected = new ArrayList<>();
+                        if (curMethod.getDefaultAnnotation() == null) {
+                            expected.add(DEFAULT);
+                        }
+                        if (!curMethod.hasExceptions()) {
+                            expected.add(THROWS);
+                        }
+                        if (curMethod.getSignatureAttr() == null) {
+                            expected.add(SIGNATURE);
+                        }
+                        if (expected.size() != 1) {
+                            environment.throwErrorException(scanner.prevPos, "err.one.of.N.token.expected", JasmTokens.asString(expected));
+                        } else {
+                            environment.throwErrorException(scanner.prevPos, "err.token.expected", expected.get(0).parseKey());
+                        }
+                    }
+                    parseNext = false;
+                }
             }
         } while (parseNext);
 
-        MethodData curMethod = classData.StartMethod(mod, nameCell, typeCell, exceptionList);
-        if (signatureCell != null) {
-            curMethod.setSignatureAttr(signatureCell);
-        }
+        if (!endClassExpected) {
+            Indexer max_stack = null, max_locals = null;
+            do {
+                if (scanner.token == STACK) {
+                    scanner.scan();
+                    max_stack = parseUInt(2);
+                }
+                if (scanner.token == LOCAL) {
+                    scanner.scan();
+                    max_locals = parseUInt(2);
+                }
+                if (scanner.token == INTVAL) {
+                    annotParser.parseParamAnnotation(paramCount, curMethod);
+                }
+            } while (scanner.token.in(STACK, LOCAL, INTVAL));
 
-        Indexer max_stack = null, max_locals = null;
-
-        if (scanner.token == STACK) {
-            scanner.scan();
-            max_stack = parseUInt(2);
-        }
-        if (scanner.token == LOCAL) {
-            scanner.scan();
-            max_locals = parseUInt(2);
-        }
-        if (scanner.token == INTVAL) {
-            annotParser.parseParamAnnotation(paramCount, curMethod);
-        }
-
-        if (scanner.token == SEMICOLON) {
-            if ((max_stack != null) || (max_locals != null)) {
-                environment.error("err.token.expected", LBRACE.parseKey());
-            }
-            scanner.scan();
-        } else if (!EModifier.isAbstract(mod)) {
-            scanner.expect(LBRACE);
-            curCodeAttr = curMethod.startCode(paramCount, max_stack, max_locals);
-            parseCodeAttribute();
-            curCodeAttr.endCode();
-            scanner.expect(RBRACE);
-        } else { // abstract method could have empty body {} and even not empty
-            if (scanner.token == LBRACE) {
+            if (scanner.token == SEMICOLON) {
+                if ((max_stack != null) || (max_locals != null)) {
+                    environment.error("err.token.expected", LBRACE.parseKey());
+                }
                 scanner.scan();
+            } else if (!EModifier.isAbstract(mod)) {
+                scanner.expect(LBRACE);
                 curCodeAttr = curMethod.startCode(paramCount, max_stack, max_locals);
                 parseCodeAttribute();
                 curCodeAttr.endCode();
                 scanner.expect(RBRACE);
+            } else { // abstract method could have empty body {} and even not empty
+                if (scanner.token == LBRACE) {
+                    scanner.scan();
+                    curCodeAttr = curMethod.startCode(paramCount, max_stack, max_locals);
+                    parseCodeAttribute();
+                    curCodeAttr.endCode();
+                    scanner.expect(RBRACE);
+                }
             }
         }
-        if (defAnnot != null) {
-            curMethod.addDefaultAnnotation(defAnnot);
-        }
-        if (memberAnnotations != null) {
-            curMethod.addAnnotations(memberAnnotations);
-        }
         classData.EndMethod();
-
         traceMethodInfoLn("End of the method " + curMethod);
-
     }  // end parseMethod
 
     private void parseCodeAttribute() throws IOException {
@@ -970,19 +1029,16 @@ class Parser extends ParseBase {
     /**
      * @return list of the exception classes
      */
-    private ArrayList<ConstCell<?>> parseThrowsClause() {
+    private ArrayList<ConstCell<?>> parseThrowsClause(DataVectorAttr<ConstCell<?>> exceptionList) {
         scanner.scan();
         ArrayList<ConstCell<?>> list = new ArrayList<>();
         for (; ; ) {
             ConstCell<?> exc = cpParser.parseConstRef(ConstType.CONSTANT_CLASS);
-            if (list.contains(exc)) {
+            if (exceptionList != null && exceptionList.contains(exc)) {
                 environment.warning(scanner.pos, "warn.exc.repeated");
-            } else {
-                list.add(exc);
-                environment.traceln(() -> "THROWS:" + exc.cpIndex);
             }
+            list.add(exc);
             if (scanner.token == SEMICOLON) {
-                scanner.scan();
                 break;
             } else if (scanner.token != COMMA) {
                 break;

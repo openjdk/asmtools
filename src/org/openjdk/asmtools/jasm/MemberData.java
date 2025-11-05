@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2025, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -47,7 +47,7 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrVis = null;
     protected DataVectorAttr<TypeAnnotationData> type_annotAttrInv = null;
     protected AttrData signatureAttr;
-    protected ELocation attributeLocation = ELocation.UNKNOWN;
+    protected ELocation attributeLocation = ELocation.unknown;
 
     public MemberData(ConstantPool pool, T environment) {
         this(pool, environment, 0);
@@ -112,6 +112,13 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
     }
 
     public void setSignatureAttr(ConstCell value_cpx) {
+        if (this.signatureAttr != null) {
+            CPXAttr cpx = (CPXAttr) signatureAttr;
+            if (value_cpx.cpIndex != cpx.cell.cpIndex) {
+                environment.warning("warn.redeclared.attribute", SIGNATURE.parseKey(),
+                        this.attributeLocation.getDescription());
+            }
+        }
         signatureAttr = new CPXAttr(pool, EAttribute.ATT_Signature, value_cpx);
     }
 
@@ -120,10 +127,19 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
             CPXAttr cpx = (CPXAttr) signatureAttr;
             if (value_cpx.cpIndex != cpx.cell.cpIndex) {
                 environment.warning(position, "warn.redeclared.attribute",
-                        SIGNATURE.parseKey(), ELocation.ClassFile.toString());
+                        SIGNATURE.parseKey(), this.attributeLocation.getDescription());
             }
         }
         signatureAttr = new CPXAttr(pool, EAttribute.ATT_Signature, value_cpx);
+    }
+
+    /**
+     * Retrieves the signature attribute associated with this member.
+     *
+     * @return the signature attribute, or null if it has not been set
+     */
+    public AttrData getSignatureAttr() {
+        return signatureAttr;
     }
 
 
@@ -153,41 +169,44 @@ abstract public class MemberData<T extends Environment<? extends ToolLogger>> {
         return attrs;
     }
 
-    public void addAnnotations(ArrayList<AnnotationData> list) {
-        for (AnnotationData item : list) {
-            boolean invisible = item.invisible;
+    public MemberData<T> addAnnotations(ArrayList<AnnotationData> list) {
+        if( list != null ) {
+            for (AnnotationData item : list) {
+                boolean invisible = item.invisible;
 
-            if (item instanceof TypeAnnotationData typeAnnotationData) {
-                // Type Annotations
-                if (invisible) {
-                    if (type_annotAttrInv == null) {
-                        type_annotAttrInv = new DataVectorAttr<>(pool,
-                                EAttribute.ATT_RuntimeInvisibleTypeAnnotations);
+                if (item instanceof TypeAnnotationData typeAnnotationData) {
+                    // Type Annotations
+                    if (invisible) {
+                        if (type_annotAttrInv == null) {
+                            type_annotAttrInv = new DataVectorAttr<>(pool,
+                                    EAttribute.ATT_RuntimeInvisibleTypeAnnotations);
+                        }
+                        type_annotAttrInv.add(typeAnnotationData);
+                    } else {
+                        if (type_annotAttrVis == null) {
+                            type_annotAttrVis = new DataVectorAttr<>(pool,
+                                    EAttribute.ATT_RuntimeVisibleTypeAnnotations);
+                        }
+                        type_annotAttrVis.add(typeAnnotationData);
                     }
-                    type_annotAttrInv.add(typeAnnotationData);
                 } else {
-                    if (type_annotAttrVis == null) {
-                        type_annotAttrVis = new DataVectorAttr<>(pool,
-                                EAttribute.ATT_RuntimeVisibleTypeAnnotations);
+                    // Regular Annotations
+                    if (invisible) {
+                        if (annotAttrInv == null) {
+                            annotAttrInv = new DataVectorAttr<>(pool,
+                                    EAttribute.ATT_RuntimeInvisibleAnnotations);
+                        }
+                        annotAttrInv.add(item);
+                    } else {
+                        if (annotAttrVis == null) {
+                            annotAttrVis = new DataVectorAttr<>(pool,
+                                    EAttribute.ATT_RuntimeVisibleAnnotations);
+                        }
+                        annotAttrVis.add(item);
                     }
-                    type_annotAttrVis.add(typeAnnotationData);
-                }
-            } else {
-                // Regular Annotations
-                if (invisible) {
-                    if (annotAttrInv == null) {
-                        annotAttrInv = new DataVectorAttr<>(pool,
-                                EAttribute.ATT_RuntimeInvisibleAnnotations);
-                    }
-                    annotAttrInv.add(item);
-                } else {
-                    if (annotAttrVis == null) {
-                        annotAttrVis = new DataVectorAttr<>(pool,
-                                EAttribute.ATT_RuntimeVisibleAnnotations);
-                    }
-                    annotAttrVis.add(item);
                 }
             }
         }
+        return this;
     }
 }
