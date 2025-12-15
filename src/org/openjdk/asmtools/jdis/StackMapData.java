@@ -184,9 +184,9 @@ public class StackMapData extends MemberData<CodeData> {
                             println(unsetFields.length == 0 ? "" : " // " + right);
                         } else {
                             String str = PadRight(enlargedIndent(strLine.formatted(
-                                    prefix, "[ " + line.first.getFirst().concat(",")), doubleIndent), padding);
+                                    prefix, "[ " + line.first.get(0).concat(",")), doubleIndent), padding);
                             int offs = str.indexOf('[') - INDENT_STEP * (wrapLevel + 1);
-                            print(str).println(" // " + line.second.getFirst());
+                            print(str).println(" // " + line.second.get(0));
                             for (int i = 1; i <= limit; i++) {
                                 delim = i == limit ? "; ]  {" : ",";
                                 String id = line.first.get(i);
@@ -202,7 +202,7 @@ public class StackMapData extends MemberData<CodeData> {
                     } else {
                         // first element
                         println(enlargedIndent(strLine.formatted(
-                                prefix, "[ " + line.second.getFirst().concat(",")), doubleIndent));
+                                prefix, "[ " + line.second.get(0).concat(",")), doubleIndent));
                         for (int i = 1; i <= limit; i++) {
                             delim = i == limit ? "; ] {" : ",";
                             String field = line.second.get(i);

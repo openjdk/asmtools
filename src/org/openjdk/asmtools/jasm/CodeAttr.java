@@ -393,11 +393,12 @@ class CodeAttr extends AttrData {
     // The StackMap
     public StackMapData getStackMapTable() {
         StackMapData entry;
-        if (stackMapEntries.isEmpty()) {
+        int len = stackMapEntries.size();
+        if (len == 0) {
             entry = new StackMapData(environment, isTypeCheckingVerifier());
             stackMapEntries.add(entry);
         } else {
-            entry = stackMapEntries.getLast();
+            entry = stackMapEntries.get(len - 1);
         }
         return entry;
     }
