@@ -118,7 +118,7 @@ class InstructionAttr extends MemberData<MethodData> {
         } else if (stackMapEntry != null) {
             return stackMapEntry.belongsToStackMapTable() ? printStackMapTable(shift) : printStackMap(shift);
         } else {
-            return stackMapWrappers.getFirst().belongsToStackMapTable() ? printStackMapTable(shift) : printStackMap(shift);
+            return stackMapWrappers.get(0).belongsToStackMapTable() ? printStackMapTable(shift) : printStackMap(shift);
         }
     }
 
@@ -241,7 +241,7 @@ class InstructionAttr extends MemberData<MethodData> {
                 if (limit == 0) {
                     println(right);
                 } else {
-                    println(line.second.getFirst().concat(","));
+                    println(line.second.get(0).concat(","));
                     for (int i = 1; i <= limit; i++) {
                         String delim = i == limit ? ";" : ",";
                         String field = line.second.get(i).concat(delim);

@@ -42,7 +42,7 @@ public class Container<T extends Indenter, M extends MemberData<?>> extends Inde
     }
 
     protected final boolean isCollectionMeasurable() {
-        return (!this.elements.isEmpty() && elements.getFirst() instanceof Measurable);
+        return (!this.elements.isEmpty() && elements.get(0) instanceof Measurable);
     }
 
     @Override
