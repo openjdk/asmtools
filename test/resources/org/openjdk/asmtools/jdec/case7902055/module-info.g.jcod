@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ /* Jasm source of the test resource may look like this:
+    module moduleB@1.2.3 version 62:0
+    {
+      requires mandated java.base@jck-22;
+      exports  packB;
+    }
+ */
+module moduleB {
+  0xCAFEBABE;
+  0;                                       // minor version
+  62;                                      // version
+  [15] {                                   // Constant Pool
+    ;                                      // first element is empty
+    Class #2;                              // #1     at 0x0A
+    Utf8 "module-info";                    // #2     at 0x0D
+    Utf8 "SourceFile";                     // #3     at 0x1B
+    Utf8 "module-info.jcod";               // #4     at 0x28
+    Utf8 "Module";                         // #5     at 0x3B
+    Module #7;                             // #6     at 0x44
+    Utf8 "moduleB";                        // #7     at 0x47
+    Module #9;                             // #8     at 0x51
+    Utf8 "java.base";                      // #9     at 0x54
+    Utf8 "jdk4jck_22";                     // #10     at 0x60
+    Package #12;                           // #11     at 0x6D
+    Utf8 "packB";                          // #12     at 0x70
+    Utf8 "1.2.3";                          // #13     at 0x78
+    Utf8 "ModulePackages";                 // #14     at 0x80
+  }                                        // end of Constant Pool
+
+  0x8000;                                  // access [ ACC_MODULE, 0xFFFF0000 ]
+  #1;                                      // this_cpx
+  #0;                                      // super_cpx
+
+  [0] {                                    // Interfaces
+  }                                        // end of Interfaces
+
+  [0] {                                    // Fields
+  }                                        // end of Fields
+
+  [0] {                                    // Methods
+  }                                        // end of Methods
+
+  [2] {                                    // Attributes
+    Attr(#3, 2) {                          // SourceFile at 0x9F
+      #4;
+    }                                      // end of SourceFile
+    ;
+    Attr(#5, 28) {                         // Module at 0xA7
+      #6;                                  // name_index
+      0x0000;                              // flags
+
+      #13;                                 // version
+      [1] {                                // requires
+        #8 0x8000 #10;                     // ACC_MANDATED
+      }                                    // end of requires
+
+      [1] {                                // exports
+        #11 0x0000                         // [  ]
+        [0] {
+        };
+      }                                    // of exports
+
+      [0] {                                // opens
+      }                                    // of opens
+
+      [0] {                                // uses
+      }                                    // end of uses
+
+      [0] {                                // provides
+      }                                    // end of provides
+
+    }                                      // end of Module
+  }                                        // end of Attributes
+}                                          // end of module moduleB

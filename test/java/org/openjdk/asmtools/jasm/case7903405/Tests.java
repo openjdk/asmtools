@@ -36,7 +36,7 @@ import java.util.List;
 import static org.openjdk.asmtools.common.Environment.OK;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class NegativeJasmTests {
+public class Tests {
 
     private final Jasm jasm = new Jasm();
 
