@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * The test is intended to check that the module-info file with Constant Pool can be compiled without issues.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TransformationTest {
+public class Tests {
 
     private final String[] jasmFiles = new String[]{"module-info.class.g.jasm", "module-info.class.jasm"};
 

@@ -41,7 +41,7 @@ import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class JcodTests {
+public class Tests {
 
     private final Jcoder jcoder = new Jcoder();
 
@@ -63,7 +63,7 @@ public class JcodTests {
      * hides the error because the error message is outputted to stdout instead of stderr.
      */
     @Test
-    public void testJCoderWarning() {
+    public void testJdisWarning() {
         final LogAndBinResults jcodResult = jcoder.compile(List.of(resourceDir + File.separator + resName));
         List<String> out = jcodResult.getLogStringsByPrefix("Warning:");
         Assertions.assertEquals(OK, jcodResult.result);

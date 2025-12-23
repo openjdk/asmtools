@@ -27,7 +27,7 @@ import org.openjdk.asmtools.lib.helper.BruteForceHelper;
 
 import java.io.IOException;
 
-class JdecJcodTest {
+class JdecJcodTests {
 
     @Test
     public void jdecJcodAllDecompileCompileAndLoad() throws IOException {

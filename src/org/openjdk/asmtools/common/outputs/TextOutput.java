@@ -67,7 +67,7 @@ public class TextOutput extends NamedToolOutput {
     public void finishClass(String fullyQualifiedName) throws IOException {
         String fqn = getCurrentClassName();
         if (fqn != null && !fqn.equals(fullyQualifiedName)) {
-            throw new RuntimeException("Ended different class: %s then was started %s".
+            throw new RuntimeException("Ended with a different class: %s; then %s was started.".
                     formatted(fullyQualifiedName, fqn));
         }
         if (curClsStringBuilder != null) {

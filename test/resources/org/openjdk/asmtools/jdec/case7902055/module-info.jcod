@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ /* Jasm source of the test resource may look like this:
+    module moduleB@1.2.3 version 62:0
+    {
+      requires mandated java.base@jck-22;
+      exports  packB;
+    }
+ */
+module {
+  0xCAFEBABE;
+  0;                                       // minor version
+  62;                                      // version
+  [] {                                     // Constant Pool
+    ;                                      // first element is empty
+    Class #2;                              // #1
+    Utf8 "module-info";                    // #2
+    Utf8 "SourceFile";                     // #3
+    Utf8 "module-info.jcod";               // #4
+    Utf8 "Module";                         // #5
+    Module #7;                             // #6
+    Utf8 "moduleB";                        // #7
+    Module #9;                             // #8
+    Utf8 "java.base";                      // #9
+    Utf8 "jdk4jck_22";                     // #10
+    Package #12;                           // #11
+    Utf8 "packB";                          // #12
+    Utf8 "1.2.3";                          // #13
+    Utf8 "ModulePackages";                 // #14
+  }
+
+  0x8000;                                  // access
+  #1;                                      // this_cpx
+  #0;                                      // super_cpx
+
+  [] {                                     // Interfaces
+  }                                        // end of Interfaces
+
+  [] {                                     // Fields
+  }                                        // end of Fields
+
+  [] {                                     // Methods
+  }                                        // end of Methods
+
+  [] {                                     // Attributes
+    Attr(#3) {                             // SourceFile
+      #4;
+    }                                      // end of SourceFile
+    ;
+    Attr(#5) {                             // Module
+      #6;                                  // name_index
+      0x0000;                              // flags
+
+      #13;                                 // version
+      [] {                                 // requires
+        #8 0x8000 #10;
+      }                                    // end of requires
+
+      [] {                                 // exports
+        #11 0x0000
+        [] {
+        };
+      }                                    // of exports
+
+      [] {                                 // opens
+      }                                    // of opens
+
+      [] {                                 // uses
+      }                                    // end of uses
+
+      [] {                                 // provides
+      }                                    // end of provides
+
+    }                                      // end of Module
+  }                                        // end of Attributes
+}

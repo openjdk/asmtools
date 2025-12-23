@@ -24,22 +24,18 @@ package org.openjdk.asmtools.jasm.case7902696;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.openjdk.asmtools.lib.action.EToolArguments;
 import org.openjdk.asmtools.lib.action.Jasm;
-import org.openjdk.asmtools.lib.action.Jdec;
 import org.openjdk.asmtools.lib.action.Jdis;
 import org.openjdk.asmtools.lib.log.LogAndBinResults;
 import org.openjdk.asmtools.lib.log.LogAndTextResults;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -49,7 +45,7 @@ import static org.openjdk.asmtools.common.Environment.FAILED;
 import static org.openjdk.asmtools.common.Environment.OK;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class JasmTests {
+public class Tests {
 
     private final Jasm jasm = new Jasm();
 
@@ -100,7 +96,7 @@ public class JasmTests {
      */
     @ParameterizedTest
     @MethodSource("getJasmParameters")
-    public void testJCoderWarning(String resourceName) {
+    public void testJdisWarning(String resourceName) {
         // jasm to class
         final LogAndBinResults binResult = jasm.compile(List.of(resourceDir + File.separator + resourceName));
         Assertions.assertEquals(OK, binResult.result);
