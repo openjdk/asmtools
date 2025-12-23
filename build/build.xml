@@ -185,14 +185,14 @@ questions.
         <echo></echo>
         <condition property="check-java-version.passed">
             <or>
-                <matches pattern=".*2[123456789]+.*" string="${ant.java.version}"/>
-                <matches pattern=".*3\d.*" string="${ant.java.version}"/>
+                <matches pattern=".*1[789]+.*" string="${ant.java.version}"/>
+                <matches pattern=".*[23]\d.*" string="${ant.java.version}"/>
             </or>
         </condition>
         <fail unless="check-java-version.passed">
             ...${line.separator}${line.separator}
             Current Java version is ${ant.java.version}
-            The build should be started by Java 21 or above
+            The build should be started by Java 17 or above
         </fail>
     </target>
 

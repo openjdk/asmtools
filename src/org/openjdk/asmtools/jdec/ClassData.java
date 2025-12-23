@@ -58,6 +58,7 @@ class ClassData {
     private static final int COMMENT_OFFSET = 42;
     private static final int BYTES_IN_LINE_SPACED_OUT = 12;    // Format: 0x04 0x3C 0x04 0x3D;
     private static final int BYTES_IN_LINE_CONDENSED = 8;     // Format: 0x043C043D043E1B1C;
+    private static final String ERROR_PREFIX = " // The ConstantPoll Index ";
 
     private static final String INDENT_STRING = "  ";
     private static final int INDENT_LENGTH = INDENT_STRING.length();
@@ -148,11 +149,11 @@ class ClassData {
                 }
             }
         } catch (EOFException ignored) {
-            if(!ignoreException) {
+            if (!ignoreException) {
                 throw ignored;
             }
         } finally {
-            if( printed ) {
+            if (printed) {
                 if (len % 8 != 0) {
                     if (i > 0)
                         environment.println(";");
@@ -412,7 +413,7 @@ class ClassData {
         }
         if (idx != 0) {
             try {
-                name = StringUtils.Utf8ToString(getStringByIndex(idx));
+                name = StringUtils.Utf8ToString(getNameByRefIndex(idx));
             } catch (Throwable ignored) { /* ignored*/ }
         }
         return name;
@@ -1212,10 +1213,9 @@ class ClassData {
         String sComment;
         //u2 module_name_index
         int index = in.readUnsignedShort();
-        entityName = getStringByIndex(index);
         out_print("#" + index + "; // ");
         if (environment.printDetailsFlag) {
-            environment.println(format("%-16s", "name_index") + " : " + entityName);
+            environment.println(format("%-16s", "name_index"));
         } else {
             environment.println("name_index");
         }
@@ -1345,20 +1345,23 @@ class ClassData {
 
             try {
                 entityName = (String) cpool[(Integer) cpool[this_cpx]];
-                environment.getToolOutput().startClass(entityName, Optional.of(".jcod"), environment);
                 if (entityName.equals("module-info")) {
                     entityType = "module";
                     entityName = getModuleName();
                 } else {
                     entityType = "class";
                 }
+                environment.getToolOutput().startClass(entityName, Optional.of(".jcod"), environment);
                 if (!entityName.isEmpty() && (JcodTokens.keyword_token_ident(entityName) != IDENT ||
                         JcodTokens.getConstTagByParseString(entityName) != -1)) {
                     // JCod can't parse a entityName matching a keyword or a constant value,
                     // then use the filename instead:
                     out_begin(format("file \"%s.class\" {", entityName));
                 } else {
-                    out_begin(format("%s %s {", entityType, entityName));
+                    if (entityName.startsWith(ERROR_PREFIX))
+                        out_begin(format("%s { %s", entityType, entityName));
+                    else
+                        out_begin(format("%s %s {", entityType, entityName));
                 }
                 printingStarted = true;
             } catch (Exception e) {
@@ -1458,13 +1461,24 @@ class ClassData {
     }
 
     private String getStringByIndex(int idx) {
-        Object str = cpool[idx];
-        if (str instanceof String) {
-            return (String) str;
+        Object obj = cpool[idx];
+        if (obj instanceof String str) {
+            return str;
         } else {
-            return " // The ConstantPoll Index #%d refers to a ConstantPool Object: %s".
-                    formatted(idx, String.valueOf(str));
+            return "%s #%d refers to a ConstantPool Object: %s".
+                    formatted(ERROR_PREFIX, idx, String.valueOf(obj));
         }
+    }
+
+    private String getNameByRefIndex(int idx) {
+        Object obj = cpool[idx];
+        if (obj instanceof Integer ref) {
+            return getStringByIndex(ref);
+        } else {
+            return "%s #%d refers to a ConstantPool Object: %s".
+                    formatted(ERROR_PREFIX, idx, String.valueOf(obj));
+        }
+
     }
 
     private String formatComments(String str, int shift) {
