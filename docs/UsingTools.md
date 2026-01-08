@@ -1,488 +1,337 @@
-<span id="top"></span>
+## Chapter 1
+###  Java Assembler Tools (AsmTools) User’s Guide
 
-<table dir="ltr"
-data-summary="Navigation bar, includes the book title and navigation buttons"
-width="100%" data-border="0" data-cellpadding="0" data-cellspacing="0">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<tbody>
-<tr class="odd" data-bgcolor="#cccccc">
-<td class="navbartitle" style="text-align: left;" abbr="ChapTitle"><span
-id="Z400012b9112"></span>Java Assembler Tools (AsmTools) User's
-Guide</td>
-<td style="text-align: right;" abbr="NavButtons" data-valign="top"><a
-href="index.html"><img src="shared/toc01.gif" title="Table Of Contents"
-data-border="0" width="30" height="26" alt="Table Of Contents" /></a><a
-href="chapter1.html"><img src="shared/prev01.gif"
-title="Previous Chapter" data-border="0" width="30" height="26"
-alt="Previous Chapter" /></a><a href="chapter3.html"><img
-src="shared/next01.gif" title="Next Chapter" data-border="0" width="30"
-height="26" alt="Next Chapter" /></a><a href="ix.html"><img
-src="shared/index01.gif" title="Book Index" data-border="0" width="30"
-height="26" alt="Book Index" /></a></td>
-</tr>
-</tbody>
-</table>
+---
 
-  
-  
+### Using the AsmTools
 
-<table dir="ltr" data-summary="Chapter Number" abbr="ChapNum"
-width="100%" data-border="0">
-<tbody>
-<tr class="odd">
-<td class="ChapNumber" style="text-align: right;"><span
-class="ChapNumPrefix">CHAPTER</span>  <span
-class="ChapNumNum">2</span><span class="ChapNumSuffix"></span></td>
-</tr>
-</tbody>
-</table>
+This chapter describes general principles and techniques for using the AsmTools.
 
-------------------------------------------------------------------------
+If no command-line options are provided, or they are invalid, the tools display
+error messages and usage information. To get the help message, launch AsmTools
+without parameters:
 
-# <span id="d0e1017"></span> Using the AsmTools
+```bash
+java -jar asmtools.jar
+```
 
-<span id="d0e1021"></span> This chapter describes general principles and
-techniques for using the AsmTools. For detailed information about the
-syntax of each component and command line examples, see [Appendix
-B](appendix2.html#Z400013211728). If no command-line options are
-provided or they are invalid, the tools provide error messages and usage
-information. To get the help message, launch AsmTools without any
-parameters as follows:
+The help system describes how to use all the AsmTools components and contains 
+the following topics described in this chapter.
 
-<span id="d0e1026"></span><span class="kbd command">java  
-  
--jar asmtools.jar</span>
+-   [Assemblers and Disassemblers](#BADGCIGA)
+-   [JASM vs JCOD](chapter2.html#BADGCIGB)
+-   [Tool Usage](#BADCEIIF)
+    -  [ASMTools (Launcher)](BADCEABC) 
+    -  [JASM](#BADEFIIJ)
+    -  [JDIS](#BADCBFCE)
+    -  [JCODER](#BADIFAIE)
+    -  [JDEC](#BADHJAHI)
 
-<span id="d0e1030"></span>The help system describes how to use all of
-the AsmTools components and contains the following topics described in
-this chapter.
-
--   <span id="d0e1035"></span> [Assemblers and Disassemblers](#BADGCIGA)
-
--   <span id="d0e1035"></span>[JASM vs JCOD  
-    ](chapter2.html#BADGCIGB)
-
--   <span id="d0e1039"></span>[Tool Usage  
-    ](#BADCEIIF)
-
-    -   <span id="d0e1044"></span>[JASM](#BADEFIIJ)
-
-    -   <span id="d0e1048"></span>[JDIS](#BADCBFCE)
-
-    -   <span id="d0e1052"></span>[JCODER](#BADIFAIE)
-
-    -   <span id="d0e1056"></span>[JDEC](#BADHJAHI)
-
-    -   <span id="d0e1060"></span>[JCDEC](#BADBIGAE)
-
-------------------------------------------------------------------------
+---
 
 <span id="BADGCIGA"></span>
+### Assemblers and Dissassemblers 
 
-# Assemblers and Dissassemblers 
+Assembly and disassembly are reflexive operations. One tool’s output can be fed
+into another to reproduce the same file.
 
-Assembly and Dissassembly are reflexive operations.  You can feed one
-tool into another to achieve the same file.  For example  
-  
-**java -jar asmtools.jar jdec foo.class \# produces foo.jcod**  
-**java -jar asmtools.jar jcod foo.jcod \# produces foo.class**  
+```bash
+java -jar asmtools.jar jdec   Foo.class   # produces Foo.jcod
+java -jar asmtools.jar jcoder Foo.jcod    # produces Foo.class
 
-For a given class foo.class, the product of dissassembly, and
-re-assembly is the same foo.class.  
+java -jar asmtools.jar jdis   Foo.class   # produces Foo.jasm
+java -jar asmtools.jar jasm   Foo.jasm    # produces Foo.class
+```
 
-  
+For a given `foo.class`, the result of disassembly followed by reassembly is the
+same `foo.class`.
 
-------------------------------------------------------------------------
+---
 
 <span id="BADGCIGB"></span>
+### JASM vs JCOD 
 
-# JASM vs. JCod 
-
-Which format to use depends on the task you are trying to do. We can
-describe some generalizations of when you might wish to use the JASM
-format versus the JCOD format.    
+Which format to use depends on the task you are trying to do. 
+We can describe some generalizations of when you might wish to use the `JASM` format versus the `JCOD` format.
 
 #### JASM 
 
-The biggest difference between the two formats is that JASM specifically
-focuses on representing byte-code instructions in the VM format (while
-providing minimal description of the structure of  the rest of the class
-file).  Generally, JASM is more convenient for semantic changes, like
-change to instruction flow.  
+The biggest difference between the two formats is that `JASM` specifically focuses on representing byte-code instructions in the VM format 
+(while providing minimal description of the structure of the rest of the class file).
+Generally, `JASM` is more convenient for semantic changes, like change to instruction flow. 
+
+Typical JASM use cases:
+
+-   Producing invalid classes in which two methods have the same signature
+-   Producing invalid class references that use illegal types
+-   Generating invalid classes with missing or removed instructions
+-   Inserting instrumentation or profiling instructions into methods
+-   Creating classes in which language keywords are used as identifiers
+-   Verifying that two classes produced by different compilers are equivalent
 
 #### JCOD
 
-JCOD provides good support for describing the structure of a class file
-(as well as writing incorrect bytes outside of this structure), and
-provides no support for specifying byte-code instructions (simply raw
-bytes for instructions).   JCOD is typically used for VMs to test
-Well-formedness of class files (eg extra or missing bytes), boundary
-issues, constant-pool coherence, constant-pool index coherence,
-attribute well-formedness, etc..  
+`JCOD` provides good support for describing the structure of a class file 
+(as well as writing incorrect bytes outside of this structure), 
+and provides no support for specifying byte-code instructions (simply raw bytes for instructions).
+`JCOD` is typically used for VMs to test Well-formedness of class files (e.g. extra or missing bytes), 
+boundary issues, constant-pool coherence, constant-pool index coherence, attribute well-formedness, etc.
 
-#### Use Cases
+Typical JCOD use cases:
 
-Below are typical cases of usage of both formats:  
-  
-JASM usages:  
-  
-
--    To obtain an invalid class where two methods have the same
-    signature
--    To obtain an invalid class reference where an illegal type is used
--    To obtain an invalid class with missing/removed instructions
--    To insert profiling instructions in methods
--    To obtain a class where a keyword is used as an identifier
--    To check that two classes produced by different compilers are
-    equivalent  
-
-  
-JCOD usages:  
-  
-
--    To examine specific parts of a classfile  
-
--   -   eg. constant-pool (for dependency analysis)
+-   Examining specific parts of a class file, such as:
+    -   the constant pool (for dependency analysis)
     -   constant values
-    -   inheritance chains (super classes)
-    -   implementation fullfillment (interface resolution)
+    -   inheritance chains (superclasses)
+    -   interface implementation and resolution
+-   Producing malformed or structurally invalid class files for JVM testing
+-   Validating class-file well-formedness rules
+-   Testing boundary conditions and structural constraints
+-   Verifying attribute structure and consistency
+ 
+---
 
-  
-
-------------------------------------------------------------------------
-
-  
 <span id="BADCEIIF"></span>
+### Tool Usage 
 
-# Tool Usage 
+AsmTools consists of the following utilities: 
 
-Asmtools consist of five utilities:  
-  
+- [jasm](#BADEFIIJ) – Generates class files from `JASM`
+- [jdis](#BADCBFCE) – Disassembles class files into `JASM`
+- [jcoder](#BADIFAIE) – Generates class files from `JCOD`
+- [jdec](#BADHJAHI) – Disassembles class files into `JCOD`
 
--    jasm - Generates class files from the JASM representation
--    jdis - Represents class file in JASM format
--    jcoder - Generates class files from the JCOD representation
--    jdec - Represents class file in JCOD format
--    jcdec - Represents JavaCard cap and exp files in JCOD format
+Each utility can be invoked as:
 
-  
-Each utility can be invoked from the command line as shown below:  
-  
-<span style="font-weight: bold;">$ java -jar asmtools.jar UTILITY
-\[options\] File1 ...</span>  
-  
-or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar 
-com.sun.asmtools.UTILITY.Main \[options\] File1 ...</span>  
-  
-Each utility supports own set of options  
+```bash
+java -jar asmtools.jar UTILITY [options] File1 ...
+```
+or
+```bash
+java -cp asmtools.jar com.sun.asmtools.UTILITY.Main [options] File1 ...
+```
+Each utility supports own set of options. 
 
-------------------------------------------------------------------------
+---
+<font size=-1>**Note**: <i>See the following sections for the options associated with each tool.</i></font>
 
-<table width="100%" data-cellpadding="2" data-cellspacing="2">
-<tbody>
-<tr class="odd">
-<td data-valign="top"><p><span id="d0e1281"></span><strong>Note
--</strong> See the following sections for the options associated with
-each tool.<br />
-</p></td>
-</tr>
-</tbody>
-</table>
+---
 
-------------------------------------------------------------------------
+<span id="BADCEABC"></span>
+### ASMTools (Launcher)
 
-  
+The `asmtools.jar` launcher provides a single entry point to run one of the AsmTools utilities (`jasm`, `jdis`, `jcoder`, or `jdec`) 
+and to display global help/version information.
 
-------------------------------------------------------------------------
+**Usage**:
+```text
+java -jar asmtools.jar <jasm|jdis|jcoder|jdec> <options> <source files>     run jasm, jdis, jcoder, or jdec tool
+or: java -jar asmtools.jar -?|-h|-help                                      print Help (this message) and exit
+or: java -jar asmtools.jar -version                                         print version information and exit
+
+use -dls switch to return the ancient dual stream logging
+```
+
+---
 
 <span id="BADEFIIJ"></span>
+### JASM
 
-## JASM
+`JASM` assembles a `.jasm` source file, written according to the [JASM Specification](JASM_SPEC), into a `.class` file 
+for use with a Java Virtual Machine.
 
-<span id="DDE_LINK"></span><span style="font-style: italic;">jasm</span>
-is an assembler that accepts a text file based on the JASM
-Specification, and produces a .class file for use with a Java Virtual
-Machine.  
-
-#### Usage: 
-
-<span style="font-weight: bold;">$ java -jar asmtools.jar jasm
-\[options\] filename.jasm</span>  
-  
+**Usage**:
+```text
+java -jar asmtools.jar jasm [options] <jasm source files>|-
+```
 or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar
-com.sun.asmtools.jasm.Main \[options\] filename.jasm</span>  
-  
+```text
+java -cp asmtools.jar org.openjdk.asmtools.jasm.Main [options] <jasm source files>|-
+``` 
+
+**Note**: <i>if `-` is provided, `<stdin>` is used as the input stream.</i>
 
 #### Options:
 
-<span style="font-weight: bold;">-version</span> Print jasm version  
-  
-<span style="font-weight: bold;">-d destdir </span>Specifies a directory
-to place resulting .class files. If a destdir is not provided, the
-.class file will be written in the current directory.  
-  
-<span style="font-weight: bold;">-g </span>Add debug information to
-.class file.  
-  
-<span style="font-weight: bold;">-nowrite</span> Do not write resulting
-.class files. This option may be used to verify the integrity of your
-source jasm file.  
-  
-<span style="font-weight: bold;">-strict</span> Consider warnings as
-errors.  
-  
-<span style="font-weight: bold;">-nowarn</span> Do not print warnings.  
-  
-<span style="font-weight: bold;">-cv major.minor</span> Set the
-operating class file version (by default 45.3).
+```text
+  -d <directory>                      Specify where to place generated class files, otherwise <stdout>
+  -w <directory>                      Specify where to place generated class files, without considering the classpath, otherwise <stdout>
+  -nowrite                            Do not write generated class files
+  -nowarn                             Do not print warnings
+  -strict                             Consider warnings as errors
+  -cv <major.minor>                   Set operating class file version if not specified in the source file (by default 45.3)
+  -fixcv <major.minor>                Override class file version in source file(s)
+  -fixcv <threshold-major.minor>      Update class file version to major.minor if file's version is below the threshold(<major.minor>)
+  -t                                  Print debug, trace information
+  -v                                  Print additional information
+  -version                            Print the jasm version
+```
+#### Notes:
+1. **Class-file generation behavior**
+   
+    <br>The `-nowrite` option always suppresses generation of the `.class` file.<br>
+    Without `-nowrite`, warnings prevent class-file generation only when `-strict` is specified; otherwise, the class file is written.
+    <br><br>
 
-------------------------------------------------------------------------
+2. **Class‑file version selection (`-cv` vs `-fixcv`)**
 
-<table width="100%" data-cellpadding="2" data-cellspacing="2">
-<tbody>
-<tr class="odd">
-<td data-valign="top"><p><span id="d0e1281"></span><strong>Note
--</strong> If the optional class attribute '<span
-style="font-style: italic;">version</span>'defines (in source of class)
-the class file version then it overrides default class file version set
-by <span style="font-style: italic;">-cv</span> option.</p></td>
-</tr>
-</tbody>
-</table>
+    <br>In typical usage, a `.jasm` file explicitly specifies the class‑file version in
+    its header, for example:
+    
+    ```text
+    public super class Foo version 55:0 {}
+    ```
+    
+    If the version is not specified in the source file, `JASM` defaults to **45.3**.
+    
+    The `-cv` option provides a *fallback* version and is used *only if the source
+    file does not declare a version*. If a version is present in the `.jasm` file,
+    it takes precedence over `-cv`.
+    
+    To force the class‑file version regardless of whether the source declares one,
+    use `-fixcv`. This option overrides the version unconditionally.
+    
+    The `-cv` and `-fixcv` options were added primarily to support batch updates of
+    large sets of `.jasm` files. In general, it is preferable to specify the correct
+    class‑file version directly in the `.jasm` source.
 
-------------------------------------------------------------------------
-
-<span style="font-weight: bold;"></span>  
-
-#### Description:
-
-To use jasm, specify the filename of the .jasm file you wish to develop
-a .class file from. The Jasm Specification contains information relative
-to the format of a .jasm file.  
-
-  
-
-------------------------------------------------------------------------
+---
 
 <span id="BADCBFCE"></span>
+### JDIS
 
-## JDIS
+`JDIS` is a disassembler that accepts a `.class` file specified by filename, translates it into plain-text jasm source, 
+and writes the result to standard output or, when `-d <directory>` is specified, to a generated `.jasm` file in the given directory.
 
-<span id="DDE_LINK"></span>*jdis* is a disassembler that accepts a
-`.class` file, and prints the plain-text translation of `jasm` source
-file to the standard output.
+**Usage**:
+```text
+java -jar asmtools.jar jdis [options] <class files>|-
+```
+or
+```text
+java -cp asmtools.jar org.openjdk.asmtools.jdis.Main [options] <class files>|-
+``` 
 
-#### Usage: 
-
-<span style="font-weight: bold;">$ java -jar asmtools.jar jdis
-\[options\] filename.class</span>  
-  
-or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar
-com.sun.asmtools.jdis.Main \[options\] filename.class</span>  
-  
+**Note**: <i>if `-` is provided, `<stdin>` is used as the input stream.</i>
 
 #### Options:
 
-<span style="font-weight: bold;">-version</span> Print jdis
-version<span style="font-weight: bold;"></span>  
-  
-<span style="font-weight: bold;">-g </span>Generate a detailed output
-format. Constants from constant pool are printed, and instructions in
-methods are preceded with source line numbers (if attribute
-LineNumberTable is available) and with bytecode program counters.  
-  
-<span style="font-weight: bold;">-s1</span> Generate source lines in
-comments. Commented lines of the source file, from which given .class
-file is obtained, are printed above the corresponding instruction. Both
-attributes LineNumberTable and SourceFile must be available. The source
-file should be placed in the current working directory.  
-  
-<span style="font-weight: bold;">-hx</span> Generate floating-point
-constants in hexadecimal format.
+```text
+  -d <directory>        Specify where to place generated class files, otherwise <stdout>
+  -w <directory>        Specify where to place generated class files, without considering the classpath, otherwise <stdout>
+  -g                    Generate a detailed output format.
+  -gg                   Generate a detailed output format. This includes displaying
+                        the pair of this_class and super_class.
+  -nc                   Don't print comments
+  -table                Print specific attributes in a table format resembling the style of the 'javap' command.
+  -hx                   Generate floating-point constants in hexadecimal format.
+  -pc                   Print instruction offsets when the output is not detailed with the options -g or -gg.
+  -sysinfo              Show system info (path, size, date, SHA-256 hash) of class being processed
+  -lnt:<numbers,lines,table,all>
+                        Print the LineNumberTable attribute in a Code attribute:
+                        table   - print the LineNumberTable attribute as a table
+                        numbers - print numbers of source lines in inlined comments
+                        lines   - print Java source lines if a class file with LineNumberTable attribute and Java source file are in the same folder
+                        all     - print both line numbers and Java source lines in inlined comments, and LineNumberTable attribute as a table
+                        The '-lnt' without parameters functions the same way as '-lnt:all'
+  -lvt:<vars,types,all>
+                        Print LocalVariableTable,LocalVariableTypeTable attributes in a Code attribute:
+                        vars    - print LocalVariableTable attribute
+                        types   - print LocalVariableTypeTable attribute
+                        all     - print both LocalVariableTable and LocalVariableTypeTable attributes
+                        The '-lvt' without parameters functions the same way as '-lvt:all'
+  -drop:<source,classes,all>
+                        Discard some attributes or their groups where:
+                        source  - SourceFile attribute
+                        classes - this_class, super_class pair
+                        all     - SourceFile attribute, this_class and super_class pair
+                        The '-drop' without parameters functions the same way as '-drop:all'
+  -best-effort          Print as much information as possible despite errors; suppresses the -v option.
+  -version              Print the program version
+  -t                    Print debug, trace information
+  -v                    Print additional information
+```
+#### Notes:
+1. **Line Number and Source Line Generation (-lnt option)**
 
-#### Description:
+    <br>The `-lnt[:numbers|lines|table|all]` option controls how `LineNumberTable` information is printed.
+    Depending on the mode, it can print line numbers as inline comments, include Java source lines above the corresponding instructions, 
+    display the LineNumberTable attribute as a table, or combine all of these. 
+    Specifying `-lnt` without parameters is equivalent to `-lnt:all`.
+    Printing source lines in comments requires both the `LineNumberTable` and `SourceFile` attributes to be present, 
+    and the corresponding *Java source file must be located in the current working directory*.
 
-To use jdis, specify a *filename*`.class` that you wish to
-disassemble.  
-You may redirect standard output to a *filename* `.jasm` file. Jdis will
-disassemble a `.class` file and create a resultant `.jasm` source file.
+Refer to the [JASM Assembler](JASM_SPEC) documentation for information on the structure of the resultant `.jasm` file.  
+ 
 
-Refer to the [Jasm
-Assembler](../../work/asmtools/asm-tools-4.1.2-build/release/doc/misc/jasmspec.html)
-documentation for information on the structure of the resultant `.jasm`
-file.  
-
-  
-
-------------------------------------------------------------------------
+---
 
 <span id="BADIFAIE"></span>
+### JCODER
 
-## JCoder
+`JCODER` is a low-level assembler that accepts text conforming to the [Jcoder Specification.](JCODER_SPEC) and 
+produces a `.class` file for use by a Java Virtual Machine. 
 
-<span id="DDE_LINK"></span>*jcoder* is a low-level assembler that
-accepts text based on the [Jcoder
-Specification.](../../work/asmtools/asm-tools-4.1.2-build/release/doc/misc/jcoderspec.html)
-and produces a `.class` file for use with a Java Virtual Machine.
-Jcoder's primary use is as a tool for producing specialized tests for
-testing a JVM implementation.
+Its primary purpose is to generate specialized tests for validating JVM implementations.
 
-#### Usage: 
+**Usage**:
+```text
+java -jar asmtools.jar jcoder [options] <jcod source files>|-
+```
+or
+```text
+java -cp asmtools.jar org.openjdk.asmtools.jcoder.Main [options] <jcod source files>|-
+``` 
 
-<span style="font-weight: bold;">$ java -jar asmtools.jar jcoder
-\[options\] filename.jcod</span>  
-  
-or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar
-com.sun.asmtools.jcoder.Main \[options\] filename.jcod</span>  
-  
+**Note**: <i>if `-` is provided, `<stdin>` is used as the input stream.</i>
 
 #### Options:
+```text
+  -d <directory>                      Specify where to place generated class files, otherwise <stdout>
+  -w <directory>                      Specify where to place generated class files, without considering the classpath, otherwise <stdout>
+  -nowrite                            Do not write generated class files
+  -ignore                             Ignore non-fatal error(s) that suppress writing class files
+  -fixcv <major:minor>                Override class file version in source file(s)
+  -fixcv <threshold-major:minor>      Update class file version to major:minor if file's version is below the threshold(<major:minor>)
+  -t                                  Print debug, trace information
+  -v                                  Print additional information
+  -version                            Print the program version
+```
 
-<span style="font-weight: bold;">-version</span> Print jcoder version  
-  
-<span style="font-weight: bold;">-d destdir </span>Specifies a directory
-to place resulting .class files. If a destdir is not provided, the
-.class file will be written in the current directory.  
-  
-<span style="font-weight: bold;">-nowrite</span> Do not write resulting
-.class files. This option may be used to verify the integrity of your
-source jcoder file.  
-
-#### Description:
-
-To use jcoder, specify the *filename*`.jcod` file you wish to develop a
-`.class` file from. The [Jcoder
-Specification](../../work/asmtools/asm-tools-4.1.2-build/release/doc/misc/jcoderspec.html)
-contains information relative to the format of a `.jcod` file.
-
-  
-
-------------------------------------------------------------------------
+---
 
 <span id="BADHJAHI"></span>
+### JDEC
 
-## JDec
+`JDEC` is a low-level disassembler that accepts a `.class` file specified by filename, translates it into plain-text `jcov` source,
+and writes the result to standard output or, when `-d <directory>` is specified, to a generated `.jcov` file in the given directory.
 
-<span id="DDE_LINK"></span>*jdec* is a low-level disassembler that
-accepts `.class` file and prints a plain text of `jcod` source file to
-the standard output.
+**Usage**:
+```text
+java -jar asmtools.jar jdec [options] <class files>|-
+```
+or
+```text
+java -cp asmtools.jar org.openjdk.asmtools.jdec.Main [options] <class files>|-
+``` 
 
-#### Usage: 
-
-<span style="font-weight: bold;">$ java -jar asmtools.jar jdec
-\[options\] filename.class \[&gt; filename.jcod\]</span>  
-  
-or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar
-com.sun.asmtools.jdec.Main \[options\]
-filename.class</span><span style="font-weight: bold;"> \[&gt;
-filename.jcod\]</span>  
-  
+**Note**: <i>if `-` is provided, `<stdin>` is used as the input stream.</i>
 
 #### Options:
 
-<span style="font-weight: bold;">-version</span> Print jdec
-version<span style="font-weight: bold;"></span>  
-  
-<span style="font-weight: bold;">-g </span>Generate a detailed output
-format.  
+```text
+  -d <directory>        Specify where to place generated class files, otherwise <stdout>
+  -w <directory>        Specify where to place generated class files, without considering the classpath, otherwise <stdout>
+  -g                    Generate a detailed output format
+  -v                    Print additional information
+  -version              Print the program version
+```
 
-#### Description:
-
-To use jdec, specify a *`filename.class`* that you wish to
-disassemble.  
-You may redirect standard output to a *`filename.jcod`* file. *jdec*
-will disassemble `.class` file and create a resultant `.jcod` plain
-source file.
-
-Refer to the [Jcoder Low-Level
-Assembler](../../work/asmtools/asm-tools-4.1.2-build/release/doc/misc/jcoderspec.html)
-documentation for information on the structure of the resultant `.jcod`
-file.  
-
-  
-
-------------------------------------------------------------------------
-
-<span id="BADBIGAE"></span>
-
-## JCDec
-
-<span id="DDE_LINK"></span>*jcdec* is a low-level disassembler that
-accepts `.class` file and prints a plain text of `jcod` source file to
-the standard output.
-
-#### Usage: 
-
-<span style="font-weight: bold;">$ java -jar asmtools.jar jcdec
-\[options\] filename.exp | filename.cap \[&gt; filename.jcod\]</span>  
-  
-or  
-  
-<span style="font-weight: bold;">$ java -cp asmtools.jar
-com.sun.asmtools.jcdec.Main \[options\]
-</span><span style="font-weight: bold;">filename.exp |
-filename.cap</span><span style="font-weight: bold;"> \[&gt;
-filename.jcod\]</span>  
-  
-
-#### Options:
-
-<span style="font-weight: bold;">-version</span> Print jcdec
-version<span style="font-weight: bold;"></span>  
-  
-<span style="font-weight: bold;">-g </span>Generate a detailed output
-format.  
-
-#### Description:
-
-To use jcdec, specify a *`filename.exp`* or *`filename.cap`* that you
-wish to disassemble.  
-You may redirect standard output to a *`filename.jcod`* file. *jcdec*
-will disassemble the file and create a resultant `.jcod` plain source
+Refer to the [Jcoder Low-Level Assembler](JCODER_SPEC) documentation for information on the structure of the resultant `.jcod`
 file.
 
-Refer to the [Jcoder Low-Level
-Assembler](../../work/asmtools/asm-tools-4.1.2-build/release/doc/misc/jcoderspec.html)
-documentation for information on the structure of the resultant ` .jcod`
-file.
+---
+*Java Assembler Tools (AsmTools) User’s Guide*
 
-  
-
-<table width="100%" data-border="0" data-cellpadding="0"
-data-cellspacing="0">
-<tbody>
-<tr class="odd" data-bgcolor="#cccccc">
-<td><p>Java Assembler Tools (AsmTools) User's Guide</p></td>
-<td><p>000-0000-00</p></td>
-<td data-valign="top"><p><a href="index.html"><img
-src="shared/toc01.gif" id="graphics14" data-align="bottom"
-data-border="0" width="30" height="26" alt="Table Of Contents" /></a> <a
-href="chapter1.html"><img src="shared/prev01.gif" id="graphics15"
-data-align="bottom" data-border="0" width="30" height="26"
-alt="Previous Chapter" /></a><a href="chapter3.html"><img
-src="shared/next01.gif" id="graphics16" data-align="bottom"
-data-border="0" width="30" height="26" alt="Next Chapter" /></a><a
-href="ix.html"><img src="shared/index01.gif" id="graphics17"
-data-align="bottom" data-border="0" width="30" height="26"
-alt="Book Index" /></a></p></td>
-</tr>
-</tbody>
-</table>
-
-------------------------------------------------------------------------
-
-Copyright © 2012, 2017, Oracle and/or its affiliates. All rights
-reserved.
+---
+Copyright © 2012, 2025, Oracle and/or its affiliates. All rights reserved.
