@@ -1,4 +1,3 @@
-## Chapter 1
 ###  Java Assembler Tools (AsmTools) User’s Guide
 
 ---
@@ -19,7 +18,7 @@ The help system describes how to use all the AsmTools components and contains
 the following topics described in this chapter.
 
 -   [Assemblers and Disassemblers](#BADGCIGA)
--   [JASM vs JCOD](chapter2.html#BADGCIGB)
+-   [JASM vs JCOD](#BADGCIGB)
 -   [Tool Usage](#BADCEIIF)
     -  [ASMTools (Launcher)](BADCEABC) 
     -  [JASM](#BADEFIIJ)
